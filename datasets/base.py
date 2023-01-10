@@ -9,7 +9,7 @@ from .parsers import create_parser
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
 
-class CustomDataset(data.Dataset):
+class BaseCustomDataset(data.Dataset):
 
     def __init__(
             self,
@@ -20,7 +20,7 @@ class CustomDataset(data.Dataset):
             transform=None,
             target_transform=None,
     ):
-        super(CustomDataset, self).__init__()
+        super(BaseCustomDataset, self).__init__()
         if parser is None or isinstance(parser, str):
             parser = create_parser(parser or '', root=root, class_map=class_map)
         self.parser = parser

@@ -7,12 +7,12 @@ import torch
 import torch.utils.data as data
 
 from .parsers import create_parser
-from ..base import CustomDataset
+from ..base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
 
-class ClassificationCustomDataset(CustomDataset):
+class CustomDataset(BaseCustomDataset):
 
     def __init__(
             self,
@@ -23,7 +23,7 @@ class ClassificationCustomDataset(CustomDataset):
             transform=None,
             target_transform=None,
     ):
-        super(ClassificationCustomDataset, self).__init__(
+        super(CustomDataset, self).__init__(
             root,
             parser,
             class_map,
