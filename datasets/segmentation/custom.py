@@ -12,7 +12,7 @@ from ..base import BaseCustomDataset
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
 
-class ClassificationCustomDataset(BaseCustomDataset):
+class SegmentationCustomDataset(BaseCustomDataset):
 
     def __init__(
             self,
@@ -23,7 +23,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
             transform=None,
             target_transform=None,
     ):
-        super(ClassificationCustomDataset, self).__init__(
+        super(SegmentationCustomDataset, self).__init__(
             root,
             parser,
             class_map,
