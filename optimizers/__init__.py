@@ -12,4 +12,5 @@ from .radam import RAdam
 from .ranger import Ranger
 from .rmsprop_tf import RMSpropTF
 from .sgdp import SGDP
-from .factory import create_optimizer, optimizer_kwargs
+
+from .builder import create_optimizer, optimizer_kwargs
