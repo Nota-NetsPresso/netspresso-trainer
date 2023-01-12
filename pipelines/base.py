@@ -5,26 +5,31 @@ from ..utils.search_api import ModelSearchServerHandler
 MAX_SAMPLE_RESULT = 10
 
 class BasePipeline:
-    def __init__(self, args, is_online=True):
+    def __init__(self, args, model, is_online=True):
         super(BasePipeline, self).__init__()
         self.args = args
+        self.model = model
         
         self.dataloader = None
-        self.model = None
         self.loss = None
+        self.metric = None
         self.optimizer = None
         self.train_logger = None
         
         self.is_online = is_online
         if self.is_online:
             self.server_service = ModelSearchServerHandler(args.train.project_id, args.train.token)
+            
+    def _is_ready_to_train(self):
+        assert self.dataloader is not None, "`self.dataloader` is not defined!"
+        assert self.model is not None, "`self.model` is not defined!"
+        assert self.loss is not None, "`self.loss` is not defined!"
+        assert self.metric is not None, "`self.metric` is not defined!"
+        assert self.optimizer is not None, "`self.optimizer` is not defined!"
+        assert self.train_logger is not None, "`self.train_logger` is not defined!"
     
     def train(self):
-        assert self.dataloader is not None
-        assert self.model is not None
-        assert self.loss is not None
-        assert self.optimizer is not None
-        assert self.train_logger is not None
+        self._is_ready_to_train()
         
         one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
         for num_epoch in range(1, self.args.train.epochs + 1):
