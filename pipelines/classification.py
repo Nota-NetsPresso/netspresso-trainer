@@ -26,6 +26,13 @@ from service.image_logger import ImageLogger
 class ClassificationPipeline(BasePipeline):
     def __init__(self, args, model, devices, **kwargs):
         super(ClassificationPipeline, self).__init__(args, model, devices, **kwargs)
+    
+    def set_train(self):
+        self.dataloader = None
+        self.loss = None
+        self.metric = None
+        self.optimizer = None
+        self.train_logger = None
         
     def train_one_epoch(self, one_epoch_result):
         for batch in self.dataloader:

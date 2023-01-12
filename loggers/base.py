@@ -1,7 +1,8 @@
+from abc import ABC
 from pathlib import Path
 from typing import List, Dict
 
-class BaseCSVLogger:
+class BaseCSVLogger(ABC):
     def __init__(self, csv_path):
         super(BaseCSVLogger, self).__init__()
         self.csv_path = Path(csv_path)

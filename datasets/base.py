@@ -1,5 +1,6 @@
 import os
 import logging
+from abc import abstractmethod
 
 import torch
 import torch.utils.data as data
@@ -29,8 +30,9 @@ class BaseCustomDataset(data.Dataset):
         self.target_transform = target_transform
         self._consecutive_errors = 0
 
+    @abstractmethod
     def __getitem__(self, index):
-        raise NotImplementedError
+        pass
         
     def __len__(self):
         return len(self.parser)
