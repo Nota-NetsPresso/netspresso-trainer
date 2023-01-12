@@ -1,14 +1,9 @@
+from .base import BaseCSVLogger
 
+CSV_HEADER = ['epoch', 'train_loss', 'valid_loss', 'train_accuracy', 'valid_accuracy']
 
-MAX_LOGGING_SAMPLES = 5
-
-class BaseLogger:
-    def __init__(self) -> None:
-        super(BaseLogger, self).__init__()
-        self.epoch = 0
-    
-    def save_plot(self, image, pred):
-        pass
-    
-    def append_csv(self, csv_logging, epoch):
-        pass
+class ClassificationCSVLogger(BaseCSVLogger):
+    def __init__(self, csv_path):
+        super(ClassificationCSVLogger, self).__init__(csv_path)
+        self.header = CSV_HEADER
+        self.update_header()

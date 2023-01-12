@@ -1,21 +1,50 @@
+from pathlib import Path
+from typing import List, Dict
 
+class BaseCSVLogger:
+    def __init__(self, csv_path):
+        super(BaseCSVLogger, self).__init__()
+        self.csv_path = Path(csv_path)
+        self.header = []
+        
+        self._temp_row_dict = dict()
+        
+        if self.csv_path.exists():
+            self.csv_path.unlink()
+        
+    def update_header(self):
+        assert len(self.header) != 0
+        with open(self.csv_path, 'a') as f:
+            f.write(",".join(self.header))
+            f.write("\n")
 
-MAX_LOGGING_SAMPLES = 5
-
-class BaseLogger:
-    def __init__(self) -> None:
-        super(BaseLogger, self).__init__()
-        self._epoch = 0
+    def _clear_temp(self):
+        self._temp_row_dict = dict()
     
-    def log_epoch_end(self, image, pred, csv_logging, epoch=0):
-        if epoch - self._epoch > 1 or epoch - self._epoch < 0:
-            raise AssertionError(f"The given epoch ({epoch}) should be equal(or +1) to self._epoch {self._epoch}!")
-        self._epoch += 1 if self._epoch != epoch else 0
-        self.save_plot(image, pred)
-        self.append_csv(csv_logging, epoch)
+    def _update_with_list(self, data: List):
+        if data is not None and len(data) != 0:
+            with open(self.csv_path, 'a') as f:
+                f.write(",".join([f"{x:.09f}" for x in data]))
+                f.write("\n")
+        self._clear_temp()
     
-    def save_plot(self, image, pred):
-        raise NotImplementedError
-    
-    def append_csv(self, csv_logging, epoch):
-        raise NotImplementedError
+    def _update_specific(self, data: Dict):
+        for _key, _value in data.items():
+            if _key not in self.header:
+                raise AssertionError(f"The given key ({_key}) is not in {self.header}!")
+            if _key not in self._temp_row_dict:
+                self._temp_row_dict[_key] = _value
+        
+        if set(self.header) == set(self._temp_row_dict.keys()):
+            self._update_with_list([self._temp_row_dict[_col] for _col in self.header])
+            
+    def update(self, data=None, **kwargs):
+        if isinstance(data, List):
+            self._update_all(data)
+        elif isinstance(data, Dict):
+            self._update_specific(data)
+        elif isinstance(data, type(None)):
+            self._update_specific(kwargs)
+        else:
+            raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
+        
