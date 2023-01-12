@@ -5,10 +5,11 @@ from ..utils.search_api import ModelSearchServerHandler
 MAX_SAMPLE_RESULT = 10
 
 class BasePipeline:
-    def __init__(self, args, model, is_online=True):
+    def __init__(self, args, model, devices, is_online=True):
         super(BasePipeline, self).__init__()
         self.args = args
         self.model = model
+        self.devices = devices
         
         self.dataloader = None
         self.loss = None
