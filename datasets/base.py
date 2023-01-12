@@ -4,7 +4,7 @@ import logging
 import torch
 import torch.utils.data as data
 
-from .parsers import create_parser
+from datasets.parsers import create_parser
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
