@@ -39,7 +39,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
         try:
             img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
         except Exception as e:
-            _logger.warning(f'Skipped sample (index {index}, file {self.parser.filename(index)}). {str(e)}')
+            _logger.warning(f"Skipped sample (index {index}, file {self.parser.filename(index)}). {str(e)}")
             self._consecutive_errors += 1
             if self._consecutive_errors < _ERROR_RETRY:
                 return self.__getitem__((index + 1) % len(self.parser))

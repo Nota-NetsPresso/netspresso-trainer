@@ -4,6 +4,24 @@ from torchvision import transforms
 from datasets.utils.augmentation.transforms import str_to_interp_mode, ToNumpy
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
+def transforms_config(is_train: bool):
+    transf_config = {}
+
+    if is_train:
+        transf_config = {
+            'hflip': 0.5,
+            'vflip': 0,
+            'mean': IMAGENET_DEFAULT_MEAN, 
+            'std': IMAGENET_DEFAULT_STD
+        }
+    else:
+        transf_config = {
+            'mean': IMAGENET_DEFAULT_MEAN, 
+            'std': IMAGENET_DEFAULT_STD
+        }
+
+    return transf_config
+
 def transforms_custom_train(
         use_prefetcher=True,
         img_size=32,
@@ -54,11 +72,6 @@ def transforms_custom_eval(
                      std=torch.tensor(std))
         ]
     return transforms.Compose(tfl)
-
-
-# ================================================================================
-# ================================================================================
-# ================================================================================
 
 
 def create_classification_transform(dataset, img_size, is_training=False, use_prefetcher=True):

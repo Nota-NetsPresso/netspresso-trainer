@@ -1,11 +1,11 @@
 from pathlib import Path
 import logging
 
-from datasets.utils.misc import transforms_config
 from datasets.classification import ClassificationCustomDataset
 from datasets.segmentation import SegmentationCustomDataset
 from datasets.classification.transforms import create_classification_transform
 from datasets.utils.loader import create_loader
+from datasets.classification.transforms import transforms_config
 
 
 _logger = logging.getLogger(__name__)
@@ -50,8 +50,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset):
     collate_fn = None
     use_prefetcher = not args.no_prefetcher
 
-    train_data_cfg = model.train_data_cfg if hasattr(model, 'train_data_cfg') else None
-    train_data_cfg = transforms_config(args.dataset, True, train_data_cfg)
+    train_data_cfg = transforms_config(is_train=True)
     setattr(model, "train_data_cfg", train_data_cfg)
     train_loader = create_loader(
         train_dataset,
@@ -69,8 +68,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset):
         args = args
     )
 
-    val_data_cfg = model.val_data_cfg if hasattr(model, 'val_data_cfg') else None
-    val_data_cfg = transforms_config(args.dataset, False, val_data_cfg)
+    val_data_cfg = transforms_config(is_train=False)
     setattr(model, "val_data_cfg", val_data_cfg)
     eval_loader = create_loader(
         eval_dataset,
