@@ -11,7 +11,6 @@ def transforms_custom_train(
         vflip=0.,
         mean=IMAGENET_DEFAULT_MEAN,
         std=IMAGENET_DEFAULT_STD,
-        **kwargs
 ):
     primary_tfl = []
     if img_size>32:
@@ -62,9 +61,10 @@ def transforms_custom_eval(
 # ================================================================================
 
 
-def create_classification_transform(dataset, img_size, is_training=False, use_prefetcher=True, **kwargs):
+def create_classification_transform(dataset, img_size, is_training=False, use_prefetcher=True):
+    
     if is_training:
-        transform =  transforms_custom_train(use_prefetcher, img_size, **kwargs)
+        transform =  transforms_custom_train(use_prefetcher, img_size)
     else:
-        transform = transforms_custom_eval(use_prefetcher, img_size, **kwargs)
+        transform = transforms_custom_eval(use_prefetcher, img_size)
     return transform

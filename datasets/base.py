@@ -9,10 +9,8 @@ import torch
 import torch.utils.data as data
 
 from datasets.utils.parsers import create_parser
-from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 _logger = logging.getLogger(__name__)
-_ERROR_RETRY = 50
 
 class BaseCustomDataset(data.Dataset):
 
@@ -46,24 +44,3 @@ class BaseCustomDataset(data.Dataset):
     def filenames(self, basename=False, absolute=False):
         return self.parser.filenames(basename, absolute)
 
-def transforms_config(dataset: str, train: bool, cfg = None):
-    transf_config = {}
-
-    if train:
-        transf_config = {
-            'hflip': 0.5,
-            'vflip': 0,
-            'mean': IMAGENET_DEFAULT_MEAN, 
-            'std': IMAGENET_DEFAULT_STD
-        }
-    else:
-        transf_config = {
-            'mean': IMAGENET_DEFAULT_MEAN, 
-            'std': IMAGENET_DEFAULT_STD
-        }
-
-    if cfg is not None:
-        for key in cfg.keys():
-            transf_config[key] = cfg[key]
-
-    return transf_config

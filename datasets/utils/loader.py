@@ -2,6 +2,10 @@ import torch
 import numpy as np
 from typing import Callable
 import random
+from functools import partial
+
+import torch
+from torch.utils.data import DataLoader
 
 from datasets.utils.misc import expand_to_chs
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
@@ -117,3 +121,60 @@ def init_worker(worker_id, worker_seeding='all'):
         # to reproduce some old results (same seed + hparam combo), partial seeding is required (skip numpy re-seed)
         if worker_seeding == 'all':
             np.random.seed(worker_info.seed % (2 ** 32 - 1))
+
+
+
+def create_loader(
+        dataset,
+        dataset_name,
+        logger,
+        input_size,
+        batch_size,
+        is_training=False,
+        use_prefetcher=True,
+        num_aug_repeats=0,
+        num_aug_splits=0,
+        num_workers=1,
+        distributed=False,
+        collate_fn=None,
+        pin_memory=False,
+        fp16=False,
+        tf_preprocessing=False,
+        use_multi_epochs_loader=False,
+        persistent_workers=True,
+        worker_seeding='all',
+        kwargs=None,
+        args=None
+):
+
+    sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=args.world_size, rank=args.rank)
+    
+    if collate_fn is None:
+        collate_fn = fast_collate if use_prefetcher else None
+
+    loader_args = dict(
+        batch_size=batch_size,
+        shuffle=not isinstance(dataset, torch.utils.data.IterableDataset) and sampler is None and is_training,
+        num_workers=num_workers,
+        sampler=sampler,
+        collate_fn=collate_fn,
+        pin_memory=pin_memory,
+        drop_last=is_training,
+        worker_init_fn=partial(init_worker, worker_seeding=worker_seeding),
+        persistent_workers=persistent_workers
+    )
+    try:
+        loader = DataLoader(dataset, **loader_args)
+    except TypeError as e:
+        loader_args.pop('persistent_workers')  # only in Pytorch 1.7+
+        loader = DataLoader(dataset, **loader_args)
+    if use_prefetcher:
+        loader = PrefetchLoader(
+            loader,
+            mean     = kwargs['mean'],
+            std      = kwargs['std'],
+            channels = input_size[1],
+            fp16     = fp16,
+        )
+
+    return loader
