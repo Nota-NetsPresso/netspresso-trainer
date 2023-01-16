@@ -1,2 +1,2 @@
-from .classification import ClassificationPipeline
-from .segmentation import SegmentationPipeline
+from pipelines.classification import ClassificationPipeline
+from pipelines.segmentation import SegmentationPipeline

@@ -9,30 +9,33 @@ import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
 from tqdm import tqdm
 
-from .base import BasePipeline
-from ..utils.search_api import ModelSearchServerHandler
+from datasets import build_dataset, build_dataloader
+from pipelines.base import BasePipeline
+from utils.search_api import ModelSearchServerHandler
+from loggers.classification import ClassificationCSVLogger, ImageLogger
 
-from atomixnet.train_validate.train_validate import reduce_tensor
-from atomixnet.train_validate.show_res import ShowResults
-from atomixnet.others.common import get_device, AverageMeter
-from atomixnet.train_validate.utils import *
-from atomixnet.train_validate.cuda import Scaler
-from atomixnet.dataset.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+# from atomixnet.train_validate.train_validate import reduce_tensor
+# from atomixnet.train_validate.show_res import ShowResults
+# from atomixnet.others.common import get_device, AverageMeter
+# from atomixnet.train_validate.utils import *
+# from atomixnet.train_validate.cuda import Scaler
+# from atomixnet.dataset.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-from service.csv_logger import CSVLogger
-from service.image_logger import ImageLogger
 
 
 class ClassificationPipeline(BasePipeline):
     def __init__(self, args, model, devices, **kwargs):
         super(ClassificationPipeline, self).__init__(args, model, devices, **kwargs)
+        
+    def set_dataloader(self):
+        train_dataset, valid_dataset = build_dataset(self.args, self.args.rank, self.args.distributed)
+        self.dataloader = build_dataloader(self.args, self.model)
     
     def set_train(self):
-        self.dataloader = None
         self.loss = None
         self.metric = None
         self.optimizer = None
-        self.train_logger = None
+        self.train_logger = ClassificationCSVLogger(csv_path=self.args.csv_path)
         
     def train_one_epoch(self, one_epoch_result):
         for batch in self.dataloader:
@@ -77,7 +80,7 @@ class CustomTrainValidate():
         self.results = ShowResults(logger)
         
         csv_path = self.output_dir / RESULT_CSV_PATH
-        self.csv_logger = CSVLogger(csv_path=csv_path)
+        self.csv_logger = ClassificationCSVLogger(csv_path=csv_path)
         
         image_dir = self.output_dir / RESULT_IMAGE_DIR
         image_dir.mkdir(exist_ok=True)
