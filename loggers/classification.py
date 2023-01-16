@@ -7,3 +7,7 @@ class ClassificationCSVLogger(BaseCSVLogger):
         super(ClassificationCSVLogger, self).__init__(csv_path)
         self.header = CSV_HEADER
         self.update_header()
+        
+class ImageLogger:
+    def __init__(self) -> None:
+        raise NotImplementedError
