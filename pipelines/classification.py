@@ -1,9 +1,11 @@
 import os
 from pathlib import Path
-from collections import namedtuple
 from typing import List
 import time
+from collections import deque
 
+
+import torch
 from torch.cuda.amp import autocast
 import torch.nn.functional as F
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -14,22 +16,26 @@ from pipelines.base import BasePipeline
 from utils.search_api import ModelSearchServerHandler
 from loggers.classification import ClassificationCSVLogger, ImageLogger
 
-# from atomixnet.train_validate.train_validate import reduce_tensor
-# from atomixnet.train_validate.show_res import ShowResults
-# from atomixnet.others.common import get_device, AverageMeter
-# from atomixnet.train_validate.utils import *
-# from atomixnet.train_validate.cuda import Scaler
-# from atomixnet.dataset.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-
-
+MAX_SAMPLE_RESULT = 10
 
 class ClassificationPipeline(BasePipeline):
     def __init__(self, args, model, devices, **kwargs):
         super(ClassificationPipeline, self).__init__(args, model, devices, **kwargs)
+        self.one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
+
         
     def set_dataloader(self):
-        train_dataset, valid_dataset = build_dataset(self.args, self.args.rank, self.args.distributed)
-        self.dataloader = build_dataloader(self.args, self.model)
+        
+        if self.args.distributed and self.args.rank != 0:
+            torch.distributed.barrier() # wait for rank 0 to download dataset
+            
+        train_dataset, eval_dataset = build_dataset(self.args)
+        
+        if self.args.distributed and self.args.rank == 0:
+            torch.distributed.barrier()
+        
+        self.train_dataloader, self.eval_dataloader = \
+            build_dataloader(self.args, self.model, train_dataset=train_dataset, eval_dataset=eval_dataset)
     
     def set_train(self):
         self.loss = None
@@ -37,11 +43,15 @@ class ClassificationPipeline(BasePipeline):
         self.optimizer = None
         self.train_logger = ClassificationCSVLogger(csv_path=self.args.csv_path)
         
-    def train_one_epoch(self, one_epoch_result):
-        for batch in self.dataloader:
-            one_epoch_result.append(self.model(batch))
+    def train_one_epoch(self):
+        
+        for batch in self.train_dataloader:
+            out = self.model(batch)
+            # TODO: fn(out)
+            fn = lambda x: x
+            self.one_epoch_result.append(fn(out))
             
-        return one_epoch_result
+        self.one_epoch_result.clear()
     
 
 CKPT_DIR = "weights"

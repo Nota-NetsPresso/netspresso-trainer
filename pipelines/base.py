@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections import deque
 
 from ..utils.search_api import ModelSearchServerHandler
 from ..utils.timer import Timer
@@ -15,7 +14,8 @@ class BasePipeline(ABC):
         
         self.timer  = Timer()
         
-        self.dataloader = None
+        self.train_dataloader = None
+        self.eval_dataloader = None
         self.loss = None
         self.metric = None
         self.optimizer = None
@@ -26,7 +26,8 @@ class BasePipeline(ABC):
             self.server_service = ModelSearchServerHandler(args.train.project_id, args.train.token)
             
     def _is_ready(self):
-        assert self.dataloader is not None, "`self.dataloader` is not defined!"
+        assert self.train_dataloader is not None, "`self.train_dataloader` is not defined!"
+        assert self.eval_dataloader is not None, "`self.eval_dataloader` is not defined!"
         assert self.model is not None, "`self.model` is not defined!"
         assert self.loss is not None, "`self.loss` is not defined!"
         assert self.metric is not None, "`self.metric` is not defined!"
@@ -41,11 +42,9 @@ class BasePipeline(ABC):
         self.timer.start_record(name='train_full')
         self._is_ready()
         
-        one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
         for num_epoch in range(1, self.args.train.epochs + 1):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
-            one_epoch_result = self.train_one_epoch(one_epoch_result)  # append result in `self._one_epoch_result`
-            one_epoch_result.clear()
+            self.train_one_epoch()  # append result in `self._one_epoch_result`
             
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
             if num_epoch == 1:  # FIXME: continue training
