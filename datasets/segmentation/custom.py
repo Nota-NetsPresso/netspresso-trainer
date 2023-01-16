@@ -6,8 +6,7 @@ import PIL.Image as Image
 import torch
 import torch.utils.data as data
 
-from ..parsers import create_parser
-from ..base import BaseCustomDataset
+from datasets.base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50

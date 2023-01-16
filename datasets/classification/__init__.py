@@ -1,1 +1,1 @@
-from .custom import ClassificationCustomDataset
+from datasets.classification.custom import ClassificationCustomDataset

@@ -7,11 +7,11 @@ Hacked together by / Copyright 2020 Ross Wightman
 """
 import os
 
-from datasets.parsers.misc import natural_key
+from datasets.utils.parsers.misc import natural_key
 
-from datasets.parsers.parser import Parser
-from datasets.parsers.class_map import load_class_map
-from datasets.parsers.constants import IMG_EXTENSIONS
+from datasets.utils.parsers.parser import Parser
+from datasets.utils.parsers.class_map import load_class_map
+from datasets.utils.constants import IMG_EXTENSIONS
 
 
 def find_images_and_targets(folder, types=IMG_EXTENSIONS, class_to_idx=None, leaf_name_only=True, sort=True):

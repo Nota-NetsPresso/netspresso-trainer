@@ -1,1 +1,1 @@
-from .custom import SegmentationCustomDataset
+from datasets.segmentation.custom import SegmentationCustomDataset

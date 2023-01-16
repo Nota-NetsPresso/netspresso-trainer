@@ -6,8 +6,8 @@ import PIL.Image as Image
 import torch
 import torch.utils.data as data
 
-from ..parsers import create_parser
-from ..base import BaseCustomDataset
+from datasets.utils.parsers import create_parser
+from datasets.base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
@@ -16,17 +16,17 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
     def __init__(
             self,
+            args,
             root,
             parser=None,
-            class_map=None,
             load_bytes=False,
             transform=None,
             target_transform=None,
     ):
         super(ClassificationCustomDataset, self).__init__(
+            args,
             root,
             parser,
-            class_map,
             load_bytes,
             transform,
             target_transform

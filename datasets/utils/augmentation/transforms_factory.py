@@ -8,10 +8,10 @@ import math
 import torch
 from torchvision import transforms
 
-from dataset.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
-from .auto_augment import rand_augment_transform, augment_and_mix_transform, auto_augment_transform
-from .transforms import str_to_interp_mode, str_to_pil_interp, RandomResizedCropAndInterpolation, ToNumpy
-from .random_erasing import RandomErasing
+from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD, DEFAULT_CROP_PCT
+from datasets.utils.augmentation.auto_augment import rand_augment_transform, augment_and_mix_transform, auto_augment_transform
+from datasets.utils.augmentation.transforms import str_to_interp_mode, str_to_pil_interp, RandomResizedCropAndInterpolation, ToNumpy
+from datasets.utils.augmentation.random_erasing import RandomErasing
 
 # ============================== CIFAR10 =============================
 
