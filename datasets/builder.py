@@ -4,16 +4,16 @@ import logging
 
 import torch
 
-from .base import fast_collate, expand_to_chs
-from .classification import ClassificationCustomDataset
-from .segmentation import SegmentationCustomDataset
+from datasets.base import transforms_config
+from datasets.utils.loader import fast_collate, PrefetchLoader
+from datasets.classification import ClassificationCustomDataset
+from datasets.segmentation import SegmentationCustomDataset
+from datasets.classification.transforms import create_classification_transform
+from datasets.utils.loader import init_worker
 
 
 _logger = logging.getLogger(__name__)
-_ERROR_RETRY = 50
 _RECOMMEND_DATASET_DIR = "./datasets"
-_RECOMMEND_MAPPING_TXT_PATH = "./datasets/mapping.txt"
-
 
 
 def build_dataset(args, rank=0, distributed=False):
@@ -71,7 +71,7 @@ def create_loader(
         re_num_splits = num_aug_splits or 2
     kwargs['re_num_splits'] = re_num_splits
 
-    dataset.transform = create_custom_transform(
+    dataset.transform = create_classification_transform(
         dataset_name,
         img_size=input_size[2],
         is_training=is_training,
@@ -94,7 +94,7 @@ def create_loader(
         collate_fn=collate_fn,
         pin_memory=pin_memory,
         drop_last=is_training,
-        worker_init_fn=partial(_worker_init, worker_seeding=worker_seeding),
+        worker_init_fn=partial(init_worker, worker_seeding=worker_seeding),
         persistent_workers=persistent_workers
     )
     try:

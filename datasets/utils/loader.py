@@ -1,5 +1,7 @@
 import torch
 import numpy as np
+from typing import Callable
+import random
 
 from datasets.utils.misc import expand_to_chs
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
@@ -99,3 +101,19 @@ class PrefetchLoader:
     @property
     def dataset(self):
         return self.loader.dataset
+    
+    
+def init_worker(worker_id, worker_seeding='all'):
+    worker_info = torch.utils.data.get_worker_info()
+    assert worker_info.id == worker_id
+    if isinstance(worker_seeding, Callable):
+        seed = worker_seeding(worker_info)
+        random.seed(seed)
+        torch.manual_seed(seed)
+        np.random.seed(seed % (2 ** 32 - 1))
+    else:
+        assert worker_seeding in ('all', 'part')
+        # random / torch seed already called in dataloader iter class w/ worker_info.seed
+        # to reproduce some old results (same seed + hparam combo), partial seeding is required (skip numpy re-seed)
+        if worker_seeding == 'all':
+            np.random.seed(worker_info.seed % (2 ** 32 - 1))
