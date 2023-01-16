@@ -33,8 +33,6 @@ class BaseCustomDataset(data.Dataset):
         self.target_transform = target_transform
         self._consecutive_errors = 0
         
-        self.class_map = args.class_map if Path(args.class_map).exists() else None
-
     @abstractmethod
     def __getitem__(self, index):
         pass

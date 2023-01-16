@@ -31,6 +31,8 @@ class ClassificationCustomDataset(BaseCustomDataset):
             transform,
             target_transform
         )
+        
+        self.class_map = args.class_map if Path(args.class_map).exists() else None
 
     def __getitem__(self, index):
         img, target = self.parser[index]
