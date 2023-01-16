@@ -8,8 +8,8 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-from datasets.parsers import create_parser
-from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from datasets.utils.parsers import create_parser
+from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
