@@ -14,3 +14,6 @@ class FC(nn.Module):
     def forward(self, x):
         x = self.classifier(x)
         return x
+    
+def fc(feature_dim, num_classes):
+    return FC(feature_dim=feature_dim, num_classes=num_classes)

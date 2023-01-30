@@ -12,7 +12,7 @@ class AssembleModel(nn.Module):
         self.backbone = eval(f"backbones.{bacbkone}")()
         if task == 'classification':
             head_module = eval(f"heads.{task}.{head}")
-            self.head = head_module(feature_dim=self.backbone.out_features, num_classes=num_classes)
+            self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
             
     def forward(self, x):
         features = self.backbone(x)
@@ -21,5 +21,10 @@ class AssembleModel(nn.Module):
         return out
     
 
-def build_model():
-    pass
+def build_model(args, num_classes):
+    if args.architecture.full is not None:
+        model = eval(args.architecture.full)(args, num_classes)
+        return model
+    
+    model = AssembleModel(args, num_classes)
+    return model

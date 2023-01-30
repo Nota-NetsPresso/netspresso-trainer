@@ -1,1 +1,1 @@
-from models.heads.classification import FC
+from models.heads import classification
