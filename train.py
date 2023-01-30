@@ -1,10 +1,13 @@
 import argparse
+from pathlib import Path
 
+import torch
 from omegaconf import OmegaConf
 
-from .models.builder import build_model
-from .pipelines import ClassificationPipeline, SegmentationPipeline
-from .utils.environment import set_device
+from datasets import build_dataset, build_dataloader
+from models import build_model
+from pipelines import ClassificationPipeline, SegmentationPipeline
+from utils.environment import set_device
 
 SUPPORT_TASK = ['classification', 'segmentation']
 
@@ -40,13 +43,29 @@ def train():
     task = str(args.train.task).lower()
     assert task in SUPPORT_TASK
     
-    model = build_model(args)
+    if args.distributed and args.rank != 0:
+        torch.distributed.barrier() # wait for rank 0 to download dataset
+        
+    train_dataset, eval_dataset = build_dataset(args)
+    
+    if args.distributed and args.rank == 0:
+        torch.distributed.barrier()
+        
+    model = build_model(args, train_dataset.num_classes)
+    
+    train_dataloader, eval_dataloader = \
+        build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset)
+
     
     if task == 'classification':
-        trainer = ClassificationPipeline(args, model, devices)
+        trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader)
     elif task == 'segmentation':
-        trainer = SegmentationPipeline(args, model, devices)
+        trainer = SegmentationPipeline(args, model, devices, train_dataloader, eval_dataloader)
     else:
         raise AssertionError(f"No such task! (task: {task})")
     
+    trainer.set_train()
     trainer.train()
+    
+if __name__ == '__main__':
+    train()
