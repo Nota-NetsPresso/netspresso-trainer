@@ -18,6 +18,7 @@ class BaseCustomDataset(data.Dataset):
             self,
             args,
             root,
+            split,
             parser=None,
             load_bytes=False,
             transform=None,
@@ -44,3 +45,6 @@ class BaseCustomDataset(data.Dataset):
     def filenames(self, basename=False, absolute=False):
         return self.parser.filenames(basename, absolute)
 
+    @property
+    def num_classes(self):
+        return self._num_classes

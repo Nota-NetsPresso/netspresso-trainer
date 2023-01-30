@@ -17,29 +17,31 @@ def build_dataset(args):
     _logger.info('-'*40)
     _logger.info('==> Loading data...')
         
-    assert Path(args.data_dir).exists(), \
-        f"No such directory {args.data_dir}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
+    assert Path(args.train.data).exists(), \
+        f"No such directory {args.train.data}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
 
     train_transform = create_classification_transform(
-        args.dataset,
-        img_size=args.input_size[2],
+        args.train.data,
+        img_size=args.train.img_size,
         is_training=True,
-        use_prefetcher=not args.no_prefetcher
+        use_prefetcher=True
     )
     
     eval_transform = create_classification_transform(
-        args.dataset,
-        img_size=args.input_size[2],
+        args.train.data,
+        img_size=args.train.img_size,
         is_training=False,
-        use_prefetcher=not args.no_prefetcher
+        use_prefetcher=True
     )
 
     train_dataset = ClassificationCustomDataset(
-        root=args.data_dir, parser=args.dataset, split='train', args=args,
+        args=args, root=args.train.data, split='train', 
+        parser=args.train.data, 
         transform=train_transform, target_transform=None  # TODO: apply target_transform
         )
     eval_dataset = ClassificationCustomDataset(
-        root=args.data_dir, parser=args.dataset, split='val', args=args,
+        args=args, root=args.train.data, split='val', 
+        parser=args.train.data,
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
         )
     
@@ -48,16 +50,16 @@ def build_dataset(args):
 def build_dataloader(args, model, train_dataset, eval_dataset):
 
     collate_fn = None
-    use_prefetcher = not args.no_prefetcher
+    use_prefetcher = True
 
     train_data_cfg = transforms_config(is_train=True)
     setattr(model, "train_data_cfg", train_data_cfg)
     train_loader = create_loader(
         train_dataset,
-        args.dataset,
+        args.train.data,
         _logger,
-        input_size=args.input,
-        batch_size=args.batch_size,
+        input_size=args.train.img_size,
+        batch_size=args.train.batch_size,
         is_training=True,
         use_prefetcher=use_prefetcher,
         num_workers=args.environment.num_workers,
@@ -72,10 +74,10 @@ def build_dataloader(args, model, train_dataset, eval_dataset):
     setattr(model, "val_data_cfg", val_data_cfg)
     eval_loader = create_loader(
         eval_dataset,
-        args.dataset,
+        args.train.data,
         _logger,
-        input_size=args.input,
-        batch_size=args.batch_size,
+        input_size=args.train.img_size,
+        batch_size=args.train.batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
         num_workers=args.environment.num_workers,

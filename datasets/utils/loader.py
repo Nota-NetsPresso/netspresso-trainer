@@ -10,6 +10,8 @@ from torch.utils.data import DataLoader
 from datasets.utils.misc import expand_to_chs
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
+NUM_RGB_CHANNEL = 3
+
 
 def fast_collate(batch):
     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
@@ -173,7 +175,7 @@ def create_loader(
             loader,
             mean     = kwargs['mean'],
             std      = kwargs['std'],
-            channels = input_size[1],
+            channels = NUM_RGB_CHANNEL,
             fp16     = fp16,
         )
 
