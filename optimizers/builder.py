@@ -168,7 +168,7 @@ def optimizer_kwargs(cfg):
     return kwargs
 
 
-def create_optimizer(
+def build_optimizer(
         model_or_params,
         opt: str = 'sgd',
         lr: Optional[float] = None,

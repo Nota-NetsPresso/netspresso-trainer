@@ -13,4 +13,3 @@ from .ranger import Ranger
 from .rmsprop_tf import RMSpropTF
 from .sgdp import SGDP
 
-from .builder import create_optimizer, optimizer_kwargs
