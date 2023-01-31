@@ -10,12 +10,16 @@ trainer_launcher:
   username: ~ 
   task: &task classification
   model_format: pt
-architecture:
-  full: ~ # auto
-  backbone: atomixnet_s
-  head: fc
 train:
   task: *task
+  architecture:
+    full: ~ # auto
+    backbone: atomixnet_s
+    head: fc
+  losses:
+    criterion: label_smoothing_cross_entropy
+    smoothing: 0.01
+  opt: adamw
   lr0: 0.01
   lrf: 0.01 
   seed: 1 
@@ -48,7 +52,7 @@ train:
   exist_ok: ~ 
   label_smoothing: 0.01 
   freeze: ~ 
-  patience: ~ 
+  patience: ~  
 environment: 
   num_workers: 4 
   device: '0' 
