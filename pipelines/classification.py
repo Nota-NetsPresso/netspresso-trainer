@@ -8,11 +8,11 @@ from collections import deque
 import torch
 from torch.cuda.amp import autocast
 import torch.nn.functional as F
-from torch.nn.parallel import DistributedDataParallel as DDP
 from tqdm import tqdm
 
+
+from optimizers.builder import build_optimizer
 from pipelines.base import BasePipeline
-from utils.search_api import ModelSearchServerHandler
 from loggers.classification import ClassificationCSVLogger, ImageLogger
 
 MAX_SAMPLE_RESULT = 10
@@ -26,21 +26,40 @@ class ClassificationPipeline(BasePipeline):
         self.one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
     
     def set_train(self):
-        self.loss = None
-        self.metric = None
-        self.optimizer = None
+        
+        assert self.model is not None
+        self.optimizer = build_optimizer(self.model,
+                                         opt=self.args.train.opt,
+                                         lr=self.args.train.lr0,
+                                         wd=self.args.train.weight_decay,
+                                         momentum=self.args.train.momentum)
         
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
         output_dir.mkdir(exist_ok=True, parents=True)
         
         self.train_logger = ClassificationCSVLogger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH)
+        
                 
     def train_one_epoch(self):
         
-        for batch in self.train_dataloader:
-            out = self.model(batch)
-            # TODO: fn(out)
-            fn = lambda x: x
-            self.one_epoch_result.append(fn(out))
+        for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
+            images, target = batch
+            images = images.to(self.devices)
+            target = target.to(self.devices)
+            
+            self.optimizer.zero_grad()
+            with autocast():
+                out = self.model(images)
+                self.loss(out, target)
+            
+            self.loss.backward()
+            self.optimizer.step()
+                        
+            # # TODO: fn(out)
+            # fn = lambda x: x
+            self.one_epoch_result.append(self.loss.result)
+            
+            if self.args.distributed:
+                torch.distributed.barrier()
             
         self.one_epoch_result.clear()

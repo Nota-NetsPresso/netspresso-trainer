@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 
+from losses.builder import build_losses
+from metrics.builder import build_metrics
 from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 
@@ -27,8 +29,6 @@ class BasePipeline(ABC):
             
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
-        assert self.loss is not None, "`self.loss` is not defined!"
-        assert self.metric is not None, "`self.metric` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         assert self.train_logger is not None, "`self.train_logger` is not defined!"
         
@@ -42,6 +42,8 @@ class BasePipeline(ABC):
         
         for num_epoch in range(1, self.args.train.epochs + 1):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
+            self.loss = build_losses(self.args)
+            self.metric = build_metrics(self.args)
             self.train_one_epoch()  # append result in `self._one_epoch_result`
             
             self.timer.end_record(name=f'train_epoch_{num_epoch}')

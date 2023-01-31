@@ -56,7 +56,7 @@ def train():
     train_dataloader, eval_dataloader = \
         build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset)
 
-    
+    model = model.to(device=devices)
     if task == 'classification':
         trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader)
     elif task == 'segmentation':
