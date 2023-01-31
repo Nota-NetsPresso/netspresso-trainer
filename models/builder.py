@@ -6,8 +6,8 @@ class AssembleModel(nn.Module):
     def __init__(self, args, num_classes) -> None:
         super(AssembleModel, self).__init__()
         task = args.train.task
-        bacbkone = args.architecture.backbone
-        head = args.architecture.head
+        bacbkone = args.train.architecture.backbone
+        head = args.train.architecture.head
         
         self.backbone = eval(f"backbones.{bacbkone}")()
         if task == 'classification':
@@ -22,8 +22,8 @@ class AssembleModel(nn.Module):
     
 
 def build_model(args, num_classes):
-    if args.architecture.full is not None:
-        model = eval(args.architecture.full)(args, num_classes)
+    if args.train.architecture.full is not None:
+        model = eval(args.train.architecture.full)(args, num_classes)
         return model
     
     model = AssembleModel(args, num_classes)
