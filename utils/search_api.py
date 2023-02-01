@@ -1,6 +1,10 @@
 import os
-import logging
 import requests
+
+from utils.logger import set_logger
+
+logger = set_logger('utils', level=os.getenv('LOG_LEVEL', default='INFO'))
+
 
 DEPLOYMENT_MODE = os.environ.get("DEPLOYMENT_MODE")
 if DEPLOYMENT_MODE and DEPLOYMENT_MODE == "PROD":
@@ -10,7 +14,6 @@ else:
 
 STATUS_CODE_400 = 400
 
-_logger = logging.getLogger(__name__)
 
 class ModelSearchServerHandler:
     def __init__(self, project_id: str, token: str):
@@ -28,12 +31,12 @@ class ModelSearchServerHandler:
                 }
                 response = requests.patch(self.dest, json={"elapsed_time": elapsed_time_one_epoch}, headers=headers)
 
-                _logger.info(f"Status Code: {response.status_code}")
-                _logger.debug(f"Content: {response.content}")
+                logger.info(f"Status Code: {response.status_code}")
+                logger.debug(f"Content: {response.content}")
 
                 if response.status_code >= STATUS_CODE_400:
                     raise Exception("To estimate elapsed time of one epoch failed.")
             except Exception as e:
-                _logger.error(e)
+                logger.error(e)
             finally:
                 self.is_sent = True

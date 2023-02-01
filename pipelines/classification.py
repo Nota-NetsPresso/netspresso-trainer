@@ -14,6 +14,9 @@ from tqdm import tqdm
 from optimizers.builder import build_optimizer
 from pipelines.base import BasePipeline
 from loggers.classification import ClassificationCSVLogger, ImageLogger
+from utils.logger import set_logger
+
+logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 MAX_SAMPLE_RESULT = 10
 _RECOMMEND_CSV_LOG_PATH = "results.csv"
