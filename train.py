@@ -1,4 +1,5 @@
 import argparse
+import os
 from pathlib import Path
 
 import torch
@@ -8,8 +9,11 @@ from datasets import build_dataset, build_dataloader
 from models import build_model
 from pipelines import ClassificationPipeline, SegmentationPipeline
 from utils.environment import set_device
+from utils.logger import set_logger
 
 SUPPORT_TASK = ['classification', 'segmentation']
+logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
+
 
 def parse_args_netspresso():
 

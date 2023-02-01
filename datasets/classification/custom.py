@@ -8,8 +8,10 @@ import torch.utils.data as data
 
 from datasets.utils.parsers import create_parser
 from datasets.base import BaseCustomDataset
+from utils.logger import set_logger
 
-_logger = logging.getLogger(__name__)
+logger = set_logger('datasets', level=os.getenv('LOG_LEVEL', default='INFO'))
+
 _ERROR_RETRY = 50
 _MAPPING_TXT_FILE = "mapping.txt"
 
@@ -46,7 +48,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
         try:
             img = img.read() if self.load_bytes else Image.open(img).convert('RGB')
         except Exception as e:
-            _logger.warning(f"Skipped sample (index {index}, file {self.parser.filename(index)}). {str(e)}")
+            logger.warning(f"Skipped sample (index {index}, file {self.parser.filename(index)}). {str(e)}")
             self._consecutive_errors += 1
             if self._consecutive_errors < _ERROR_RETRY:
                 return self.__getitem__((index + 1) % len(self.parser))
