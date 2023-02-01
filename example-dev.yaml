@@ -1,0 +1,106 @@
+trainer_launcher:
+  project_name: ~
+  project_id: &project_id xxxxxxxx-079a-431b-85a0-787b8c1d9975 
+  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
+  dataset_id: &dataset_id data
+  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
+  token: &token xxxxxxxx-0000-0000-0000-000000000000
+  base_architecture: &base_architecture atomixnet_l
+  user_id: ~ 
+  username: ~ 
+  task: &task classification
+  model_format: pt
+train:
+  task: *task
+  architecture:
+    full: ~ # auto
+    backbone: atomixnet_s
+    head: fc
+  losses:
+    criterion: label_smoothing_cross_entropy
+    smoothing: 0.01
+  opt: adamw
+  lr0: 0.01
+  lrf: 0.01 
+  seed: 1 
+  momentum: 0.937
+  weight_decay: 0.0005 
+  warmup_steps: 100 
+  warmup_epochs: 5 
+  warmup_momentum: 0.8 
+  warmup_bias_lr: 0.0001
+  schd_power: 1.0
+  reduce_zero_label: ~
+  box: ~
+  cls: ~
+  cls_pw: ~ 
+  obj: ~ 
+  obj_pw: ~ 
+  iou_t: ~ 
+  anchor_t: ~
+  fl_gamma: ~ 
+  weights: *model_id
+  model_cfg: ~ 
+  model_name: *base_architecture
+  model_info: ~
+  data: *dataset_id 
+  project: *project_id
+  token: *token
+  epochs: 3 
+  batch_size: 64 
+  img_size: &img_size 128 
+  exist_ok: ~ 
+  label_smoothing: 0.01 
+  freeze: ~ 
+  patience: ~  
+environment: 
+  num_workers: 4 
+  device: '0' 
+inference: 
+  slide_eval: ~ 
+  stride: ~ 
+  crop_h: ~
+  crop_w: ~
+augment: 
+  hsv_h: ~
+  hsv_s: ~
+  hsv_v: ~
+  degrees: ~
+  translate: ~
+  scale: ~ 
+  max_scale: ~
+  min_scale: ~  
+  crop_size_h: ~
+  crop_size_w: ~
+  resize_ratio0: ~
+  resize_ratiof: ~
+  resize_add: ~
+  shear: ~
+  perspective: ~
+  flipud: ~
+  fliplr: ~ 
+  mosaic: ~ 
+  mixup: 1.0 
+  copy_paste: ~ 
+  mixup_alpha: 0.0 
+  cutmix_alpha: 0.0 
+  mixup_switch_prob: 0.5 
+  color_jitter:
+    brightness: ~ 
+    contrast: ~ 
+    saturation: ~
+    hue: ~ 
+    colorjitter_p: ~ 
+output_model_info: 
+  output_batch_size: 1 
+  img_size_width: *img_size 
+  img_size_height: *img_size 
+  img_size_channel: 3 
+train_cmd:
+  runtime: python3 
+  runtime_args:
+    -m: torch.distributed.launch 
+    --nproc_per_node: 1 
+  runfile: train.py 
+  runfile_args:
+    --config: /config.yml

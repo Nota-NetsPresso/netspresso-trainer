@@ -1,0 +1,7 @@
+torch
+numpy
+omegaconf
+tqdm
+pillow
+opencv-python
+requests
