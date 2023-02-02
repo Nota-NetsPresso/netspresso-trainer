@@ -1,4 +1,4 @@
-from .base import BaseCSVLogger
+from loggers.base import BaseCSVLogger
 
 CSV_HEADER = ['epoch', 'train_loss', 'valid_loss', 'train_accuracy', 'valid_accuracy']
 

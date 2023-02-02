@@ -5,11 +5,11 @@ from collections import deque
 
 import torch
 from torch.cuda.amp import autocast
+from omegaconf import OmegaConf
 
 from optimizers.builder import build_optimizer
 from loggers.builder import build_logger
 from pipelines.base import BasePipeline
-from loggers.classification import ClassificationCSVLogger, ImageLogger
 from utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -72,3 +72,18 @@ class ClassificationPipeline(BasePipeline):
         
         if self.args.distributed:
             torch.distributed.barrier()
+            
+    def log_result(self, num_epoch, with_valid):
+        logging_contents = {
+            'epoch': num_epoch,
+            'train_loss': self.train_loss,
+            'train_accuracy': self.metric.result('train').get('Acc@1').avg,
+        }
+        
+        if with_valid:
+            logging_contents.update({
+                'valid_loss': self.valid_loss,
+                'valid_accuracy': self.metric.result('valid').get('Acc@1').avg
+            })
+        
+        self.train_logger.update(logging_contents)
