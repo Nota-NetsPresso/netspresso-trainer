@@ -5,3 +5,4 @@ tqdm
 pillow
 opencv-python
 requests
+torch_tb_profiler

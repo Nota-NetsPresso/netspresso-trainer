@@ -9,6 +9,7 @@ services:
     ipc: host
     ports:
       - "50004:50002"
+      - "50005:50003"
     volumes:
       - /ssd1/hksong/modelsearch-trainer-allinone-dev:/workspace
       - /ssd1/hksong/DATA:/DATA
