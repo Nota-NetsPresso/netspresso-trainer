@@ -47,7 +47,7 @@ def build_dataset(args):
     
     return train_dataset, eval_dataset
 
-def build_dataloader(args, model, train_dataset, eval_dataset):
+def build_dataloader(args, model, train_dataset, eval_dataset, profile):
 
     collate_fn = None
     use_prefetcher = True
@@ -62,7 +62,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset):
         batch_size=args.train.batch_size,
         is_training=True,
         use_prefetcher=use_prefetcher,
-        num_workers=args.environment.num_workers,
+        num_workers=args.environment.num_workers if not profile else 1,
         distributed=args.distributed,
         collate_fn=collate_fn,
         pin_memory=False,
@@ -80,7 +80,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset):
         batch_size=args.train.batch_size,
         is_training=False,
         use_prefetcher=use_prefetcher,
-        num_workers=args.environment.num_workers,
+        num_workers=args.environment.num_workers if not profile else 1,
         distributed=args.distributed,
         collate_fn=None,
         pin_memory=False,

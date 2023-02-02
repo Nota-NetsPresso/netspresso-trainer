@@ -1,19 +1,15 @@
 import os
 from pathlib import Path
-from typing import List
-import time
 from collections import deque
 
 
 import torch
 from torch.cuda.amp import autocast
-import torch.nn.functional as F
-from tqdm import tqdm
-
+from omegaconf import OmegaConf
 
 from optimizers.builder import build_optimizer
+from loggers.builder import build_logger
 from pipelines.base import BasePipeline
-from loggers.classification import ClassificationCSVLogger, ImageLogger
 from utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -39,30 +35,55 @@ class ClassificationPipeline(BasePipeline):
         
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
         output_dir.mkdir(exist_ok=True, parents=True)
+        self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
+
+    def train_step(self, batch):
+        images, target = batch
+        images = images.to(self.devices)
+        target = target.to(self.devices)
         
-        self.train_logger = ClassificationCSVLogger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH)
+        self.optimizer.zero_grad()
+        with autocast():
+            out = self.model(images)
+            self.loss(out, target, mode='train')
+            self.metric(out, target, mode='train')
         
-                
-    def train_one_epoch(self):
+        self.loss.backward()
+        self.optimizer.step()
+                    
+        # # TODO: fn(out)
+        # fn = lambda x: x
+        # self.one_epoch_result.append(self.loss.result('train'))
         
-        for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
-            images, target = batch
-            images = images.to(self.devices)
-            target = target.to(self.devices)
+        if self.args.distributed:
+            torch.distributed.barrier()
             
-            self.optimizer.zero_grad()
-            with autocast():
-                out = self.model(images)
-                self.loss(out, target)
+    def valid_step(self, batch):
+        images, target = batch
+        images = images.to(self.devices)
+        target = target.to(self.devices)
+        
+        with autocast():
+            out = self.model(images)
+            self.loss(out, target, mode='valid')
+            self.metric(out, target, mode='valid')
+        
+        # self.one_epoch_result.append(self.loss.result('valid'))
+        
+        if self.args.distributed:
+            torch.distributed.barrier()
             
-            self.loss.backward()
-            self.optimizer.step()
-                        
-            # # TODO: fn(out)
-            # fn = lambda x: x
-            self.one_epoch_result.append(self.loss.result)
-            
-            if self.args.distributed:
-                torch.distributed.barrier()
-            
-        self.one_epoch_result.clear()
+    def log_result(self, num_epoch, with_valid):
+        logging_contents = {
+            'epoch': num_epoch,
+            'train_loss': self.train_loss,
+            'train_accuracy': self.metric.result('train').get('Acc@1').avg,
+        }
+        
+        if with_valid:
+            logging_contents.update({
+                'valid_loss': self.valid_loss,
+                'valid_accuracy': self.metric.result('valid').get('Acc@1').avg
+            })
+        
+        self.train_logger.update(logging_contents)

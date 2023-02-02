@@ -30,6 +30,14 @@ def parse_args_netspresso():
         '-o', '--output_dir', type=str, default='..',
         dest='output_dir', 
         help="Checkpoint and result saving directory")
+    
+    parser.add_argument(
+        '--profile', action='store_true',
+        help="Whether to use profile mode")
+    
+    parser.add_argument(
+        '--report-modelsearch-api', action='store_true',
+        help="Report elapsed time for single epoch to NetsPresso Modelsearch API")
 
     args, _ = parser.parse_known_args()    
     
@@ -58,13 +66,16 @@ def train():
     model = build_model(args, train_dataset.num_classes)
     
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset)
+        build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
     if task == 'classification':
-        trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader)
+        trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader,
+                                         is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
     elif task == 'segmentation':
-        trainer = SegmentationPipeline(args, model, devices, train_dataloader, eval_dataloader)
+        trainer = SegmentationPipeline(args, model, devices, train_dataloader, eval_dataloader,
+                                        is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
+
     else:
         raise AssertionError(f"No such task! (task: {task})")
     
