@@ -6,6 +6,9 @@ import torch.nn as nn
 
 from models.op.depth import drop_path
 
+from models.configuration.segformer import SegformerConfig
+
+
 class SegformerDropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
 
@@ -19,7 +22,7 @@ class SegformerDropPath(nn.Module):
     def extra_repr(self) -> str:
         return "p={}".format(self.drop_prob)
 
-    
+
 class SegformerDWConv(nn.Module):
     def __init__(self, dim=768):
         super().__init__()
@@ -32,14 +35,15 @@ class SegformerDWConv(nn.Module):
         hidden_states = hidden_states.flatten(2).transpose(1, 2)
 
         return hidden_states
-    
+
+
 class SegformerMixFFN(nn.Module):
     def __init__(self, config, in_features, hidden_features=None, out_features=None):
         super().__init__()
         out_features = out_features or in_features
         self.dense1 = nn.Linear(in_features, hidden_features)
         self.dwconv = SegformerDWConv(hidden_features)
-        self.intermediate_act_fn = nn.functional.gelu # TODO: change activation with configuration
+        self.intermediate_act_fn = nn.functional.gelu  # TODO: change activation with configuration
         self.dense2 = nn.Linear(hidden_features, out_features)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
@@ -51,8 +55,8 @@ class SegformerMixFFN(nn.Module):
         hidden_states = self.dense2(hidden_states)
         hidden_states = self.dropout(hidden_states)
         return hidden_states
-    
-    
+
+
 class SegformerEfficientSelfAttention(nn.Module):
     """SegFormer's efficient self-attention mechanism. Employs the sequence reduction process introduced in the [PvT
     paper](https://arxiv.org/abs/2102.12122)."""
@@ -133,6 +137,7 @@ class SegformerEfficientSelfAttention(nn.Module):
 
         return outputs
 
+
 class SegformerSelfOutput(nn.Module):
     def __init__(self, config, hidden_size):
         super().__init__()
@@ -143,7 +148,8 @@ class SegformerSelfOutput(nn.Module):
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
         return hidden_states
-    
+
+
 class SegformerAttention(nn.Module):
     def __init__(self, config, hidden_size, num_attention_heads, sequence_reduction_ratio):
         super().__init__()
@@ -163,7 +169,7 @@ class SegformerAttention(nn.Module):
         outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
         return outputs
 
-    
+
 class SegformerOverlapPatchEmbeddings(nn.Module):
     """Construct the overlapping patch embeddings."""
 
@@ -187,6 +193,7 @@ class SegformerOverlapPatchEmbeddings(nn.Module):
         embeddings = embeddings.flatten(2).transpose(1, 2)
         embeddings = self.layer_norm(embeddings)
         return embeddings, height, width
+
 
 class SegformerLayer(nn.Module):
     """This corresponds to the Block class in the original implementation."""
@@ -230,23 +237,24 @@ class SegformerLayer(nn.Module):
 
         return outputs
 
+
 class SegformerEncoder(nn.Module):
-    def __init__(self, config):
+    def __init__(self, num_classes=None):
         super().__init__()
-        self.config = config
+        self.config = SegformerConfig()
 
         # stochastic depth decay rule
-        drop_path_decays = [x.item() for x in torch.linspace(0, config.drop_path_rate, sum(config.depths))]
+        drop_path_decays = [x.item() for x in torch.linspace(0, self.config.drop_path_rate, sum(self.config.depths))]
 
         # patch embeddings
         embeddings = []
-        for i in range(config.num_encoder_blocks):
+        for i in range(self.config.num_encoder_blocks):
             embeddings.append(
                 SegformerOverlapPatchEmbeddings(
-                    patch_size=config.patch_sizes[i],
-                    stride=config.strides[i],
-                    num_channels=config.num_channels if i == 0 else config.hidden_sizes[i - 1],
-                    hidden_size=config.hidden_sizes[i],
+                    patch_size=self.config.patch_sizes[i],
+                    stride=self.config.strides[i],
+                    num_channels=self.config.num_channels if i == 0 else self.config.hidden_sizes[i - 1],
+                    hidden_size=self.config.hidden_sizes[i],
                 )
             )
         self.patch_embeddings = nn.ModuleList(embeddings)
@@ -254,20 +262,20 @@ class SegformerEncoder(nn.Module):
         # Transformer blocks
         blocks = []
         cur = 0
-        for i in range(config.num_encoder_blocks):
+        for i in range(self.config.num_encoder_blocks):
             # each block consists of layers
             layers = []
             if i != 0:
-                cur += config.depths[i - 1]
-            for j in range(config.depths[i]):
+                cur += self.config.depths[i - 1]
+            for j in range(self.config.depths[i]):
                 layers.append(
                     SegformerLayer(
-                        config,
-                        hidden_size=config.hidden_sizes[i],
-                        num_attention_heads=config.num_attention_heads[i],
+                        self.config,
+                        hidden_size=self.config.hidden_sizes[i],
+                        num_attention_heads=self.config.num_attention_heads[i],
                         drop_path=drop_path_decays[cur + j],
-                        sequence_reduction_ratio=config.sr_ratios[i],
-                        mlp_ratio=config.mlp_ratios[i],
+                        sequence_reduction_ratio=self.config.sr_ratios[i],
+                        mlp_ratio=self.config.mlp_ratios[i],
                     )
                 )
             blocks.append(nn.ModuleList(layers))
@@ -276,47 +284,44 @@ class SegformerEncoder(nn.Module):
 
         # Layer norms
         self.layer_norm = nn.ModuleList(
-            [nn.LayerNorm(config.hidden_sizes[i]) for i in range(config.num_encoder_blocks)]
+            [nn.LayerNorm(self.config.hidden_sizes[i]) for i in range(self.config.num_encoder_blocks)]
         )
+        self._last_channels = 256
 
-    def forward(
-        self,
-        pixel_values,
-        output_attentions=False,
-        output_hidden_states=False,
-        return_dict=True,
-    ):
-        all_hidden_states = () if output_hidden_states else None
-        all_self_attentions = () if output_attentions else None
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        batch_size = pixel_values.shape[0]
+    @property
+    def last_channels(self):
+        return self._last_channels
 
-        hidden_states = pixel_values
-        for idx, x in enumerate(zip(self.patch_embeddings, self.block, self.layer_norm)):
-            embedding_layer, block_layer, norm_layer = x
+    def forward(self, x):
+
+        batch_size = x.shape[0]
+
+        hidden_states = x
+        for idx, _layers in enumerate(zip(self.patch_embeddings, self.block, self.layer_norm)):
+            embedding_layer, block_layer, norm_layer = _layers
+
             # first, obtain patch embeddings
             hidden_states, height, width = embedding_layer(hidden_states)
+
             # second, send embeddings through blocks
-            for i, blk in enumerate(block_layer):
-                layer_outputs = blk(hidden_states, height, width, output_attentions)
+            for _, blk in enumerate(block_layer):
+                layer_outputs = blk(hidden_states, height, width, output_attentions=False)
                 hidden_states = layer_outputs[0]
-                if output_attentions:
-                    all_self_attentions = all_self_attentions + (layer_outputs[1],)
+
             # third, apply layer norm
             hidden_states = norm_layer(hidden_states)
+
             # fourth, optionally reshape back to (batch_size, num_channels, height, width)
             if idx != len(self.patch_embeddings) - 1 or (
                 idx == len(self.patch_embeddings) - 1 and self.config.reshape_last_stage
             ):
                 hidden_states = hidden_states.reshape(batch_size, height, width, -1).permute(0, 3, 1, 2).contiguous()
-            if output_hidden_states:
-                all_hidden_states = all_hidden_states + (hidden_states,)
 
-        if not return_dict:
-            return tuple(v for v in [hidden_states, all_hidden_states, all_self_attentions] if v is not None)
-        return BaseModelOutput(
-            last_hidden_state=hidden_states,
-            hidden_states=all_hidden_states,
-            attentions=all_self_attentions,
-        )
-        
+        hidden_states = self.avgpool(hidden_states).reshape(-1, hidden_states.size(1))  # B x (self.last_channel)
+        return hidden_states
+
+
+def segformer(num_class=1000, **extra_params) -> SegformerEncoder:
+    return SegformerEncoder(**extra_params)
