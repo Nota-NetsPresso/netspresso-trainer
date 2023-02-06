@@ -5,7 +5,7 @@ trainer_launcher:
   dataset_id: &dataset_id data
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
   token: &token xxxxxxxx-0000-0000-0000-000000000000
-  base_architecture: &base_architecture atomixnet_l
+  base_architecture: &base_architecture ~
   user_id: ~ 
   username: ~ 
   task: &task classification
@@ -14,14 +14,14 @@ train:
   task: *task
   architecture:
     full: ~ # auto
-    backbone: atomixnet_s
+    backbone: segformer
     head: fc
   losses:
     criterion: label_smoothing_cross_entropy
     smoothing: 0.01
   opt: adamw
   lr0: 0.01
-  lrf: 0.01 
+  lrf: 0.01
   seed: 1 
   momentum: 0.937
   weight_decay: 0.0005 
@@ -46,7 +46,7 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 3 
+  epochs: 100
   batch_size: 64 
   img_size: &img_size 128 
   exist_ok: ~ 
