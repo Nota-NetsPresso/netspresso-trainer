@@ -534,13 +534,13 @@ class AtomixNet(nn.Module):
             self.add_module(f"mod{mod_id}", nn.Sequential(OrderedDict(blocks)))
             mod_id += 1
 
-        self.last_channels = 1536
-        self.last_feat = ConvBlock(in_channels, self.last_channels,
+        self._last_channels = 1536
+        self.last_feat = ConvBlock(in_channels, self._last_channels,
                                    kernel_size=1, stride=1,
                                    groups=1, dilate=1, act_type=ReLU)
 
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        # self.classifier = nn.Linear(self.last_channels, num_classes)
+        # self.classifier = nn.Linear(self._last_channels, num_classes)
         self._initialize_weights()
 
     def _initialize_weights(self):
@@ -590,6 +590,10 @@ class AtomixNet(nn.Module):
             x = F.dropout(input=x, p=self.dropout_rate, training=self.training)
         # x = self.classifier(x)
         return x
+    
+    @property
+    def last_channels(self):
+        return self._last_channels
 
 def atomixnet_supernet(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, **extra_params)
