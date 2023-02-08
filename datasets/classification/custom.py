@@ -15,6 +15,7 @@ logger = set_logger('datasets', level=os.getenv('LOG_LEVEL', default='INFO'))
 _ERROR_RETRY = 50
 _MAPPING_TXT_FILE = "mapping.txt"
 
+
 class ClassificationCustomDataset(BaseCustomDataset):
 
     def __init__(
@@ -30,19 +31,29 @@ class ClassificationCustomDataset(BaseCustomDataset):
         super(ClassificationCustomDataset, self).__init__(
             args,
             root,
-            split,
-            parser,
-            load_bytes,
-            transform,
-            target_transform
+            split
         )
+
+        self.parser = parser
+        self.load_bytes = load_bytes
+        self.transform = transform
+        self.target_transform = target_transform
+        self._consecutive_errors = 0
+
         _class_map_maybe = Path(args.train.data) / _MAPPING_TXT_FILE
         class_map = _class_map_maybe if _class_map_maybe.exists() else None
         if parser is None or isinstance(parser, str):
-            parser = create_parser(parser or '', root=root, split=split, class_map=class_map)
+            parser = create_parser(parser or '', root=self._root, split=self._split, class_map=class_map)
         self.parser = parser
         self._num_classes = self.parser.num_classes
-        
+
+    @property
+    def num_classes(self):
+        return self._num_classes
+
+    def __len__(self):
+        return len(self.parser)
+
     def __getitem__(self, index):
         img, target = self.parser[index]
         try:
