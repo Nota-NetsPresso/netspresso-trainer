@@ -89,10 +89,10 @@ def infer_transforms(args_augment, img_size):
     return val_transforms
 
 
-def create_segmentation_transform(args, img_size, label, is_training=False, use_prefetcher=True):
+def create_segmentation_transform(is_training=False):
 
     if is_training:
-        transform = train_transforms(args, img_size, label, use_prefetcher)
+        transform = train_transforms
     else:
-        transform = val_transforms(args, img_size, label, use_prefetcher)
+        transform = val_transforms
     return transform

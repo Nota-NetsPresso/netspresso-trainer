@@ -76,10 +76,10 @@ def transforms_custom_eval(
     return transforms.Compose(tfl)
 
 
-def create_classification_transform(args, img_size, label, is_training=False, use_prefetcher=True):
+def create_classification_transform(is_training=False):
 
     if is_training:
-        transform = transforms_custom_train(use_prefetcher, img_size)
+        transform = transforms_custom_train
     else:
-        transform = transforms_custom_eval(use_prefetcher, img_size)
+        transform = transforms_custom_eval
     return transform

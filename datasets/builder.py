@@ -37,25 +37,15 @@ def build_dataset(args):
     assert task in transform_func_for, f"The given task `{task}` is not supported!"
     assert task in dataset_cls_for, f"The given task `{task}` is not supported!"
 
-    train_transform = transform_func_for[task](
-        args.augment,
-        img_size=args.train.img_size,
-        is_training=True,
-        use_prefetcher=True
-    )
-    eval_transform = transform_func_for[task](
-        args.augment,
-        img_size=args.train.img_size,
-        is_training=False,
-        use_prefetcher=True
-    )
+    train_transform = transform_func_for[task](is_training=True)
+    eval_transform = transform_func_for[task](is_training=False)
 
     train_dataset = dataset_cls_for[task](
-        args=args, root=data_dir, split='train',
+        args.train, root=data_dir, split='train',
         transform=train_transform, target_transform=None  # TODO: apply target_transform
     )
     eval_dataset = dataset_cls_for[task](
-        args=args, root=data_dir, split='val',
+        args.train, root=data_dir, split='val',
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
     )
 

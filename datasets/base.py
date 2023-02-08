@@ -17,12 +17,12 @@ class BaseCustomDataset(data.Dataset):
 
     def __init__(
             self,
-            args,
+            args_train,
             root,
             split
     ):
         super(BaseCustomDataset, self).__init__()
-        self.args = args
+        self.args = args_train
         self._root = root
         self._split = split
 
