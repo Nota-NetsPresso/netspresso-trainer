@@ -2,14 +2,23 @@ import os
 from pathlib import Path
 import logging
 
+import cv2
 import PIL.Image as Image
+import numpy as np
 import torch
-import torch.utils.data as data
 
 from datasets.base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
+
+
+def exist_name(candidate, folder_iterable):
+    try:
+        return list(filter(lambda x: candidate[0] in x, folder_iterable))[0]
+    except:
+        return list(filter(lambda x: candidate[1] in x, folder_iterable))[0]
+
 
 class SegmentationCustomDataset(BaseCustomDataset):
 
@@ -28,10 +37,63 @@ class SegmentationCustomDataset(BaseCustomDataset):
             split
         )
 
+        if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
+            image_dir = Path(self._root) / 'image'
+            annotation_dir = Path(self._root) / 'mask'
+            if not annotation_dir.exists():
+                annotation_dir = Path(self._root) / 'annotation'
+            self.image_dir = image_dir / self._split
+            self.annotation_dir = annotation_dir / self._split
+
+            self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
+            self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
+
+            assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are segmentation maps"
+
+        else:  # self._split in ['infer', 'inference']
+
+            try:  # a folder with multiple images
+                self.img_name = list(sorted([path for path in Path(self.data_dir).iterdir()]))
+            except:  # single image
+                raise AssertionError
+                # TODO: check the case for single image
+                self.file_name = [self.data_dir.split('/')[-1]]
+                self.img_name = [self.data_dir]
+
         self.transform = transform
         self.target_transform = target_transform
         self._consecutive_errors = 0
         self.load_bytes = load_bytes
 
-    def __getitem__(self, index):
+    def __len__(self):
+        return len(self.img_name)
+
+    @property
+    def num_classes(self):
+        # TODO: implement # classes finder
         raise NotImplementedError
+        pass
+
+    def __getitem__(self, index):
+        img_path = self.img_name[index]
+        ann_path = self.ann_name[index]
+        img = np.array(Image.open(str(img_path)).convert('RGB'))
+
+        org_img = img.copy()
+
+        h, w = img.shape[:2]
+
+        if self._split in ['infer', 'inference']:
+            out = self.transform(img)
+            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
+
+        label = np.array(Image.open(str(ann_path)).convert('L'))
+        out = self.transform(img, label)
+
+        outputs = {'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name}
+
+        if self._split in ['train', 'training']:
+            return outputs
+
+        assert self._split in ['val', 'valid', 'test']
+        return outputs.update({'org_img': org_img, 'org_shape': (h, w)})
