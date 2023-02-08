@@ -15,20 +15,23 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
     def __init__(
             self,
+            args,
             root,
-            parser=None,
-            load_bytes=False,
+            split,
             transform=None,
             target_transform=None,
+            load_bytes=False,
     ):
         super(SegmentationCustomDataset, self).__init__(
+            args,
             root,
-            parser,
-            load_bytes,
-            transform,
-            target_transform
+            split
         )
-        raise NotImplementedError
+
+        self.transform = transform
+        self.target_transform = target_transform
+        self._consecutive_errors = 0
+        self.load_bytes = load_bytes
 
     def __getitem__(self, index):
         raise NotImplementedError

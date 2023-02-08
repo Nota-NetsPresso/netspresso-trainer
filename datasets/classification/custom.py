@@ -4,7 +4,6 @@ import logging
 
 import PIL.Image as Image
 import torch
-import torch.utils.data as data
 
 from datasets.utils.parsers import create_parser
 from datasets.base import BaseCustomDataset
@@ -23,10 +22,9 @@ class ClassificationCustomDataset(BaseCustomDataset):
             args,
             root,
             split,
-            parser=None,
-            load_bytes=False,
             transform=None,
             target_transform=None,
+            load_bytes=False,
     ):
         super(ClassificationCustomDataset, self).__init__(
             args,
@@ -34,18 +32,17 @@ class ClassificationCustomDataset(BaseCustomDataset):
             split
         )
 
-        self.parser = parser
-        self.load_bytes = load_bytes
         self.transform = transform
         self.target_transform = target_transform
         self._consecutive_errors = 0
 
         _class_map_maybe = Path(args.train.data) / _MAPPING_TXT_FILE
         class_map = _class_map_maybe if _class_map_maybe.exists() else None
-        if parser is None or isinstance(parser, str):
-            parser = create_parser(parser or '', root=self._root, split=self._split, class_map=class_map)
-        self.parser = parser
+
+        self.parser = create_parser(name='', root=self._root, split=self._split, class_map=class_map)
         self._num_classes = self.parser.num_classes
+
+        self.load_bytes = load_bytes
 
     @property
     def num_classes(self):

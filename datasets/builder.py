@@ -4,6 +4,7 @@ import logging
 from datasets.classification import ClassificationCustomDataset
 from datasets.segmentation import SegmentationCustomDataset
 from datasets.classification.transforms import create_classification_transform
+from datasets.segmentation.transforms import create_segmentation_transform
 from datasets.utils.loader import create_loader
 from datasets.classification.transforms import transforms_config
 
@@ -13,39 +14,53 @@ _RECOMMEND_DATASET_DIR = "./datasets"
 
 
 def build_dataset(args):
-    
+
     _logger.info('-'*40)
     _logger.info('==> Loading data...')
-        
-    assert Path(args.train.data).exists(), \
-        f"No such directory {args.train.data}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
 
-    train_transform = create_classification_transform(
-        args.train.data,
+    task = args.train.task
+    data_dir = args.train.data
+
+    assert Path(data_dir).exists(), \
+        f"No such directory {data_dir}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
+
+    transform_func_for = {
+        'classification': create_classification_transform,
+        'segmentation': create_segmentation_transform
+    }
+
+    dataset_cls_for = {
+        'classification': ClassificationCustomDataset,
+        'segmentation': SegmentationCustomDataset,
+    }
+
+    assert task in transform_func_for, f"The given task `{task}` is not supported!"
+    assert task in dataset_cls_for, f"The given task `{task}` is not supported!"
+
+    train_transform = transform_func_for[task](
+        args.augment,
         img_size=args.train.img_size,
         is_training=True,
         use_prefetcher=True
     )
-    
-    eval_transform = create_classification_transform(
-        args.train.data,
+    eval_transform = transform_func_for[task](
+        args.augment,
         img_size=args.train.img_size,
         is_training=False,
         use_prefetcher=True
     )
 
-    train_dataset = ClassificationCustomDataset(
-        args=args, root=args.train.data, split='train', 
-        parser=args.train.data, 
+    train_dataset = dataset_cls_for[task](
+        args=args, root=data_dir, split='train',
         transform=train_transform, target_transform=None  # TODO: apply target_transform
-        )
-    eval_dataset = ClassificationCustomDataset(
-        args=args, root=args.train.data, split='val', 
-        parser=args.train.data,
+    )
+    eval_dataset = dataset_cls_for[task](
+        args=args, root=data_dir, split='val',
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
-        )
-    
+    )
+
     return train_dataset, eval_dataset
+
 
 def build_dataloader(args, model, train_dataset, eval_dataset, profile):
 
@@ -66,8 +81,8 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
         distributed=args.distributed,
         collate_fn=collate_fn,
         pin_memory=False,
-        kwargs = train_data_cfg,
-        args = args
+        kwargs=train_data_cfg,
+        args=args
     )
 
     val_data_cfg = transforms_config(is_train=False)
@@ -84,8 +99,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
         distributed=args.distributed,
         collate_fn=None,
         pin_memory=False,
-        kwargs = val_data_cfg,
-        args = args
+        kwargs=val_data_cfg,
+        args=args
     )
     return train_loader, eval_loader
-
