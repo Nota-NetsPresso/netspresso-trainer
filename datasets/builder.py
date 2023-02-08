@@ -41,11 +41,11 @@ def build_dataset(args):
     eval_transform = transform_func_for[task](is_training=False)
 
     train_dataset = dataset_cls_for[task](
-        args.train, root=data_dir, split='train',
+        args, root=data_dir, split='train',
         transform=train_transform, target_transform=None  # TODO: apply target_transform
     )
     eval_dataset = dataset_cls_for[task](
-        args.train, root=data_dir, split='val',
+        args, root=data_dir, split='val',
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
     )
 

@@ -19,7 +19,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
     def __init__(
             self,
-            args_train,
+            args,
             root,
             split,
             transform=None,
@@ -27,7 +27,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
             load_bytes=False,
     ):
         super(ClassificationCustomDataset, self).__init__(
-            args_train,
+            args,
             root,
             split
         )
@@ -36,7 +36,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
         self.target_transform = target_transform
         self._consecutive_errors = 0
 
-        _class_map_maybe = Path(self.args.data) / _MAPPING_TXT_FILE
+        _class_map_maybe = Path(self.args.train.data) / _MAPPING_TXT_FILE
         class_map = _class_map_maybe if _class_map_maybe.exists() else None
 
         self.parser = create_parser(name='', root=self._root, split=self._split, class_map=class_map)
@@ -64,9 +64,9 @@ class ClassificationCustomDataset(BaseCustomDataset):
                 raise e
         self._consecutive_errors = 0
         if self.transform is not None:
-            img = self.transform(use_prefetcher=True, img_size=self.args.img_size)(img)
+            img = self.transform(use_prefetcher=True, img_size=self.args.train.img_size)(img)
         if target is None:
             target = -1
         elif self.target_transform is not None:
-            target = self.target_transform(use_prefetcher=True, img_size=self.args.img_size)(target)
+            target = self.target_transform(use_prefetcher=True, img_size=self.args.train.img_size)(target)
         return img, target
