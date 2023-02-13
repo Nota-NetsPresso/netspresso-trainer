@@ -5,17 +5,17 @@ import torch.nn as nn
 from models.configuration.segformer import SegformerConfig
 
 
-class SegformerConvMLP(nn.Module):
+class SegformerMLP(nn.Module):
     """
     Linear Embedding.
     """
 
     def __init__(self, config, input_dim):
         super().__init__()
-        self.proj = nn.Conv2d(input_dim, config.decoder_hidden_size, 1)
+        self.proj = nn.Linear(input_dim, config.decoder_hidden_size)
 
     def forward(self, hidden_states: torch.Tensor):
-        # hidden_states = hidden_states.flatten(2).transpose(1, 2)
+        hidden_states = hidden_states.flatten(2).transpose(1, 2)
         hidden_states = self.proj(hidden_states)
         return hidden_states
 
@@ -27,7 +27,7 @@ class SegformerDecodeHead(nn.Module):
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
         for i in range(config.num_encoder_blocks):
-            mlp = SegformerConvMLP(config, input_dim=config.hidden_sizes[i])
+            mlp = SegformerMLP(config, input_dim=config.hidden_sizes[i])
             mlps.append(mlp)
         self.linear_c = nn.ModuleList(mlps)
 
