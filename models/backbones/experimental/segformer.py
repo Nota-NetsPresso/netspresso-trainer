@@ -8,6 +8,8 @@ from models.op.depth import drop_path
 
 from models.configuration.segformer import SegformerConfig
 
+SUPPORTING_TASK = ['classification', 'segmentation']
+
 
 class SegformerDropPath(nn.Module):
     """Drop paths (Stochastic Depth) per sample (when applied in main path of residual blocks)."""
@@ -294,11 +296,15 @@ class SegformerEncoder(nn.Module):
     def last_channels(self):
         return self._last_channels
 
-    def forward(self, x):
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
+
+    def forward(self, x, intermediate_features=True):
 
         batch_size = x.shape[0]
 
         hidden_states = x
+        all_hidden_states = () if intermediate_features else None
         for idx, _layers in enumerate(zip(self.patch_embeddings, self.block, self.layer_norm)):
             embedding_layer, block_layer, norm_layer = _layers
 
@@ -319,8 +325,17 @@ class SegformerEncoder(nn.Module):
             ):
                 hidden_states = hidden_states.reshape(batch_size, height, width, -1).permute(0, 3, 1, 2).contiguous()
 
+            if intermediate_features:
+                all_hidden_states = all_hidden_states + (hidden_states,)
+
         hidden_states = self.avgpool(hidden_states).reshape(-1, hidden_states.size(1))  # B x (self.last_channel)
-        return hidden_states
+        return_dict = {'end_feature': hidden_states}
+
+        if not intermediate_features:
+            return return_dict
+
+        return_dict.update({'intermediate_features': all_hidden_states})
+        return return_dict
 
 
 def segformer(num_class=1000, **extra_params) -> SegformerEncoder:
