@@ -9,12 +9,16 @@ import math
 from models.op.swish import Swish
 from torch.nn import ReLU
 
+
 __all__ = ['atomixnet_supernet', 'atomixnet_l', 'atomixnet_m', 'atomixnet_s']
 
+SUPPORTING_TASK = ['classification']
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # SEBlock: Squeeze & Excitation (SCSE)
 #          namely, Channel-wise Attention
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
+
+
 class SEBlock(nn.Module):
     def __init__(self, in_planes, reduced_dim, act_type=ReLU):
         super(SEBlock, self).__init__()
@@ -56,26 +60,27 @@ class ConvBlock(nn.Module):
 # GPConv: Grouped Point-wise Convolution for MixDepthBlock
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 class GPConv_exp(nn.Module):
-    def __init__(self, in_planes, out_planes, act_type = Swish):
+    def __init__(self, in_planes, out_planes, act_type=Swish):
         super(GPConv_exp, self).__init__()
         self.group_point_wise = nn.Sequential(OrderedDict([
-                ("conv", nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0,
-                                   groups=1, dilation=1, bias=False)),
-                ("norm", nn.BatchNorm2d(out_planes, eps=1e-3, momentum=0.01)),
-                ("act", act_type())
-            ]))
+            ("conv", nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0,
+                               groups=1, dilation=1, bias=False)),
+            ("norm", nn.BatchNorm2d(out_planes, eps=1e-3, momentum=0.01)),
+            ("act", act_type())
+        ]))
 
     def forward(self, x):
         return self.group_point_wise(x)
+
 
 class GPConv(nn.Module):
     def __init__(self, in_planes, out_planes):
         super(GPConv, self).__init__()
         self.group_point_wise = nn.Sequential(OrderedDict([
-                ("conv", nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0,
-                                   groups=1, dilation=1, bias=False)),
-                ("norm", nn.BatchNorm2d(out_planes, eps=1e-3, momentum=0.01))
-            ]))
+            ("conv", nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=1, padding=0,
+                               groups=1, dilation=1, bias=False)),
+            ("norm", nn.BatchNorm2d(out_planes, eps=1e-3, momentum=0.01))
+        ]))
 
     def forward(self, x):
         return self.group_point_wise(x)
@@ -85,25 +90,26 @@ class GPConv(nn.Module):
 # MDConv: Mixed Depth-wise Convolution for MixDepthBlock
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 class MDConv(nn.Module):
-    def __init__(self, in_planes, kernel_size=1, stride=1, dilate=1, act_type = Swish):
+    def __init__(self, in_planes, kernel_size=1, stride=1, dilate=1, act_type=Swish):
         super(MDConv, self).__init__()
         assert stride in [1, 2]
         # dilate = 1 if stride > 1 else dilate
 
         padding = ((kernel_size - 1) // 2) * dilate
         self.mixed_depth_wise = nn.Sequential(OrderedDict([
-                ("conv", nn.Conv2d(in_planes, in_planes,
-                                    kernel_size=kernel_size, stride=stride, padding=padding,
-                                    groups=in_planes, dilation=dilate, bias=False)),
-                ("norm", nn.BatchNorm2d(in_planes, eps=1e-3, momentum=0.01)),
-                ("act", act_type())
-            ]))
+            ("conv", nn.Conv2d(in_planes, in_planes,
+                               kernel_size=kernel_size, stride=stride, padding=padding,
+                               groups=in_planes, dilation=dilate, bias=False)),
+            ("norm", nn.BatchNorm2d(in_planes, eps=1e-3, momentum=0.01)),
+            ("act", act_type())
+        ]))
 
     def forward(self, x):
         return self.mixed_depth_wise(x)
 
+
 class subMixDepthBlock(nn.Module):
-    def __init__(self, in_planes, out_planes, expand_ratio, ksize, stride, dilate, reduction_ratio=4, act_type=Swish, n_group = 1, compression=None):
+    def __init__(self, in_planes, out_planes, expand_ratio, ksize, stride, dilate, reduction_ratio=4, act_type=Swish, n_group=1, compression=None):
         super(subMixDepthBlock, self).__init__()
         # hidden_dim = in_planes * expand_ratio
         hidden_dim = (in_planes * expand_ratio) // n_group
@@ -113,7 +119,7 @@ class subMixDepthBlock(nn.Module):
 
         if compression:
             cmprssn = [value for (key, value) in compression.items() if 'expansion.group_point_wise.conv' in key]
-            cmprssn = cmprssn[0] if len(cmprssn)>0 else 0
+            cmprssn = cmprssn[0] if len(cmprssn) > 0 else 0
             hidden_dim = round(hidden_dim*(1-cmprssn))
 
         # step 1. Expansion phase/Point-wise convolution
@@ -128,7 +134,7 @@ class subMixDepthBlock(nn.Module):
             reduced_dim = max(1, int(in_planes / reduction_ratio))
             if compression:
                 se_cmprssn = [value for (key, value) in compression.items() if 'se_block' in key]
-                se_cmprssn = se_cmprssn[0] if len(se_cmprssn)>0 else 0
+                se_cmprssn = se_cmprssn[0] if len(se_cmprssn) > 0 else 0
                 reduced_dim = round(reduced_dim*(1-se_cmprssn))
             self.se_block = SEBlock(hidden_dim, reduced_dim, act_type=act_type)
 
@@ -170,8 +176,9 @@ class MixDepthBlock(nn.Module):
         self.mdblock = nn.ModuleList()
         for i, ksize in enumerate(kernel_sizes):
             dilatation = dilate[i]
-            mdblock_compression = {key:value for (key,value) in compression.items() if f"mdblock.{i}" in key} if compression else None
-            self.mdblock.append(subMixDepthBlock(in_planes, out_planes, expand_ratio, ksize, stride, dilatation, reduction_ratio=reduction_ratio, act_type=act_type, n_group = self.num_groups, compression=mdblock_compression))
+            mdblock_compression = {key: value for (key, value) in compression.items() if f"mdblock.{i}" in key} if compression else None
+            self.mdblock.append(subMixDepthBlock(in_planes, out_planes, expand_ratio, ksize, stride, dilatation,
+                                reduction_ratio=reduction_ratio, act_type=act_type, n_group=self.num_groups, compression=mdblock_compression))
 
     def forward(self, x):
         res = x
@@ -182,7 +189,8 @@ class MixDepthBlock(nn.Module):
             mix = [self.mdblock[stream](x) for stream in range(self.num_groups)]
             x = mix[0]
             # torch.add()
-            for i in mix[1:]: x += i
+            for i in mix[1:]:
+                x += i
             # x = torch.stack(mix).sum(dim=0)
 
         # step 5. Skip connection and drop connect
@@ -195,11 +203,6 @@ class MixDepthBlock(nn.Module):
         return x
 
 
-
-
-
-
-
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # AtomixNet
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -207,11 +210,10 @@ class AtomixNet(nn.Module):
     def __init__(self, num_classes=1000, arch='supernet', dropout=None):
         super(AtomixNet, self).__init__()
 
-
         # compression rate (automatically found via NAS)
         compression = {
             'supernet': None,
-            'l':{
+            'l': {
                 'mod5.block1.mdblock.0.expansion.group_point_wise.conv': 0.042,
                 'mod5.block1.mdblock.0.se_block.channel_se.linear1': 0.000,
                 'mod5.block1.mdblock.1.expansion.group_point_wise.conv': 0.000,
@@ -473,30 +475,30 @@ class AtomixNet(nn.Module):
                 'mod14.block2.mdblock.1.expansion.group_point_wise.conv': 0.887,
                 'mod14.block2.mdblock.1.se_block.channel_se.linear1': 0.200,
                 'mod14.block2.mdblock.2.expansion.group_point_wise.conv': 0.831,
-                'mod14.block2.mdblock.2.se_block.channel_se.linear1': 0.210  
+                'mod14.block2.mdblock.2.se_block.channel_se.linear1': 0.210
             }
         }
         compression = compression[arch]
 
         params = (24, [
-                # t, c,  n, k,            s,  d,             a,     se
-                [1, 24,  1, [3],          1, [1],          ReLU,   None], # [2]
-                [6, 32,  1, [3, 5],       2, [1, 1],       ReLU,   None], # [3]
-                [3, 32,  1, [3],          1, [1],          ReLU,   None], # [4]
-                [6, 40,  1, [3, 5, 7, 9], 2, [1, 1, 1, 1], Swish,  2],    # [5]
-                [6, 40,  2, [3, 5],       1, [1, 1],       Swish,  2],    # [6]
-                [6, 80,  1, [3, 5, 7],    2, [1, 1, 1],    Swish,  4],    # [7]
-                [6, 80,  3, [3, 5, 7, 9], 1, [1, 1, 1, 1], Swish,  4],    # [8]
-                [6, 80,  1, [3],          1, [1],          Swish,  2],    # [9]
-                [3, 80,  1, [3, 5, 7, 9], 1, [1, 1, 1, 1], Swish,  2],    # [10]
-                [3, 80,  1, [3, 5],       1, [1, 1, 1, 1], Swish,  2],    # [11]
-                [6, 200, 1, [3, 5, 7, 9], 2, [1, 1, 1, 1], Swish,  2],    # [12]
-                [8, 200, 1, [3, 5, 7],    1, [1, 1, 1],    Swish,  2],    # [13]
-                [4, 200, 2, [3, 5, 7],    1, [1, 1, 1],    Swish,  2]     # [14]
-            ], 1.0, 1.0, 0.2)
+            # t, c,  n, k,            s,  d,             a,     se
+            [1, 24,  1, [3],          1, [1],          ReLU,   None],  # [2]
+            [6, 32,  1, [3, 5],       2, [1, 1],       ReLU,   None],  # [3]
+            [3, 32,  1, [3],          1, [1],          ReLU,   None],  # [4]
+            [6, 40,  1, [3, 5, 7, 9], 2, [1, 1, 1, 1], Swish,  2],    # [5]
+            [6, 40,  2, [3, 5],       1, [1, 1],       Swish,  2],    # [6]
+            [6, 80,  1, [3, 5, 7],    2, [1, 1, 1],    Swish,  4],    # [7]
+            [6, 80,  3, [3, 5, 7, 9], 1, [1, 1, 1, 1], Swish,  4],    # [8]
+            [6, 80,  1, [3],          1, [1],          Swish,  2],    # [9]
+            [3, 80,  1, [3, 5, 7, 9], 1, [1, 1, 1, 1], Swish,  2],    # [10]
+            [3, 80,  1, [3, 5],       1, [1, 1, 1, 1], Swish,  2],    # [11]
+            [6, 200, 1, [3, 5, 7, 9], 2, [1, 1, 1, 1], Swish,  2],    # [12]
+            [8, 200, 1, [3, 5, 7],    1, [1, 1, 1],    Swish,  2],    # [13]
+            [4, 200, 2, [3, 5, 7],    1, [1, 1, 1],    Swish,  2]     # [14]
+        ], 1.0, 1.0, 0.2)
 
         stem_planes, settings, width_multi, depth_multi, self.dropout_rate = params
-        if dropout is not None: 
+        if dropout is not None:
             # replace default dropout if a value was manually specified
             self.dropout_rate = dropout
         out_channels = self._round_filters(stem_planes, width_multi)
@@ -515,20 +517,20 @@ class AtomixNet(nn.Module):
                 drop_rate = self.dropout_rate * float(mod_id-1) / len(settings)
 
             # Create blocks for module
-            mod_compression = {key:value for (key,value) in compression.items() if f"mod{mod_id}" in key} if compression else None
+            mod_compression = {key: value for (key, value) in compression.items() if f"mod{mod_id}" in key} if compression else None
             blocks = []
             for block_id in range(repeats):
                 stride = s if block_id == 0 else 1
                 dilate = d
-                block_compression = {key:value for (key,value) in mod_compression.items() if f"block{block_id + 1}" in key} if compression else None
+                block_compression = {key: value for (key, value) in mod_compression.items() if f"block{block_id + 1}" in key} if compression else None
                 blocks.append((f"block{block_id + 1}", MixDepthBlock(in_channels, out_channels,
-                                                                         expand_ratio=t,
-                                                                         kernel_sizes=k,
-                                                                         stride=stride, dilate=dilate,
-                                                                         reduction_ratio=se,
-                                                                         dropout_rate=drop_rate,
-                                                                         act_type=a,
-                                                                        compression=block_compression)))
+                                                                     expand_ratio=t,
+                                                                     kernel_sizes=k,
+                                                                     stride=stride, dilate=dilate,
+                                                                     reduction_ratio=se,
+                                                                     dropout_rate=drop_rate,
+                                                                     act_type=a,
+                                                                     compression=block_compression)))
 
                 in_channels = out_channels
             self.add_module(f"mod{mod_id}", nn.Sequential(OrderedDict(blocks)))
@@ -590,19 +592,26 @@ class AtomixNet(nn.Module):
             x = F.dropout(input=x, p=self.dropout_rate, training=self.training)
         # x = self.classifier(x)
         return x
-    
+
     @property
     def last_channels(self):
         return self._last_channels
 
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
+
+
 def atomixnet_supernet(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, **extra_params)
+
 
 def atomixnet_l(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, arch='l', **extra_params)
 
+
 def atomixnet_m(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, arch='m', **extra_params)
+
 
 def atomixnet_s(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, arch='s', **extra_params)
