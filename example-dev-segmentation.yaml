@@ -15,7 +15,7 @@ train:
   architecture:
     full: ~ # auto
     backbone: segformer
-    head: fc
+    head: segformer_decode_head
   losses:
     criterion: label_smoothing_cross_entropy
     smoothing: 0.01
