@@ -30,7 +30,7 @@ train:
   warmup_momentum: 0.8 
   warmup_bias_lr: 0.0001
   schd_power: 1.0
-  reduce_zero_label: ~
+  reduce_zero_label: &reduce_zero_label ~
   box: ~
   cls: ~
   cls_pw: ~ 
@@ -61,36 +61,37 @@ inference:
   stride: ~ 
   crop_h: ~
   crop_w: ~
-augment: 
+augment:
   hsv_h: ~
   hsv_s: ~
   hsv_v: ~
   degrees: ~
   translate: ~
   scale: ~ 
-  max_scale: ~
-  min_scale: ~  
-  crop_size_h: ~
-  crop_size_w: ~
-  resize_ratio0: ~
-  resize_ratiof: ~
-  resize_add: ~
+  max_scale: 2048
+  min_scale: 768
+  crop_size_h: 768
+  crop_size_w: 768
+  resize_ratio0: 0.5
+  resize_ratiof: 2.0
+  resize_add: 1
   shear: ~
   perspective: ~
   flipud: ~
-  fliplr: ~ 
-  mosaic: ~ 
-  mixup: 1.0 
-  copy_paste: ~ 
-  mixup_alpha: 0.0 
-  cutmix_alpha: 0.0 
-  mixup_switch_prob: 0.5 
+  fliplr: 0.5
+  mosaic: ~
+  mixup: ~
+  copy_paste: ~
+  mixup_alpha: ~
+  cutmix_alpha: ~
+  mixup_switch_prob: ~
   color_jitter:
-    brightness: ~ 
-    contrast: ~ 
-    saturation: ~
-    hue: ~ 
-    colorjitter_p: ~ 
+    brightness: 0.25
+    contrast: 0.25
+    saturation: 0.25
+    hue: 0.1
+    colorjitter_p: 0.5
+  reduce_zero_label: *reduce_zero_label
 output_model_info: 
   output_batch_size: 1 
   img_size_width: *img_size 
