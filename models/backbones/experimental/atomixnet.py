@@ -591,7 +591,7 @@ class AtomixNet(nn.Module):
         if self.training and (self.dropout_rate is not None):
             x = F.dropout(input=x, p=self.dropout_rate, training=self.training)
         # x = self.classifier(x)
-        return x
+        return {'last_feature': x}
 
     @property
     def last_channels(self):

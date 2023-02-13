@@ -329,7 +329,7 @@ class SegformerEncoder(nn.Module):
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
         hidden_states = self.avgpool(hidden_states).reshape(-1, hidden_states.size(1))  # B x (self.last_channel)
-        return_dict = {'end_feature': hidden_states}
+        return_dict = {'last_feature': hidden_states}
 
         if not intermediate_features:
             return return_dict
