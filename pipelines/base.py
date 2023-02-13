@@ -23,6 +23,7 @@ PROFILE_WARMUP = 1
 PROFILE_ACTIVE = 10
 PROFILE_REPEAT = 1
 
+
 class BasePipeline(ABC):
     def __init__(self, args, model, devices, train_dataloader, eval_dataloader, is_online=True, profile=False):
         super(BasePipeline, self).__init__()
@@ -31,92 +32,92 @@ class BasePipeline(ABC):
         self.devices = devices
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
-        
-        self.timer  = Timer()
-        
+
+        self.timer = Timer()
+
         self.loss = None
         self.metric = None
         self.optimizer = None
         self.train_logger = None
-        
+
         self.is_online = is_online
         if self.is_online:
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
         self.profile = profile
-            
+
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         assert self.train_logger is not None, "`self.train_logger` is not defined!"
-        
+
     @abstractmethod
     def set_train(self):
         pass
-    
+
     def train(self):
         logger.info(f"Training configuration:\n{OmegaConf.to_yaml(OmegaConf.create(self.args).get('train'))}")
         logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')
         self._is_ready()
-        
+
         for num_epoch in range(START_EPOCH, self.args.train.epochs + START_EPOCH):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
             self.loss = build_losses(self.args)
             self.metric = build_metrics(self.args)
-            
+
             if self.profile:
                 self.profile_one_epoch()
                 break
             else:
                 self.train_one_epoch()  # append result in `self._one_epoch_result`
-            
+
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
-            
+
             if num_epoch == START_EPOCH and self.is_online:  # FIXME: case for continuing training
                 time_for_first_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
                 self.server_service.report_elapsed_time_for_epoch(time_for_first_epoch)
-            
+
             epoch_with_valid = num_epoch % VALID_FREQ == START_EPOCH % VALID_FREQ
-            
+
             if epoch_with_valid:
                 self.validate()
-                
+
             self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
         logger.info(f"Total time: {self.timer.get(name='train_all'):.2f} s")
-        
+
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
-    
+
     @torch.no_grad()
     def validate(self):
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             self.valid_step(batch)
-        
+
     def log_end_epoch(self, num_epoch, with_valid):
         logger.info(f"Epoch: {num_epoch} / {self.args.train.epochs}")
         logger.info(f"learning rate: {self.learning_rate:.7f}")
         logger.info(f"training loss: {self.train_loss:.7f}")
         logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
-        
-        if with_valid: 
+
+        if with_valid:
             logger.info(f"validation loss: {self.valid_loss:.7f}")
             logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
-        
+
         self.log_result(num_epoch, with_valid)
-    
+
     @property
     def learning_rate(self):
         return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
-    
+
     @property
     def train_loss(self):
         return self.loss.result('train').get('total').avg
-    
+
     @property
     def valid_loss(self):
         return self.loss.result('valid').get('total').avg
@@ -128,11 +129,11 @@ class BasePipeline(ABC):
     @abstractmethod
     def train_step(self, batch):
         pass
-    
+
     @abstractmethod
     def valid_step(self, batch):
         pass
-    
+
     def profile_one_epoch(self):
         _ = torch.ones(1).to(self.devices)
         with torch.profiler.profile(
@@ -151,6 +152,3 @@ class BasePipeline(ABC):
                     break
                 self.train_step(batch)
                 prof.step()
-        
-        
-        
