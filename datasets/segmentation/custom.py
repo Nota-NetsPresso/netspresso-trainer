@@ -93,11 +93,11 @@ class SegmentationCustomDataset(BaseCustomDataset):
         h, w = img.shape[:2]
 
         if self._split in ['infer', 'inference']:
-            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(img)
+            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
 
         label = np.array(Image.open(str(ann_path)).convert('L'))
-        out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(img, label)
+        out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
 
         outputs = {'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name}
 
