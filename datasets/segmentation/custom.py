@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 import logging
+import json
 
 import cv2
 import PIL.Image as Image
@@ -12,12 +13,20 @@ from datasets.base import BaseCustomDataset
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
 
+ID2LABEL_FILENAME = "id2label.json"
+
 
 def exist_name(candidate, folder_iterable):
     try:
         return list(filter(lambda x: candidate[0] in x, folder_iterable))[0]
     except:
         return list(filter(lambda x: candidate[1] in x, folder_iterable))[0]
+
+
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 
 class SegmentationCustomDataset(BaseCustomDataset):
@@ -45,6 +54,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
             self.image_dir = image_dir / self._split
             self.annotation_dir = annotation_dir / self._split
 
+            self.id2label = read_json(Path(self._root) / ID2LABEL_FILENAME)
+
             self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
             self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
 
@@ -68,11 +79,9 @@ class SegmentationCustomDataset(BaseCustomDataset):
     def __len__(self):
         return len(self.img_name)
 
-    @property
+    @ property
     def num_classes(self):
-        # TODO: implement # classes finder
-        raise NotImplementedError
-        pass
+        return len(self.id2label)
 
     def __getitem__(self, index):
         img_path = self.img_name[index]
