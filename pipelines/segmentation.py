@@ -35,7 +35,8 @@ class SegmentationPipeline(BasePipeline):
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
 
     def train_step(self, batch):
-        images, target = batch
+        images, target = batch['pixel_values'], batch['labels']
+
         images = images.to(self.devices)
         target = target.to(self.devices)
 
