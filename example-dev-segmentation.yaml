@@ -46,9 +46,9 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 3
+  epochs: 100
   batch_size: 16 
-  img_size: &img_size 128 
+  img_size: &img_size 768 
   exist_ok: ~ 
   label_smoothing: 0.01 
   freeze: ~ 
