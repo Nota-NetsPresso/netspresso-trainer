@@ -105,4 +105,5 @@ class SegmentationCustomDataset(BaseCustomDataset):
             return outputs
 
         assert self._split in ['val', 'valid', 'test']
-        return outputs.update({'org_img': org_img, 'org_shape': (h, w)})
+        outputs.update({'org_img': org_img, 'org_shape': (h, w)})
+        return outputs
