@@ -17,8 +17,8 @@ train:
     backbone: segformer
     head: segformer_decode_head
   losses:
-    criterion: label_smoothing_cross_entropy
-    smoothing: 0.01
+    criterion: cross_entropy
+    smoothing: ~
   opt: adamw
   lr0: 0.01
   lrf: 0.01
