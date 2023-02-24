@@ -64,10 +64,6 @@ class LossFactory:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
         for loss_key, loss_func in self.loss_func_dict.items():
-            print(pred.size(), target.size())
-            print(pred.size(), target.size())
-            print(pred.size(), target.size())
-            print(pred.size(), target.size())
             loss_val = loss_func(pred, target)
             self.loss_val_dict[_mode][loss_key].update(loss_val.item())
             self._accumulate(loss_val, _mode)

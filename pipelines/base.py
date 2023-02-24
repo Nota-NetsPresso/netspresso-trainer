@@ -41,6 +41,7 @@ class BasePipeline(ABC):
         self.train_logger = None
 
         self.ignore_index = None
+        self.num_classes = None
 
         self.is_online = is_online
         if self.is_online:
@@ -66,7 +67,7 @@ class BasePipeline(ABC):
         for num_epoch in range(START_EPOCH, self.args.train.epochs + START_EPOCH):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
             self.loss = build_losses(self.args, ignore_index=self.ignore_index)
-            self.metric = build_metrics(self.args)
+            self.metric = build_metrics(self.args, ignore_index=self.ignore_index, num_classes=self.num_classes)
 
             if self.profile:
                 self.profile_one_epoch()

@@ -23,6 +23,7 @@ class SegmentationPipeline(BasePipeline):
     def __init__(self, args, model, devices, train_dataloader, eval_dataloader, **kwargs):
         super(SegmentationPipeline, self).__init__(args, model, devices, train_dataloader, eval_dataloader, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
+        self.num_classes = train_dataloader.dataset.num_classes
 
     def set_train(self):
 
@@ -60,12 +61,12 @@ class SegmentationPipeline(BasePipeline):
             torch.distributed.barrier()
 
     def valid_step(self, batch):
-        images, target = batch
+        images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        target = target.long().to(self.devices)
 
         with autocast():
-            out = self.model(images)
+            out = self.model(images, label_size=target.size())
             self.loss(out, target, mode='valid')
             self.metric(out, target, mode='valid')
 
@@ -76,13 +77,13 @@ class SegmentationPipeline(BasePipeline):
         logging_contents = {
             'epoch': num_epoch,
             'train_loss': self.train_loss,
-            'train_accuracy': self.metric.result('train').get('Acc@1').avg,
+            'train_accuracy': self.metric.result('train').get('iou').avg,
         }
 
         if with_valid:
             logging_contents.update({
                 'valid_loss': self.valid_loss,
-                'valid_accuracy': self.metric.result('valid').get('Acc@1').avg
+                'valid_accuracy': self.metric.result('valid').get('iou').avg
             })
 
         self.train_logger.update(logging_contents)
