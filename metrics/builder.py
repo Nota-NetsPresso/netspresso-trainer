@@ -1,7 +1,7 @@
 from typing import Any
 
 from metrics.classification import accuracy_topk
-from metrics.segmentation import iou
+from metrics.segmentation import segmentation_stats
 from utils.common import AverageMeter
 
 MODE = ['train', 'valid', 'test']
@@ -33,7 +33,14 @@ class MetricFactory:
             self.metric_func_dict['Acc@5'] = lambda pred, target: accuracy_topk(pred, target, topk=(5, ))[0]
         elif task == 'segmentation':
             assert self.num_classes is not None
-            self.metric_func_dict['iou'] = lambda pred, target: iou(pred, target, ignore_index=self.ignore_index, num_classes=self.num_classes)
+            self.metric_func_dict['iou'] = \
+                lambda pred, target: segmentation_stats(pred, target,
+                                                        ignore_index=self.ignore_index,
+                                                        num_classes=self.num_classes)['iou']
+            self.metric_func_dict['pixel_acc'] = \
+                lambda pred, target: segmentation_stats(pred, target,
+                                                        ignore_index=self.ignore_index,
+                                                        num_classes=self.num_classes)['pixel_acc']
         else:
             raise AssertionError
 

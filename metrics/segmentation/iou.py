@@ -37,13 +37,17 @@ def _intersection_and_union_gpu(output, target, **kwargs):
     }
 
 
-def iou(output, target, **kwargs):
+def segmentation_stats(output, target, **kwargs):
 
     B = output.size(0)
-    metric_iou = AverageMeter('iou')
+    metric_iou = {
+        'iou': AverageMeter('iou'),
+        'pixel_acc': AverageMeter('pixel_acc')
+    }
 
     output_seg = torch.max(output, dim=1)[1]  # argmax
     metrics = _intersection_and_union_gpu(output_seg, target, **kwargs)
-    metric_iou.update(sum(metrics['intersection']) / (sum(metrics['union']) + 1e-10), n=B)
+    metric_iou['iou'].update(sum(metrics['intersection']) / (sum(metrics['union']) + 1e-10), n=B)
+    metric_iou['pixel_acc'].update(sum(metrics['intersection']) / (sum(metrics['target']) + 1e-10), n=B)
 
-    return metric_iou.avg
+    return {k: metric_iou[k].avg for k in metric_iou.keys()}

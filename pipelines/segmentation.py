@@ -77,13 +77,13 @@ class SegmentationPipeline(BasePipeline):
         logging_contents = {
             'epoch': num_epoch,
             'train_loss': self.train_loss,
-            'train_accuracy': self.metric.result('train').get('iou').avg,
+            'train_miou %': self.metric.result('train').get('iou').avg,
         }
 
         if with_valid:
             logging_contents.update({
-                'valid_loss': self.valid_loss,
-                'valid_accuracy': self.metric.result('valid').get('iou').avg
+                'valid_miou %': self.metric.result('valid').get('iou').avg,
+                'valid_pixAcc %': self.metric.result('valid').get('pixel_acc').avg
             })
 
         self.train_logger.update(logging_contents)
