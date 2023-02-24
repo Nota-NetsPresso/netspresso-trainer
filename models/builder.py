@@ -19,12 +19,12 @@ class AssembleModel(nn.Module):
             head_module = eval(f"heads.{self.task}.{head}")
             self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
 
-    def forward(self, x):
+    def forward(self, x, label_size=None):
         features = self.backbone(x)
         if self.task == 'classification':
             out = self.head(features['last_feature'])
         elif self.task == 'segmentation':
-            out = self.head(features['intermediate_features'])
+            out = self.head(features['intermediate_features'], label_size=label_size)
 
         return out
 

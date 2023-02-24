@@ -16,10 +16,13 @@ _RECOMMEND_CSV_LOG_PATH = "results.csv"
 _RECOMMEND_OUTPUT_DIR = './'
 _RECOMMEND_OUTPUT_DIR_NAME = 'exp'
 
+CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
+
 
 class SegmentationPipeline(BasePipeline):
     def __init__(self, args, model, devices, train_dataloader, eval_dataloader, **kwargs):
         super(SegmentationPipeline, self).__init__(args, model, devices, train_dataloader, eval_dataloader, **kwargs)
+        self.ignore_index = CITYSCAPE_IGNORE_INDEX
 
     def set_train(self):
 
@@ -38,11 +41,11 @@ class SegmentationPipeline(BasePipeline):
         images, target = batch['pixel_values'], batch['labels']
 
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        target = target.long().to(self.devices)
 
         self.optimizer.zero_grad()
         with autocast():
-            out = self.model(images)
+            out = self.model(images, label_size=target.size())
             self.loss(out, target, mode='train')
             self.metric(out, target, mode='train')
 

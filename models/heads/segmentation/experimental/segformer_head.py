@@ -46,7 +46,9 @@ class SegformerDecodeHead(nn.Module):
 
         self.config = config
 
-    def forward(self, encoder_hidden_states):
+    def forward(self, encoder_hidden_states, **kwargs):
+        label_size = kwargs['label_size'] if 'label_size' in kwargs else None
+
         batch_size = encoder_hidden_states[-1].shape[0]
 
         all_hidden_states = ()
@@ -75,6 +77,14 @@ class SegformerDecodeHead(nn.Module):
 
         # logits are of shape (batch_size, num_labels, height/4, width/4)
         logits = self.classifier(hidden_states)
+
+        if label_size is not None:
+            H, W = label_size[-2:]
+            # upsample logits to the images' original size
+            upsampled_logits = nn.functional.interpolate(
+                logits, size=(H, W), mode="bilinear", align_corners=False
+            )
+            return upsampled_logits
 
         return logits
 

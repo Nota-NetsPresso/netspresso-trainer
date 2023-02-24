@@ -40,6 +40,8 @@ class BasePipeline(ABC):
         self.optimizer = None
         self.train_logger = None
 
+        self.ignore_index = None
+
         self.is_online = is_online
         if self.is_online:
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
@@ -63,7 +65,7 @@ class BasePipeline(ABC):
 
         for num_epoch in range(START_EPOCH, self.args.train.epochs + START_EPOCH):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
-            self.loss = build_losses(self.args)
+            self.loss = build_losses(self.args, ignore_index=self.ignore_index)
             self.metric = build_metrics(self.args)
 
             if self.profile:
