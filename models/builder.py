@@ -8,10 +8,10 @@ class AssembleModel(nn.Module):
     def __init__(self, args, num_classes) -> None:
         super(AssembleModel, self).__init__()
         self.task = args.train.task
-        bacbkone = args.train.architecture.backbone
+        backbone_name = args.train.architecture.backbone
         head = args.train.architecture.head
 
-        self.backbone = eval(f"backbones.{bacbkone}")()
+        self.backbone = eval(f"backbones.{backbone_name}")()
         if self.task == 'classification':
             head_module = eval(f"heads.{self.task}.{head}")
             self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
