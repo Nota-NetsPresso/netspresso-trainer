@@ -9,7 +9,7 @@ trainer_launcher:
   user_id: ~ 
   username: ~ 
   task: &task segmentation
-  model_format: pt
+  model_format: bin_json
 train:
   task: *task
   architecture:
@@ -20,17 +20,17 @@ train:
     criterion: cross_entropy
     smoothing: ~
   opt: adamw
-  lr0: 0.0001
+  lr0: 6e-5
   lrf: 0.0001
-  seed: 1 
-  momentum: 0.937
-  weight_decay: 0.0005 
+  seed: 0
+  momentum: ~
+  weight_decay: 0.01
   warmup_steps: 100 
-  warmup_epochs: 5 
-  warmup_momentum: 0.8 
-  warmup_bias_lr: 0.0001
+  warmup_epochs: ~
+  warmup_momentum: ~
+  warmup_bias_lr: ~
   schd_power: 1.0
-  reduce_zero_label: &reduce_zero_label ~
+  reduce_zero_label: &reduce_zero_label false
   box: ~
   cls: ~
   cls_pw: ~ 
@@ -46,11 +46,11 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 100
-  batch_size: 16 
+  epochs: 450
+  batch_size: 4 
   img_size: &img_size 768 
   exist_ok: ~ 
-  label_smoothing: 0.01 
+  label_smoothing: ~
   freeze: ~ 
   patience: ~  
 environment: 
