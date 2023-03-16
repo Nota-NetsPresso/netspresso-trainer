@@ -8,6 +8,11 @@ from torch import Tensor
 import torch.nn as nn
 from typing import Type, Any, Callable, Union, List, Optional
 
+__all__ = ['resnet50', 'resnet101']
+
+SUPPORTING_TASK = ['classification']
+
+
 # 'resnet18': 'https://download.pytorch.org/models/resnet18-f37072fd.pth'
 # 'resnet34': 'https://download.pytorch.org/models/resnet34-b627a593.pth'
 # 'resnet50': 'https://download.pytorch.org/models/resnet50-0676ba61.pth'
@@ -181,6 +186,7 @@ class ResNet(nn.Module):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self._last_channels = 512 * block.expansion
         # self.fc = nn.Linear(512 * block.expansion, num_class)
 
         for m in self.modules():
@@ -241,19 +247,25 @@ class ResNet(nn.Module):
         x = torch.flatten(x, 1)
         # x = self.fc(x)
 
-        return x
+        return {'last_feature': x}
 
+    @property
+    def last_channels(self):
+        return self._last_channels
 
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
 
 
 def resnet50(num_class=1000, **extra_params) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_class = num_class, **extra_params)
+    return ResNet(Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
+
 
 def resnet101(num_class=1000, **extra_params) -> ResNet:
     """
         ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_class = num_class, **extra_params)
+    return ResNet(Bottleneck, [3, 4, 23, 3], num_class=num_class, **extra_params)

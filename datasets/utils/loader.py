@@ -46,7 +46,7 @@ def fast_collate(batch):
         return tensor, targets
     else:
         assert False
-        
+
 
 class PrefetchLoader:
 
@@ -107,8 +107,8 @@ class PrefetchLoader:
     @property
     def dataset(self):
         return self.loader.dataset
-    
-    
+
+
 def init_worker(worker_id, worker_seeding='all'):
     worker_info = torch.utils.data.get_worker_info()
     assert worker_info.id == worker_id
@@ -123,7 +123,6 @@ def init_worker(worker_id, worker_seeding='all'):
         # to reproduce some old results (same seed + hparam combo), partial seeding is required (skip numpy re-seed)
         if worker_seeding == 'all':
             np.random.seed(worker_info.seed % (2 ** 32 - 1))
-
 
 
 def create_loader(
@@ -150,7 +149,7 @@ def create_loader(
 ):
 
     sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=args.world_size, rank=args.rank)
-    
+
     if collate_fn is None:
         collate_fn = fast_collate if use_prefetcher else None
 
@@ -173,10 +172,10 @@ def create_loader(
     if use_prefetcher:
         loader = PrefetchLoader(
             loader,
-            mean     = kwargs['mean'],
-            std      = kwargs['std'],
-            channels = NUM_RGB_CHANNEL,
-            fp16     = fp16,
+            mean=kwargs['mean'],
+            std=kwargs['std'],
+            channels=NUM_RGB_CHANNEL,
+            fp16=fp16,
         )
 
     return loader

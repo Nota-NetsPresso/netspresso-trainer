@@ -4,7 +4,6 @@ import logging
 
 import PIL.Image as Image
 import torch
-import torch.utils.data as data
 
 from datasets.utils.parsers import create_parser
 from datasets.base import BaseCustomDataset
@@ -15,6 +14,7 @@ logger = set_logger('datasets', level=os.getenv('LOG_LEVEL', default='INFO'))
 _ERROR_RETRY = 50
 _MAPPING_TXT_FILE = "mapping.txt"
 
+
 class ClassificationCustomDataset(BaseCustomDataset):
 
     def __init__(
@@ -22,27 +22,35 @@ class ClassificationCustomDataset(BaseCustomDataset):
             args,
             root,
             split,
-            parser=None,
-            load_bytes=False,
             transform=None,
             target_transform=None,
+            load_bytes=False,
     ):
         super(ClassificationCustomDataset, self).__init__(
             args,
             root,
-            split,
-            parser,
-            load_bytes,
-            transform,
-            target_transform
+            split
         )
-        _class_map_maybe = Path(args.train.data) / _MAPPING_TXT_FILE
+
+        self.transform = transform
+        self.target_transform = target_transform
+        self._consecutive_errors = 0
+
+        _class_map_maybe = Path(self.args.train.data) / _MAPPING_TXT_FILE
         class_map = _class_map_maybe if _class_map_maybe.exists() else None
-        if parser is None or isinstance(parser, str):
-            parser = create_parser(parser or '', root=root, split=split, class_map=class_map)
-        self.parser = parser
+
+        self.parser = create_parser(name='', root=self._root, split=self._split, class_map=class_map)
         self._num_classes = self.parser.num_classes
-        
+
+        self.load_bytes = load_bytes
+
+    @property
+    def num_classes(self):
+        return self._num_classes
+
+    def __len__(self):
+        return len(self.parser)
+
     def __getitem__(self, index):
         img, target = self.parser[index]
         try:
@@ -56,9 +64,9 @@ class ClassificationCustomDataset(BaseCustomDataset):
                 raise e
         self._consecutive_errors = 0
         if self.transform is not None:
-            img = self.transform(img)
+            img = self.transform(use_prefetcher=True, img_size=self.args.train.img_size)(img)
         if target is None:
             target = -1
         elif self.target_transform is not None:
-            target = self.target_transform(target)
+            target = self.target_transform(use_prefetcher=True, img_size=self.args.train.img_size)(target)
         return img, target

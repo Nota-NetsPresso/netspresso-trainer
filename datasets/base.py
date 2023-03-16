@@ -12,39 +12,37 @@ from datasets.utils.parsers import create_parser
 
 _logger = logging.getLogger(__name__)
 
+
 class BaseCustomDataset(data.Dataset):
 
     def __init__(
             self,
             args,
             root,
-            split,
-            parser=None,
-            load_bytes=False,
-            transform=None,
-            target_transform=None,
+            split
     ):
         super(BaseCustomDataset, self).__init__()
         self.args = args
-        self.parser = parser
-        self.load_bytes = load_bytes
-        self.transform = transform
-        self.target_transform = target_transform
-        self._consecutive_errors = 0
-        
+        self._root = root
+        self._split = split
+
     @abstractmethod
     def __getitem__(self, index):
         pass
-        
+
+    @abstractmethod
     def __len__(self):
-        return len(self.parser)
-
-    def filename(self, index, basename=False, absolute=False):
-        return self.parser.filename(index, basename, absolute)
-
-    def filenames(self, basename=False, absolute=False):
-        return self.parser.filenames(basename, absolute)
+        pass
 
     @property
+    @abstractmethod
     def num_classes(self):
-        return self._num_classes
+        pass
+
+    @property
+    def root(self):
+        return self._root
+
+    @property
+    def mode(self):
+        return self._split
