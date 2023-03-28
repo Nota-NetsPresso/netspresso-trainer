@@ -101,7 +101,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
                                   num_workers=args.environment.num_workers if not profile else 1,
                                   collate_fn=None,
                                   pin_memory=False)
-        eval_loader = DataLoader(eval_dataset, batch_size=args.train.batch_size,
+        eval_loader = DataLoader(eval_dataset, batch_size=1,
                                  num_workers=args.environment.num_workers if not profile else 1,
                                  collate_fn=None,
                                  pin_memory=False)
