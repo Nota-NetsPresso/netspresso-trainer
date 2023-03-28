@@ -1,15 +1,15 @@
 version: "3.9"
 
-# docker compose run --service-ports --name modelsearch-trainer-allinone-dev modelsearch-trainer-allinone bash
+# docker compose run --service-ports --name modelsearch-trainer-allinone modelsearch-trainer-allinone bash
 
 services:
   modelsearch-trainer-allinone:
     image: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
-    container_name: modelsearch-trainer-allinone-dev
+    container_name: modelsearch-trainer-allinone
     ipc: host
     ports:
-      - "50004:50002"
-      - "50005:50003"
+      - "50012:50002"
+      - "50013:50003"
     volumes:
       - /ssd1/hksong/modelsearch-trainer-allinone-dev:/workspace
       - /ssd1/hksong/DATA:/DATA
