@@ -1,7 +1,15 @@
 import logging
 import time
 
+import torch.distributed as dist
+
 __all__ = ['set_logger']
+
+
+class RankFilter(logging.Filter):
+    def filter(self, record):
+        return dist.get_rank() == 0
+
 
 def _custom_logger(name):
     fmt = f'[%(levelname)s][%(filename)s:%(lineno)s][%(funcName)s] %(asctime)s >>> %(message)s'
@@ -12,10 +20,12 @@ def _custom_logger(name):
 
         formatter = logging.Formatter(fmt, fmt_date)
         handler.setFormatter(formatter)
+        handler.addFilter(RankFilter())
 
         logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)
     return logger
+
 
 def set_logger(logger_name, level):
     try:
@@ -37,6 +47,7 @@ def set_logger(logger_name, level):
     elif _level == 'CRITICAL':
         logger.setLevel(logging.CRITICAL)
     return logger
+
 
 if __name__ == '__main__':
     set_logger(__name__, level='DEBUG')
