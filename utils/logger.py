@@ -8,7 +8,10 @@ __all__ = ['set_logger']
 
 class RankFilter(logging.Filter):
     def filter(self, record):
-        return dist.get_rank() == 0
+        try:
+            return dist.get_rank() == 0
+        except RuntimeError as e:  # Default process group has not been initialized, please make sure to call init_process_group.
+            return True
 
 
 def _custom_logger(name):
