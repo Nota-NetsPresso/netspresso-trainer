@@ -5,4 +5,4 @@ from .poly_lr import PolyLRScheduler
 from .step_lr import StepLRScheduler
 from .tanh_lr import TanhLRScheduler
 
-from .factory import create_scheduler
+from .builder import create_scheduler
