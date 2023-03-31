@@ -75,6 +75,7 @@ class BasePipeline(ABC):
             else:
                 self.train_one_epoch()  # append result in `self._one_epoch_result`
 
+            self.scheduler.step(num_epoch)
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
 
             if num_epoch == START_EPOCH and self.is_online:  # FIXME: case for continuing training

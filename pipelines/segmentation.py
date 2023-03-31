@@ -3,9 +3,11 @@ from pathlib import Path
 
 import torch
 from torch.cuda.amp import autocast
+from omegaconf import OmegaConf
 
 
 from optimizers.builder import build_optimizer
+from schedulers.builder import create_scheduler
 from loggers.builder import build_logger
 from pipelines.base import BasePipeline
 from utils.logger import set_logger
@@ -33,6 +35,17 @@ class SegmentationPipeline(BasePipeline):
                                          lr=self.args.train.lr0,
                                          wd=self.args.train.weight_decay,
                                          momentum=self.args.train.momentum)
+        sched_args = OmegaConf.create({
+            'epochs': self.args.train.epochs,
+            'lr_noise': None,
+            'sched': 'poly',
+            'decay_rate': self.args.train.schd_power,
+            'min_lr': self.args.train.lrf,
+            'warmup_lr': self.args.train.lr0,
+            'warmup_epochs': int(self.args.train.warmup_steps / len(self.train_dataloader)),
+            'cooldown_epochs': 0,
+        })
+        self.scheduler, _ = create_scheduler(self.optimizer, sched_args)
 
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
         output_dir.mkdir(exist_ok=True, parents=True)
