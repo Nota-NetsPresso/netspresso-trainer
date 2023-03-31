@@ -86,7 +86,8 @@ class BasePipeline(ABC):
             if epoch_with_valid:
                 self.validate()
 
-            self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
+            if torch.distributed.get_rank() == 0:
+                self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
@@ -102,6 +103,7 @@ class BasePipeline(ABC):
             self.valid_step(batch)
 
     def log_end_epoch(self, num_epoch, with_valid):
+
         logger.info(f"Epoch: {num_epoch} / {self.args.train.epochs}")
         logger.info(f"learning rate: {self.learning_rate:.7f}")
         logger.info(f"training loss: {self.train_loss:.7f}")

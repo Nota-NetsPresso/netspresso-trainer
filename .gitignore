@@ -2,3 +2,6 @@ __pycache__/
 
 data/
 log/
+pretrained/
+
+**/exp/
