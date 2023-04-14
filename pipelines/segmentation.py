@@ -40,11 +40,12 @@ class SegmentationPipeline(BasePipeline):
             'lr_noise': None,
             'sched': 'poly',
             'decay_rate': self.args.train.schd_power,
-            'min_lr': self.args.train.lrf,
-            'warmup_lr': self.args.train.lr0,
-            'warmup_epochs': int(self.args.train.warmup_steps / len(self.train_dataloader)),
+            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.train.lrf`
+            'warmup_lr': 0.00001, # self.args.train.lr0
+            'warmup_epochs': 5, # self.args.train.warmup_epochs
             'cooldown_epochs': 0,
         })
+        
         self.scheduler, _ = create_scheduler(self.optimizer, sched_args)
 
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME

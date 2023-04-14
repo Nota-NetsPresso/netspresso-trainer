@@ -78,9 +78,9 @@ if __name__ == '__main__':
         'lr_noise': None,
         'sched': 'poly',
         'decay_rate': args.train.schd_power,
-        'min_lr': args.train.lrf,
-        'warmup_lr': args.train.lr0,
-        'warmup_epochs': int(args.train.warmup_steps / len(dataloader)),
+        'min_lr': args.train.lrf, 
+        'warmup_lr': 0.00001, # args.train.warmup_bias_lr
+        'warmup_epochs': 5, # args.train.warmup_epochs
         'cooldown_epochs': 0,
     })
 
