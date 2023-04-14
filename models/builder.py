@@ -41,7 +41,7 @@ class AssembleModel(nn.Module):
         self.backbone: nn.Module = eval(f"backbones.{backbone_name}")()
         model_state_dict = load_pretrained_checkpoint(backbone_name)
         self.backbone.load_state_dict(model_state_dict)
-        self._freeze_backbone()
+        # self._freeze_backbone()
 
         if self.task == 'classification':
             head_module: nn.Module = eval(f"heads.{self.task}.{head}")
