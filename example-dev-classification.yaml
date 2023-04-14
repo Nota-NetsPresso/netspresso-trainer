@@ -14,13 +14,13 @@ train:
   task: *task
   architecture:
     full: ~ # auto
-    backbone: segformer
+    backbone: resnet50
     head: fc
   losses:
     criterion: label_smoothing_cross_entropy
     smoothing: 0.01
   opt: adamw
-  lr0: 0.01
+  lr0: 0.0001
   lrf: 0.01
   seed: 1 
   momentum: 0.937
@@ -46,9 +46,9 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 3
+  epochs: 100
   batch_size: 16 
-  img_size: &img_size 128 
+  img_size: &img_size 256 
   exist_ok: ~ 
   label_smoothing: 0.01 
   freeze: ~ 

@@ -19,11 +19,18 @@ class LossFactory:
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_AS
         self._build_losses(args)
 
-        self.loss_val_dict = {
-            _mode: {
+        self.loss_val_per_epoch = {
+            mode: {
                 loss_key: AverageMeter(loss_key, ':.4e') for loss_key in chain(self.loss_func_dict.keys(), ['total'])
             }
-            for _mode in MODE
+            for mode in MODE
+        }
+
+        self.loss_val_per_step = {
+            mode: {
+                loss_key: 0. for loss_key in chain(self.loss_func_dict.keys(), ['total'])
+            }
+            for mode in MODE
         }
 
         self._clear()
@@ -44,17 +51,11 @@ class LossFactory:
 
         self.loss_func_dict = {criterion: loss}
 
-    def _accumulate(self, loss_val, mode):
-        self._loss_total[mode] += loss_val
-
     def _clear(self):
-        self._loss_total = {mode: 0. for mode in MODE}
+        self.total_loss_for_backward = 0
 
     def _backward(self):
-        self._loss_total['train'].backward()
-
-    def _get_total(self, mode):
-        return self._loss_total[mode].item()
+        self.total_loss_for_backward.backward()
 
     def backward(self):
         self._backward()
@@ -63,16 +64,21 @@ class LossFactory:
     def __call__(self, pred, target, mode='train', *args: Any, **kwds: Any) -> Any:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
+        total_loss_per_step = 0
         for loss_key, loss_func in self.loss_func_dict.items():
             loss_val = loss_func(pred, target)
-            self.loss_val_dict[_mode][loss_key].update(loss_val.item())
-            self._accumulate(loss_val, _mode)
+            self.loss_val_per_step[_mode][loss_key] = loss_val.item()
+            self.loss_val_per_epoch[_mode][loss_key].update(loss_val.item())
+            total_loss_per_step += loss_val
 
-        self.loss_val_dict[_mode]['total'].update(self._get_total(_mode))
+        if mode == 'train':
+            self.total_loss_for_backward = total_loss_per_step
+        self.loss_val_per_step[_mode]['total'] = total_loss_per_step.item()
+        self.loss_val_per_epoch[_mode]['total'].update(total_loss_per_step.item())
 
     def result(self, mode='train'):
         _mode = mode.lower()
-        return self.loss_val_dict[_mode]
+        return self.loss_val_per_epoch[_mode]
 
 
 def build_losses(args, **kwargs):
