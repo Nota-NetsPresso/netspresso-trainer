@@ -99,10 +99,12 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
     elif task == 'segmentation':
         train_loader = DataLoader(train_dataset, batch_size=args.train.batch_size,
                                   num_workers=args.environment.num_workers if not profile else 1,
+                                  shuffle=True,
                                   collate_fn=None,
                                   pin_memory=False)
         eval_loader = DataLoader(eval_dataset, batch_size=1,
                                  num_workers=args.environment.num_workers if not profile else 1,
+                                 shuffle=False,
                                  collate_fn=None,
                                  pin_memory=False)
     else:
