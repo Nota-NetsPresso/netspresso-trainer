@@ -45,7 +45,6 @@ class SegmentationPipeline(BasePipeline):
             'warmup_epochs': 5, # self.args.train.warmup_epochs
             'cooldown_epochs': 0,
         })
-        
         self.scheduler, _ = create_scheduler(self.optimizer, sched_args)
 
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME

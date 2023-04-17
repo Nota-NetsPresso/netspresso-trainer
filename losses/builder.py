@@ -52,7 +52,7 @@ class LossFactory:
         self.loss_func_dict = {criterion: loss}
 
     def _clear(self):
-        self.total_loss_for_backward = 0
+        self.total_loss_for_backward = 0  
 
     def backward(self):
         self.total_loss_for_backward.requires_grad_(True)
@@ -62,6 +62,7 @@ class LossFactory:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
         self._clear()
+
         for loss_key, loss_func in self.loss_func_dict.items():
             loss_val = loss_func(pred, target)
             self.loss_val_per_step[_mode][loss_key] = loss_val.item()
