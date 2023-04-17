@@ -59,13 +59,14 @@ class SegmentationPipeline(BasePipeline):
         target = target.long().to(self.devices)
 
         self.optimizer.zero_grad()
-        with autocast():
-            out = self.model(images, label_size=target.size())
-            self.loss(out, target, mode='train')
-            self.metric(out, target, mode='train')
+        out = self.model(images, label_size=target.size())
+        self.loss(out, target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
+        
+        self.metric(out.detach(), target, mode='train')
+
 
         # # TODO: fn(out)
         # fn = lambda x: x
@@ -79,10 +80,9 @@ class SegmentationPipeline(BasePipeline):
         images = images.to(self.devices)
         target = target.long().to(self.devices)
 
-        with autocast():
-            out = self.model(images, label_size=target.size())
-            self.loss(out, target, mode='valid')
-            self.metric(out, target, mode='valid')
+        out = self.model(images, label_size=target.size())
+        self.loss(out, target, mode='valid')
+        self.metric(out, target, mode='valid')
 
         if self.args.distributed:
             torch.distributed.barrier()
