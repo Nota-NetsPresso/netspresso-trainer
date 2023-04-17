@@ -54,27 +54,22 @@ class LossFactory:
     def _clear(self):
         self.total_loss_for_backward = 0
 
-    def _backward(self):
-        self.total_loss_for_backward.backward()
-
     def backward(self):
-        self._backward()
-        self._clear()
+        self.total_loss_for_backward.requires_grad_(True)
+        self.total_loss_for_backward.backward()
 
     def __call__(self, pred, target, mode='train', *args: Any, **kwds: Any) -> Any:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
-        total_loss_per_step = 0
+        self._clear()
         for loss_key, loss_func in self.loss_func_dict.items():
             loss_val = loss_func(pred, target)
             self.loss_val_per_step[_mode][loss_key] = loss_val.item()
             self.loss_val_per_epoch[_mode][loss_key].update(loss_val.item())
-            total_loss_per_step += loss_val
+            self.total_loss_for_backward += loss_val
 
-        if mode == 'train':
-            self.total_loss_for_backward = total_loss_per_step
-        self.loss_val_per_step[_mode]['total'] = total_loss_per_step.item()
-        self.loss_val_per_epoch[_mode]['total'].update(total_loss_per_step.item())
+        self.loss_val_per_step[_mode]['total'] = self.total_loss_for_backward.item()
+        self.loss_val_per_epoch[_mode]['total'].update(self.total_loss_for_backward.item())
 
     def result(self, mode='train'):
         _mode = mode.lower()
