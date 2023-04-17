@@ -51,6 +51,9 @@ def build_dataset(args):
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
     )
 
+    _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
+    _logger.info(f'Summary | Evaluation dataset: {len(eval_dataset)} sample(s)')
+
     return train_dataset, eval_dataset
 
 
@@ -97,14 +100,52 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             args=args
         )
     elif task == 'segmentation':
-        train_loader = DataLoader(train_dataset, batch_size=args.train.batch_size,
-                                  num_workers=args.environment.num_workers if not profile else 1,
-                                  collate_fn=None,
-                                  pin_memory=False)
-        eval_loader = DataLoader(eval_dataset, batch_size=1,
-                                 num_workers=args.environment.num_workers if not profile else 1,
-                                 collate_fn=None,
-                                 pin_memory=False)
+        collate_fn = None
+        use_prefetcher = False
+
+        train_loader = create_loader(
+            train_dataset,
+            args.train.data,
+            _logger,
+            batch_size=args.train.batch_size,
+            is_training=True,
+            use_prefetcher=use_prefetcher,
+            num_workers=args.environment.num_workers if not profile else 1,
+            distributed=args.distributed,
+            collate_fn=collate_fn,
+            pin_memory=False,
+            kwargs=None,
+            args=args
+        )
+
+        eval_loader = create_loader(
+            eval_dataset,
+            args.train.data,
+            _logger,
+            batch_size=1,
+            is_training=False,
+            use_prefetcher=use_prefetcher,
+            num_workers=args.environment.num_workers if not profile else 1,
+            distributed=args.distributed,
+            collate_fn=None,
+            pin_memory=False,
+            kwargs=None,
+            args=args
+        )
+
+        # train_loader = DataLoader(train_dataset, batch_size=args.train.batch_size,
+        #                           num_workers=args.environment.num_workers if not profile else 1,
+        #                           shuffle=True,
+        #                           collate_fn=None,
+        #                           pin_memory=False)
+        # eval_loader = DataLoader(eval_dataset, batch_size=1,
+        #                          num_workers=args.environment.num_workers if not profile else 1,
+        #                          shuffle=False,
+        #                          collate_fn=None,
+        #                          pin_memory=False)
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
+
+    print(f"{len(train_loader)}, rank: {args.rank}")
+    print(f"{len(eval_loader)}, rank: {args.rank}")
     return train_loader, eval_loader

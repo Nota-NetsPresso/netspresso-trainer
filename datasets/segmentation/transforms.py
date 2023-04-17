@@ -39,7 +39,7 @@ def train_transforms(args_augment, img_size, label, use_prefetcher):
     if (scale_factor * min(h, w)) < min(crop_size_h, crop_size_w):
         scale_factor = min(crop_size_h, crop_size_w) / min(h, w)
 
-    train_transforms = A.Compose([
+    train_transforms_composed = A.Compose([
         A.Resize(int(h * scale_factor) + args.resize_add,
                  int(w * scale_factor) + args.resize_add, p=1),
         A.RandomCrop(crop_size_h, crop_size_w),
@@ -55,7 +55,7 @@ def train_transforms(args_augment, img_size, label, use_prefetcher):
         ToTensorV2()
     ])
 
-    return train_transforms
+    return train_transforms_composed
 
 
 def val_transforms(args_augment, img_size, label, use_prefetcher):
@@ -67,13 +67,13 @@ def val_transforms(args_augment, img_size, label, use_prefetcher):
 
     h, w = img_size[:2]
     scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
-    val_transforms = A.Compose([
+    val_transforms_composed = A.Compose([
         A.Resize(int(h * scale_factor), int(w * scale_factor), p=1),
         A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
         ToTensorV2()
     ])
 
-    return val_transforms
+    return val_transforms_composed
 
 
 def infer_transforms(args_augment, img_size):
@@ -83,13 +83,13 @@ def infer_transforms(args_augment, img_size):
     h, w = img_size[:2]
     scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
 
-    val_transforms = A.Compose([
+    val_transforms_composed = A.Compose([
         A.Resize(int(h * scale_factor), int(w * scale_factor), p=1),
         A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
         ToTensorV2()
     ])
 
-    return val_transforms
+    return val_transforms_composed
 
 
 def create_segmentation_transform(is_training=False):

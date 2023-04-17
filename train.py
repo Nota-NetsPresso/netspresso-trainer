@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 import torch
+from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
 
 from datasets import build_dataset, build_dataloader
@@ -10,6 +11,7 @@ from models import build_model
 from pipelines import ClassificationPipeline, SegmentationPipeline
 from utils.environment import set_device
 from utils.logger import set_logger
+
 
 SUPPORT_TASK = ['classification', 'segmentation']
 logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
@@ -70,6 +72,8 @@ def train():
         build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
+    model = DDP(model, device_ids=[devices])
+
     if task == 'classification':
         trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader,
                                          is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
