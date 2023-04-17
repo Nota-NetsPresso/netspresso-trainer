@@ -46,10 +46,11 @@ class ClassificationPipeline(BasePipeline):
         with autocast():
             out = self.model(images)
             self.loss(out, target, mode='train')
-            self.metric(out, target, mode='train')
+            self.metric(out.detach(), target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
+        
 
         # # TODO: fn(out)
         # fn = lambda x: x
