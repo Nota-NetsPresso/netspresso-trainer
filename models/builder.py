@@ -2,6 +2,7 @@ import importlib
 from pathlib import Path
 import torch
 import torch.nn as nn
+import models.full as full
 import models.backbones as backbones
 import models.heads as heads
 
@@ -66,7 +67,7 @@ class AssembleModel(nn.Module):
 
 def build_model(args, num_classes):
     if args.train.architecture.full is not None:
-        model = eval(args.train.architecture.full)(args, num_classes)
+        model = eval(f"full.{args.train.architecture.full}")(args, num_classes)
         return model
 
     model = AssembleModel(args, num_classes)
