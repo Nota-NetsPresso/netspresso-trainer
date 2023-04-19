@@ -72,7 +72,8 @@ def train():
         build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
-    model = DDP(model, device_ids=[devices])
+    if args.distributed:
+        model = DDP(model, device_ids=[devices])
 
     if task == 'classification':
         trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader,

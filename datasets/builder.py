@@ -146,6 +146,4 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
 
-    print(f"{len(train_loader)}, rank: {args.rank}")
-    print(f"{len(eval_loader)}, rank: {args.rank}")
     return train_loader, eval_loader
