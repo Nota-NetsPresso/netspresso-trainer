@@ -17,7 +17,7 @@ def reduce_label(label):
     return label
 
 
-def train_transforms(args_augment, img_size, label, use_prefetcher):
+def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
     args = args_augment
 
@@ -58,7 +58,7 @@ def train_transforms(args_augment, img_size, label, use_prefetcher):
     return train_transforms_composed
 
 
-def val_transforms(args_augment, img_size, label, use_prefetcher):
+def val_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
     args = args_augment
 
@@ -76,7 +76,7 @@ def val_transforms(args_augment, img_size, label, use_prefetcher):
     return val_transforms_composed
 
 
-def infer_transforms(args_augment, img_size):
+def infer_transforms_segformer(args_augment, img_size):
 
     args = args_augment
 
@@ -91,11 +91,25 @@ def infer_transforms(args_augment, img_size):
 
     return val_transforms_composed
 
+def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
+    raise NotImplementedError
 
-def create_segmentation_transform(is_training=False):
+def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
+    raise NotImplementedError
 
-    if is_training:
-        transform = train_transforms
-    else:
-        transform = val_transforms
+def infer_transforms_pidnet(args_augment, img_size):
+    pass
+
+def create_segmentation_transform(args, is_training=False):
+
+    if 'segformer' in args.train.architecture.values():
+        if is_training:
+            transform = train_transforms_segformer
+        else:
+            transform = val_transforms_segformer
+    elif 'pidnet' in args.train.architecture.values():
+        if is_training:
+            transform = train_transforms_pidnet
+        else:
+            transform = val_transforms_pidnet
     return transform
