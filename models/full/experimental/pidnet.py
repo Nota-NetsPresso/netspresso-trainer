@@ -139,7 +139,7 @@ class PIDNet(nn.Module):
 
         return layer
 
-    def forward(self, x):
+    def forward(self, x, label_size=None):
 
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -201,7 +201,7 @@ class PIDNet(nn.Module):
 
         # return {"pred": x_}
     
-    def inference(self, x):
+    def inference(self, x, label_size=None):
         
         # assert H == x.size(2)
         # assert W == x.size(3)
