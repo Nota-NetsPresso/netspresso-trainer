@@ -9,6 +9,7 @@ import numpy as np
 import torch
 
 from datasets.base import BaseCustomDataset
+from datasets.segmentation.transforms import generate_edge
 
 _logger = logging.getLogger(__name__)
 _ERROR_RETRY = 50
@@ -97,9 +98,13 @@ class SegmentationCustomDataset(BaseCustomDataset):
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
 
         label = np.array(Image.open(str(ann_path)).convert('L'))
-        out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
+        if self.args.train.architecture.full == 'pidnet':
+            edge = generate_edge(label)
+            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label, edge=edge)
+        else:
+            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
 
-        outputs = {'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name}
+        outputs = {'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'], 'name': img_path.name}
 
         if self._split in ['train', 'training']:
             return outputs
