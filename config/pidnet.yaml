@@ -48,7 +48,7 @@ train:
   token: *token
   epochs: 250
   batch_size: 16
-  img_size: &img_size 768 
+  img_size: &img_size 512 
   exist_ok: ~ 
   label_smoothing: ~
   freeze: ~ 
@@ -57,10 +57,10 @@ environment:
   num_workers: 4 
   device: '0' 
 inference: 
-  slide_eval: true 
-  stride: 512 
-  crop_h: 768
-  crop_w: 768
+  slide_eval: false 
+  stride: ~ 
+  crop_h: 512
+  crop_w: 512
 augment:
   hsv_h: ~
   hsv_s: ~
@@ -68,13 +68,13 @@ augment:
   degrees: ~
   translate: ~
   scale: ~ 
-  max_scale: 2048
-  min_scale: 768
-  crop_size_h: 768
-  crop_size_w: 768
-  resize_ratio0: 0.5
+  max_scale: 1024
+  min_scale: 512
+  crop_size_h: 512
+  crop_size_w: 512
+  resize_ratio0: 1.0
   resize_ratiof: 2.0
-  resize_add: 1
+  resize_add: 0
   shear: ~
   perspective: ~
   flipud: ~
