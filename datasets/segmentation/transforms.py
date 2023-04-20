@@ -29,36 +29,29 @@ def generate_edge(label):
     edge = np.pad(edge, ((Y_K_SIZE, Y_K_SIZE), (X_K_SIZE, X_K_SIZE)), mode='constant')
     edge = (cv2.dilate(edge, kernel, iterations=1) > 50) * 1.0
 
-    return edge
-
-def crop_augmentation(args, image, label):
+    return edge.astype(np.float32).copy()
+def resize_and_crop(args_augment, image, label):
 
     edge = generate_edge(label)
+    
+    f_scale = np.random.random_sample() * (args_augment.resize_ratiof - args_augment.resize_ratio0) + args_augment.resize_add 
 
-    f_scale = random.choice(args.transform.scale)
     image = cv2.resize(image, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
     label = cv2.resize(label, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
     edge = cv2.resize(edge, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
 
     # random crop augmentation
     img_h, img_w = image.shape[:2]
-    h_off = random.randint(0, img_h - args.crop_size.h)
-    w_off = random.randint(0, img_w - args.crop_size.w)
+    h_off = random.randint(0, img_h - args_augment.crop_size_h)
+    w_off = random.randint(0, img_w - args_augment.crop_size_w)
 
-    image = image[h_off: h_off + args.crop_size.h,
-                    w_off: w_off + args.crop_size.w, :]  # H x W x C(=3)
-    label = label[h_off: h_off + args.crop_size.h,
-                    w_off: w_off + args.crop_size.w]  # H x W
-    edge = edge[h_off: h_off + args.crop_size.h,
-                w_off: w_off + args.crop_size.w]  # H x W
+    image = image[h_off: h_off + args_augment.crop_size_h,
+                    w_off: w_off + args_augment.crop_size_w, :]  # H x W x C(=3)
+    label = label[h_off: h_off + args_augment.crop_size_h,
+                    w_off: w_off + args_augment.crop_size_w]  # H x W
+    edge = edge[h_off: h_off + args_augment.crop_size_h,
+                w_off: w_off + args_augment.crop_size_w]  # H x W
 
-    return image, label, edge
-
-def resize_as(args, image, label):
-    image = cv2.resize(image, dsize=(args.resize.h, args.resize.w), interpolation=cv2.INTER_LINEAR)
-    label = cv2.resize(label, dsize=(args.resize.h, args.resize.w), interpolation=cv2.INTER_NEAREST)
-
-    edge = generate_edge(label)
     return image, label, edge
 
 
@@ -137,42 +130,57 @@ def infer_transforms_segformer(args_augment, img_size):
     return val_transforms_composed
 
 def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
-    def compose_transform(image, mask):
-        out = {}
-        image = np.asarray(image, np.float32)
-        image -= args_augment.mean
+    args = args_augment
 
-        aug_fn = resize_as if args_augment.resize.use else crop_augmentation
+    crop_size_h = args.crop_size_h
+    crop_size_w = args.crop_size_w
 
-        image, mask, edge = aug_fn(args_augment, image, mask)
+    ratio_range = args.resize_ratio0, args.resize_ratiof
+    img_scale = args.max_scale, args.min_scale
 
-        image = image.transpose((2, 0, 1))  # C x H x W
+    if args.reduce_zero_label:
+        label = reduce_label(label)
         
-        out = {
-            'image': image,
-            'mask': mask,
-            'edge': edge
-        }
-        return out
+    h, w = img_size[:2]
+    ratio = np.random.random_sample() * (ratio_range[1] - ratio_range[0]) + ratio_range[0]
+    scale = (img_scale[0] * ratio, img_scale[1] * ratio)
+    max_long_edge = max(scale)
+    max_short_edge = min(scale)
+    scale_factor = min(max_long_edge / max(h, w), max_short_edge / min(h, w))
+    if (scale_factor * min(h, w)) < min(crop_size_h, crop_size_w):
+        scale_factor = min(crop_size_h, crop_size_w) / min(h, w)
+
+    train_transforms_composed = A.Compose(
+        [
+            A.Resize(int(h * scale_factor) + args.resize_add,
+                    int(w * scale_factor) + args.resize_add, p=1),
+            A.RandomCrop(crop_size_h, crop_size_w),
+            A.Flip(p=args.fliplr),
+            A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
+            A.PadIfNeeded(crop_size_h, crop_size_w,
+                        border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=255),
+            ToTensorV2()
+        ],
+        additional_targets={'edge': 'mask'})
     
-    return compose_transform
+    return train_transforms_composed
 
 def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
-    def compose_transform(image):
-        out = {}
-        image = np.asarray(image, np.float32)
-        image -= args_augment.mean
-        
-        image = cv2.resize(image, dsize=(args_augment.crop_size.h, args_augment.crop_size.w), interpolation=cv2.INTER_LINEAR)
-        image = image.transpose((2, 0, 1))  # C x H x W
-        
-        out = {
-            'image': image,
-        }
-        
-        return out
-    
-    return compose_transform
+    args = args_augment
+
+    if args.reduce_zero_label == True:
+        label = reduce_label(label)
+
+    h, w = img_size[:2]
+    scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
+    val_transforms_composed = A.Compose([
+        A.Resize(int(h * scale_factor), int(w * scale_factor), p=1),
+        A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
+        ToTensorV2()
+    ])
+
+    return val_transforms_composed
+
 
 def infer_transforms_pidnet(args_augment, img_size):
     return
