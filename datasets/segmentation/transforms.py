@@ -1,5 +1,6 @@
 import os
 import importlib
+import random
 
 import torch
 import numpy as np
@@ -9,12 +10,56 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
+AUG_FLIP_PROP = 0.5
+EDGE_SIZE = 4
+Y_K_SIZE = 6
+X_K_SIZE = 6
 
 def reduce_label(label):
     label[label == 0] = 255
     label = label - 1
     label[label == 254] = 255
     return label
+
+def generate_edge(label):
+    edge = cv2.Canny(label, 0.1, 0.2)
+    kernel = np.ones((EDGE_SIZE, EDGE_SIZE), np.uint8)
+    # edge_pad == True
+    edge = edge[Y_K_SIZE:-Y_K_SIZE, X_K_SIZE:-X_K_SIZE]
+    edge = np.pad(edge, ((Y_K_SIZE, Y_K_SIZE), (X_K_SIZE, X_K_SIZE)), mode='constant')
+    edge = (cv2.dilate(edge, kernel, iterations=1) > 50) * 1.0
+
+    return edge
+
+def crop_augmentation(args, image, label):
+
+    edge = generate_edge(label)
+
+    f_scale = random.choice(args.transform.scale)
+    image = cv2.resize(image, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
+    label = cv2.resize(label, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
+    edge = cv2.resize(edge, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
+
+    # random crop augmentation
+    img_h, img_w = image.shape[:2]
+    h_off = random.randint(0, img_h - args.crop_size.h)
+    w_off = random.randint(0, img_w - args.crop_size.w)
+
+    image = image[h_off: h_off + args.crop_size.h,
+                    w_off: w_off + args.crop_size.w, :]  # H x W x C(=3)
+    label = label[h_off: h_off + args.crop_size.h,
+                    w_off: w_off + args.crop_size.w]  # H x W
+    edge = edge[h_off: h_off + args.crop_size.h,
+                w_off: w_off + args.crop_size.w]  # H x W
+
+    return image, label, edge
+
+def resize_as(args, image, label):
+    image = cv2.resize(image, dsize=(args.resize.h, args.resize.w), interpolation=cv2.INTER_LINEAR)
+    label = cv2.resize(label, dsize=(args.resize.h, args.resize.w), interpolation=cv2.INTER_NEAREST)
+
+    edge = generate_edge(label)
+    return image, label, edge
 
 
 def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
@@ -77,7 +122,7 @@ def val_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
 
 def infer_transforms_segformer(args_augment, img_size):
-
+    return
     args = args_augment
 
     h, w = img_size[:2]
@@ -92,13 +137,60 @@ def infer_transforms_segformer(args_augment, img_size):
     return val_transforms_composed
 
 def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
-    raise NotImplementedError
+    def compose_transform(image, mask):
+        out = {}
+        image = np.asarray(image, np.float32)
+        image -= args_augment.mean
+
+        aug_fn = resize_as if args_augment.resize.use else crop_augmentation
+
+        image, mask, edge = aug_fn(args_augment, image, mask)
+
+        image = image.transpose((2, 0, 1))  # C x H x W
+        
+        out = {
+            'image': image,
+            'mask': mask,
+            'edge': edge
+        }
+        return out
+    
+    return compose_transform
 
 def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
-    raise NotImplementedError
+    def compose_transform(image):
+        out = {}
+        image = np.asarray(image, np.float32)
+        image -= args_augment.mean
+        
+        image = cv2.resize(image, dsize=(args_augment.crop_size.h, args_augment.crop_size.w), interpolation=cv2.INTER_LINEAR)
+        image = image.transpose((2, 0, 1))  # C x H x W
+        
+        out = {
+            'image': image,
+        }
+        
+        return out
+    
+    return compose_transform
 
 def infer_transforms_pidnet(args_augment, img_size):
-    pass
+    return
+    def compose_transform(image):
+        out = {}
+        image = np.asarray(image, np.float32)
+        image -= args_augment.mean
+        
+        image = cv2.resize(image, dsize=(args_augment.crop_size.h, args_augment.crop_size.w), interpolation=cv2.INTER_LINEAR)
+        image = image.transpose((2, 0, 1))  # C x H x W
+        
+        out = {
+            'image': image,
+        }
+        
+        return out
+    
+    return compose_transform
 
 def create_segmentation_transform(args, is_training=False):
 
