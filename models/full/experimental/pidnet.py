@@ -141,7 +141,7 @@ class PIDNet(SeparateForwardModule):
 
         return layer
 
-    def forward_training(self, x):
+    def forward_training(self, x, label_size=None):
 
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -196,14 +196,13 @@ class PIDNet(SeparateForwardModule):
 
         return {
             "extra_p": x_extra_p,
-            "x_": x_,
             "extra_d": x_extra_d,
             "pred": x_
         }
 
         # return {"pred": x_}
     
-    def forward_inference(self, x):
+    def forward_inference(self, x, label_size=None):
         
         # assert H == x.size(2)
         # assert W == x.size(3)

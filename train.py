@@ -77,7 +77,7 @@ def train():
 
     model = model.to(device=devices)
     if args.distributed:
-        model = DDP(model, device_ids=[devices])
+        model = DDP(model, device_ids=[devices], find_unused_parameters=True)
 
     if task == 'classification':
         trainer = ClassificationPipeline(args, task, model_name, model, devices, train_dataloader, eval_dataloader,
