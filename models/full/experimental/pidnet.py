@@ -1,13 +1,15 @@
 # ------------------------------------------------------------------------------
 # Written by Jiacong Xu (jiacong.xu@tamu.edu)
 # ------------------------------------------------------------------------------
+import logging
+import time
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import time
-from models.op.pidnet import BasicBlock, Bottleneck, segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
-import logging
 
+from models.op.pidnet import BasicBlock, Bottleneck, segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from models.utils import SeparateForwardModule
 
 def imagenet_pretrained_path(x):
     return f"pretrained/PIDNet_{x.upper()}_ImageNet.pth.tar"
@@ -18,7 +20,7 @@ bn_mom = 0.1
 algc = False
 
 
-class PIDNet(nn.Module):
+class PIDNet(SeparateForwardModule):
 
     def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, augment=True):
         super(PIDNet, self).__init__()
@@ -139,7 +141,7 @@ class PIDNet(nn.Module):
 
         return layer
 
-    def forward(self, x):
+    def forward_training(self, x, label_size=None):
 
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -194,14 +196,13 @@ class PIDNet(nn.Module):
 
         return {
             "extra_p": x_extra_p,
-            "x_": x_,
             "extra_d": x_extra_d,
             "pred": x_
         }
 
         # return {"pred": x_}
     
-    def inference(self, x):
+    def forward_inference(self, x, label_size=None):
         
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -243,8 +244,7 @@ class PIDNet(nn.Module):
 
         x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
-        return {"pred": x_}
-
+        return x_
 
 def get_seg_model(args, imgnet_pretrained):
 

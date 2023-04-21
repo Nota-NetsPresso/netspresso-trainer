@@ -74,7 +74,7 @@ augment:
   crop_size_w: 512
   resize_ratio0: 1.0
   resize_ratiof: 2.0
-  resize_add: 0
+  resize_add: 1
   shear: ~
   perspective: ~
   flipud: ~

@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from models.op.depth import drop_path
+from models.utils import SeparateForwardModule
 
 from models.configuration.segformer import SegformerConfig
 
@@ -240,7 +241,7 @@ class SegformerLayer(nn.Module):
         return outputs
 
 
-class SegformerEncoder(nn.Module):
+class SegformerEncoder(SeparateForwardModule):
     def __init__(self, num_classes=None):
         super().__init__()
         self.config = SegformerConfig()
@@ -299,7 +300,7 @@ class SegformerEncoder(nn.Module):
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
-    def forward(self, x, intermediate_features=True):
+    def forward_training(self, x, intermediate_features=True):
 
         batch_size = x.shape[0]
 
@@ -336,6 +337,10 @@ class SegformerEncoder(nn.Module):
 
         return_dict.update({'intermediate_features': all_hidden_states})
         return return_dict
+    
+    def forward_inference(self, x, intermediate_features=True):
+        return self.forward_training(x, intermediate_features)
+
 
 
 def segformer(num_class=1000, **extra_params) -> SegformerEncoder:

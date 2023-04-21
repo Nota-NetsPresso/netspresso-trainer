@@ -20,8 +20,8 @@ _RECOMMEND_OUTPUT_DIR_NAME = 'exp'
 
 
 class ClassificationPipeline(BasePipeline):
-    def __init__(self, args, model, devices, train_dataloader, eval_dataloader, **kwargs):
-        super(ClassificationPipeline, self).__init__(args, model, devices, train_dataloader, eval_dataloader, **kwargs)
+    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs):
+        super(ClassificationPipeline, self).__init__(args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs)
         self.one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
 
     def set_train(self):
@@ -38,6 +38,7 @@ class ClassificationPipeline(BasePipeline):
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
 
     def train_step(self, batch):
+        self.model.train()
         images, target = batch
         images = images.to(self.devices)
         target = target.to(self.devices)
@@ -46,7 +47,7 @@ class ClassificationPipeline(BasePipeline):
         with autocast():
             out = self.model(images)
             self.loss(out, target, mode='train')
-            self.metric(out.detach(), target, mode='train')
+            self.metric(out['pred'], target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
@@ -60,6 +61,7 @@ class ClassificationPipeline(BasePipeline):
             torch.distributed.barrier()
 
     def valid_step(self, batch):
+        self.model.eval()
         images, target = batch
         images = images.to(self.devices)
         target = target.to(self.devices)

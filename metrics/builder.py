@@ -1,5 +1,7 @@
 from typing import Any
 
+import torch
+
 from metrics.classification import accuracy_topk
 from metrics.segmentation import segmentation_stats
 from utils.common import AverageMeter
@@ -51,7 +53,7 @@ class MetricFactory:
     def clear(self):
         self._clear()
 
-    def __call__(self, pred, target, mode='train', *args: Any, **kwds: Any) -> Any:
+    def __call__(self, pred: torch.Tensor, target: torch.Tensor, mode='train', *args: Any, **kwds: Any) -> Any:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
         for metric_key, metric_func in self.metric_func_dict.items():

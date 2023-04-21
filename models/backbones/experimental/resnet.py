@@ -2,11 +2,14 @@
 Based on the Torchvision implementation of ResNet.
 https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
+from typing import Type, Any, Callable, Union, List, Optional
 
 import torch
 from torch import Tensor
 import torch.nn as nn
-from typing import Type, Any, Callable, Union, List, Optional
+
+from models.utils import SeparateForwardModule
+
 
 __all__ = ['resnet50', 'resnet101']
 
@@ -144,7 +147,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
+class ResNet(SeparateForwardModule):
 
     def __init__(
         self,
@@ -231,7 +234,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward_training(self, x: Tensor) -> Tensor:
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.bn1(x)
@@ -248,6 +251,9 @@ class ResNet(nn.Module):
         # x = self.fc(x)
 
         return {'last_feature': x}
+    
+    def forward_inference(self, x: Tensor) -> Tensor:
+        return self.forward_training(x)
 
     @property
     def last_channels(self):

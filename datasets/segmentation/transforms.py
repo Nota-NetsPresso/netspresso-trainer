@@ -10,7 +10,6 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-AUG_FLIP_PROP = 0.5
 EDGE_SIZE = 4
 Y_K_SIZE = 6
 X_K_SIZE = 6
@@ -30,30 +29,6 @@ def generate_edge(label):
     edge = (cv2.dilate(edge, kernel, iterations=1) > 50) * 1.0
 
     return edge.astype(np.float32).copy()
-def resize_and_crop(args_augment, image, label):
-
-    edge = generate_edge(label)
-    
-    f_scale = np.random.random_sample() * (args_augment.resize_ratiof - args_augment.resize_ratio0) + args_augment.resize_add 
-
-    image = cv2.resize(image, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
-    label = cv2.resize(label, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
-    edge = cv2.resize(edge, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
-
-    # random crop augmentation
-    img_h, img_w = image.shape[:2]
-    h_off = random.randint(0, img_h - args_augment.crop_size_h)
-    w_off = random.randint(0, img_w - args_augment.crop_size_w)
-
-    image = image[h_off: h_off + args_augment.crop_size_h,
-                    w_off: w_off + args_augment.crop_size_w, :]  # H x W x C(=3)
-    label = label[h_off: h_off + args_augment.crop_size_h,
-                    w_off: w_off + args_augment.crop_size_w]  # H x W
-    edge = edge[h_off: h_off + args_augment.crop_size_h,
-                w_off: w_off + args_augment.crop_size_w]  # H x W
-
-    return image, label, edge
-
 
 def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
@@ -167,6 +142,8 @@ def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
 
 def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     args = args_augment
+    crop_size_h = args.crop_size_h
+    crop_size_w = args.crop_size_w
 
     if args.reduce_zero_label == True:
         label = reduce_label(label)
@@ -174,7 +151,7 @@ def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     h, w = img_size[:2]
     scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
     val_transforms_composed = A.Compose([
-        A.Resize(int(h * scale_factor), int(w * scale_factor), p=1),
+        A.Resize(crop_size_h, crop_size_w),
         A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
         ToTensorV2()
     ])

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Dict
 from itertools import chain
 
 import torch
@@ -58,13 +58,13 @@ class LossFactory:
         self.total_loss_for_backward.requires_grad_(True)
         self.total_loss_for_backward.backward()
 
-    def __call__(self, pred, target, mode='train', *args: Any, **kwds: Any) -> Any:
+    def __call__(self, out: Dict, target: torch.Tensor, mode='train', *args: Any, **kwds: Any) -> None:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
         self._clear()
 
         for loss_key, loss_func in self.loss_func_dict.items():
-            loss_val = loss_func(pred, target)
+            loss_val = loss_func(out['pred'], target) if mode == 'train' else loss_func(out, target)
             self.loss_val_per_step[_mode][loss_key] = loss_val.item()
             self.loss_val_per_epoch[_mode][loss_key].update(loss_val.item())
             self.total_loss_for_backward += loss_val

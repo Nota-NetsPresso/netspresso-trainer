@@ -57,6 +57,10 @@ def train():
 
     task = str(args.train.task).lower()
     assert task in SUPPORT_TASK
+    model_name = args.train.architecture.full \
+        if args.train.architecture.full is not None \
+            else args.train.architecture.backbone
+    model_name = str(model_name).lower()
 
     if args.distributed and args.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
@@ -73,13 +77,13 @@ def train():
 
     model = model.to(device=devices)
     if args.distributed:
-        model = DDP(model, device_ids=[devices])
+        model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
     if task == 'classification':
-        trainer = ClassificationPipeline(args, model, devices, train_dataloader, eval_dataloader,
+        trainer = ClassificationPipeline(args, task, model_name, model, devices, train_dataloader, eval_dataloader,
                                          is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
     elif task == 'segmentation':
-        trainer = SegmentationPipeline(args, model, devices, train_dataloader, eval_dataloader,
+        trainer = SegmentationPipeline(args, task, model_name, model, devices, train_dataloader, eval_dataloader,
                                        is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
 
     else:

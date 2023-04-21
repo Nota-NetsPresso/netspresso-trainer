@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from models.configuration.segformer import SegformerConfig
-
+from models.utils import SeparateForwardModule
 
 class SegformerMLP(nn.Module):
     """
@@ -20,7 +20,7 @@ class SegformerMLP(nn.Module):
         return hidden_states
 
 
-class SegformerDecodeHead(nn.Module):
+class SegformerDecodeHead(SeparateForwardModule):
     def __init__(self, num_classes):
         super().__init__()
         config = SegformerConfig()
@@ -46,7 +46,7 @@ class SegformerDecodeHead(nn.Module):
 
         self.config = config
 
-    def forward(self, encoder_hidden_states, **kwargs):
+    def forward_training(self, encoder_hidden_states, **kwargs):
         label_size = kwargs['label_size'] if 'label_size' in kwargs else None
 
         batch_size = encoder_hidden_states[-1].shape[0]
@@ -84,9 +84,12 @@ class SegformerDecodeHead(nn.Module):
             upsampled_logits = nn.functional.interpolate(
                 logits, size=(H, W), mode="bilinear", align_corners=False
             )
-            return upsampled_logits
+            return {'pred': upsampled_logits}
 
-        return logits
+        return {'pred': logits}
+    
+    def forward_inference(self, encoder_hidden_states, **kwargs):
+        return self.forward_training(encoder_hidden_states, **kwargs)['pred']
 
 
 def segformer_decode_head(feature_dim, num_classes):
