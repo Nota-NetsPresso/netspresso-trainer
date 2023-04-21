@@ -10,7 +10,6 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-AUG_FLIP_PROP = 0.5
 EDGE_SIZE = 4
 Y_K_SIZE = 6
 X_K_SIZE = 6
@@ -30,29 +29,6 @@ def generate_edge(label):
     edge = (cv2.dilate(edge, kernel, iterations=1) > 50) * 1.0
 
     return edge.astype(np.float32).copy()
-def resize_and_crop(args_augment, image, label):
-
-    edge = generate_edge(label)
-    
-    f_scale = np.random.random_sample() * (args_augment.resize_ratiof - args_augment.resize_ratio0) + args_augment.resize_add 
-
-    image = cv2.resize(image, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_LINEAR)
-    label = cv2.resize(label, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
-    edge = cv2.resize(edge, dsize=None, fx=f_scale, fy=f_scale, interpolation=cv2.INTER_NEAREST)
-
-    # random crop augmentation
-    img_h, img_w = image.shape[:2]
-    h_off = random.randint(0, img_h - args_augment.crop_size_h)
-    w_off = random.randint(0, img_w - args_augment.crop_size_w)
-
-    image = image[h_off: h_off + args_augment.crop_size_h,
-                    w_off: w_off + args_augment.crop_size_w, :]  # H x W x C(=3)
-    label = label[h_off: h_off + args_augment.crop_size_h,
-                    w_off: w_off + args_augment.crop_size_w]  # H x W
-    edge = edge[h_off: h_off + args_augment.crop_size_h,
-                w_off: w_off + args_augment.crop_size_w]  # H x W
-
-    return image, label, edge
 
 
 def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
