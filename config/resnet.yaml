@@ -1,15 +1,3 @@
-trainer_launcher:
-  project_name: ~
-  project_id: &project_id xxxxxxxx-079a-431b-85a0-787b8c1d9975 
-  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
-  dataset_id: &dataset_id data/classification
-  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
-  token: &token xxxxxxxx-0000-0000-0000-000000000000
-  base_architecture: &base_architecture ~
-  user_id: ~ 
-  username: ~ 
-  task: &task classification
-  model_format: pt
 train:
   task: *task
   architecture:
@@ -91,16 +79,3 @@ augment:
     saturation: ~
     hue: ~ 
     colorjitter_p: ~ 
-output_model_info: 
-  output_batch_size: 1 
-  img_size_width: *img_size 
-  img_size_height: *img_size 
-  img_size_channel: 3 
-train_cmd:
-  runtime: python3 
-  runtime_args:
-    -m: torch.distributed.launch 
-    --nproc_per_node: 1 
-  runfile: train.py 
-  runfile_args:
-    --config: /config.yml

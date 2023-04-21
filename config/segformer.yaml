@@ -1,15 +1,3 @@
-trainer_launcher:
-  project_name: ~
-  project_id: &project_id segformer-model-fix-plz
-  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
-  dataset_id: &dataset_id /DATA/VOC12Dataset
-  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
-  token: &token xxxxxxxx-0000-0000-0000-000000000000
-  base_architecture: &base_architecture ~
-  user_id: ~ 
-  username: ~ 
-  task: &task segmentation
-  model_format: bin_json
 train:
   task: *task
   architecture:
@@ -92,16 +80,3 @@ augment:
     hue: 0.1
     colorjitter_p: 0.5
   reduce_zero_label: *reduce_zero_label
-output_model_info: 
-  output_batch_size: 1 
-  img_size_width: 512
-  img_size_height: 512
-  img_size_channel: 3 
-train_cmd:
-  runtime: python3 
-  runtime_args:
-    -m: torch.distributed.launch 
-    --nproc_per_node: 1 
-  runfile: train.py 
-  runfile_args:
-    --config: /config.yml
