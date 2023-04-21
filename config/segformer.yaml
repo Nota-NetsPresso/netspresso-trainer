@@ -1,12 +1,26 @@
+trainer_launcher:
+  project_name: ~
+  project_id: &project_id segformer-model-fix-plz
+  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
+  dataset_id: &dataset_id /DATA/VOC12Dataset
+  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
+  token: &token xxxxxxxx-0000-0000-0000-000000000000
+  base_architecture: &base_architecture ~
+  user_id: ~ 
+  username: ~ 
+  task: &task segmentation
+  model_format: bin_json
 train:
-  task: *task
+  task: 'segmentation'
   architecture:
     full: ~ # auto
     backbone: segformer
     head: segformer_decode_head
   losses:
-    criterion: cross_entropy
-    smoothing: ~
+    - criterion: cross_entropy
+      weight: ~
+      ignore_index: 255
+
   opt: adamw
   lr0: 6e-5
   lrf: 0.0

@@ -1,3 +1,15 @@
+trainer_launcher:
+  project_name: ~
+  project_id: &project_id pidnet-model-fix-plz
+  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
+  dataset_id: &dataset_id /DATA/VOC12Dataset
+  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
+  token: &token xxxxxxxx-0000-0000-0000-000000000000
+  base_architecture: &base_architecture ~
+  user_id: ~ 
+  username: ~ 
+  task: &task segmentation
+  model_format: bin_json
 train:
   task: *task
   architecture:
@@ -5,8 +17,13 @@ train:
     backbone: ~
     head: ~
   losses:
-    criterion: cross_entropy
-    smoothing: ~
+    - criterion: pidnet_cross_entropy
+      weight: ~
+    - criterion: boundary_loss
+      weight: 20.0
+    - criterion: pidnet_cross_entropy_with_boundary
+      weight: ~
+      
   opt: adamw
   lr0: 6e-5
   lrf: 0.0

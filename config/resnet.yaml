@@ -1,3 +1,15 @@
+trainer_launcher:
+  project_name: ~
+  project_id: &project_id xxxxxxxx-079a-431b-85a0-787b8c1d9975 
+  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
+  dataset_id: &dataset_id data/classification
+  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
+  token: &token xxxxxxxx-0000-0000-0000-000000000000
+  base_architecture: &base_architecture ~
+  user_id: ~ 
+  username: ~ 
+  task: &task classification
+  model_format: pt
 train:
   task: *task
   architecture:
@@ -5,8 +17,8 @@ train:
     backbone: resnet50
     head: fc
   losses:
-    criterion: label_smoothing_cross_entropy
-    smoothing: 0.01
+    - criterion: label_smoothing_cross_entropy
+      smoothing: 0.01
   opt: adamw
   lr0: 0.0001
   lrf: 0.01
