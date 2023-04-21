@@ -245,7 +245,7 @@ class PIDNet(SeparateForwardModule):
 
         x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
-        return {"pred": x_}
+        return x_
 
 
 def get_seg_model(args, imgnet_pretrained):

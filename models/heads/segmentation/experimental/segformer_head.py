@@ -84,12 +84,12 @@ class SegformerDecodeHead(SeparateForwardModule):
             upsampled_logits = nn.functional.interpolate(
                 logits, size=(H, W), mode="bilinear", align_corners=False
             )
-            return upsampled_logits
+            return {'pred': upsampled_logits}
 
-        return logits
+        return {'pred': logits}
     
     def forward_inference(self, encoder_hidden_states, **kwargs):
-        return self.forward_training(encoder_hidden_states, **kwargs)
+        return self.forward_training(encoder_hidden_states, **kwargs)['pred']
 
 
 def segformer_decode_head(feature_dim, num_classes):
