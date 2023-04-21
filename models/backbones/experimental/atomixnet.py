@@ -1,14 +1,13 @@
-
-from torch.nn import functional as F
+import math
 from collections import OrderedDict
 
-from torch import nn
 import torch
-import math
+from torch import nn
+from torch.nn import ReLU
+from torch.nn import functional as F
 
 from models.op.swish import Swish
-from torch.nn import ReLU
-
+from models.utils import SeparateForwardModule
 
 __all__ = ['atomixnet_supernet', 'atomixnet_l', 'atomixnet_m', 'atomixnet_s']
 
@@ -206,7 +205,7 @@ class MixDepthBlock(nn.Module):
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # AtomixNet
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-class AtomixNet(nn.Module):
+class AtomixNet(SeparateForwardModule):
     def __init__(self, num_classes=1000, arch='supernet', dropout=None):
         super(AtomixNet, self).__init__()
 
@@ -582,7 +581,7 @@ class AtomixNet(nn.Module):
             return repeats
         return int(math.ceil(depth_multi * repeats))
 
-    def forward(self, x):
+    def forward_training(self, x):
         for module_key in self._modules:
             if 'mod' in module_key:
                 x = self._modules[module_key](x)
@@ -592,6 +591,9 @@ class AtomixNet(nn.Module):
             x = F.dropout(input=x, p=self.dropout_rate, training=self.training)
         # x = self.classifier(x)
         return {'last_feature': x}
+    
+    def forward_inference(self, x):
+        return self.forward_training(x)
 
     @property
     def last_channels(self):

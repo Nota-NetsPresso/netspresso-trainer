@@ -1,7 +1,9 @@
 import torch
 import torch.nn as nn
 
-class FC(nn.Module):
+from models.utils import SeparateForwardModule
+
+class FC(SeparateForwardModule):
     def __init__(
         self,
         feature_dim: int,
@@ -11,9 +13,12 @@ class FC(nn.Module):
         
         self.classifier = nn.Linear(feature_dim, num_classes)
         
-    def forward(self, x):
+    def forward_training(self, x):
         x = self.classifier(x)
         return x
+    
+    def forward_inference(self, x):
+        return self.forward_training(x)
     
 def fc(feature_dim, num_classes):
     return FC(feature_dim=feature_dim, num_classes=num_classes)
