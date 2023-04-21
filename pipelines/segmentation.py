@@ -22,8 +22,8 @@ CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
 
 class SegmentationPipeline(BasePipeline):
-    def __init__(self, args, model, devices, train_dataloader, eval_dataloader, **kwargs):
-        super(SegmentationPipeline, self).__init__(args, model, devices, train_dataloader, eval_dataloader, **kwargs)
+    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs):
+        super(SegmentationPipeline, self).__init__(args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
 
@@ -52,10 +52,11 @@ class SegmentationPipeline(BasePipeline):
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
 
     def train_step(self, batch):
-        images, target = batch['pixel_values'], batch['labels']
+        images, target, bd_gt = batch['pixel_values'], batch['labels'], batch['edges']
 
         images = images.to(self.devices)
         target = target.long().to(self.devices)
+        bd_gt = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
         out = self.model(images, label_size=target.size())

@@ -25,9 +25,11 @@ PROFILE_REPEAT = 1
 
 
 class BasePipeline(ABC):
-    def __init__(self, args, model, devices, train_dataloader, eval_dataloader, is_online=True, profile=False):
+    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, is_online=True, profile=False):
         super(BasePipeline, self).__init__()
         self.args = args
+        self.task = task
+        self.model_name = model_name
         self.model = model
         self.devices = devices
         self.train_dataloader = train_dataloader
@@ -88,8 +90,7 @@ class BasePipeline(ABC):
             if epoch_with_valid:
                 self.validate()
 
-            if torch.distributed.get_rank() == 0:
-                self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
+            self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')

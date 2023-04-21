@@ -20,8 +20,8 @@ _RECOMMEND_OUTPUT_DIR_NAME = 'exp'
 
 
 class ClassificationPipeline(BasePipeline):
-    def __init__(self, args, model, devices, train_dataloader, eval_dataloader, **kwargs):
-        super(ClassificationPipeline, self).__init__(args, model, devices, train_dataloader, eval_dataloader, **kwargs)
+    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs):
+        super(ClassificationPipeline, self).__init__(args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs)
         self.one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
 
     def set_train(self):
