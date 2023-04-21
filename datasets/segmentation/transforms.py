@@ -167,6 +167,9 @@ def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
 
 def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     args = args_augment
+    
+    crop_size_h = args.crop_size_h
+    crop_size_w = args.crop_size_w
 
     if args.reduce_zero_label == True:
         label = reduce_label(label)
@@ -174,7 +177,7 @@ def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     h, w = img_size[:2]
     scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
     val_transforms_composed = A.Compose([
-        A.Resize(int(h * scale_factor), int(w * scale_factor), p=1),
+        A.Resize(crop_size_h, crop_size_w),
         A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
         ToTensorV2()
     ])
