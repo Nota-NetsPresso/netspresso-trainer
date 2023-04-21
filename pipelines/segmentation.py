@@ -52,11 +52,14 @@ class SegmentationPipeline(BasePipeline):
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
 
     def train_step(self, batch):
-        images, target, bd_gt = batch['pixel_values'], batch['labels'], batch['edges']
-
+        self.model.train()
+        images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
         target = target.long().to(self.devices)
-        bd_gt = bd_gt.to(self.devices)
+        
+        if self.model_name == 'pidnet':
+            bd_gt = batch['edges']
+            bd_gt = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
         out = self.model(images, label_size=target.size())
@@ -65,7 +68,8 @@ class SegmentationPipeline(BasePipeline):
         self.loss.backward()
         self.optimizer.step()
         
-        self.metric(out.detach(), target, mode='train')
+        out = {k: v.detach() for k, v in out.items()}
+        self.metric(out['pred'], target, mode='train')
 
 
         # # TODO: fn(out)
@@ -76,6 +80,7 @@ class SegmentationPipeline(BasePipeline):
             torch.distributed.barrier()
 
     def valid_step(self, batch):
+        self.model.eval()
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
         target = target.long().to(self.devices)

@@ -38,6 +38,7 @@ class ClassificationPipeline(BasePipeline):
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
 
     def train_step(self, batch):
+        self.model.train()
         images, target = batch
         images = images.to(self.devices)
         target = target.to(self.devices)
@@ -46,7 +47,7 @@ class ClassificationPipeline(BasePipeline):
         with autocast():
             out = self.model(images)
             self.loss(out, target, mode='train')
-            self.metric(out.detach(), target, mode='train')
+            self.metric(out['pred'], target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
@@ -60,6 +61,7 @@ class ClassificationPipeline(BasePipeline):
             torch.distributed.barrier()
 
     def valid_step(self, batch):
+        self.model.eval()
         images, target = batch
         images = images.to(self.devices)
         target = target.to(self.devices)
