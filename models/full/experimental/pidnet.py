@@ -246,7 +246,6 @@ class PIDNet(SeparateForwardModule):
 
         return x_
 
-
 def get_seg_model(args, imgnet_pretrained):
 
     model_size = args.models.full.size

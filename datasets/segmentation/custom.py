@@ -108,6 +108,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
             out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
+
         if self._split in ['train', 'training']:
             return outputs
 

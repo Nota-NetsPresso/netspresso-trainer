@@ -30,7 +30,6 @@ def generate_edge(label):
 
     return edge.astype(np.float32).copy()
 
-
 def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
     args = args_augment
@@ -143,7 +142,6 @@ def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
 
 def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     args = args_augment
-    
     crop_size_h = args.crop_size_h
     crop_size_w = args.crop_size_w
 
