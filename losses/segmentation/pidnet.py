@@ -10,43 +10,42 @@ IGNORE_INDEX_NONE_VALUE = -100
 
 NUM_OUTPUTS = 2
 BALANCE_WEIGHTS = [0.4, 1.0]
-SB_WEIGHTS = 1.0
 
 OHEMTHRES = 0.9
 OHEMKEEP = 131072
 
 
 class PIDNetCrossEntropy(nn.Module):
-    def __init__(self, ignore_label=IGNORE_INDEX_NONE_VALUE, weight=None, for_boundary=False):
+    def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None):
         super(PIDNetCrossEntropy, self).__init__()
-        self.ignore_label = ignore_label
+        self.ignore_index = ignore_index
         self.loss_fn = nn.CrossEntropyLoss(
             weight=weight,
-            ignore_index=ignore_label
+            ignore_index=ignore_index
         )
-        self.for_boundary = False
+        self.boundary_aware = False
 
-    def _forward(self, out: Dict, target: torch.Tensor):
-
-        if self.for_boundary:
-            return self.loss_fn(out['pred'], target)
+    def _forward(self, out: torch.Tensor, target: torch.Tensor):
         
-        return self.loss_fn([out['extra_p'], out['pred']], target)
+        return self.loss_fn(out, target)
 
-    def forward(self, score, target):
+    def forward(self, out: Dict, target: torch.Tensor):
 
-        balance_weights = BALANCE_WEIGHTS
-        sb_weights = SB_WEIGHTS
-        if len(balance_weights) == len(score) and type(score) != torch.Tensor:
-            return sum([w * self._forward(x, target) for (w, x) in zip(balance_weights, score)])
-        elif len(score) == 1 or type(score) == torch.Tensor:
-            score = score if isinstance(score, torch.Tensor) else score[0]
-            return sb_weights * self._forward(score, target)
+        if self.boundary_aware:
+            pred, extra_d = out['pred'], out['extra_d']
+            filler = torch.ones_like(target) * self.ignore_index
+            bd_label = torch.where(torch.sigmoid(extra_d[:, 0, :, :]) > 0.8, target, filler)
+            return self._forward(pred, bd_label)
+        
+        pred, extra_p = out['pred'], out['extra_p']
+        score = [extra_p, pred]
+        return sum([w * self._forward(x, target) for (w, x) in zip(BALANCE_WEIGHTS, score)])
 
-        else:
-            raise ValueError("lengths of prediction and target are not identical!")
-
-
+class PIDNetBoundaryAwareCrossEntropy(PIDNetCrossEntropy):
+    def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None):
+        super().__init__(ignore_index, weight)
+        self.boundary_aware = True
+    
 # class OhemCrossEntropy(nn.Module):
 #     def __init__(self, ignore_label=-1, thres=0.7, min_kept=100000, weight=None):
 #         super(OhemCrossEntropy, self).__init__()
@@ -129,4 +128,5 @@ class BondaryLoss(nn.Module):
         return loss
 
     def forward(self, out: Dict, bd_gt: torch.Tensor) -> torch.Tensor:
-        return self.weighted_bce(out['extra_d'], bd_gt)
+        extra_d = out['extra_d']
+        return self.weighted_bce(extra_d, bd_gt)

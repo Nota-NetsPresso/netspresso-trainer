@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from losses.common import CrossEntropyLoss
 from losses.classification.soft_target import SoftTargetCrossEntropy
-from losses.segmentation.pidnet import PIDNetCrossEntropy, BondaryLoss
+from losses.segmentation.pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
 from utils.common import AverageMeter
 
 MODE = ['train', 'valid', 'test']
@@ -18,7 +18,7 @@ LOSS_DICT = {
     'label_smoothing_cross_entropy': CrossEntropyLoss,
     'pidnet_cross_entropy': PIDNetCrossEntropy,
     'boundary_loss': BondaryLoss,
-    'pidnet_cross_entropy_with_boundary': PIDNetCrossEntropy,
+    'pidnet_cross_entropy_with_boundary': PIDNetBoundaryAwareCrossEntropy,
 }
 
 class LossFactory:
@@ -26,8 +26,6 @@ class LossFactory:
         self.loss_func_dict = dict()
         self.loss_weight_dict = dict()
 
-        ignore_index = kwargs['ignore_index'] if 'ignore_index' in kwargs else None
-        self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_AS
         self._build_losses(args)
 
         self.loss_val_per_epoch = {
@@ -77,7 +75,10 @@ class LossFactory:
         self._clear()
         
         for loss_key, loss_func in self.loss_func_dict.items():
-            loss_val = loss_func(out, target)  # TODO: bd_gt
+            if loss_key == 'boundary_loss':
+                loss_val = loss_func(out, bd_gt)
+            else:
+                loss_val = loss_func(out, target)
             self.loss_val_per_step[_mode][loss_key] = loss_val.item()
             self.loss_val_per_epoch[_mode][loss_key].update(loss_val.item())
             
