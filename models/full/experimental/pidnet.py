@@ -246,46 +246,6 @@ class PIDNet(SeparateForwardModule):
 
         return x_
 
-def get_seg_model(args, imgnet_pretrained):
-
-    model_size = args.models.full.size
-
-    if 's' in model_size:
-        model = PIDNet(m=2, n=3, num_classes=args.datasets.num_classes, planes=32, ppm_planes=96, head_planes=128, augment=True)
-    elif 'm' in model_size:
-        model = PIDNet(m=2, n=3, num_classes=args.datasets.num_classes, planes=64, ppm_planes=96, head_planes=128, augment=True)
-    elif 'l' in model_size:
-        model = PIDNet(m=3, n=4, num_classes=args.datasets.num_classes, planes=64, ppm_planes=112, head_planes=256, augment=True)
-    else:
-        raise AssertionError(f"No such model_size! model_size: ({model_size})")
-
-    if imgnet_pretrained:
-        pretrained_state = torch.load(imagenet_pretrained_path(model_size[:1]), map_location='cpu')['state_dict']
-        model_dict = model.state_dict()
-        pretrained_state = {k: v for k, v in pretrained_state.items() if (k in model_dict and v.shape == model_dict[k].shape)}
-        model_dict.update(pretrained_state)
-        msg = 'Loaded {} parameters!'.format(len(pretrained_state))
-        logging.info('Attention!!!')
-        logging.info(msg)
-        logging.info('Over!!!')
-        model.load_state_dict(model_dict, strict=False)
-
-    else:
-        pretrained_dict = torch.load(imagenet_pretrained_path(model_size[:1]), map_location='cpu')
-        if 'state_dict' in pretrained_dict:
-            pretrained_dict = pretrained_dict['state_dict']
-        model_dict = model.state_dict()
-        pretrained_dict = {k[6:]: v for k, v in pretrained_dict.items() if (k[6:] in model_dict and v.shape == model_dict[k[6:]].shape)}
-        msg = 'Loaded {} parameters!'.format(len(pretrained_dict))
-        logging.info('Attention!!!')
-        logging.info(msg)
-        logging.info('Over!!!')
-        model_dict.update(pretrained_dict)
-        model.load_state_dict(model_dict, strict=False)
-
-    return model
-
-
 def pidnet(args, num_classes: int) -> PIDNet:
     model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, augment=True)
     # if 's' in name:
