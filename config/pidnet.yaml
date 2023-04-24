@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id pidnet-model-fix-plz
+  project_id: &project_id pidnet-model-full-loss-plz
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id /DATA/VOC12Dataset
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -19,10 +19,12 @@ train:
   losses:
     - criterion: pidnet_cross_entropy
       weight: ~
+      ignore_index: 255
     - criterion: boundary_loss
       weight: 20.0
     - criterion: pidnet_cross_entropy_with_boundary
       weight: ~
+      ignore_index: 255
       
   opt: adamw
   lr0: 6e-5
