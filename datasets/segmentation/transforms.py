@@ -150,11 +150,13 @@ def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
 
     h, w = img_size[:2]
     scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
-    val_transforms_composed = A.Compose([
-        A.Resize(crop_size_h, crop_size_w),
-        A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
-        ToTensorV2()
-    ])
+    val_transforms_composed = A.Compose(
+        [
+            A.Resize(crop_size_h, crop_size_w),
+            A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
+            ToTensorV2()
+        ],
+    additional_targets={'edge': 'mask'})
 
     return val_transforms_composed
 
