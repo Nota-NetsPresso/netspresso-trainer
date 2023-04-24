@@ -9,5 +9,6 @@ class SoftTargetCrossEntropy(nn.Module): # cutmix/mixup augmentation
         super(SoftTargetCrossEntropy, self).__init__()
 
     def forward(self, out: Dict, target: torch.Tensor) -> torch.Tensor:
-        loss = torch.sum(-target * F.log_softmax(out['pred'], dim=-1), dim=-1)
+        pred = out['pred']
+        loss = torch.sum(-target * F.log_softmax(pred, dim=-1), dim=-1)
         return loss.mean()
