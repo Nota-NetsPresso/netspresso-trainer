@@ -69,7 +69,7 @@ class ClassificationPipeline(BasePipeline):
         with autocast():
             out = self.model(images)
             self.loss(out, target, mode='valid')
-            self.metric(out, target, mode='valid')
+            self.metric(out['pred'], target, mode='valid')
 
         # self.one_epoch_result.append(self.loss.result('valid'))
 

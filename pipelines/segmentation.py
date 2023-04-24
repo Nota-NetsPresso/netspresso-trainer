@@ -87,7 +87,7 @@ class SegmentationPipeline(BasePipeline):
 
         out = self.model(images, label_size=target.size())
         self.loss(out, target, mode='valid')
-        self.metric(out, target, mode='valid')
+        self.metric(out['pred'], target, mode='valid')
 
         if self.args.distributed:
             torch.distributed.barrier()
