@@ -11,14 +11,16 @@ trainer_launcher:
   task: &task segmentation
   model_format: bin_json
 train:
-  task: *task
+  task: 'segmentation'
   architecture:
     full: ~ # auto
     backbone: segformer
     head: segformer_decode_head
   losses:
-    criterion: cross_entropy
-    smoothing: ~
+    - criterion: cross_entropy
+      weight: ~
+      ignore_index: 255
+
   opt: adamw
   lr0: 6e-5
   lrf: 0.0
@@ -92,16 +94,3 @@ augment:
     hue: 0.1
     colorjitter_p: 0.5
   reduce_zero_label: *reduce_zero_label
-output_model_info: 
-  output_batch_size: 1 
-  img_size_width: 512
-  img_size_height: 512
-  img_size_channel: 3 
-train_cmd:
-  runtime: python3 
-  runtime_args:
-    -m: torch.distributed.launch 
-    --nproc_per_node: 1 
-  runfile: train.py 
-  runfile_args:
-    --config: /config.yml

@@ -18,6 +18,6 @@ class SeparateForwardModule(nn.Module):
     
     # @final
     def forward(self, *args, **kwargs):
-        if self.training:
-            return self.forward_training(*args, **kwargs)
-        return self.forward_inference(*args, **kwargs)
+        # TODO: train/val/infer
+        return self.forward_training(*args, **kwargs)
+        # return self.forward_inference(*args, **kwargs)

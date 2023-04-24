@@ -57,13 +57,16 @@ class SegmentationPipeline(BasePipeline):
         images = images.to(self.devices)
         target = target.long().to(self.devices)
         
-        if self.model_name == 'pidnet':
+        if 'edges' in batch:
             bd_gt = batch['edges']
             bd_gt = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
         out = self.model(images, label_size=target.size())
-        self.loss(out, target, mode='train')
+        if 'edges' in batch:
+            self.loss(out, target, bd_gt=bd_gt, mode='train')
+        else:
+            self.loss(out, target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
@@ -84,10 +87,18 @@ class SegmentationPipeline(BasePipeline):
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
         target = target.long().to(self.devices)
+        
+        if 'edges' in batch:
+            bd_gt = batch['edges']
+            bd_gt = bd_gt.to(self.devices)
 
         out = self.model(images, label_size=target.size())
-        self.loss(out, target, mode='valid')
-        self.metric(out, target, mode='valid')
+        if 'edges' in batch:
+            self.loss(out, target, bd_gt=bd_gt, mode='valid')
+        else:
+            self.loss(out, target, mode='valid')
+
+        self.metric(out['pred'], target, mode='valid')
 
         if self.args.distributed:
             torch.distributed.barrier()
