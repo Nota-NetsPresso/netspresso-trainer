@@ -70,7 +70,7 @@ def build_model(args, num_classes):
         model: nn.Module = eval(f"full.{model_name}")(args, num_classes)
         
         model_state_dict = load_pretrained_checkpoint(model_name)
-        model.load_state_dict(model_state_dict)
+        model.load_state_dict(model_state_dict, strict=False)
         return model
 
     model = AssembleModel(args, num_classes)
