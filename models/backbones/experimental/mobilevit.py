@@ -1,6 +1,7 @@
 """
-Based on the mobilevit implementation.
+Based on the mobilevit unofficial implementation.
 https://github.com/chinhsuanwu/mobilevit-pytorch
+TODO: substitute with the official code: https://github.com/apple/ml-cvnets/blob/main/cvnets/models/classification/mobilevit.py
 """
 import torch
 import torch.nn as nn
