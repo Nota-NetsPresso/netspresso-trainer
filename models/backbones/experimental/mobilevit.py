@@ -45,7 +45,7 @@ class MobileViT(nn.Module):
         self.layer_4 = None
         self.layer_5 = None
         self.conv_1x1_exp = None
-        self.classifier = None
+        # self.classifier = None
         self.round_nearest = 8
 
         # Segmentation architectures like Deeplab and PSPNet modifies the strides of the backbone
