@@ -12,8 +12,8 @@ from torch import Tensor
 # from . import register_cls_models
 # from .base_cls import BaseEncoder
 from models.configuration.mobilevit import get_configuration
-from models.op.mobilevit import ConvLayer, LinearLayer, GlobalPool
-from models.op.mobilevit import InvertedResidual, MobileViTBlock
+from models.op.ml_cvnets import ConvLayer, LinearLayer, GlobalPool
+from models.op.ml_cvnets import InvertedResidual, MobileViTBlock
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
@@ -45,7 +45,7 @@ class MobileViT(nn.Module):
         self.layer_4 = None
         self.layer_5 = None
         self.conv_1x1_exp = None
-        self.classifier = None
+        # self.classifier = None
         self.round_nearest = 8
 
         # Segmentation architectures like Deeplab and PSPNet modifies the strides of the backbone
