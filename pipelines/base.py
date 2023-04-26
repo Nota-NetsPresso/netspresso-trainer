@@ -90,7 +90,7 @@ class BasePipeline(ABC):
             if epoch_with_valid:
                 self.validate()
             
-            if torch.distributed.get_rank() == 0:
+            if (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0):
                 self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
             
             logger.info("-" * 40)
