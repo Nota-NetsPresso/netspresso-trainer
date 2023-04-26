@@ -9,7 +9,7 @@ from typing import Dict, Tuple, Optional
 
 # from . import register_cls_models
 # from .base_cls import BaseEncoder
-from .config.mobilevit import get_configuration
+from models.configuration.mobilevit import get_configuration
 from models.op.mobilevit import ConvLayer, LinearLayer, GlobalPool
 from models.op.mobilevit import InvertedResidual, MobileViTBlock
 
