@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 
 from losses.common import CrossEntropyLoss
+from losses.classification.label_smooth import LabelSmoothingCrossEntropy
 from losses.classification.soft_target import SoftTargetCrossEntropy
 from losses.segmentation.pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
 from utils.common import AverageMeter
@@ -15,7 +16,7 @@ IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
 LOSS_DICT = {
     'cross_entropy': CrossEntropyLoss,
     'soft_target_cross_entropy': SoftTargetCrossEntropy,
-    'label_smoothing_cross_entropy': CrossEntropyLoss,
+    'label_smoothing_cross_entropy': LabelSmoothingCrossEntropy,
     'pidnet_cross_entropy': PIDNetCrossEntropy,
     'boundary_loss': BondaryLoss,
     'pidnet_cross_entropy_with_boundary': PIDNetBoundaryAwareCrossEntropy,
@@ -60,7 +61,7 @@ class LossFactory:
 
     def backward(self):
         self.total_loss_for_backward.requires_grad_(True)
-        self.total_loss_for_backward.backward()
+        self.total_loss_for_backward.mean().backward()
         
     def _assert_argument(self, kwargs):
         if 'boundary_loss' in self.loss_func_dict:
