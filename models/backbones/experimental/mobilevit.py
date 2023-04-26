@@ -3,16 +3,20 @@ Based on the mobilevit official implementation.
 https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f/cvnets/models/classification/mobilevit.py
 """
 
-from torch import nn
 import argparse
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple, Optional, Any
 
+import torch
+import torch.nn as nn
+from torch import Tensor
 # from . import register_cls_models
 # from .base_cls import BaseEncoder
 from models.configuration.mobilevit import get_configuration
 from models.op.mobilevit import ConvLayer, LinearLayer, GlobalPool
 from models.op.mobilevit import InvertedResidual, MobileViTBlock
 
+__all__ = ['mobilevit']
+SUPPORTING_TASK = ['classification']
 
 # class MobileViT(BaseEncoder):
 class MobileViT(nn.Module):
@@ -21,18 +25,41 @@ class MobileViT(nn.Module):
     """
 
     def __init__(self, opts, *args, **kwargs) -> None:
-        num_classes = getattr(opts, "model.classification.n_classes", 1000)
-        classifier_dropout = getattr(
-            opts, "model.classification.classifier_dropout", 0.0
-        )
+        # classifier_dropout = getattr(
+        #     opts, "model.classification.classifier_dropout", 0.0
+        # )
 
         pool_type = getattr(opts, "model.layer.global_pool", "mean")
         image_channels = 3
         out_channels = 16
 
-        mobilevit_config = get_configuration(opts=opts)
+        mobilevit_config = get_configuration()
 
-        super().__init__(opts, *args, **kwargs)
+        super().__init__()
+        
+        """From BaseEncoder"""
+        self.conv_1 = None
+        self.layer_1 = None
+        self.layer_2 = None
+        self.layer_3 = None
+        self.layer_4 = None
+        self.layer_5 = None
+        self.conv_1x1_exp = None
+        self.classifier = None
+        self.round_nearest = 8
+
+        # Segmentation architectures like Deeplab and PSPNet modifies the strides of the backbone
+        # We allow that using output_stride and replace_stride_with_dilation arguments
+        self.dilation = 1
+        output_stride = kwargs.get("output_stride", None)
+        self.dilate_l4 = False
+        self.dilate_l5 = False
+        if output_stride == 8:
+            self.dilate_l4 = True
+            self.dilate_l5 = True
+        elif output_stride == 16:
+            self.dilate_l5 = True
+        """End BaseEncoder"""
 
         # store model configuration in a dictionary
         self.model_conf_dict = dict()
@@ -100,27 +127,37 @@ class MobileViT(nn.Module):
             "in": in_channels,
             "out": exp_channels,
         }
+        self.pool = GlobalPool(pool_type=pool_type, keep_dim=False)
+        
+        self._last_channels = exp_channels
 
-        self.classifier = nn.Sequential()
-        self.classifier.add_module(
-            name="global_pool", module=GlobalPool(pool_type=pool_type, keep_dim=False)
-        )
-        if 0.0 < classifier_dropout < 1.0:
-            self.classifier.add_module(
-                name="dropout", module=nn.Dropout(p=classifier_dropout, inplace=True)
-            )
-        self.classifier.add_module(
-            name="fc",
-            module=LinearLayer(
-                in_features=exp_channels, out_features=num_classes, bias=True
-            ),
-        )
+        # self.classifier = nn.Sequential()
+        # self.classifier.add_module(
+        #     name="global_pool", module=GlobalPool(pool_type=pool_type, keep_dim=False)
+        # )
+        # if 0.0 < classifier_dropout < 1.0:
+        #     self.classifier.add_module(
+        #         name="dropout", module=nn.Dropout(p=classifier_dropout, inplace=True)
+        #     )
+        # self.classifier.add_module(
+        #     name="fc",
+        #     module=LinearLayer(
+        #         in_features=exp_channels, out_features=num_classes, bias=True
+        #     ),
+        # )
 
-        # check model
-        self.check_model()
+        # # check model
+        # self.check_model()
 
-        # weight initialization
-        self.reset_parameters(opts=opts)
+        # # weight initialization
+        # self.reset_parameters(opts=opts)
+        
+    @property
+    def last_channels(self):
+        return self._last_channels
+
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
 
     @classmethod
     def add_arguments(cls, parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -298,3 +335,92 @@ class MobileViT(nn.Module):
         )
 
         return nn.Sequential(*block), input_channel
+    
+    def _forward_layer(self, layer: nn.Module, x: Tensor) -> Tensor:
+        # Larger models with large input image size may not be able to fit into memory.
+        # We can use gradient checkpointing to enable training with large models and large inputs
+        # return (
+        #     gradient_checkpoint_fn(layer, x)
+        #     if self.gradient_checkpointing
+        #     else layer(x)
+        # )
+        return layer(x)
+
+    def extract_end_points_all(
+        self,
+        x: Tensor,
+        use_l5: Optional[bool] = True,
+        use_l5_exp: Optional[bool] = False,
+        *args,
+        **kwargs
+    ) -> Dict[str, Tensor]:
+        out_dict = {}  # Use dictionary over NamedTuple so that JIT is happy
+
+        # if self.training and self.neural_augmentor is not None:
+        #     x = self.neural_augmentor(x)
+        #     out_dict["augmented_tensor"] = x
+
+        x = self._forward_layer(self.conv_1, x)  # 112 x112
+        x = self._forward_layer(self.layer_1, x)  # 112 x112
+        out_dict["out_l1"] = x
+
+        x = self._forward_layer(self.layer_2, x)  # 56 x 56
+        out_dict["out_l2"] = x
+
+        x = self._forward_layer(self.layer_3, x)  # 28 x 28
+        out_dict["out_l3"] = x
+
+        x = self._forward_layer(self.layer_4, x)  # 14 x 14
+        out_dict["out_l4"] = x
+
+        if use_l5:
+            x = self._forward_layer(self.layer_5, x)  # 7 x 7
+            out_dict["out_l5"] = x
+
+            if use_l5_exp:
+                x = self._forward_layer(self.conv_1x1_exp, x)
+                out_dict["out_l5_exp"] = x
+        return out_dict
+
+    def extract_end_points_l4(self, x: Tensor, *args, **kwargs) -> Dict[str, Tensor]:
+        return self.extract_end_points_all(x, use_l5=False)
+
+    def _extract_features(self, x: Tensor, *args, **kwargs) -> Tensor:
+        x = self._forward_layer(self.conv_1, x)
+        x = self._forward_layer(self.layer_1, x)
+        x = self._forward_layer(self.layer_2, x)
+        x = self._forward_layer(self.layer_3, x)
+
+        x = self._forward_layer(self.layer_4, x)
+        x = self._forward_layer(self.layer_5, x)
+        x = self._forward_layer(self.conv_1x1_exp, x)
+        x = self._forward_layer(self.pool, x)
+        return x
+
+    def _forward_classifier(self, x: Tensor, *args, **kwargs) -> Dict:
+        # We add another classifier function so that the classifiers
+        # that do not adhere to the structure of BaseEncoder can still
+        # use neural augmentor
+        x = self._extract_features(x)
+        # x = self.classifier(x)
+        return x
+
+    def forward(self, x: Any, *args, **kwargs) -> Dict:
+        # if self.neural_augmentor is not None:
+        #     if self.training:
+        #         x_aug = self.neural_augmentor(x)
+        #         prediction = self._forward_classifier(x_aug)  # .detach()
+        #         out_dict = {"augmented_tensor": x_aug, "logits": prediction}
+        #     else:
+        #         out_dict = {
+        #             "augmented_tensor": None,
+        #             "logits": self._forward_classifier(x),
+        #         }
+        #     return out_dict
+        # else:
+        x = self._forward_classifier(x, *args, **kwargs)
+        return {'last_feature': x}
+
+
+def mobilevit(*args, **kwargs):
+    return MobileViT(opts=None)

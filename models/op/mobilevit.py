@@ -372,7 +372,8 @@ class ConvLayer(nn.Module):
         self.norm_name = None
         if use_norm:
             # norm_layer = get_normalization_layer(opts=opts, num_features=out_channels)
-            norm_layer = nn.BatchNorm2d(num_features=out_channels, momentum=self.hp.momentum)
+            momentum = getattr(opts, "model.normalization.momentum", 0.1)
+            norm_layer = nn.BatchNorm2d(num_features=out_channels, momentum=momentum)
             block.add_module(name="norm", module=norm_layer)
             self.norm_name = norm_layer.__class__.__name__
 

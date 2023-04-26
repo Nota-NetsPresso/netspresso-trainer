@@ -5,8 +5,12 @@ https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f
 
 from typing import Dict
 
+from omegaconf import OmegaConf
 
-def get_configuration(opts) -> Dict:
+# config = OmegaConf.load("models/configuration/mobilevit.yaml")
+
+def get_configuration() -> Dict:
+    opts = OmegaConf.load("models/configuration/mobilevit.yaml")
     mode = getattr(opts, "model.classification.mit.mode", "small")
     # if mode is None:
     #     logger.error("Please specify mode")
