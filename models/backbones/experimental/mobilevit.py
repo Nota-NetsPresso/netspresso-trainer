@@ -12,8 +12,8 @@ from torch import Tensor
 # from . import register_cls_models
 # from .base_cls import BaseEncoder
 from models.configuration.mobilevit import get_configuration
-from models.op.mobilevit import ConvLayer, LinearLayer, GlobalPool
-from models.op.mobilevit import InvertedResidual, MobileViTBlock
+from models.op.ml_cvnets import ConvLayer, LinearLayer, GlobalPool
+from models.op.ml_cvnets import InvertedResidual, MobileViTBlock
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
