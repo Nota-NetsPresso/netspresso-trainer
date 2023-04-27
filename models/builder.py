@@ -8,7 +8,7 @@ import models.heads as heads
 
 PRETRAINED_ROOT = Path("pretrained")
 UPDATE_PREFIX = "updated_"
-
+SUPPORTING_MODEL_LIST = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet", "mobilevit", "vit"]
 MODEL_PRETRAINED_DICT = {
     "atomixnet_l": PRETRAINED_ROOT / "backbones" / "atomixnet" / "atomixnet_l.pth",
     "atomixnet_m": PRETRAINED_ROOT / "backbones" / "atomixnet" / "atomixnet_m.pth",
@@ -16,6 +16,7 @@ MODEL_PRETRAINED_DICT = {
     "resnet50": PRETRAINED_ROOT / "backbones" / "resnet" / "resnet50.pth",
     "segformer": PRETRAINED_ROOT / "backbones" / "segformer" / "segformer.pth",
     "pidnet": PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
+    "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
 }
 
 def load_pretrained_checkpoint(model_name: str):
