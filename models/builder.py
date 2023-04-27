@@ -1,10 +1,16 @@
 import importlib
+import os
 from pathlib import Path
+
 import torch
 import torch.nn as nn
 import models.full as full
 import models.backbones as backbones
 import models.heads as heads
+
+from utils.logger import set_logger
+logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
+
 
 PRETRAINED_ROOT = Path("pretrained")
 UPDATE_PREFIX = "updated_"
@@ -20,15 +26,13 @@ MODEL_PRETRAINED_DICT = {
 }
 
 def load_pretrained_checkpoint(model_name: str):
-    supporting_model_list = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet"]
-    assert model_name in supporting_model_list
-
-    if model_name in MODEL_PRETRAINED_DICT:
-        state_dict_path: Path = MODEL_PRETRAINED_DICT[model_name]
-        state_dict = torch.load(state_dict_path)
-    else:
-        raise AssertionError(f"The model_name ({model_name}) should be one of the followings: {supporting_model_list}")
-
+    assert model_name in SUPPORTING_MODEL_LIST, f"The model_name ({model_name}) should be one of the followings: {SUPPORTING_MODEL_LIST}"
+    
+    if not model_name in MODEL_PRETRAINED_DICT:
+        raise AssertionError(f"No pretrained checkpoint found! Model name: ({model_name})")
+    
+    state_dict_path: Path = MODEL_PRETRAINED_DICT[model_name]
+    state_dict = torch.load(state_dict_path)
     return state_dict
 
 
@@ -44,7 +48,7 @@ class AssembleModel(nn.Module):
             model_state_dict = load_pretrained_checkpoint(backbone_name)
             self.backbone.load_state_dict(model_state_dict)
         except AssertionError as e:
-            pass
+            logger.warning(str(e))
         # self._freeze_backbone()
 
         if self.task == 'classification':
