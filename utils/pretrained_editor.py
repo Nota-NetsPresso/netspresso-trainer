@@ -18,6 +18,11 @@ def convert_state_dict_to_model(model_name, model, state_dict):
             return True
         return False
     """
+    
+    """mobilevit
+    def convert_string(x): return f"{x}"
+    def exclude_string(x): return False
+    """
 
     """vanila
     """
@@ -40,7 +45,7 @@ def convert_state_dict_to_model(model_name, model, state_dict):
 
     print(f"no_match_layers: \n{no_match_layers[:5]}")
     print(f"NO MATCH COUNT: {len(no_match_layers)}")
-    model.load_state_dict(dict(extracted_state_dict), strict=False)
+    model.load_state_dict(dict(extracted_state_dict))
     _save_extracted_state_dict(extracted_state_dict, "result.pth")
 
     return model
