@@ -23,6 +23,7 @@ MODEL_PRETRAINED_DICT = {
     "segformer": PRETRAINED_ROOT / "backbones" / "segformer" / "segformer.pth",
     "pidnet": PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
     "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
+    "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_tiny.pth",
 }
 
 def load_pretrained_checkpoint(model_name: str):
