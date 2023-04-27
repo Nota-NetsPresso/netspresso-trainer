@@ -1,6 +1,6 @@
 """
 Based on the vit implementation of apple/ml-cvnets.
-https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f/cvnets/models/classification/vit.py
+https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 
 from typing import Dict
@@ -21,11 +21,12 @@ def get_configuration() -> Dict:
     vit_config = dict()
     if mode == "tiny":
         vit_config = {
+            "patch_size": 16,
             "embed_dim": 192,
             "n_transformer_layers": 12,
             "n_attn_heads": 3,
             "ffn_dim": 192 * 4,
-            "norm_layer": norm_layer,
+            "norm_layer": "layer_norm",
             "pos_emb_drop_p": 0.1,
             "attn_dropout": 0.0,
             "ffn_dropout": 0.0,
@@ -33,35 +34,12 @@ def get_configuration() -> Dict:
         }
     elif mode == "small":
         vit_config = {
+            "patch_size": 16,
             "embed_dim": 384,
             "n_transformer_layers": 12,
             "n_attn_heads": 6,
             "ffn_dim": 384 * 4,
-            "norm_layer": norm_layer,
-            "pos_emb_drop_p": 0.0,
-            "attn_dropout": 0.0,
-            "ffn_dropout": 0.0,
-            "dropout": dropout,
-        }
-    elif mode == "base":
-        vit_config = {
-            "embed_dim": 768,
-            "n_transformer_layers": 12,
-            "n_attn_heads": 12,
-            "ffn_dim": 768 * 4,
-            "norm_layer": norm_layer,
-            "pos_emb_drop_p": 0.0,
-            "attn_dropout": 0.0,
-            "ffn_dropout": 0.0,
-            "dropout": dropout,
-        }
-    elif mode == "huge":
-        vit_config = {
-            "embed_dim": 1280,
-            "n_transformer_layers": 32,
-            "n_attn_heads": 20,  # each head dimension is 64
-            "ffn_dim": 1280 * 4,
-            "norm_layer": norm_layer,
+            "norm_layer": "layer_norm",
             "pos_emb_drop_p": 0.0,
             "attn_dropout": 0.0,
             "ffn_dropout": 0.0,

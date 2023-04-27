@@ -1,6 +1,6 @@
 """
 Based on the vit implementation of apple/ml-cvnets.
-https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f/cvnets/models/classification/vit.py
+https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 import argparse
 from typing import Union, Dict, Optional, Tuple, Any
@@ -10,7 +10,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from models.configuration.vit import get_configuration
-from models.op.ml_cvnets import ConvLayer, LinearLayer, LayerNorm, PositionalEmbedding
+from models.op.ml_cvnets import ConvLayer, LinearLayer, LayerNorm, SinusoidalPositionalEncoding
 from models.op.ml_cvnets import TransformerEncoder
 
 __all__ = ['vit']
@@ -31,7 +31,6 @@ class VisionTransformer(nn.Module):
     def __init__(self, opts, *args, **kwargs) -> None:
         image_channels = 3
         num_classes = getattr(opts, "model.classification.n_classes", 1000)
-        pytorch_mha = getattr(opts, "model.classification.vit.use_pytorch_mha", False)
 
         vit_config = get_configuration()
 
@@ -66,12 +65,12 @@ class VisionTransformer(nn.Module):
             self.dilate_l5 = True
         """End BaseEncoder"""
         
-        kernel_sizes_conv_stem = [4, 2, 2]
         # Typically, in the ImageNet dataset, we use 224x224 as a resolution.
         # For out ViT implementation, patch size is 16 (16 = 4 * 2 * 2)
         # Therefore, total number of embeddings along width and height are (224 / 16)^2
         num_embeddings = (224 // 16) ** 2
 
+        patch_size = vit_config["patch_size"]
         embed_dim = vit_config["embed_dim"]
         ffn_dim = vit_config["ffn_dim"]
         pos_emb_drop_p = vit_config["pos_emb_drop_p"]
@@ -81,42 +80,21 @@ class VisionTransformer(nn.Module):
         dropout = vit_config["dropout"]
         ffn_dropout = vit_config["ffn_dropout"]
         norm_layer = vit_config["norm_layer"]
+        
+        kernel_size = patch_size
+        if patch_size % 2 == 0:
+            kernel_size += 1
 
-        conv_stem_proj_dim = max(32, embed_dim // 4)
-        patch_emb = [
-            ConvLayer(
-                opts=opts,
-                in_channels=image_channels,
-                out_channels=conv_stem_proj_dim,
-                kernel_size=kernel_sizes_conv_stem[0],
-                stride=kernel_sizes_conv_stem[0],
-                bias=False,
-                use_norm=True,
-                use_act=True,
-            ),
-            ConvLayer(
-                opts=opts,
-                in_channels=conv_stem_proj_dim,
-                out_channels=conv_stem_proj_dim,
-                kernel_size=kernel_sizes_conv_stem[1],
-                stride=kernel_sizes_conv_stem[1],
-                bias=False,
-                use_norm=True,
-                use_act=True,
-            ),
-            ConvLayer(
-                opts=opts,
-                in_channels=conv_stem_proj_dim,
-                out_channels=embed_dim,
-                kernel_size=kernel_sizes_conv_stem[2],
-                stride=kernel_sizes_conv_stem[2],
-                bias=True,
-                use_norm=False,
-                use_act=False,
-            ),
-        ]
-
-        self.patch_emb = nn.Sequential(*patch_emb)
+        self.patch_emb = ConvLayer(
+            opts=opts,
+            in_channels=image_channels,
+            out_channels=embed_dim,
+            kernel_size=kernel_size,
+            stride=patch_size,
+            bias=True,
+            use_norm=False,
+            use_act=False,
+        )
 
         use_cls_token = not getattr(
             opts, "model.classification.vit.no_cls_token", False
@@ -138,7 +116,9 @@ class VisionTransformer(nn.Module):
         # self.post_transformer_norm = get_normalization_layer(
         #     opts=opts, num_features=embed_dim, norm_type=norm_layer
         # )
-        self.post_transformer_norm = LayerNorm(normalized_shape=embed_dim)
+        transformer_blocks.append(
+            LayerNorm(normalized_shape=embed_dim)
+        )
 
         self.transformer = nn.Sequential(*transformer_blocks)
         # self.classifier = LinearLayer(embed_dim, num_classes)
@@ -151,19 +131,15 @@ class VisionTransformer(nn.Module):
         else:
             self.cls_token = None
 
-        self.pos_embed = PositionalEmbedding(
-            opts=opts,
-            num_embeddings=num_embeddings,
-            embedding_dim=embed_dim,
-            sequence_first=False,
-            padding_idx=None,
-            is_learnable=not getattr(
-                opts, "model.classification.vit.sinusoidal_pos_emb", False
-            ),
-            interpolation_mode="bilinear",
+        vocab_size = getattr(opts, "model.classification.vit.vocab_size", 1000)
+        self.pos_embed = SinusoidalPositionalEncoding(
+                d_model=embed_dim,
+                dropout=pos_emb_drop_p,
+                channels_last=True,
+                max_len=vocab_size,
         )
         self.emb_dropout = nn.Dropout(p=pos_emb_drop_p)
-        self.use_pytorch_mha = pytorch_mha
+        self.use_pytorch_mha = False
         self.embed_dim = embed_dim
         self.checkpoint_segments = getattr(
             opts, "model.classification.vit.checkpoint_segments", 4
@@ -326,39 +302,28 @@ class VisionTransformer(nn.Module):
             "ViT does not support feature extraction the same way as CNN."
         )
 
-    def extract_patch_embeddings(self, x: Tensor) -> Tuple[Tensor, Tuple[int, int]]:
-        # input is of shape [Batch, in_channels, height, width]. in_channels is mostly 3 (for RGB images)
-        batch_size = x.shape[0]
+    def extract_patch_embeddings(self, x: Tensor) -> Tensor:
+        # x -> [B, C, H, W]
+        B_ = x.shape[0]
 
-        # [Batch, in_channels, height, width] --> [Batch, emb_dim, num_patches_height, num_patches_width]
+        # [B, C, H, W] --> [B, C, n_h, n_w]
         patch_emb = self.patch_emb(x)
-        n_h, n_w = patch_emb.shape[-2:]
-
-        # [Batch, emb_dim, num_patches_height, num_patches_width] --> [Batch, emb_dim, num_patches]
+        # [B, C, n_h, n_w] --> [B, C, N]
         patch_emb = patch_emb.flatten(2)
-        # [Batch, emb_dim, num_patches] --> [Batch, num_patches, emb_dim]
+        # [B, C, N] --> [B, N, C]
         patch_emb = patch_emb.transpose(1, 2).contiguous()
-
-        n_patches = patch_emb.shape[1]
-        pos_emb = self.pos_embed(n_patches).to(patch_emb.dtype)
-
-        # add positional encodings
-        patch_emb = pos_emb + patch_emb
 
         # add classification token
         if self.cls_token is not None:
-            # [1, 1, emb_dim] --> [Batch, 1, emb_dim]
-            cls_tokens = self.cls_token.expand(batch_size, -1, -1)
-            # Concat([Batch, 1, emb_dim], [Batch, num_patches, emb_dim]) --> [Batch, num_patches + 1, emb_dim]
+            cls_tokens = self.cls_token.expand(B_, -1, -1)
             patch_emb = torch.cat((cls_tokens, patch_emb), dim=1)
 
-        # dropout
-        patch_emb = self.emb_dropout(patch_emb)
-        return patch_emb, (n_h, n_w)
+        patch_emb = self.pos_embed(patch_emb)
+        return patch_emb
 
     def _forward_classifier(self, x: Tensor, *args, **kwargs) -> Tensor:
-        x, _ = self.extract_patch_embeddings(x)
-
+        x = self.extract_patch_embeddings(x)
+        x = self.transformer(x)
         if self.use_pytorch_mha:
             # [B, N, C] --> [N, B, C]
             # For PyTorch MHA, we need sequence first.
@@ -374,9 +339,9 @@ class VisionTransformer(nn.Module):
         #     # Note that default MHA implementation is batch-first, while pytorch implementation is sequence-first.
         #     x = gradient_checkpoint_fn(self.transformer, self.checkpoint_segments, x)
         # else:
-        for layer in self.transformer:
-            x = layer(x, use_pytorch_mha=self.use_pytorch_mha)
-        x = self.post_transformer_norm(x)
+        # for layer in self.transformer:
+        #     x = layer(x, use_pytorch_mha=self.use_pytorch_mha)
+        x = self.transformer(x)
 
         # [N, B, C] or [B, N, C] --> [B, C]
         if self.cls_token is not None:
