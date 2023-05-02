@@ -9,7 +9,7 @@ from .step_lr import StepLRScheduler
 from .tanh_lr import TanhLRScheduler
 
 
-def create_scheduler(optimizer, args):
+def build_scheduler(optimizer, args):
     num_epochs = getattr(args, 'epochs')
 
     if getattr(args, 'lr_noise', None) is not None:
