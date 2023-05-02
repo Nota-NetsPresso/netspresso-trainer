@@ -2,11 +2,12 @@ import os
 from pathlib import Path
 from collections import deque
 
-
+from omegaconf import OmegaConf
 import torch
 from torch.cuda.amp import autocast
 
 from optimizers.builder import build_optimizer
+from schedulers.builder import build_scheduler
 from loggers.builder import build_logger
 from pipelines.base import BasePipeline
 from utils.logger import set_logger
@@ -32,7 +33,18 @@ class ClassificationPipeline(BasePipeline):
                                          lr=self.args.train.lr0,
                                          wd=self.args.train.weight_decay,
                                          momentum=self.args.train.momentum)
-
+        sched_args = OmegaConf.create({
+            'epochs': self.args.train.epochs,
+            'lr_noise': None,
+            'sched': 'poly',
+            'decay_rate': self.args.train.schd_power,
+            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.train.lrf`
+            'warmup_lr': 0.00001, # self.args.train.lr0
+            'warmup_epochs': 5, # self.args.train.warmup_epochs
+            'cooldown_epochs': 0,
+        })
+        self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
+        
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
         output_dir.mkdir(exist_ok=True, parents=True)
         self.train_logger = build_logger(csv_path=output_dir / _RECOMMEND_CSV_LOG_PATH, task=self.args.train.task)
