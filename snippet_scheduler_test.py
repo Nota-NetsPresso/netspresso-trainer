@@ -9,7 +9,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from optimizers.builder import build_optimizer
-from schedulers import create_scheduler
+from schedulers import build_scheduler
 from utils.logger import set_logger
 
 logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
@@ -84,7 +84,7 @@ if __name__ == '__main__':
         'cooldown_epochs': 0,
     })
 
-    scheduler, _ = create_scheduler(optimizer, sched_args)
+    scheduler, _ = build_scheduler(optimizer, sched_args)
 
     loss_func = nn.MSELoss()
 
