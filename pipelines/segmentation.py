@@ -7,7 +7,7 @@ from omegaconf import OmegaConf
 
 
 from optimizers.builder import build_optimizer
-from schedulers.builder import create_scheduler
+from schedulers.builder import build_scheduler
 from loggers.builder import build_logger
 from pipelines.base import BasePipeline
 from utils.logger import set_logger
@@ -45,7 +45,7 @@ class SegmentationPipeline(BasePipeline):
             'warmup_epochs': 5, # self.args.train.warmup_epochs
             'cooldown_epochs': 0,
         })
-        self.scheduler, _ = create_scheduler(self.optimizer, sched_args)
+        self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
 
         output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
         output_dir.mkdir(exist_ok=True, parents=True)

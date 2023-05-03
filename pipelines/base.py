@@ -77,8 +77,6 @@ class BasePipeline(ABC):
             else:
                 self.train_one_epoch()  # append result in `self._one_epoch_result`
 
-            if self.args.train.task == 'segmentation':
-                self.scheduler.step(num_epoch)
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
 
             if num_epoch == START_EPOCH and self.is_online:  # FIXME: case for continuing training
@@ -101,6 +99,8 @@ class BasePipeline(ABC):
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
+            
+        self.scheduler.step()
 
     @torch.no_grad()
     def validate(self):
@@ -110,7 +110,7 @@ class BasePipeline(ABC):
     def log_end_epoch(self, num_epoch, with_valid):
 
         logger.info(f"Epoch: {num_epoch} / {self.args.train.epochs}")
-        logger.info(f"learning rate: {self.learning_rate:.7f}")
+        logger.info(f"learning rate: {self.learning_rate:.7f}")  # TODO: call before scheduler.step()
         logger.info(f"training loss: {self.train_loss:.7f}")
         logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
 
