@@ -110,7 +110,7 @@ class BasePipeline(ABC):
     def log_end_epoch(self, num_epoch, with_valid):
 
         logger.info(f"Epoch: {num_epoch} / {self.args.train.epochs}")
-        logger.info(f"learning rate: {self.learning_rate:.7f}")
+        logger.info(f"learning rate: {self.learning_rate:.7f}")  # TODO: call before scheduler.step()
         logger.info(f"training loss: {self.train_loss:.7f}")
         logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
 
