@@ -1,4 +1,4 @@
-from loggers.base import BaseCSVLogger
+from loggers.base import BaseCSVLogger, BaseVisualizer
 
 CSV_HEADER = ['epoch', 'train_loss', 'valid_loss', 'train_accuracy', 'valid_accuracy']
 
@@ -8,6 +8,9 @@ class ClassificationCSVLogger(BaseCSVLogger):
         self.header = CSV_HEADER
         self.update_header()
         
-class ImageLogger:
-    def __init__(self) -> None:
-        raise NotImplementedError
+class ClassificationVisualizer(BaseVisualizer):
+    def __init__(self, result_dir) -> None:
+        super(BaseVisualizer, self).__init__(result_dir)
+    
+    def save_result(self, data):
+        return

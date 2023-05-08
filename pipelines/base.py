@@ -50,14 +50,32 @@ class BasePipeline(ABC):
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
         self.profile = profile
 
+        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ
+        self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
+
+    # final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         assert self.train_logger is not None, "`self.train_logger` is not defined!"
+        """Append here if you need more assertion checks!"""
+        return True
 
     @abstractmethod
     def set_train(self):
-        pass
+        raise NotImplementedError
+    
+    @abstractmethod
+    def log_result(self, num_epoch, with_valid):
+        raise NotImplementedError
+
+    @abstractmethod
+    def train_step(self, batch):
+        raise NotImplementedError
+
+    @abstractmethod
+    def valid_step(self, batch):
+        raise NotImplementedError
 
     def train(self):
         logger.info(f"Training configuration:\n{OmegaConf.to_yaml(OmegaConf.create(self.args).get('train'))}")
@@ -83,13 +101,11 @@ class BasePipeline(ABC):
                 time_for_first_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
                 self.server_service.report_elapsed_time_for_epoch(time_for_first_epoch)
 
-            epoch_with_valid = num_epoch % VALID_FREQ == START_EPOCH % VALID_FREQ
-
-            if epoch_with_valid:
+            with_valid_logging = self.epoch_with_valid_logging(num_epoch)
+            if with_valid_logging:
                 self.validate()
-            
-            if (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0):
-                self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
+            if self.single_gpu_or_rank_zero:
+                self.log_end_epoch(num_epoch=num_epoch, with_valid=with_valid_logging)
             
             logger.info("-" * 40)
 
@@ -131,18 +147,6 @@ class BasePipeline(ABC):
     @property
     def valid_loss(self):
         return self.loss.result('valid').get('total').avg
-
-    @abstractmethod
-    def log_result(self, num_epoch, with_valid):
-        pass
-
-    @abstractmethod
-    def train_step(self, batch):
-        pass
-
-    @abstractmethod
-    def valid_step(self, batch):
-        pass
 
     def profile_one_epoch(self):
         _ = torch.ones(1).to(self.devices)

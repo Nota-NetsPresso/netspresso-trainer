@@ -1,6 +1,10 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional, Union
+
+import numpy as np
+import PIL.Image as Image
+    
 
 class BaseCSVLogger(ABC):
     def __init__(self, csv_path):
@@ -41,11 +45,37 @@ class BaseCSVLogger(ABC):
             
     def update(self, data=None, **kwargs):
         if isinstance(data, List):
-            self._update_all(data)
-        elif isinstance(data, Dict):
-            self._update_specific(data)
-        elif isinstance(data, type(None)):
-            self._update_specific(kwargs)
-        else:
-            raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
+            return self._update_with_list(data)
+        if isinstance(data, Dict):
+            return self._update_specific(data)
+        # if isinstance(data, type(None)):
+        #     return self._update_specific(kwargs)
         
+        raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
+
+class BaseVisualizer(ABC):
+    def __init__(self, result_dir) -> None:
+        super(BaseVisualizer, self).__init__()
+        self.result_dir = Path(result_dir)
+        
+    @staticmethod
+    def magic_visualizer(image: Union[np.ndarray, Image.Image, str, Path], size: Optional[Tuple]=None) -> np.ndarray:
+        pass
+    
+    @abstractmethod
+    def save_result(self, data):
+        raise NotImplementedError
+
+class InferenceReporter(ABC):
+    def __init__(self, csv_logger: Optional[BaseCSVLogger], visualizer: Optional[BaseVisualizer]) -> None:
+        super(InferenceReporter, self).__init__()
+        self.csv_logger = csv_logger
+        self.visualizer = visualizer
+        
+    def update(self, data):
+        assert isinstance(self.csv_logger, BaseCSVLogger), "`csv_logger` is not initialized!"
+        self.csv_logger.update(data)
+    
+    def log_prediction(self, data, epoch: int):
+        assert isinstance(self.visualizer, BaseVisualizer), "`visualizer` is not initialized!"
+        self.visualizer.save_result(data)
