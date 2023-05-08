@@ -117,3 +117,4 @@ class SegmentationPipeline(BasePipeline):
             })
 
         self.train_logger.update(logging_contents)
+        return logging_contents

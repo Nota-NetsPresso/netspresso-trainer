@@ -3,6 +3,7 @@ import os
 from statistics import mean
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
@@ -48,6 +49,7 @@ class BasePipeline(ABC):
         self.is_online = is_online
         if self.is_online:
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
+        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
         self.profile = profile
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ
@@ -111,11 +113,15 @@ class BasePipeline(ABC):
 
         self.timer.end_record(name='train_all')
         logger.info(f"Total time: {self.timer.get(name='train_all'):.2f} s")
+        
+        if self.single_gpu_or_rank_zero:
+            # TODO: self.tensorboard.add_graph()
+            pass
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
-            
+        
         self.scheduler.step()
 
     @torch.no_grad()
@@ -134,7 +140,13 @@ class BasePipeline(ABC):
             logger.info(f"validation loss: {self.valid_loss:.7f}")
             logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
 
-        self.log_result(num_epoch, with_valid)
+        logging_contents = self.log_result(num_epoch, with_valid)
+        
+        for k, v in logging_contents:
+            # TODO: self.tensorboard.add_scalar()
+            pass
+            
+        # TODO: self.tensorboard.add_figure()
 
     @property
     def learning_rate(self):
