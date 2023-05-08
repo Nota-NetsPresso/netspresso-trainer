@@ -49,7 +49,6 @@ class BasePipeline(ABC):
         self.is_online = is_online
         if self.is_online:
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
-        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
         self.profile = profile
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ

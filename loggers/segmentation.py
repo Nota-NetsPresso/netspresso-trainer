@@ -1,4 +1,4 @@
-from loggers.base import BaseCSVLogger, BaseVisualizer
+from loggers.base import BaseCSVLogger, BaseImageSaver
 
 CSV_HEADER = ['epoch', 'train_loss', 'train_miou %', 'valid_miou %', 'valid_pixAcc %']
 
@@ -10,9 +10,9 @@ class SegmentationCSVLogger(BaseCSVLogger):
         self.update_header()
 
 
-class SegmentationVisualizer(BaseVisualizer):
+class SegmentationImageSaver(BaseImageSaver):
     def __init__(self, result_dir) -> None:
-        super(BaseVisualizer, self).__init__(result_dir)
+        super(BaseImageSaver, self).__init__(result_dir)
     
     def save_result(self, data):
         return
