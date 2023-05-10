@@ -35,12 +35,18 @@ class TrainingLogger():
             train_images=None, val_images=None, learning_rate=None, elapsed_time=None):
         pass
 
-def build_logger(args, result_dir: Union[Path, str], csv_filename: Union[Path, str],
-                 task: str, model: str, class_map: Dict):
-    result_dir = Path(result_dir)
-    csv_path = result_dir / Path(csv_filename).with_suffix('.csv')
-    _task = task.lower()
+# def build_logger(args, result_dir: Union[Path, str], csv_filename: Union[Path, str],
+#                  task: str, model: str, class_map: Dict):
+#     result_dir = Path(result_dir)
+#     csv_path = result_dir / Path(csv_filename).with_suffix('.csv')
+#     _task = task.lower()
     
-    pass
+#     pass
     
-    return inference_reporter
+#     return inference_reporter
+
+def build_logger(csv_path, task):
+    if not task.lower() in CSV_LOGGER_TASK_SPECIFIC:
+        raise AssertionError(f"No such task! (task: {task})")
+    
+    return CSV_LOGGER_TASK_SPECIFIC[task](csv_path)
