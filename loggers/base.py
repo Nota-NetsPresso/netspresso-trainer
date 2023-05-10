@@ -1,6 +1,21 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Tuple, Optional, Union
+
+import numpy as np
+import PIL.Image as Image
+from torch.utils.tensorboard import SummaryWriter
+
+
+
+class BaseTensorboardLogger(ABC):
+    def __init__(self, args, task, model) -> None:
+        super(BaseTensorboardLogger, self).__init__()
+        self.args = args
+        self.task = task
+        self.model_name = model
+        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
+
 
 class BaseCSVLogger(ABC):
     def __init__(self, csv_path):
@@ -41,11 +56,24 @@ class BaseCSVLogger(ABC):
             
     def update(self, data=None, **kwargs):
         if isinstance(data, List):
-            self._update_all(data)
-        elif isinstance(data, Dict):
-            self._update_specific(data)
-        elif isinstance(data, type(None)):
-            self._update_specific(kwargs)
-        else:
-            raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
+            return self._update_with_list(data)
+        if isinstance(data, Dict):
+            return self._update_specific(data)
+        # if isinstance(data, type(None)):
+        #     return self._update_specific(kwargs)
         
+        raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
+
+class BaseImageSaver(ABC):
+    def __init__(self, result_dir) -> None:
+        super(BaseImageSaver, self).__init__()
+        self.result_dir = Path(result_dir)
+        
+    @staticmethod
+    def magic_visualizer(image: Union[np.ndarray, Image.Image, str, Path], size: Optional[Tuple]=None) -> np.ndarray:
+        pass
+    
+    @abstractmethod
+    def save_result(self, data):
+        raise NotImplementedError
+

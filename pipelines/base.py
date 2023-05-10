@@ -1,13 +1,17 @@
 from abc import ABC, abstractmethod
 import os
+from itertools import chain
 from statistics import mean
 
+
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
 from losses.builder import build_losses
 from metrics.builder import build_metrics
+from loggers.segmentation import magic_image_handler
 from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 from utils.logger import set_logger
@@ -34,6 +38,7 @@ class BasePipeline(ABC):
         self.devices = devices
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
+        self.train_step_per_epoch = len(train_dataloader)
 
         self.timer = Timer()
 
@@ -50,14 +55,34 @@ class BasePipeline(ABC):
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
         self.profile = profile
 
+        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ
+        self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
+        
+        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
+
+    # final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         assert self.train_logger is not None, "`self.train_logger` is not defined!"
+        """Append here if you need more assertion checks!"""
+        return True
 
     @abstractmethod
     def set_train(self):
-        pass
+        raise NotImplementedError
+    
+    @abstractmethod
+    def log_result(self, num_epoch, with_valid):
+        raise NotImplementedError
+
+    @abstractmethod
+    def train_step(self, batch):
+        raise NotImplementedError
+
+    @abstractmethod
+    def valid_step(self, batch):
+        raise NotImplementedError
 
     def train(self):
         logger.info(f"Training configuration:\n{OmegaConf.to_yaml(OmegaConf.create(self.args).get('train'))}")
@@ -83,29 +108,34 @@ class BasePipeline(ABC):
                 time_for_first_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
                 self.server_service.report_elapsed_time_for_epoch(time_for_first_epoch)
 
-            epoch_with_valid = num_epoch % VALID_FREQ == START_EPOCH % VALID_FREQ
-
-            if epoch_with_valid:
-                self.validate()
-            
-            if (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0):
-                self.log_end_epoch(num_epoch=num_epoch, with_valid=epoch_with_valid)
+            with_valid_logging = self.epoch_with_valid_logging(num_epoch)
+            if with_valid_logging:
+                self.validate(num_epoch)
+            if self.single_gpu_or_rank_zero:
+                self.log_end_epoch(num_epoch=num_epoch, with_valid=with_valid_logging)
             
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
         logger.info(f"Total time: {self.timer.get(name='train_all'):.2f} s")
+        
+        if self.single_gpu_or_rank_zero:
+            # TODO: self.tensorboard.add_graph()
+            pass
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
-            
+        
         self.scheduler.step()
 
     @torch.no_grad()
-    def validate(self):
+    def validate(self, num_epoch):
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
-            self.valid_step(batch)
+            out = self.valid_step(batch)
+            if out is not None and idx == 0:
+                for k, v in out.items():
+                    self.tensorboard.add_image(f"valid/{k}", magic_image_handler(v), global_step=int(num_epoch * self.train_step_per_epoch), dataformats='HWC')
 
     def log_end_epoch(self, num_epoch, with_valid):
 
@@ -118,7 +148,15 @@ class BasePipeline(ABC):
             logger.info(f"validation loss: {self.valid_loss:.7f}")
             logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
 
-        self.log_result(num_epoch, with_valid)
+        logging_contents = self.log_result(num_epoch, with_valid)
+        
+        for k, v in logging_contents.items():
+            self.tensorboard.add_scalar(str(k).replace("_", "/"), v, global_step=int(num_epoch * self.train_step_per_epoch))
+        for k, v in self.metric.result('train').items():
+            self.tensorboard.add_scalar(f"train/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
+        for k, v in self.metric.result('valid').items():
+            self.tensorboard.add_scalar(f"valid/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
+        # TODO: self.tensorboard.add_figure()
 
     @property
     def learning_rate(self):
@@ -131,18 +169,6 @@ class BasePipeline(ABC):
     @property
     def valid_loss(self):
         return self.loss.result('valid').get('total').avg
-
-    @abstractmethod
-    def log_result(self, num_epoch, with_valid):
-        pass
-
-    @abstractmethod
-    def train_step(self, batch):
-        pass
-
-    @abstractmethod
-    def valid_step(self, batch):
-        pass
 
     def profile_one_epoch(self):
         _ = torch.ones(1).to(self.devices)
