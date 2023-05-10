@@ -11,6 +11,7 @@ from omegaconf import OmegaConf
 
 from losses.builder import build_losses
 from metrics.builder import build_metrics
+from loggers.segmentation import magic_image_handler
 from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 from utils.logger import set_logger
@@ -109,7 +110,7 @@ class BasePipeline(ABC):
 
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
             if with_valid_logging:
-                self.validate()
+                self.validate(num_epoch)
             if self.single_gpu_or_rank_zero:
                 self.log_end_epoch(num_epoch=num_epoch, with_valid=with_valid_logging)
             
@@ -129,9 +130,12 @@ class BasePipeline(ABC):
         self.scheduler.step()
 
     @torch.no_grad()
-    def validate(self):
+    def validate(self, num_epoch):
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
-            self.valid_step(batch)
+            out = self.valid_step(batch)
+            if out is not None and idx == 0:
+                for k, v in out.items():
+                    self.tensorboard.add_image(f"valid/{k}", magic_image_handler(v), global_step=int(num_epoch * self.train_step_per_epoch), dataformats='HWC')
 
     def log_end_epoch(self, num_epoch, with_valid):
 
