@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 import os
+from itertools import chain
 from statistics import mean
+
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -35,6 +37,7 @@ class BasePipeline(ABC):
         self.devices = devices
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
+        self.train_step_per_epoch = len(train_dataloader)
 
         self.timer = Timer()
 
@@ -53,6 +56,8 @@ class BasePipeline(ABC):
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
+        
+        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
 
     # final
     def _is_ready(self):
@@ -141,10 +146,12 @@ class BasePipeline(ABC):
 
         logging_contents = self.log_result(num_epoch, with_valid)
         
-        for k, v in logging_contents:
-            # TODO: self.tensorboard.add_scalar()
-            pass
-            
+        for k, v in logging_contents.items():
+            self.tensorboard.add_scalar(str(k).replace("_", "/"), v, global_step=int(num_epoch * self.train_step_per_epoch))
+        for k, v in self.metric.result('train').items():
+            self.tensorboard.add_scalar(f"train/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
+        for k, v in self.metric.result('valid').items():
+            self.tensorboard.add_scalar(f"valid/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
         # TODO: self.tensorboard.add_figure()
 
     @property
