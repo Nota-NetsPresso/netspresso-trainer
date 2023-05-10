@@ -5,12 +5,12 @@ from loggers.classification import ClassificationCSVLogger, ClassificationImageS
 from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
 
 CSV_LOGGER_TASK_SPECIFIC = {
-    'classificaiton': ClassificationCSVLogger,
+    'classification': ClassificationCSVLogger,
     'segmentation': SegmentationCSVLogger
 }
 
 IMAGE_SAVER_TASK_SPECIFIC = {
-    'classificaiton': ClassificationImageSaver,
+    'classification': ClassificationImageSaver,
     'segmentation': SegmentationImageSaver
 }
 
