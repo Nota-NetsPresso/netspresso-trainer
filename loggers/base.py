@@ -4,7 +4,18 @@ from typing import List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import PIL.Image as Image
-    
+from torch.utils.tensorboard import SummaryWriter
+
+
+
+class BaseTensorboardLogger(ABC):
+    def __init__(self, args, task, model) -> None:
+        super(BaseTensorboardLogger, self).__init__()
+        self.args = args
+        self.task = task
+        self.model_name = model
+        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
+
 
 class BaseCSVLogger(ABC):
     def __init__(self, csv_path):
@@ -53,9 +64,9 @@ class BaseCSVLogger(ABC):
         
         raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
 
-class BaseVisualizer(ABC):
+class BaseImageSaver(ABC):
     def __init__(self, result_dir) -> None:
-        super(BaseVisualizer, self).__init__()
+        super(BaseImageSaver, self).__init__()
         self.result_dir = Path(result_dir)
         
     @staticmethod
@@ -66,16 +77,3 @@ class BaseVisualizer(ABC):
     def save_result(self, data):
         raise NotImplementedError
 
-class InferenceReporter(ABC):
-    def __init__(self, csv_logger: Optional[BaseCSVLogger], visualizer: Optional[BaseVisualizer]) -> None:
-        super(InferenceReporter, self).__init__()
-        self.csv_logger = csv_logger
-        self.visualizer = visualizer
-        
-    def update(self, data):
-        assert isinstance(self.csv_logger, BaseCSVLogger), "`csv_logger` is not initialized!"
-        self.csv_logger.update(data)
-    
-    def log_prediction(self, data, epoch: int):
-        assert isinstance(self.visualizer, BaseVisualizer), "`visualizer` is not initialized!"
-        self.visualizer.save_result(data)

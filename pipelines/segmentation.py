@@ -2,13 +2,13 @@ import os
 from pathlib import Path
 
 import torch
-from torch.cuda.amp import autocast
+import numpy as np 
 from omegaconf import OmegaConf
-
 
 from optimizers.builder import build_optimizer
 from schedulers.builder import build_scheduler
 from loggers.builder import build_logger
+from loggers.segmentation import VOCColorize
 from pipelines.base import BasePipeline
 from utils.logger import set_logger
 
@@ -26,6 +26,8 @@ class SegmentationPipeline(BasePipeline):
         super(SegmentationPipeline, self).__init__(args, task, model_name, model, devices, train_dataloader, eval_dataloader, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
+        self.label_colorizer = VOCColorize(n=self.num_classes)
+
 
     def set_train(self):
 
@@ -102,6 +104,19 @@ class SegmentationPipeline(BasePipeline):
 
         if self.args.distributed:
             torch.distributed.barrier()
+        
+        output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
+
+        logs = {
+            'images': images.detach().cpu().numpy(),
+            'target': self.label_colorizer(target.detach().cpu().numpy()),
+            'pred': self.label_colorizer(output_seg.detach().cpu().numpy())
+        }
+        if 'edges' in batch:
+            logs.update({
+                'bd_gt': self.label_colorizer(bd_gt.detach().cpu().numpy())
+            })
+        return {k: v for k, v in logs.items()}
 
     def log_result(self, num_epoch, with_valid):
         logging_contents = {
@@ -117,3 +132,4 @@ class SegmentationPipeline(BasePipeline):
             })
 
         self.train_logger.update(logging_contents)
+        return logging_contents
