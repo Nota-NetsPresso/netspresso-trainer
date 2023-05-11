@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id pidnet-withpretrained-custom-polylr-plz
+  project_id: &project_id pidnet-tensorboard-test
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id /DATA/VOC12Dataset
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -99,3 +99,8 @@ augment:
     hue: 0.1
     colorjitter_p: 0.5
   reduce_zero_label: *reduce_zero_label
+logging:
+  tensorboard: true
+  csv: true
+  image: true
+  stdout: true
