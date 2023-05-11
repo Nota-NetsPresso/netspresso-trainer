@@ -1,6 +1,6 @@
 import os
 import logging
-from abc import abstractmethod
+from abc import abstractmethod, abstractproperty
 from itertools import repeat
 from pathlib import Path
 
@@ -34,9 +34,12 @@ class BaseCustomDataset(data.Dataset):
     def __len__(self):
         pass
 
-    @property
-    @abstractmethod
+    @abstractproperty
     def num_classes(self):
+        pass
+
+    @abstractproperty
+    def class_map(self):
         pass
 
     @property

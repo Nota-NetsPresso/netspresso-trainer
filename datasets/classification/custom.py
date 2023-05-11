@@ -47,6 +47,10 @@ class ClassificationCustomDataset(BaseCustomDataset):
     @property
     def num_classes(self):
         return self._num_classes
+    
+    @property
+    def class_map(self):
+        return self.parser.get_idx_to_class()
 
     def __len__(self):
         return len(self.parser)
