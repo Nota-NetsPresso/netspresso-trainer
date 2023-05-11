@@ -1,35 +1,40 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import PIL.Image as Image
-from torch.utils.tensorboard import SummaryWriter
 
-
-
-class BaseTensorboardLogger(ABC):
-    def __init__(self, args, task, model) -> None:
-        super(BaseTensorboardLogger, self).__init__()
-        self.args = args
-        self.task = task
-        self.model_name = model
-        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
-
-
+CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
-    def __init__(self, csv_path):
+    def __init__(self, model, result_dir):
         super(BaseCSVLogger, self).__init__()
-        self.csv_path = Path(csv_path)
-        self.header = []
+        self.model = model
+        self.csv_path = Path(result_dir) / CSV_FILENAME
+        self.header: List = []
         
         self._temp_row_dict = dict()
         
         if self.csv_path.exists():
             self.csv_path.unlink()
+            
+        self._epoch = None
+    
+    def init_epoch(self):
+        self._epoch = 0
         
-    def update_header(self):
-        assert len(self.header) != 0
+    @property
+    def epoch(self):
+        return self._epoch
+    
+    @epoch.setter
+    def epoch(self, value: int) -> None:
+        self._epoch = int(value)
+        
+    def update_header(self, header: List):
+        assert len(header) != 0
+        self.header = header
+        
         with open(self.csv_path, 'a') as f:
             f.write(",".join(self.header))
             f.write("\n")
@@ -43,6 +48,7 @@ class BaseCSVLogger(ABC):
                 f.write(",".join([f"{x:.09f}" for x in data]))
                 f.write("\n")
         self._clear_temp()
+        return
     
     def _update_specific(self, data: Dict):
         for _key, _value in data.items():
@@ -53,6 +59,7 @@ class BaseCSVLogger(ABC):
         
         if set(self.header) == set(self._temp_row_dict.keys()):
             self._update_with_list([self._temp_row_dict[_col] for _col in self.header])
+        return
             
     def update(self, data=None, **kwargs):
         if isinstance(data, List):
@@ -63,11 +70,27 @@ class BaseCSVLogger(ABC):
         #     return self._update_specific(kwargs)
         
         raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
-
+    
+    def __call__(self, train_losses, val_losses, train_metrics, val_metrics):
+        pass
+    
 class BaseImageSaver(ABC):
-    def __init__(self, result_dir) -> None:
+    def __init__(self, model, result_dir) -> None:
         super(BaseImageSaver, self).__init__()
+        self.model = model
         self.result_dir = Path(result_dir)
+        self._epoch = None
+    
+    def init_epoch(self):
+        self._epoch = 0
+        
+    @property
+    def epoch(self):
+        return self._epoch
+    
+    @epoch.setter
+    def epoch(self, value: int) -> None:
+        self._epoch = int(value)
         
     @staticmethod
     def magic_visualizer(image: Union[np.ndarray, Image.Image, str, Path], size: Optional[Tuple]=None) -> np.ndarray:
@@ -77,3 +100,5 @@ class BaseImageSaver(ABC):
     def save_result(self, data):
         raise NotImplementedError
 
+    def __call__(self, train_images, val_images):
+        pass

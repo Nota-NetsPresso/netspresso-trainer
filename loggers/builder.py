@@ -1,8 +1,14 @@
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union
 
+from loggers.base import BaseCSVLogger, BaseImageSaver
 from loggers.classification import ClassificationCSVLogger, ClassificationImageSaver
 from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
+from loggers.tensorboard import TensorboardLogger
+from loggers.stdout import StdOutLogger
+from loggers.visualizer import VOCColorize
+
+OUTPUT_ROOT_DIR = "./outputs"
 
 CSV_LOGGER_TASK_SPECIFIC = {
     'classification': ClassificationCSVLogger,
@@ -14,39 +20,93 @@ IMAGE_SAVER_TASK_SPECIFIC = {
     'segmentation': SegmentationImageSaver
 }
 
+LABEL_CONVERTER_PER_TASK = {
+    'segmentation': VOCColorize
+}
 class TrainingLogger():
-    def __init__(self, args, task: str, model: str, class_map: Dict, epoch: Optional[int]=None, step_per_epoch: Optional[int]=None) -> None:
+    def __init__(self, args, task: str, model: str, class_map: Dict,
+                 step_per_epoch: int, num_sample_images: int, epoch: Optional[int]=None) -> None:
         super(TrainingLogger, self).__init__()
         self.args = args
         self.task: str = task
         self.model: str = model
         self.class_map: Dict = class_map
-        self.epoch: int = 1 if epoch is None else epoch
-        self.step_per_epoch: Optional[int] = step_per_epoch
+        self.epoch = epoch
+        
+        result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.args.train.project
+        result_dir.mkdir(exist_ok=True)
         
         self.use_tensorboard: bool = self.args.logging.tensorboard
-        self.use_csvlogger: bool = self.args.logging.csv_logger
-        self.use_imagesaver: bool = self.args.logging.image_saver
+        self.use_csvlogger: bool = self.args.logging.csv
+        self.use_imagesaver: bool = self.args.logging.image
+        self.use_stdout: bool = self.args.logging.stdout
         
-        self.csv_logger = CSV_LOGGER_TASK_SPECIFIC[task]()
-        self.image_saver = CSV_LOGGER_TASK_SPECIFIC[task]()
+        self.csv_logger: Optional[BaseCSVLogger] = \
+            CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_csvlogger else None
+        self.image_saver: Optional[BaseImageSaver] = \
+            IMAGE_SAVER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_imagesaver else None
+        self.tensorboard_logger: Optional[TensorboardLogger] = \
+            TensorboardLogger(task=task, model=model, result_dir=result_dir,
+                              step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
+        self.stdout_logger: Optional[StdOutLogger] = \
+            StdOutLogger(task=task, model=model, total_epochs=args.train.epochs) if self.use_stdout else None
+            
+    def update_epoch(self, epoch: int):
+        self.epoch = epoch
+        if self.use_csvlogger:
+            self.csv_logger.epoch = self.epoch
+        if self.use_imagesaver:
+            self.image_saver.epoch = self.epoch
+        if self.use_tensorboard:
+            self.tensorboard_logger.epoch = self.epoch
+        if self.use_stdout:
+            self.stdout_logger.epoch = self.epoch
+            
+    def _visualize_label(self, images):
+        visualized_images = images # TODO: x 
+        return visualized_images
     
-    def log(self, train_losses, train_metrics, val_losses, val_metrics,
+    def log(self, train_losses, train_metrics, val_losses=None, val_metrics=None,
             train_images=None, val_images=None, learning_rate=None, elapsed_time=None):
-        pass
+        if self.use_csvlogger:
+            self.csv_logger(
+                train_losses=train_losses,
+                val_losses=val_losses,
+                train_metrics=train_metrics,
+                val_metrics=val_metrics
+            )
+        if self.use_imagesaver:
+            self.image_saver(
+                train_images=train_images,
+                val_images=val_images
+            )
+        if self.use_tensorboard:
+            self.tensorboard_logger(
+                train_losses=train_losses,
+                val_losses=val_losses,
+                train_metrics=train_metrics,
+                val_metrics=val_metrics,
+                train_images=train_images,
+                val_images=val_images,
+                learning_rate=learning_rate,
+                elapsed_time=elapsed_time
+            )
+        if self.use_stdout:
+            self.stdout_logger(
+                train_losses=train_losses,
+                val_losses=val_losses,
+                train_metrics=train_metrics,
+                val_metrics=val_metrics,
+                learning_rate=learning_rate,
+                elapsed_time=elapsed_time
+            )
+            
 
-# def build_logger(args, result_dir: Union[Path, str], csv_filename: Union[Path, str],
-#                  task: str, model: str, class_map: Dict):
-#     result_dir = Path(result_dir)
-#     csv_path = result_dir / Path(csv_filename).with_suffix('.csv')
-#     _task = task.lower()
+def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict, num_sample_images: int, epoch: Optional[int]=None):
+    training_logger = TrainingLogger(args,
+                                     task=task.lower(), model=model_name.lower(),
+                                     step_per_epoch=step_per_epoch,
+                                     class_map=class_map, num_sample_images=num_sample_images,
+                                     epoch=epoch)
     
-#     pass
-    
-#     return inference_reporter
-
-def build_logger(csv_path, task):
-    if not task.lower() in CSV_LOGGER_TASK_SPECIFIC:
-        raise AssertionError(f"No such task! (task: {task})")
-    
-    return CSV_LOGGER_TASK_SPECIFIC[task](csv_path)
+    return training_logger
