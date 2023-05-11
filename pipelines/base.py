@@ -11,15 +11,15 @@ from omegaconf import OmegaConf
 
 from losses.builder import build_losses
 from metrics.builder import build_metrics
-from loggers.segmentation import magic_image_handler
 from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 from utils.logger import set_logger
+from loggers.builder import build_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 MAX_SAMPLE_RESULT = 10
-START_EPOCH = 1
+START_EPOCH_ZERO_OR_ONE = 1
 VALID_FREQ = 1
 
 PROFILE_WAIT = 1
@@ -27,9 +27,12 @@ PROFILE_WARMUP = 1
 PROFILE_ACTIVE = 10
 PROFILE_REPEAT = 1
 
+NUM_SAMPLES = 16
 
 class BasePipeline(ABC):
-    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, is_online=True, profile=False):
+    def __init__(self, args, task, model_name, model, devices,
+                 train_dataloader, eval_dataloader, class_map,
+                 is_online=True, profile=False):
         super(BasePipeline, self).__init__()
         self.args = args
         self.task = task
@@ -45,7 +48,6 @@ class BasePipeline(ABC):
         self.loss = None
         self.metric = None
         self.optimizer = None
-        self.train_logger = None
 
         self.ignore_index = None
         self.num_classes = None
@@ -55,16 +57,17 @@ class BasePipeline(ABC):
             self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
         self.profile = profile
 
-        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH % VALID_FREQ
+        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
         
-        self.tensorboard = SummaryWriter(f"{args.train.project}/{self.task}_{self.model_name}")
+        self.train_logger = build_logger(self.args, self.task, self.model_name,
+                                         step_per_epoch=self.train_step_per_epoch, class_map=class_map,
+                                         num_sample_images=NUM_SAMPLES)
 
     # final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
-        assert self.train_logger is not None, "`self.train_logger` is not defined!"
         """Append here if you need more assertion checks!"""
         return True
 
@@ -91,7 +94,7 @@ class BasePipeline(ABC):
         self.timer.start_record(name='train_all')
         self._is_ready()
 
-        for num_epoch in range(START_EPOCH, self.args.train.epochs + START_EPOCH):
+        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.args.train.epochs + START_EPOCH_ZERO_OR_ONE):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
             self.loss = build_losses(self.args, ignore_index=self.ignore_index)
             self.metric = build_metrics(self.args, ignore_index=self.ignore_index, num_classes=self.num_classes)
@@ -104,16 +107,18 @@ class BasePipeline(ABC):
 
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
 
-            if num_epoch == START_EPOCH and self.is_online:  # FIXME: case for continuing training
-                time_for_first_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
-                self.server_service.report_elapsed_time_for_epoch(time_for_first_epoch)
+            time_for_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
+            if num_epoch == START_EPOCH_ZERO_OR_ONE and self.is_online:  # TODO: case for continuing training
+                self.server_service.report_elapsed_time_for_epoch(time_for_epoch)
 
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
-            if with_valid_logging:
-                self.validate(num_epoch)
+            validation_samples = self.validate() if with_valid_logging else None
             if self.single_gpu_or_rank_zero:
-                self.log_end_epoch(num_epoch=num_epoch, with_valid=with_valid_logging)
+                self.log_end_epoch(epoch=num_epoch,
+                                   time_for_epoch=time_for_epoch,
+                                   validation_samples=validation_samples)
             
+            self.scheduler.step()  # call after reporting the current `learning_rate`
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
@@ -127,36 +132,53 @@ class BasePipeline(ABC):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
         
-        self.scheduler.step()
-
     @torch.no_grad()
-    def validate(self, num_epoch):
+    def validate(self, num_samples=NUM_SAMPLES):
+        # FIXME: multi-gpu sample counting
+        # num_target_samples = num_samples / num_gpu
+        num_returning_samples = 0
+        returning_samples = []
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
-            if out is not None and idx == 0:
-                for k, v in out.items():
-                    self.tensorboard.add_image(f"valid/{k}", magic_image_handler(v), global_step=int(num_epoch * self.train_step_per_epoch), dataformats='HWC')
-
-    def log_end_epoch(self, num_epoch, with_valid):
-
-        logger.info(f"Epoch: {num_epoch} / {self.args.train.epochs}")
-        logger.info(f"learning rate: {self.learning_rate:.7f}")  # TODO: call before scheduler.step()
-        logger.info(f"training loss: {self.train_loss:.7f}")
-        logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
-
-        if with_valid:
-            logger.info(f"validation loss: {self.valid_loss:.7f}")
-            logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
-
-        logging_contents = self.log_result(num_epoch, with_valid)
+            if num_returning_samples < num_samples:
+                returning_samples.append(batch)
+                num_returning_samples += len(out['pred'])
+        return returning_samples
+            
+    def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None):
         
-        for k, v in logging_contents.items():
-            self.tensorboard.add_scalar(str(k).replace("_", "/"), v, global_step=int(num_epoch * self.train_step_per_epoch))
-        for k, v in self.metric.result('train').items():
-            self.tensorboard.add_scalar(f"train/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
-        for k, v in self.metric.result('valid').items():
-            self.tensorboard.add_scalar(f"valid/{k}", v.avg, global_step=int(num_epoch * self.train_step_per_epoch))
-        # TODO: self.tensorboard.add_figure()
+        with_valid = validation_samples is not None
+        
+        train_losses = self.loss.result('train').items()
+        train_metrics = self.metric.result('train').items()
+        # logger.info(f"training loss: {self.train_loss:.7f}")
+        # logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
+
+        valid_losses = self.loss.result('valid').items() if with_valid else None
+        valid_metrics = self.metric.result('valid').items() if with_valid else None
+        # logger.info(f"validation loss: {self.valid_loss:.7f}")
+        # logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
+
+        # logging_contents = self.log_result(epoch, with_valid)
+        
+        # for k, v in logging_contents.items():
+        #     self.tensorboard.add_scalar(str(k).replace("_", "/"), v, global_step=int(epoch * self.train_step_per_epoch))
+        # for k, v in self.metric.result('train').items():
+        #     self.tensorboard.add_scalar(f"train/{k}", v.avg, global_step=int(epoch * self.train_step_per_epoch))
+        # for k, v in self.metric.result('valid').items():
+        #     self.tensorboard.add_scalar(f"valid/{k}", v.avg, global_step=int(epoch * self.train_step_per_epoch))
+        
+        self.train_logger.update_epoch(epoch)
+        self.train_logger.log(
+            train_losses=train_losses,
+            train_metrics=train_metrics,
+            val_losses=valid_losses,
+            val_metrics=valid_metrics,
+            train_images=None,
+            val_images=validation_samples,
+            learning_rate=self.learning_rate,
+            elapsed_time=time_for_epoch
+        )
 
     @property
     def learning_rate(self):
