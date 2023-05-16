@@ -107,7 +107,10 @@ class BasePipeline(ABC):
                 self.server_service.report_elapsed_time_for_epoch(time_for_epoch)
 
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
+            
+            # FIXME: multi-gpu sample counting & validation
             validation_samples = self.validate() if with_valid_logging else None
+            
             if self.single_gpu_or_rank_zero:
                 self.log_end_epoch(epoch=num_epoch,
                                    time_for_epoch=time_for_epoch,
@@ -130,8 +133,6 @@ class BasePipeline(ABC):
         
     @torch.no_grad()
     def validate(self, num_samples=NUM_SAMPLES):
-        # FIXME: multi-gpu sample counting
-        # num_target_samples = num_samples / num_gpu
         num_returning_samples = 0
         returning_samples = []
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
