@@ -5,7 +5,6 @@ from statistics import mean
 
 
 import torch
-from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
@@ -145,23 +144,10 @@ class BasePipeline(ABC):
     def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):        
         train_losses = self.loss.result('train')
         train_metrics = self.metric.result('train')
-        # logger.info(f"training loss: {self.train_loss:.7f}")
-        # logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
-
+        
         valid_losses = self.loss.result('valid') if valid_logging else None
         valid_metrics = self.metric.result('valid') if valid_logging else None
-        # logger.info(f"validation loss: {self.valid_loss:.7f}")
-        # logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
 
-        # logging_contents = self.log_result(epoch, with_valid)
-        
-        # for k, v in logging_contents.items():
-        #     self.tensorboard.add_scalar(str(k).replace("_", "/"), v, global_step=int(epoch * self.train_step_per_epoch))
-        # for k, v in self.metric.result('train').items():
-        #     self.tensorboard.add_scalar(f"train/{k}", v.avg, global_step=int(epoch * self.train_step_per_epoch))
-        # for k, v in self.metric.result('valid').items():
-        #     self.tensorboard.add_scalar(f"valid/{k}", v.avg, global_step=int(epoch * self.train_step_per_epoch))
-        
         self.train_logger.update_epoch(epoch)
         self.train_logger.log(
             train_losses=train_losses,
