@@ -17,7 +17,7 @@ class TensorboardLogger:
         self.step_per_epoch = step_per_epoch
         self.num_sample_images = num_sample_images
         
-        self.tensorboard = SummaryWriter(self.result_dir / f"{self.task}_{self.model_name}")
+        self.tensorboard = SummaryWriter(self.result_dir / f"[{self.task}]{self.model_name}")
         self._epoch = None
     
     def init_epoch(self):
