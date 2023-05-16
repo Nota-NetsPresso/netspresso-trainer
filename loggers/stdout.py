@@ -25,18 +25,17 @@ class StdOutLogger:
     def epoch(self, value: int) -> None:
         self._epoch = int(value)
     
-    def __call__(self, train_losses, val_losses, train_metrics, val_metrics, learning_rate, elapsed_time):
+    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics, learning_rate, elapsed_time):
         logger.info(f"Epoch: {self._epoch} / {self.total_epochs}")
         
         if learning_rate is not None:
             logger.info(f"learning rate: {learning_rate:.7f}")
         if elapsed_time is not None:
             logger.info(f"elapsed_time: {elapsed_time:.7f}")
-        
-        logger.info(f"training loss: {train_losses['total']:.7f}")
-        logger.info(f"training metric: {[(name, value) for name, value in train_metrics]}")
+        logger.info(f"training loss: {train_losses['total'].avg:.7f}")
+        logger.info(f"training metric: {[(name, value.avg) for name, value in train_metrics.items()]}")
 
-        if val_losses is not None:
-            logger.info(f"validation loss: {val_losses['total']:.7f}")
-        if val_metrics is not None:
-            logger.info(f"validation metric: {[(name, value) for name, value in val_metrics]}")
+        if valid_losses is not None:
+            logger.info(f"validation loss: {valid_losses['total'].avg:.7f}")
+        if valid_metrics is not None:
+            logger.info(f"validation metric: {[(name, value.avg) for name, value in valid_metrics.items()]}")

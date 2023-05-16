@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union
 
 import numpy as np
 import torch
@@ -41,16 +41,53 @@ class TensorboardLogger:
             return value
         
         raise TypeError(f"Unsupported type! {type(value)}")
-        
-    def log_scalar(self, key, value, mode='train'):
+    
+    def _log_scalar(self, key: str, value, mode):
         global_step = self._epoch * self.step_per_epoch
-        self.tensorboard.add_scalar(f"{mode}/{key}", value, global_step=global_step)
+        meta_string = f"{mode}/" if mode is not None else ""
+        self.tensorboard.add_scalar(f"{meta_string}{key}", value, global_step=global_step)
         
-    def log_image(self, key, value: Union[np.ndarray, torch.Tensor], mode='train'):
+    def _log_image(self, key: str, value: Union[np.ndarray, torch.Tensor], mode):
         global_step = self._epoch * self.step_per_epoch
         value = self._as_numpy(value)
-        self.tensorboard.add_image(f"{mode}/{key}", magic_image_handler(value), global_step=global_step, dataformats='HWC')
-
+        meta_string = f"{mode}/" if mode is not None else ""
+        self.tensorboard.add_image(f"{meta_string}{key}", magic_image_handler(value), global_step=global_step, dataformats='HWC')
+        
+    def log_scalar(self, key, value, mode='train'):
+        self._log_scalar(key, value, mode)
+        
+    def log_scalars_with_dict(self, scalar_dict, mode='train'):
+        for k, v in scalar_dict.items():
+            self._log_scalar(k, v.avg, mode)
+        
+    def log_image(self, key, value: Union[np.ndarray, torch.Tensor], mode='train'):
+        self._log_image(key, value, mode)
+        
+    def log_images_with_dict(self, image_dict, mode='train'):
+        for k, v in image_dict.items():
+            self._log_image(k, v, mode)
+    
+    def __call__(self,
+            train_losses, train_metrics, valid_losses, valid_metrics,
+            train_images, valid_images, learning_rate, elapsed_time,
+        ) -> None:
+        
+        self.log_scalars_with_dict(train_losses, mode='train')
+        self.log_scalars_with_dict(train_metrics, mode='train')
+        if train_images is not None:
+            self.log_images_with_dict(train_images, mode='train')
+        
+        if valid_losses is not None:
+            self.log_scalars_with_dict(valid_losses, mode='valid')
+        if valid_metrics is not None:
+            self.log_scalars_with_dict(valid_metrics, mode='valid')
+        if isinstance(valid_images, dict):  # TODO: array with multiple dicts
+            self.log_images_with_dict(valid_images, mode='valid')
+        
+        if learning_rate is not None:
+            self.log_scalar('learning_rate', learning_rate, mode='misc')
+        if elapsed_time is not None:
+            self.log_scalar('elapsed_time', elapsed_time, mode='misc')
 
 def magic_image_handler(img, num_example_image=1):
     if isinstance(img, torch.Tensor):

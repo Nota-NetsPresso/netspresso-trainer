@@ -66,37 +66,37 @@ class TrainingLogger():
         visualized_images = images # TODO: x 
         return visualized_images
     
-    def log(self, train_losses, train_metrics, val_losses=None, val_metrics=None,
-            train_images=None, val_images=None, learning_rate=None, elapsed_time=None):
+    def log(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None,
+            train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
         if self.use_csvlogger:
             self.csv_logger(
                 train_losses=train_losses,
-                val_losses=val_losses,
                 train_metrics=train_metrics,
-                val_metrics=val_metrics
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics
             )
         if self.use_imagesaver:
             self.image_saver(
                 train_images=train_images,
-                val_images=val_images
+                valid_images=valid_images
             )
         if self.use_tensorboard:
             self.tensorboard_logger(
                 train_losses=train_losses,
-                val_losses=val_losses,
                 train_metrics=train_metrics,
-                val_metrics=val_metrics,
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics,
                 train_images=train_images,
-                val_images=val_images,
+                valid_images=valid_images,
                 learning_rate=learning_rate,
                 elapsed_time=elapsed_time
             )
         if self.use_stdout:
             self.stdout_logger(
                 train_losses=train_losses,
-                val_losses=val_losses,
                 train_metrics=train_metrics,
-                val_metrics=val_metrics,
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics,
                 learning_rate=learning_rate,
                 elapsed_time=elapsed_time
             )

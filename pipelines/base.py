@@ -107,7 +107,7 @@ class BasePipeline(ABC):
 
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
 
-            time_for_epoch = int(self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False))
+            time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
             if num_epoch == START_EPOCH_ZERO_OR_ONE and self.is_online:  # TODO: case for continuing training
                 self.server_service.report_elapsed_time_for_epoch(time_for_epoch)
 
@@ -116,7 +116,8 @@ class BasePipeline(ABC):
             if self.single_gpu_or_rank_zero:
                 self.log_end_epoch(epoch=num_epoch,
                                    time_for_epoch=time_for_epoch,
-                                   validation_samples=validation_samples)
+                                   validation_samples=validation_samples,
+                                   valid_logging=with_valid_logging)
             
             self.scheduler.step()  # call after reporting the current `learning_rate`
             logger.info("-" * 40)
@@ -140,22 +141,19 @@ class BasePipeline(ABC):
         returning_samples = []
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
-            if num_returning_samples < num_samples:
+            if out is not None and num_returning_samples < num_samples:
                 returning_samples.append(batch)
                 num_returning_samples += len(out['pred'])
         return returning_samples
             
-    def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None):
-        
-        with_valid = validation_samples is not None
-        
-        train_losses = self.loss.result('train').items()
-        train_metrics = self.metric.result('train').items()
+    def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):        
+        train_losses = self.loss.result('train')
+        train_metrics = self.metric.result('train')
         # logger.info(f"training loss: {self.train_loss:.7f}")
         # logger.info(f"training metric: {[(name, value.avg) for name, value in self.metric.result('train').items()]}")
 
-        valid_losses = self.loss.result('valid').items() if with_valid else None
-        valid_metrics = self.metric.result('valid').items() if with_valid else None
+        valid_losses = self.loss.result('valid') if valid_logging else None
+        valid_metrics = self.metric.result('valid') if valid_logging else None
         # logger.info(f"validation loss: {self.valid_loss:.7f}")
         # logger.info(f"validation metric: {[(name, value.avg) for name, value in self.metric.result('valid').items()]}")
 
@@ -172,10 +170,10 @@ class BasePipeline(ABC):
         self.train_logger.log(
             train_losses=train_losses,
             train_metrics=train_metrics,
-            val_losses=valid_losses,
-            val_metrics=valid_metrics,
+            valid_losses=valid_losses,
+            valid_metrics=valid_metrics,
             train_images=None,
-            val_images=validation_samples,
+            valid_images=validation_samples,
             learning_rate=self.learning_rate,
             elapsed_time=time_for_epoch
         )

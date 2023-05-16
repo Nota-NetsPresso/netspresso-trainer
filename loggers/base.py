@@ -71,7 +71,7 @@ class BaseCSVLogger(ABC):
         
         raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
     
-    def __call__(self, train_losses, val_losses, train_metrics, val_metrics):
+    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics):
         pass
     
 class BaseImageSaver(ABC):
@@ -100,5 +100,5 @@ class BaseImageSaver(ABC):
     def save_result(self, data):
         raise NotImplementedError
 
-    def __call__(self, train_images, val_images):
+    def __call__(self, train_images, valid_images):
         pass
