@@ -32,10 +32,10 @@ class StdOutLogger:
             logger.info(f"learning rate: {learning_rate:.7f}")
         if elapsed_time is not None:
             logger.info(f"elapsed_time: {elapsed_time:.7f}")
-        logger.info(f"training loss: {train_losses['total'].avg:.7f}")
-        logger.info(f"training metric: {[(name, value.avg) for name, value in train_metrics.items()]}")
+        logger.info(f"training loss: {train_losses['total']:.7f}")
+        logger.info(f"training metric: {[(name, value) for name, value in train_metrics.items()]}")
 
         if valid_losses is not None:
-            logger.info(f"validation loss: {valid_losses['total'].avg:.7f}")
+            logger.info(f"validation loss: {valid_losses['total']:.7f}")
         if valid_metrics is not None:
-            logger.info(f"validation metric: {[(name, value.avg) for name, value in valid_metrics.items()]}")
+            logger.info(f"validation metric: {[(name, value) for name, value in valid_metrics.items()]}")

@@ -1,12 +1,17 @@
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Union
 
+import numpy as np
+import torch
+import PIL.Image as Image
+
 from loggers.base import BaseCSVLogger, BaseImageSaver
 from loggers.classification import ClassificationCSVLogger, ClassificationImageSaver
 from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
 from loggers.visualizer import VOCColorize
+from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
 
@@ -66,8 +71,34 @@ class TrainingLogger():
         visualized_images = images # TODO: x 
         return visualized_images
     
+    def _convert_scalar_as_readable(self, scalar_dict: Dict):
+        for k, v in scalar_dict.items():
+            if isinstance(v, np.ndarray) or isinstance(v, float) or isinstance(v, int):
+                pass
+                continue
+            if isinstance(v, torch.Tensor):
+                new_v = v.detach().cpu().numpy()
+                scalar_dict.update({k: new_v})
+                continue
+            if isinstance(v, AverageMeter):
+                new_v = v.avg
+                scalar_dict.update({k: new_v})
+                continue
+            raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
+        return scalar_dict
+    
+    def _convert_images_as_readable(self, images_dict):
+        pass
+    
     def log(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None,
-            train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
+        train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
+        train_losses = self._convert_scalar_as_readable(train_losses)
+        train_metrics = self._convert_scalar_as_readable(train_metrics)
+        if valid_losses is not None:
+            valid_losses = self._convert_scalar_as_readable(valid_losses)
+        if valid_metrics is not None:
+            valid_metrics = self._convert_scalar_as_readable(valid_metrics)
+
         if self.use_csvlogger:
             self.csv_logger(
                 train_losses=train_losses,

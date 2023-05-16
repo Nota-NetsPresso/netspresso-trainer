@@ -58,7 +58,7 @@ class TensorboardLogger:
         
     def log_scalars_with_dict(self, scalar_dict, mode='train'):
         for k, v in scalar_dict.items():
-            self._log_scalar(k, v.avg, mode)
+            self._log_scalar(k, v, mode)
         
     def log_image(self, key, value: Union[np.ndarray, torch.Tensor], mode='train'):
         self._log_image(key, value, mode)
