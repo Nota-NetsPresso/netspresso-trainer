@@ -80,9 +80,13 @@ class SegmentationCustomDataset(BaseCustomDataset):
     def __len__(self):
         return len(self.img_name)
 
-    @ property
+    @property
     def num_classes(self):
         return len(self.id2label)
+    
+    @property
+    def class_map(self):
+        return self.id2label
 
     def __getitem__(self, index):
         img_path = self.img_name[index]

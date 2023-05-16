@@ -103,10 +103,9 @@ def magic_image_handler(img, num_example_image=1):
     return img
 
 class SegmentationCSVLogger(BaseCSVLogger):
-    def __init__(self, csv_path):
-        super(SegmentationCSVLogger, self).__init__(csv_path)
-        self.header = CSV_HEADER
-        self.update_header()
+    def __init__(self, model, result_dir):
+        super(SegmentationCSVLogger, self).__init__(model, result_dir)
+        self.update_header(CSV_HEADER)
 
 
 class SegmentationImageSaver(BaseImageSaver):

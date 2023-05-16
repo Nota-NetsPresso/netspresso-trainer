@@ -93,3 +93,8 @@ augment:
     saturation: ~
     hue: ~ 
     colorjitter_p: ~ 
+logging:
+  tensorboard: true
+  csv: true
+  image: true
+  stdout: true
