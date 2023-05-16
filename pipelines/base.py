@@ -74,10 +74,6 @@ class BasePipeline(ABC):
     @abstractmethod
     def set_train(self):
         raise NotImplementedError
-    
-    @abstractmethod
-    def log_result(self, num_epoch, with_valid):
-        raise NotImplementedError
 
     @abstractmethod
     def train_step(self, batch):

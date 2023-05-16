@@ -113,19 +113,3 @@ class SegmentationPipeline(BasePipeline):
                 'bd_gt': bd_gt.detach().cpu().numpy()
             })
         return {k: v for k, v in logs.items()}
-
-    def log_result(self, num_epoch, with_valid):
-        logging_contents = {
-            'epoch': num_epoch,
-            'train_loss': self.train_loss,
-            'train_miou %': self.metric.result('train').get('iou').avg,
-        }
-
-        if with_valid:
-            logging_contents.update({
-                'valid_miou %': self.metric.result('valid').get('iou').avg,
-                'valid_pixAcc %': self.metric.result('valid').get('pixel_acc').avg
-            })
-
-        self.train_logger.update(logging_contents)
-        return logging_contents

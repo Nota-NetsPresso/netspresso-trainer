@@ -87,19 +87,3 @@ class ClassificationPipeline(BasePipeline):
 
         if self.args.distributed:
             torch.distributed.barrier()
-
-    def log_result(self, num_epoch, with_valid):
-        logging_contents = {
-            'epoch': num_epoch,
-            'train_loss': self.train_loss,
-            'train_accuracy': self.metric.result('train').get('Acc@1').avg,
-        }
-
-        if with_valid:
-            logging_contents.update({
-                'valid_loss': self.valid_loss,
-                'valid_accuracy': self.metric.result('valid').get('Acc@1').avg
-            })
-
-        self.train_logger.update(logging_contents)
-        return logging_contents
