@@ -25,8 +25,6 @@ class SegmentationPipeline(BasePipeline):
                                                    train_dataloader, eval_dataloader, class_map, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
-        self.label_colorizer = VOCColorize(n=self.num_classes)
-
 
     def set_train(self):
 
