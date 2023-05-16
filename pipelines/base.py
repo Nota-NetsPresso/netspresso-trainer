@@ -142,7 +142,7 @@ class BasePipeline(ABC):
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
             if out is not None and num_returning_samples < num_samples:
-                returning_samples.append(batch)
+                returning_samples.append(out)
                 num_returning_samples += len(out['pred'])
         return returning_samples
             

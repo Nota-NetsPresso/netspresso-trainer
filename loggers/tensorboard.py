@@ -51,7 +51,8 @@ class TensorboardLogger:
         global_step = self._epoch * self.step_per_epoch
         value = self._as_numpy(value)
         meta_string = f"{mode}/" if mode is not None else ""
-        self.tensorboard.add_image(f"{meta_string}{key}", magic_image_handler(value), global_step=global_step, dataformats='HWC')
+        self.tensorboard.add_image(f"{meta_string}{key}", magic_image_handler(value, num_example_image=self.num_sample_images),
+                                   global_step=global_step, dataformats='HWC')
         
     def log_scalar(self, key, value, mode='train'):
         self._log_scalar(key, value, mode)

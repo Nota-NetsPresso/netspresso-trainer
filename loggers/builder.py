@@ -55,7 +55,9 @@ class TrainingLogger():
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=args.train.epochs) if self.use_stdout else None
-            
+        if task in LABEL_CONVERTER_PER_TASK:
+            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map)
+        
     def update_epoch(self, epoch: int):
         self.epoch = epoch
         if self.use_csvlogger:
@@ -70,6 +72,10 @@ class TrainingLogger():
     def _visualize_label(self, images):
         visualized_images = images # TODO: x 
         return visualized_images
+    
+    @staticmethod
+    def _to_numpy(self, tensor: torch.Tensor):
+        return tensor.detach().cpu().numpy()
     
     def _convert_scalar_as_readable(self, scalar_dict: Dict):
         for k, v in scalar_dict.items():
@@ -87,17 +93,52 @@ class TrainingLogger():
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
     
-    def _convert_images_as_readable(self, images_dict):
-        pass
+    def _convert_imagedict_as_readable(self, images_dict: Dict):
+        for k, v in images_dict.items():
+            if 'images' in k:
+                continue
+            # target, pred, bg_gt
+            images_dict.update({k: self.label_converter(v)})
+        return images_dict
+    
+    def _convert_images_as_readable(self, images_dict_or_list: Union[Dict, List]):
+        if isinstance(images_dict_or_list, list):
+            images_list = images_dict_or_list
+            
+            if len(images_list) == 0:
+                return None
+            
+            images_dict = {}
+            for minibatch in images_list:
+                minibatch: Dict = self._convert_imagedict_as_readable(minibatch)
+                for k_batch, v_batch in minibatch.items():
+                    if k_batch in images_dict:
+                        images_dict[k_batch] = np.concatenate((images_dict[k_batch], v_batch), axis=0)
+                        continue
+                    images_dict[k_batch] = v_batch
+                
+            return images_dict
+
+        if isinstance(images_dict_or_list, dict):
+            images_dict = images_dict_or_list
+            images_dict = self._convert_imagedict_as_readable(images_dict)
+            return images_dict
+    
+        raise TypeError(f"Unsupported type for image logger!!! Current type: {type(images_dict_or_list)}")
     
     def log(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None,
-        train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
+            train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
         train_losses = self._convert_scalar_as_readable(train_losses)
         train_metrics = self._convert_scalar_as_readable(train_metrics)
+        
         if valid_losses is not None:
             valid_losses = self._convert_scalar_as_readable(valid_losses)
         if valid_metrics is not None:
             valid_metrics = self._convert_scalar_as_readable(valid_metrics)
+        if train_images is not None:
+            train_images = self._convert_images_as_readable(train_images)
+        if valid_images is not None:
+            valid_images = self._convert_images_as_readable(valid_images)
 
         if self.use_csvlogger:
             self.csv_logger(
