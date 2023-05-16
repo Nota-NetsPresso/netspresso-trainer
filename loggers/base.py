@@ -102,3 +102,4 @@ class BaseImageSaver(ABC):
 
     def __call__(self, train_images, valid_images):
         pass
+

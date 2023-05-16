@@ -5,11 +5,13 @@ from statistics import mean
 
 
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
 from losses.builder import build_losses
 from metrics.builder import build_metrics
+from loggers.segmentation import magic_image_handler
 from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 from utils.logger import set_logger
@@ -73,7 +75,7 @@ class BasePipeline(ABC):
     @abstractmethod
     def set_train(self):
         raise NotImplementedError
-
+    
     @abstractmethod
     def train_step(self, batch):
         raise NotImplementedError
