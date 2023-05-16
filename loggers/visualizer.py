@@ -2,7 +2,8 @@ import numpy as np
 import torch
 
 class VOCColorize(object):
-    def __init__(self, n=22):
+    def __init__(self, class_map):
+        n = len(class_map)
         self.cmap = _voc_color_map(n)
         self.cmap = torch.from_numpy(self.cmap[:n])
         
