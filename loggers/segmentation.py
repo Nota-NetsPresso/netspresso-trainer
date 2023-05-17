@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from loggers.base import BaseCSVLogger, BaseImageSaver
+from loggers.base import BaseCSVLogger
 
 
 CSV_HEADER = ['epoch', 'train_loss', 'train_miou %', 'valid_miou %', 'valid_pixAcc %']
@@ -19,8 +19,3 @@ class SegmentationCSVLogger(BaseCSVLogger):
             'valid/iou': 'valid_miou %',
             'valid/pixel_acc': 'valid_pixAcc %',
         }
-
-class SegmentationImageSaver(BaseImageSaver):
-    def __init__(self, model, result_dir) -> None:
-        super(SegmentationImageSaver, self).__init__(model, result_dir)
-    

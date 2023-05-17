@@ -5,9 +5,10 @@ import numpy as np
 import torch
 import PIL.Image as Image
 
-from loggers.base import BaseCSVLogger, BaseImageSaver
-from loggers.classification import ClassificationCSVLogger, ClassificationImageSaver
-from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
+from loggers.base import BaseCSVLogger
+from loggers.classification import ClassificationCSVLogger
+from loggers.segmentation import SegmentationCSVLogger
+from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
 from loggers.visualizer import VOCColorize, magic_image_handler
@@ -18,11 +19,6 @@ OUTPUT_ROOT_DIR = "./outputs"
 CSV_LOGGER_TASK_SPECIFIC = {
     'classification': ClassificationCSVLogger,
     'segmentation': SegmentationCSVLogger
-}
-
-IMAGE_SAVER_TASK_SPECIFIC = {
-    'classification': ClassificationImageSaver,
-    'segmentation': SegmentationImageSaver
 }
 
 LABEL_CONVERTER_PER_TASK = {
@@ -49,8 +45,8 @@ class TrainingLogger():
         
         self.csv_logger: Optional[BaseCSVLogger] = \
             CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_csvlogger else None
-        self.image_saver: Optional[BaseImageSaver] = \
-            IMAGE_SAVER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_imagesaver else None
+        self.image_saver: Optional[ImageSaver] = \
+            ImageSaver(model=model, result_dir=result_dir) if self.use_imagesaver else None
         self.tensorboard_logger: Optional[TensorboardLogger] = \
             TensorboardLogger(task=task, model=model, result_dir=result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None

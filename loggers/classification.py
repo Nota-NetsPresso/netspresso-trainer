@@ -1,4 +1,4 @@
-from loggers.base import BaseCSVLogger, BaseImageSaver
+from loggers.base import BaseCSVLogger
 
 CSV_HEADER = ['epoch', 'train_loss', 'valid_loss', 'train_accuracy', 'valid_accuracy']
 
@@ -14,7 +14,3 @@ class ClassificationCSVLogger(BaseCSVLogger):
             'train/Acc@1': 'train_accuracy',
             'valid/Acc@1': 'valid_accuracy',
         }
-                
-class ClassificationImageSaver(BaseImageSaver):
-    def __init__(self, model, result_dir) -> None:
-        super(ClassificationImageSaver, self).__init__(model, result_dir)
