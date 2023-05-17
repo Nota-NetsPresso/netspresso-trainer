@@ -95,14 +95,12 @@ class BasePipeline(ABC):
             else:
                 self.train_one_epoch()  # append result in `self._one_epoch_result`
 
-            self.timer.end_record(name=f'train_epoch_{num_epoch}')
-
-            time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
-
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
-            
             # FIXME: multi-gpu sample counting & validation
             validation_samples = self.validate() if with_valid_logging else None
+            
+            self.timer.end_record(name=f'train_epoch_{num_epoch}')
+            time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
             
             if self.single_gpu_or_rank_zero:
                 self.log_end_epoch(epoch=num_epoch,
