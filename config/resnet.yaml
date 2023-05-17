@@ -98,3 +98,4 @@ logging:
   csv: true
   image: true
   stdout: true
+  netspresso: true
