@@ -10,15 +10,13 @@ from omegaconf import OmegaConf
 
 from losses.builder import build_losses
 from metrics.builder import build_metrics
-from utils.search_api import ModelSearchServerHandler
 from utils.timer import Timer
 from utils.logger import set_logger
-from loggers.builder import build_logger
+from loggers.builder import build_logger, START_EPOCH_ZERO_OR_ONE
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 MAX_SAMPLE_RESULT = 10
-START_EPOCH_ZERO_OR_ONE = 1
 VALID_FREQ = 1
 
 PROFILE_WAIT = 1
@@ -31,7 +29,7 @@ NUM_SAMPLES = 16
 class BasePipeline(ABC):
     def __init__(self, args, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map,
-                 is_online=True, profile=False):
+                 profile=False):
         super(BasePipeline, self).__init__()
         self.args = args
         self.task = task
@@ -51,9 +49,6 @@ class BasePipeline(ABC):
         self.ignore_index = None
         self.num_classes = None
 
-        self.is_online = is_online
-        if self.is_online:
-            self.server_service = ModelSearchServerHandler(args.train.project, args.train.token)
         self.profile = profile
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
@@ -103,8 +98,6 @@ class BasePipeline(ABC):
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
 
             time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
-            if num_epoch == START_EPOCH_ZERO_OR_ONE and self.is_online:  # TODO: case for continuing training
-                self.server_service.report_elapsed_time_for_epoch(time_for_epoch)
 
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
             
