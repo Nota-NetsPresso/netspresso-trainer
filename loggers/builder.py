@@ -10,7 +10,7 @@ from loggers.classification import ClassificationCSVLogger, ClassificationImageS
 from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
-from loggers.visualizer import VOCColorize
+from loggers.visualizer import VOCColorize, magic_image_handler
 from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
@@ -37,6 +37,7 @@ class TrainingLogger():
         self.model: str = model
         self.class_map: Dict = class_map
         self.epoch = epoch
+        self.num_sample_images = num_sample_images
         
         result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.args.train.project
         result_dir.mkdir(exist_ok=True)
@@ -68,13 +69,9 @@ class TrainingLogger():
             self.tensorboard_logger.epoch = self.epoch
         if self.use_stdout:
             self.stdout_logger.epoch = self.epoch
-            
-    def _visualize_label(self, images):
-        visualized_images = images # TODO: x 
-        return visualized_images
     
     @staticmethod
-    def _to_numpy(self, tensor: torch.Tensor):
+    def _to_numpy(tensor: torch.Tensor):
         return tensor.detach().cpu().numpy()
     
     def _convert_scalar_as_readable(self, scalar_dict: Dict):
@@ -83,22 +80,29 @@ class TrainingLogger():
                 pass
                 continue
             if isinstance(v, torch.Tensor):
-                new_v = v.detach().cpu().numpy()
-                scalar_dict.update({k: new_v})
+                v_new = v.detach().cpu().numpy()
+                scalar_dict.update({k: v_new})
                 continue
             if isinstance(v, AverageMeter):
-                new_v = v.avg
-                scalar_dict.update({k: new_v})
+                v_new = v.avg
+                scalar_dict.update({k: v_new})
                 continue
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
     
     def _convert_imagedict_as_readable(self, images_dict: Dict):
         for k, v in images_dict.items():
+            if len(v) > self.num_sample_images:
+                v = v[:self.num_sample_images, ...]
             if 'images' in k:
+                v_new: np.ndarray = magic_image_handler(v)
+                v_new = v_new.astype(np.uint8)
+                images_dict.update({k: v_new})
                 continue
             # target, pred, bg_gt
-            images_dict.update({k: self.label_converter(v)})
+            v_new: np.ndarray = magic_image_handler(self.label_converter(v))
+            v_new = v_new.astype(np.uint8)
+            images_dict.update({k: v_new})
         return images_dict
     
     def _convert_images_as_readable(self, images_dict_or_list: Union[Dict, List]):
