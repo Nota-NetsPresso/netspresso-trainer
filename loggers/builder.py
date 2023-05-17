@@ -184,6 +184,7 @@ class TrainingLogger():
                 elapsed_time=elapsed_time
             )
         if self.use_netspresso:
+            # TODO: async handler if it takes much more time
             self.netspresso_api_client(
                 elapsed_time=elapsed_time
             )
