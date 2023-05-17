@@ -18,6 +18,3 @@ class ClassificationCSVLogger(BaseCSVLogger):
 class ClassificationImageSaver(BaseImageSaver):
     def __init__(self, model, result_dir) -> None:
         super(ClassificationImageSaver, self).__init__(model, result_dir)
-
-    def save_result(self, data):
-        return
