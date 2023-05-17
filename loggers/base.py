@@ -9,9 +9,14 @@ CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
     def __init__(self, model, result_dir):
         super(BaseCSVLogger, self).__init__()
+        '''
+        TODO: if the column name can be changed from the original NP-Searcher,
+        a single CSVLogger can be used for all tasks.
+        '''
         self.model = model
         self.csv_path = Path(result_dir) / CSV_FILENAME
         self.header: List = []
+        self.key_map: Dict = {}
         
         self._temp_row_dict = dict()
         
@@ -71,8 +76,36 @@ class BaseCSVLogger(ABC):
         
         raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
     
-    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics):
-        pass
+    def _convert_as_csv_record(self, scalar_dict: Dict, prefix='train'):
+        converted_dict = {}
+        for k, v in scalar_dict.items():
+            if f"{prefix}/{k}" not in self.key_map:
+                continue
+            record_key = self.key_map[f"{prefix}/{k}"]
+            assert record_key in self.header, f"{record_key} not in {self.header}"
+            
+            converted_dict.update({record_key: v})
+        return converted_dict
+    
+    def __call__(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None):
+        assert len(self.header) != 0
+        assert len(self.key_map) != 0
+        
+        csv_record_dict = {'epoch': self._epoch}
+        converted_train_losses = self._convert_as_csv_record(train_losses, prefix='train')
+        converted_train_metrics = self._convert_as_csv_record(train_metrics, prefix='train')
+        csv_record_dict.update(converted_train_losses)
+        csv_record_dict.update(converted_train_metrics)
+        
+        if valid_losses is not None:
+            converted_valid_losses = self._convert_as_csv_record(valid_losses, prefix='valid')
+            csv_record_dict.update(converted_valid_losses)
+        if valid_metrics is not None:
+            converted_valid_metrics = self._convert_as_csv_record(valid_metrics, prefix='valid')
+            csv_record_dict.update(converted_valid_metrics)
+        
+        self.update(csv_record_dict)
+
     
 class BaseImageSaver(ABC):
     def __init__(self, model, result_dir) -> None:
