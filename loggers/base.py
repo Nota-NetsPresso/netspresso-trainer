@@ -9,6 +9,10 @@ CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
     def __init__(self, model, result_dir):
         super(BaseCSVLogger, self).__init__()
+        '''
+        TODO: if the column name can be changed from the original NP-Searcher,
+        a single CSVLogger can be used for all tasks.
+        '''
         self.model = model
         self.csv_path = Path(result_dir) / CSV_FILENAME
         self.header: List = []
