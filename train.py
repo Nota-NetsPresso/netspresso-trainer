@@ -82,11 +82,11 @@ def train():
     if task == 'classification':
         trainer = ClassificationPipeline(args, task, model_name, model, devices,
                                          train_dataloader, eval_dataloader, train_dataset.class_map,
-                                         is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
+                                         profile=args_parsed.profile)
     elif task == 'segmentation':
         trainer = SegmentationPipeline(args, task, model_name, model, devices,
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
-                                       is_online=args_parsed.report_modelsearch_api, profile=args_parsed.profile)
+                                       profile=args_parsed.profile)
 
     else:
         raise AssertionError(f"No such task! (task: {task})")

@@ -11,10 +11,13 @@ from loggers.segmentation import SegmentationCSVLogger
 from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
+from loggers.netspresso import ModelSearchServerHandler
 from loggers.visualizer import VOCColorize, magic_image_handler
 from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
+START_EPOCH_ZERO_OR_ONE = 1
+
 
 CSV_LOGGER_TASK_SPECIFIC = {
     'classification': ClassificationCSVLogger,
@@ -35,13 +38,17 @@ class TrainingLogger():
         self.epoch = epoch
         self.num_sample_images = num_sample_images
         
-        result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.args.train.project
+        self.project_id = args.train.project
+        self.token = args.train.token
+        
+        result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.project_id
         result_dir.mkdir(exist_ok=True)
         
         self.use_tensorboard: bool = self.args.logging.tensorboard
         self.use_csvlogger: bool = self.args.logging.csv
         self.use_imagesaver: bool = self.args.logging.image
         self.use_stdout: bool = self.args.logging.stdout
+        self.use_netspresso: bool = self.args.logging.netspresso
         
         self.csv_logger: Optional[BaseCSVLogger] = \
             CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_csvlogger else None
@@ -52,6 +59,8 @@ class TrainingLogger():
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=args.train.epochs) if self.use_stdout else None
+        self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
+            ModelSearchServerHandler(self.project_id, self.token, start_epoch=START_EPOCH_ZERO_OR_ONE) if self.use_netspresso else None
         if task in LABEL_CONVERTER_PER_TASK:
             self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map)
         
@@ -65,6 +74,8 @@ class TrainingLogger():
             self.tensorboard_logger.epoch = self.epoch
         if self.use_stdout:
             self.stdout_logger.epoch = self.epoch
+        if self.use_netspresso:
+            self.netspresso_api_client.epoch = self.epoch
     
     @staticmethod
     def _to_numpy(tensor: torch.Tensor):
@@ -170,6 +181,11 @@ class TrainingLogger():
                 valid_losses=valid_losses,
                 valid_metrics=valid_metrics,
                 learning_rate=learning_rate,
+                elapsed_time=elapsed_time
+            )
+        if self.use_netspresso:
+            # TODO: async handler if it takes much more time
+            self.netspresso_api_client(
                 elapsed_time=elapsed_time
             )
             
