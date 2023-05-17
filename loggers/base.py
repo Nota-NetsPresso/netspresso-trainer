@@ -2,9 +2,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any, List, Dict, Tuple, Optional, Union
 
-import numpy as np
-import PIL.Image as Image
-
 CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
     def __init__(self, model, result_dir):
@@ -105,34 +102,3 @@ class BaseCSVLogger(ABC):
             csv_record_dict.update(converted_valid_metrics)
         
         self.update(csv_record_dict)
-
-    
-class BaseImageSaver(ABC):
-    def __init__(self, model, result_dir) -> None:
-        super(BaseImageSaver, self).__init__()
-        self.model = model
-        self.result_dir = Path(result_dir)
-        self._epoch = None
-    
-    def init_epoch(self):
-        self._epoch = 0
-        
-    @property
-    def epoch(self):
-        return self._epoch
-    
-    @epoch.setter
-    def epoch(self, value: int) -> None:
-        self._epoch = int(value)
-        
-    @staticmethod
-    def magic_visualizer(image: Union[np.ndarray, Image.Image, str, Path], size: Optional[Tuple]=None) -> np.ndarray:
-        pass
-    
-    @abstractmethod
-    def save_result(self, data):
-        raise NotImplementedError
-
-    def __call__(self, train_images, valid_images):
-        pass
-

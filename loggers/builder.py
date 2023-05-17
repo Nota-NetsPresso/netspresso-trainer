@@ -5,12 +5,13 @@ import numpy as np
 import torch
 import PIL.Image as Image
 
-from loggers.base import BaseCSVLogger, BaseImageSaver
-from loggers.classification import ClassificationCSVLogger, ClassificationImageSaver
-from loggers.segmentation import SegmentationCSVLogger, SegmentationImageSaver
+from loggers.base import BaseCSVLogger
+from loggers.classification import ClassificationCSVLogger
+from loggers.segmentation import SegmentationCSVLogger
+from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
-from loggers.visualizer import VOCColorize
+from loggers.visualizer import VOCColorize, magic_image_handler
 from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
@@ -18,11 +19,6 @@ OUTPUT_ROOT_DIR = "./outputs"
 CSV_LOGGER_TASK_SPECIFIC = {
     'classification': ClassificationCSVLogger,
     'segmentation': SegmentationCSVLogger
-}
-
-IMAGE_SAVER_TASK_SPECIFIC = {
-    'classification': ClassificationImageSaver,
-    'segmentation': SegmentationImageSaver
 }
 
 LABEL_CONVERTER_PER_TASK = {
@@ -37,6 +33,7 @@ class TrainingLogger():
         self.model: str = model
         self.class_map: Dict = class_map
         self.epoch = epoch
+        self.num_sample_images = num_sample_images
         
         result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.args.train.project
         result_dir.mkdir(exist_ok=True)
@@ -48,8 +45,8 @@ class TrainingLogger():
         
         self.csv_logger: Optional[BaseCSVLogger] = \
             CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_csvlogger else None
-        self.image_saver: Optional[BaseImageSaver] = \
-            IMAGE_SAVER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_imagesaver else None
+        self.image_saver: Optional[ImageSaver] = \
+            ImageSaver(model=model, result_dir=result_dir) if self.use_imagesaver else None
         self.tensorboard_logger: Optional[TensorboardLogger] = \
             TensorboardLogger(task=task, model=model, result_dir=result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
@@ -68,13 +65,9 @@ class TrainingLogger():
             self.tensorboard_logger.epoch = self.epoch
         if self.use_stdout:
             self.stdout_logger.epoch = self.epoch
-            
-    def _visualize_label(self, images):
-        visualized_images = images # TODO: x 
-        return visualized_images
     
     @staticmethod
-    def _to_numpy(self, tensor: torch.Tensor):
+    def _to_numpy(tensor: torch.Tensor):
         return tensor.detach().cpu().numpy()
     
     def _convert_scalar_as_readable(self, scalar_dict: Dict):
@@ -83,22 +76,29 @@ class TrainingLogger():
                 pass
                 continue
             if isinstance(v, torch.Tensor):
-                new_v = v.detach().cpu().numpy()
-                scalar_dict.update({k: new_v})
+                v_new = v.detach().cpu().numpy()
+                scalar_dict.update({k: v_new})
                 continue
             if isinstance(v, AverageMeter):
-                new_v = v.avg
-                scalar_dict.update({k: new_v})
+                v_new = v.avg
+                scalar_dict.update({k: v_new})
                 continue
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
     
     def _convert_imagedict_as_readable(self, images_dict: Dict):
         for k, v in images_dict.items():
+            if len(v) > self.num_sample_images:
+                v = v[:self.num_sample_images, ...]
             if 'images' in k:
+                v_new: np.ndarray = magic_image_handler(v)
+                v_new = v_new.astype(np.uint8)
+                images_dict.update({k: v_new})
                 continue
             # target, pred, bg_gt
-            images_dict.update({k: self.label_converter(v)})
+            v_new: np.ndarray = magic_image_handler(self.label_converter(v))
+            v_new = v_new.astype(np.uint8)
+            images_dict.update({k: v_new})
         return images_dict
     
     def _convert_images_as_readable(self, images_dict_or_list: Union[Dict, List]):
