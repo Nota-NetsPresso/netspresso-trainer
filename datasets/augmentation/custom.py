@@ -62,6 +62,27 @@ class RandomResizedCrop(T.RandomResizedCrop):
     pass
 
 if __name__ == '__main__':
+    from pathlib import Path
+    
     import PIL.Image as Image
-    im = Image.open("astronaut.jpg")
+    import albumentations as A
+    import cv2
+    import numpy as np
+    input_filename = Path("astronaut.jpg")
+    im = Image.open(input_filename)
+    im_array = np.array(im)
+    print(f"Original image size (in array): {im_array.shape}")
+    
+    """Pad"""
+    torch_aug = PadIfNeeded(size=(1024, 1024))
+    im_torch_aug: Image.Image = torch_aug(im)
+    im_torch_aug.save(f"{input_filename.stem}_torch{input_filename.suffix}")
+    print(f"Aug image size (from torchvision): {np.array(im_torch_aug).shape}")
+    
+    album_aug = A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=cv2.BORDER_CONSTANT)
+    im_album_aug: np.ndarray = album_aug(image=im_array)['image']
+    Image.fromarray(im_album_aug).save(f"{input_filename.stem}_album{input_filename.suffix}")
+    print(f"Aug image size (from albumentations): {im_album_aug.shape}")
+
+    print(np.all(np.array(im_torch_aug) == im_album_aug), np.mean(np.abs(np.array(im_torch_aug) - im_album_aug)))
     
