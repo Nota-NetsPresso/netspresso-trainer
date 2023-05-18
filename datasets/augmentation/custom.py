@@ -46,6 +46,20 @@ class PadIfNeeded(torch.nn.Module):
         return self.__class__.__name__ + '(min_size={0}, fill={1}, padding_mode={2})'.\
             format((self.new_h, self.new_w), self.fill, self.padding_mode)
 
+class ColorJitter(T.ColorJitter):
+    pass
+
+class RandomCrop(T.RandomCrop):
+    pass
+
+class Normalize(T.Normalize):
+    pass
+
+class AutoAugment(T.AutoAugment):
+    pass
+
+class RandomResizedCrop(T.RandomResizedCrop):
+    pass
 
 if __name__ == '__main__':
     import PIL.Image as Image
