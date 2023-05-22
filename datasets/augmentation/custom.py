@@ -63,7 +63,7 @@ class PadIfNeeded:
         self.fill = fill
         self.padding_mode = padding_mode
 
-    def forward(self, image, mask=None, bbox=None):
+    def __call__(self, image, mask=None, bbox=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
         
