@@ -4,6 +4,7 @@ from typing import Sequence
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+import numpy as np
 
 class Compose:
     def __init__(self, transforms):
