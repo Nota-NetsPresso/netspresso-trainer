@@ -51,7 +51,7 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
         return image, mask, bbox
 
-class PadIfNeeded(torch.nn.Module):
+class PadIfNeeded:
     def __init__(self, size, fill=0, padding_mode="constant"):
         super().__init__()
         if not isinstance(size, (int, Sequence)):
