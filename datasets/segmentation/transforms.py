@@ -8,6 +8,7 @@ import cv2
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
+import datasets.augmentation.custom as TC
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 EDGE_SIZE = 4
@@ -37,35 +38,18 @@ def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
     crop_size_h = args.crop_size_h
     crop_size_w = args.crop_size_w
 
-    ratio_range = args.resize_ratio0, args.resize_ratiof
-    img_scale = args.max_scale, args.min_scale
-
-    if args.reduce_zero_label:
-        label = reduce_label(label)
-
-    h, w = img_size[:2]
-    ratio = np.random.random_sample() * (ratio_range[1] - ratio_range[0]) + ratio_range[0]
-    scale = (img_scale[0] * ratio, img_scale[1] * ratio)
-    max_long_edge = max(scale)
-    max_short_edge = min(scale)
-    scale_factor = min(max_long_edge / max(h, w), max_short_edge / min(h, w))
-    if (scale_factor * min(h, w)) < min(crop_size_h, crop_size_w):
-        scale_factor = min(crop_size_h, crop_size_w) / min(h, w)
-
-    train_transforms_composed = A.Compose([
-        A.Resize(int(h * scale_factor) + args.resize_add,
-                 int(w * scale_factor) + args.resize_add, p=1),
-        A.RandomCrop(crop_size_h, crop_size_w),
-        A.Flip(p=args.fliplr),
-        A.ColorJitter(brightness=args.color_jitter.brightness,
-                      contrast=args.color_jitter.contrast,
-                      saturation=args.color_jitter.saturation,
-                      hue=args.color_jitter.hue,
-                      p=args.color_jitter.colorjitter_p),
-        A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
-        A.PadIfNeeded(crop_size_h, crop_size_w,
-                      border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=255),
-        ToTensorV2()
+    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
+    
+    train_transforms_composed = TC.Compose([
+        TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
+        TC.RandomHorizontalFlip(p=args.fliplr),
+        TC.ColorJitter(brightness=args.color_jitter.brightness,
+                       contrast=args.color_jitter.contrast,
+                       saturation=args.color_jitter.saturation,
+                       hue=args.color_jitter.hue,
+                       p=args.color_jitter.colorjitter_p),
+        TC.ToTensor(),
+        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ])
 
     return train_transforms_composed
@@ -81,11 +65,10 @@ def val_transforms_segformer(args_augment, img_size, label, use_prefetcher):
         label = reduce_label(label)
 
     h, w = img_size[:2]
-    scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
-    val_transforms_composed = A.Compose([
-        A.Resize(int(crop_size_h), int(crop_size_w), p=1),
-        A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
-        ToTensorV2()
+    val_transforms_composed = TC.Compose([
+        TC.Resize((crop_size_h, crop_size_w)),
+        TC.ToTensor(),
+        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ])
 
     return val_transforms_composed
@@ -185,12 +168,10 @@ def create_segmentation_transform(args, is_training=False):
 
     if 'segformer' in args.train.architecture.values():
         if is_training:
-            transform = train_transforms_segformer
-        else:
-            transform = val_transforms_segformer
+            return train_transforms_segformer
+        return val_transforms_segformer
     elif 'pidnet' in args.train.architecture.values():
         if is_training:
-            transform = train_transforms_pidnet
-        else:
-            transform = val_transforms_pidnet
-    return transform
+            return train_transforms_pidnet
+        return val_transforms_pidnet
+    raise ValueError(f"No such model named: {args.train.architecture.values()} !!!")
