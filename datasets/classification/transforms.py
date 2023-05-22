@@ -6,80 +6,53 @@ from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def transforms_config(is_train: bool):
-    transf_config = {}
-
+    transf_config = {
+            'mean': IMAGENET_DEFAULT_MEAN,
+            'std': IMAGENET_DEFAULT_STD
+        }
+    
     if is_train:
-        transf_config = {
+        transf_config.update({
             'hflip': 0.5,
             'vflip': 0,
-            'mean': IMAGENET_DEFAULT_MEAN,
-            'std': IMAGENET_DEFAULT_STD
-        }
-    else:
-        transf_config = {
-            'mean': IMAGENET_DEFAULT_MEAN,
-            'std': IMAGENET_DEFAULT_STD
-        }
+        })
 
     return transf_config
 
 
 def transforms_custom_train(
-        use_prefetcher=True,
-        img_size=32,
+        img_size=64,
         hflip=0.5,
-        vflip=0.,
         mean=IMAGENET_DEFAULT_MEAN,
         std=IMAGENET_DEFAULT_STD,
 ):
-    primary_tfl = []
-    if img_size > 32:
-        primary_tfl += [transforms.Resize(img_size, str_to_interp_mode('bilinear'))]
-    primary_tfl += [transforms.RandomCrop(img_size, padding=4)]
-    if hflip > 0.:
-        primary_tfl += [transforms.RandomHorizontalFlip(p=hflip)]
-    if vflip > 0.:
-        primary_tfl += [transforms.RandomVerticalFlip(p=vflip)]
-    final_tfl = []
-    if use_prefetcher:
-        # prefetcher and collate will handle tensor conversion and norm
-        final_tfl += [ToNumpy()]
-    else:
-        final_tfl += [
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=torch.tensor(mean),
-                std=torch.tensor(std))
-        ]
-    return transforms.Compose(primary_tfl + final_tfl)
+    assert img_size > 32
+    primary_tfl = [transforms.RandomResizedCrop(img_size, interpolation=str_to_interp_mode('bilinear')),
+                   transforms.RandomHorizontalFlip(p=hflip),
+                   transforms.ToTensor(),
+                   transforms.Normalize(
+                       mean=torch.tensor(mean),
+                       std=torch.tensor(std)
+                       )
+    ]
+    return transforms.Compose(primary_tfl)
 
 
 def transforms_custom_eval(
-        use_prefetcher=True,
-        img_size=32,
+        img_size=64,
         mean=IMAGENET_DEFAULT_MEAN,
         std=IMAGENET_DEFAULT_STD,
         **kwargs):
-    tfl = []
-    if img_size > 32:
-        tfl += [transforms.Resize((img_size, img_size), str_to_interp_mode('bilinear'))]
-    if use_prefetcher:
-        # prefetcher and collate will handle tensor conversion and norm
-        tfl += [ToNumpy()]
-    else:
-        tfl += [
-            transforms.ToTensor(),
-            transforms.Normalize(
-                mean=torch.tensor(mean),
-                std=torch.tensor(std))
-        ]
+    assert img_size > 32
+    tfl = [
+        transforms.Resize((img_size, img_size), str_to_interp_mode('bilinear')),
+        transforms.ToTensor(),
+        transforms.Normalize(
+            mean=torch.tensor(mean),
+            std=torch.tensor(std))
+    ]
     return transforms.Compose(tfl)
 
 
 def create_classification_transform(args, is_training=False):
-
-    if is_training:
-        transform = transforms_custom_train
-    else:
-        transform = transforms_custom_eval
-    return transform
+    return transforms_custom_train if is_training else transforms_custom_eval
