@@ -1,20 +1,55 @@
+import random
 from typing import Sequence
 
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
+class Compose:
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, image, mask=None, bbox=None, **kwargs):
+        for t in self.transforms:
+            image, mask, bbox = t(image=image, mask=mask, bbox=bbox, **kwargs)
+        return image, mask, bbox
+
 class Pad(T.Pad):
-    pass
+    def forward(self, image, mask=None, bbox=None):
+        image = F.pad(image, self.padding, self.fill, self.padding_mode)
+        if mask is not None:
+            mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
+        return image, mask, bbox
 
 class Resize(T.Resize):
-    pass
+    def forward(self, image, mask=None, bbox=None):
+        image = F.resize(image, self.size, self.interpolation, self.max_size, self.antialias)
+        if mask is not None:
+            mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
+                            max_size=self.max_size, antialias=False)
+        return image, mask, bbox
 
-class RandomHorizontalFlip(T.RandomHorizontalFlip):
-    pass
+class RandomHorizontalFlip:
+    def __init__(self, p):
+        self.p = p
 
-class RandomVerticalFlip(T.RandomVerticalFlip):
-    pass
+    def __call__(self, image, mask=None, bbox=None):
+        if random.random() < self.p:
+            image = F.hflip(image)
+            if mask is not None:
+                mask = F.hflip(mask)
+        return image, mask, bbox
+
+class RandomVerticalFlip:
+    def __init__(self, p):
+        self.p = p
+
+    def __call__(self, image, mask=None, bbox=None):
+        if random.random() < self.p:
+            image = F.vflip(image)
+            if mask is not None:
+                mask = F.vflip(mask)
+        return image, mask, bbox
 
 class PadIfNeeded(torch.nn.Module):
     def __init__(self, size, fill=0, padding_mode="constant"):
@@ -28,14 +63,14 @@ class PadIfNeeded(torch.nn.Module):
         self.fill = fill
         self.padding_mode = padding_mode
 
-    def forward(self, img):
-        if not isinstance(img, (torch.Tensor, Image.Image)):
-            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(img)))
+    def forward(self, image, mask=None, bbox=None):
+        if not isinstance(image, (torch.Tensor, Image.Image)):
+            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
         
-        if isinstance(img, Image.Image):
-            w, h = img.size
+        if isinstance(image, Image.Image):
+            w, h = image.size
         else:
-            w, h = img.shape[-1], img.shape[-2]
+            w, h = image.shape[-1], image.shape[-2]
         
         w_pad_needed = max(0, self.new_w - w)
         h_pad_needed = max(0, self.new_h - h)
@@ -43,26 +78,65 @@ class PadIfNeeded(torch.nn.Module):
                         h_pad_needed // 2,
                         w_pad_needed // 2 + w_pad_needed % 2,
                         h_pad_needed // 2 + h_pad_needed % 2]
-        return F.pad(img, padding_ltrb, self.fill, self.padding_mode)
+        image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
+        if mask is not None:
+            mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
+        return image, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + '(min_size={0}, fill={1}, padding_mode={2})'.\
             format((self.new_h, self.new_w), self.fill, self.padding_mode)
 
 class ColorJitter(T.ColorJitter):
-    pass
+    def forward(self, image, mask=None, bbox=None):
+        fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = \
+            self.get_params(self.brightness, self.contrast, self.saturation, self.hue)
 
-class RandomCrop(T.RandomCrop):
-    pass
+        for fn_id in fn_idx:
+            if fn_id == 0 and brightness_factor is not None:
+                image = F.adjust_brightness(image, brightness_factor)
+            elif fn_id == 1 and contrast_factor is not None:
+                image = F.adjust_contrast(image, contrast_factor)
+            elif fn_id == 2 and saturation_factor is not None:
+                image = F.adjust_saturation(image, saturation_factor)
+            elif fn_id == 3 and hue_factor is not None:
+                image = F.adjust_hue(image, hue_factor)
 
-class Normalize(T.Normalize):
-    pass
+        return image, mask, bbox
 
-class AutoAugment(T.AutoAugment):
-    pass
+class RandomCrop:
+    def __init__(self, size):
+        self.size = size
+        self.image_pad_if_needed = PadIfNeeded(self.size)
+        self.mask_pad_if_needed = PadIfNeeded(self.size, fill=255)
 
+    def __call__(self, image, mask=None, bbox=None):
+        image = self.image_pad_if_needed(image)
+        crop_params = T.RandomCrop.get_params(image, (self.size, self.size))
+        image = F.crop(image, *crop_params)
+        if mask is not None:
+            mask = self.mask_pad_if_needed(mask)
+            mask = F.crop(mask, *crop_params)
+        return image, mask, bbox
+    
 class RandomResizedCrop(T.RandomResizedCrop):
-    pass
+    def forward(self, image, mask=None, bbox=None):
+        i, j, h, w = self.get_params(image, self.scale, self.ratio)
+        image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
+        if mask is not None:
+            mask = F.resized_crop(mask, i, j, h, w, self.size, interpolation=T.InterpolationMode.NEAREST)
+        return image, mask, bbox
+
+class Normalize:
+    def __init__(self, mean, std):
+        self.mean = mean
+        self.std = std
+
+    def __call__(self, image, mask=None, bbox=None):
+        image = F.normalize(image, mean=self.mean, std=self.std)
+        return image, mask, bbox
+
+
 
 if __name__ == '__main__':
     from pathlib import Path
@@ -78,7 +152,7 @@ if __name__ == '__main__':
     
     """Pad"""
     torch_aug = PadIfNeeded(size=(1024, 1024))
-    im_torch_aug: Image.Image = torch_aug(im)
+    im_torch_aug, _, _ = torch_aug(im)
     im_torch_aug.save(f"{input_filename.stem}_torch{input_filename.suffix}")
     print(f"Aug image size (from torchvision): {np.array(im_torch_aug).shape}")
     
