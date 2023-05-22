@@ -33,7 +33,6 @@ class ClassificationCustomDataset(BaseCustomDataset):
         )
 
         self.transform = transform
-        self.target_transform = target_transform
         self._consecutive_errors = 0
 
         _class_map_maybe = Path(self.args.train.data) / _MAPPING_TXT_FILE
@@ -71,6 +70,4 @@ class ClassificationCustomDataset(BaseCustomDataset):
             img = self.transform(img_size=self.args.train.img_size)(img)
         if target is None:
             target = -1
-        elif self.target_transform is not None:
-            target = self.target_transform(img_size=self.args.train.img_size)(target)
         return img, target
