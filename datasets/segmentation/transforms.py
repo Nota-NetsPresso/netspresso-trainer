@@ -2,9 +2,9 @@ import os
 import importlib
 import random
 
-import torch
 import numpy as np
 import cv2
+import PIL.Image as Image
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 
@@ -21,15 +21,14 @@ def reduce_label(label):
     label[label == 254] = 255
     return label
 
-def generate_edge(label):
+def generate_edge(label: np.ndarray) -> Image.Image:
     edge = cv2.Canny(label, 0.1, 0.2)
     kernel = np.ones((EDGE_SIZE, EDGE_SIZE), np.uint8)
     # edge_pad == True
     edge = edge[Y_K_SIZE:-Y_K_SIZE, X_K_SIZE:-X_K_SIZE]
     edge = np.pad(edge, ((Y_K_SIZE, Y_K_SIZE), (X_K_SIZE, X_K_SIZE)), mode='constant')
     edge = (cv2.dilate(edge, kernel, iterations=1) > 50) * 1.0
-
-    return edge.astype(np.float32).copy()
+    return Image.fromarray((edge.copy() * 255).astype(np.uint8))
 
 def train_transforms_segformer(args_augment, img_size, label, use_prefetcher):
 
@@ -95,33 +94,20 @@ def train_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     crop_size_h = args.crop_size_h
     crop_size_w = args.crop_size_w
 
-    ratio_range = args.resize_ratio0, args.resize_ratiof
-    img_scale = args.max_scale, args.min_scale
+    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
 
     if args.reduce_zero_label:
         label = reduce_label(label)
-        
-    h, w = img_size[:2]
-    ratio = np.random.random_sample() * (ratio_range[1] - ratio_range[0]) + ratio_range[0]
-    scale = (img_scale[0] * ratio, img_scale[1] * ratio)
-    max_long_edge = max(scale)
-    max_short_edge = min(scale)
-    scale_factor = min(max_long_edge / max(h, w), max_short_edge / min(h, w))
-    if (scale_factor * min(h, w)) < min(crop_size_h, crop_size_w):
-        scale_factor = min(crop_size_h, crop_size_w) / min(h, w)
 
-    train_transforms_composed = A.Compose(
+    train_transforms_composed = TC.Compose(
         [
-            A.Resize(int(h * scale_factor) + args.resize_add,
-                    int(w * scale_factor) + args.resize_add, p=1),
-            A.RandomCrop(crop_size_h, crop_size_w),
-            A.Flip(p=args.fliplr),
-            A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
-            A.PadIfNeeded(crop_size_h, crop_size_w,
-                        border_mode=cv2.BORDER_CONSTANT, value=0, mask_value=255),
-            ToTensorV2()
+            TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
+            TC.RandomHorizontalFlip(p=args.fliplr),
+            TC.ToTensor(),
+            TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
         ],
-        additional_targets={'edge': 'mask'})
+        additional_targets={'edge': 'mask'}
+    )
     
     return train_transforms_composed
 
@@ -133,15 +119,14 @@ def val_transforms_pidnet(args_augment, img_size, label, use_prefetcher):
     if args.reduce_zero_label == True:
         label = reduce_label(label)
 
-    h, w = img_size[:2]
-    scale_factor = min(args.max_scale / max(h, w), args.min_scale / min(h, w))
-    val_transforms_composed = A.Compose(
+    val_transforms_composed = TC.Compose(
         [
-            A.Resize(crop_size_h, crop_size_w),
-            A.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD),
-            ToTensorV2()
+            TC.Resize((crop_size_h, crop_size_w)),
+            TC.ToTensor(),
+            TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
         ],
-    additional_targets={'edge': 'mask'})
+        additional_targets={'edge': 'mask'}
+    )
 
     return val_transforms_composed
 
