@@ -80,7 +80,7 @@ augment:
   shear: ~
   perspective: ~
   flipud: ~
-  fliplr: ~ 
+  fliplr: 0.5
   mosaic: ~ 
   mixup: 1.0 
   copy_paste: ~ 
