@@ -67,7 +67,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
                 raise e
         self._consecutive_errors = 0
         if self.transform is not None:
-            img = self.transform(img_size=self.args.train.img_size)(img)
+            out = self.transform(img_size=self.args.train.img_size)(img)
         if target is None:
             target = -1
-        return img, target
+        return out['image'], target

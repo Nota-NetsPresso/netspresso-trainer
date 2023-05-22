@@ -1,5 +1,5 @@
 import random
-from typing import Sequence
+from typing import Sequence, Optional, Dict
 
 import torch
 import torchvision.transforms as T
@@ -7,19 +7,34 @@ import torchvision.transforms.functional as F
 import numpy as np
 
 class Compose:
-    def __init__(self, transforms):
+    def __init__(self, transforms, additional_targets: Dict={}):
         self.transforms = transforms
+        self.additional_targets = additional_targets
+    
+    def _get_transformed(self, image, mask, bbox):
+        for t in self.transforms:
+            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)
+        return image, mask, bbox
 
     def __call__(self, image, mask=None, bbox=None, **kwargs):
-        for t in self.transforms:
-            image, mask, bbox = t(image=image, mask=mask, bbox=bbox, **kwargs)
+        additional_targets_result = {k: None for k in kwargs.keys() if k in self.additional_targets}
         
-        assert mask is None or bbox is None, "At least one of mask and bbox should be None!"
+        result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox)
+        for key in additional_targets_result.keys():
+            if self.additional_targets[key] == 'mask':
+                _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None)
+            elif self.additional_targets[key] == 'bbox':
+                _, _, additional_targets_result[key] = self._get_transformed(image=image, mask=None, bbox=kwargs[key])
+            else:
+                del additional_targets_result[key]
+
+        return_dict = {'image': result_image}
         if mask is not None:
-            return image, mask
+            return_dict.update({'mask': result_mask})
         if bbox is not None:
-            return image, bbox
-        return image
+            return_dict.update({'bbox': result_bbox})
+        return_dict.update(additional_targets_result)
+        return return_dict
 
 class Pad(T.Pad):
     def forward(self, image, mask=None, bbox=None):
@@ -33,7 +48,7 @@ class Resize(T.Resize):
         image = F.resize(image, self.size, self.interpolation, self.max_size, self.antialias)
         if mask is not None:
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
-                            max_size=self.max_size, antialias=False)
+                            max_size=self.max_size)
         return image, mask, bbox
 
 class RandomHorizontalFlip:

@@ -97,8 +97,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if self._split in ['infer', 'inference']:
-            image = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img)
-            return {'pixel_values': image, 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
+            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img)
+            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
         
         outputs = {}
 
@@ -108,8 +108,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
             out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'], 'name': img_path.name})
         else:
-            image, mask = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
-            outputs.update({'pixel_values': image, 'labels': mask, 'name': img_path.name})
+            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
 
         if self._split in ['train', 'training']:
