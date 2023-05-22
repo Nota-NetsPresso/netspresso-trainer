@@ -1,9 +1,7 @@
 import os
 from pathlib import Path
-import logging
 
 import PIL.Image as Image
-import torch
 
 from datasets.utils.parsers import create_parser
 from datasets.base import BaseCustomDataset
@@ -33,7 +31,6 @@ class ClassificationCustomDataset(BaseCustomDataset):
         )
 
         self.transform = transform
-        self.target_transform = target_transform
         self._consecutive_errors = 0
 
         _class_map_maybe = Path(self.args.train.data) / _MAPPING_TXT_FILE
@@ -68,9 +65,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
                 raise e
         self._consecutive_errors = 0
         if self.transform is not None:
-            img = self.transform(use_prefetcher=True, img_size=self.args.train.img_size)(img)
+            out = self.transform(args_augment=self.args.augment, img_size=self.args.train.img_size)(img)
         if target is None:
             target = -1
-        elif self.target_transform is not None:
-            target = self.target_transform(use_prefetcher=True, img_size=self.args.train.img_size)(target)
-        return img, target
+        return out['image'], target
