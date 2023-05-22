@@ -28,14 +28,16 @@ def transforms_custom_train(
 ):
     assert img_size > 32
     primary_tfl = [transforms.RandomResizedCrop(img_size, interpolation=str_to_interp_mode('bilinear')),
-                   transforms.RandomHorizontalFlip(p=hflip),
+                   transforms.RandomHorizontalFlip(p=hflip)
+    ]
+    preprocess = [
                    transforms.ToTensor(),
                    transforms.Normalize(
                        mean=torch.tensor(mean),
                        std=torch.tensor(std)
                        )
     ]
-    return transforms.Compose(primary_tfl)
+    return transforms.Compose(primary_tfl + preprocess)
 
 
 def transforms_custom_eval(
@@ -44,14 +46,14 @@ def transforms_custom_eval(
         std=IMAGENET_DEFAULT_STD,
         **kwargs):
     assert img_size > 32
-    tfl = [
+    preprocess = [
         transforms.Resize((img_size, img_size), str_to_interp_mode('bilinear')),
         transforms.ToTensor(),
         transforms.Normalize(
             mean=torch.tensor(mean),
             std=torch.tensor(std))
     ]
-    return transforms.Compose(tfl)
+    return transforms.Compose(preprocess)
 
 
 def create_classification_transform(args, is_training=False):
