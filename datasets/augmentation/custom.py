@@ -12,7 +12,13 @@ class Compose:
     def __call__(self, image, mask=None, bbox=None, **kwargs):
         for t in self.transforms:
             image, mask, bbox = t(image=image, mask=mask, bbox=bbox, **kwargs)
-        return image, mask, bbox
+        
+        assert mask is None or bbox is None, "At least one of mask and bbox should be None!"
+        if mask is not None:
+            return image, mask
+        if bbox is not None:
+            return image, bbox
+        return image
 
 class Pad(T.Pad):
     def forward(self, image, mask=None, bbox=None):
