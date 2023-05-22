@@ -1,7 +1,8 @@
 import torch
 from torchvision import transforms
 
-from datasets.utils.augmentation.transforms import str_to_interp_mode, ToNumpy
+import datasets.augmentation.custom as TC
+from datasets.utils.augmentation.transforms import str_to_interp_mode
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
@@ -27,17 +28,17 @@ def transforms_custom_train(
         std=IMAGENET_DEFAULT_STD,
 ):
     assert img_size > 32
-    primary_tfl = [transforms.RandomResizedCrop(img_size, interpolation=str_to_interp_mode('bilinear')),
-                   transforms.RandomHorizontalFlip(p=hflip)
+    primary_tfl = [TC.RandomResizedCrop(img_size, interpolation=str_to_interp_mode('bilinear')),
+                   TC.RandomHorizontalFlip(p=hflip)
     ]
     preprocess = [
-                   transforms.ToTensor(),
-                   transforms.Normalize(
+                   TC.ToTensor(),
+                   TC.Normalize(
                        mean=torch.tensor(mean),
                        std=torch.tensor(std)
                        )
     ]
-    return transforms.Compose(primary_tfl + preprocess)
+    return TC.Compose(primary_tfl + preprocess)
 
 
 def transforms_custom_eval(
@@ -47,13 +48,13 @@ def transforms_custom_eval(
         **kwargs):
     assert img_size > 32
     preprocess = [
-        transforms.Resize((img_size, img_size), str_to_interp_mode('bilinear')),
-        transforms.ToTensor(),
-        transforms.Normalize(
+        TC.Resize((img_size, img_size), str_to_interp_mode('bilinear')),
+        TC.ToTensor(),
+        TC.Normalize(
             mean=torch.tensor(mean),
             std=torch.tensor(std))
     ]
-    return transforms.Compose(preprocess)
+    return TC.Compose(preprocess)
 
 
 def create_classification_transform(args, is_training=False):
