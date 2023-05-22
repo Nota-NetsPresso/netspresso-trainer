@@ -136,6 +136,13 @@ class Normalize:
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, mask, bbox
 
+class ToTensor(T.ToTensor):
+    def __call__(self, image, mask=None, bbox=None):
+        image = F.to_tensor(image)
+        if mask is not None:
+            mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
+
+        return image, mask, bbox
 
 
 if __name__ == '__main__':
