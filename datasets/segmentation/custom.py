@@ -3,16 +3,13 @@ from pathlib import Path
 import logging
 import json
 
-import cv2
 import PIL.Image as Image
 import numpy as np
-import torch
 
 from datasets.base import BaseCustomDataset
-from datasets.segmentation.transforms import generate_edge
+from datasets.segmentation.transforms import generate_edge, reduce_label
 
 _logger = logging.getLogger(__name__)
-_ERROR_RETRY = 50
 
 ID2LABEL_FILENAME = "id2label.json"
 
@@ -97,18 +94,21 @@ class SegmentationCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if self._split in ['infer', 'inference']:
-            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img)
+            out = self.transform(self.args.augment)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
         
         outputs = {}
 
         label = Image.open(str(ann_path)).convert('L')
+        if self.args.augment.reduce_zero_label:
+            label = reduce_label(np.array(label))
+        
         if self.args.train.architecture.full == 'pidnet':
             edge = generate_edge(np.array(label))
-            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label, edge=edge)
+            out = self.transform(self.args.augment)(image=img, mask=label, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})
         else:
-            out = self.transform(self.args.augment, (h, w), label, use_prefetcher=True)(image=img, mask=label)
+            out = self.transform(self.args.augment)(image=img, mask=label)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
 
