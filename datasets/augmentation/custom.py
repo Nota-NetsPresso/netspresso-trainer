@@ -94,19 +94,24 @@ class PadIfNeeded:
             format((self.new_h, self.new_w), self.fill, self.padding_mode)
 
 class ColorJitter(T.ColorJitter):
+    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
+        super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
+        self.p: float = max(0., min(1., p))
+        
     def forward(self, image, mask=None, bbox=None):
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = \
             self.get_params(self.brightness, self.contrast, self.saturation, self.hue)
 
-        for fn_id in fn_idx:
-            if fn_id == 0 and brightness_factor is not None:
-                image = F.adjust_brightness(image, brightness_factor)
-            elif fn_id == 1 and contrast_factor is not None:
-                image = F.adjust_contrast(image, contrast_factor)
-            elif fn_id == 2 and saturation_factor is not None:
-                image = F.adjust_saturation(image, saturation_factor)
-            elif fn_id == 3 and hue_factor is not None:
-                image = F.adjust_hue(image, hue_factor)
+        if random.random() < self.p:
+            for fn_id in fn_idx:
+                if fn_id == 0 and brightness_factor is not None:
+                    image = F.adjust_brightness(image, brightness_factor)
+                elif fn_id == 1 and contrast_factor is not None:
+                    image = F.adjust_contrast(image, contrast_factor)
+                elif fn_id == 2 and saturation_factor is not None:
+                    image = F.adjust_saturation(image, saturation_factor)
+                elif fn_id == 3 and hue_factor is not None:
+                    image = F.adjust_hue(image, hue_factor)
 
         return image, mask, bbox
 
