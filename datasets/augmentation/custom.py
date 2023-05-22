@@ -13,6 +13,9 @@ class Resize(T.Resize):
 class RandomHorizontalFlip(T.RandomHorizontalFlip):
     pass
 
+class RandomVerticalFlip(T.RandomVerticalFlip):
+    pass
+
 class PadIfNeeded(torch.nn.Module):
     def __init__(self, size, fill=0, padding_mode="constant"):
         super().__init__()

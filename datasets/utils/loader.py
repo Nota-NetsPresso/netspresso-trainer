@@ -132,7 +132,6 @@ def create_loader(
         input_size=None,
         batch_size=1,
         is_training=False,
-        use_prefetcher=True,
         num_aug_repeats=0,
         num_aug_splits=0,
         num_workers=1,
@@ -150,9 +149,6 @@ def create_loader(
 
     sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=args.world_size, rank=args.rank)
 
-    if collate_fn is None:
-        collate_fn = fast_collate if use_prefetcher else None
-
     loader_args = dict(
         batch_size=batch_size,
         shuffle=not isinstance(dataset, torch.utils.data.IterableDataset) and sampler is None and is_training,
@@ -169,13 +165,5 @@ def create_loader(
     except TypeError as e:
         loader_args.pop('persistent_workers')  # only in Pytorch 1.7+
         loader = DataLoader(dataset, **loader_args)
-    if use_prefetcher:
-        loader = PrefetchLoader(
-            loader,
-            mean=kwargs['mean'],
-            std=kwargs['std'],
-            channels=NUM_RGB_CHANNEL,
-            fp16=fp16,
-        )
-
+    
     return loader

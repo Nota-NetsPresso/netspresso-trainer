@@ -62,7 +62,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
     task = str(args.train.task).lower()
     if task == 'classification':
         collate_fn = None
-        use_prefetcher = True
 
         train_data_cfg = transforms_config(is_train=True)
         setattr(model, "train_data_cfg", train_data_cfg)
@@ -73,7 +72,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             input_size=args.train.img_size,
             batch_size=args.train.batch_size,
             is_training=True,
-            use_prefetcher=use_prefetcher,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,
             collate_fn=collate_fn,
@@ -91,7 +89,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             input_size=args.train.img_size,
             batch_size=args.train.batch_size,
             is_training=False,
-            use_prefetcher=use_prefetcher,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,
             collate_fn=None,
@@ -101,7 +98,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
         )
     elif task == 'segmentation':
         collate_fn = None
-        use_prefetcher = False
 
         train_loader = create_loader(
             train_dataset,
@@ -109,7 +105,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             _logger,
             batch_size=args.train.batch_size,
             is_training=True,
-            use_prefetcher=use_prefetcher,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,
             collate_fn=collate_fn,
@@ -124,7 +119,6 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             _logger,
             batch_size=args.train.batch_size if model == 'pidnet' and not args.distributed else 1,
             is_training=False,
-            use_prefetcher=use_prefetcher,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,
             collate_fn=None,
