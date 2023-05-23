@@ -14,7 +14,7 @@ logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 PRETRAINED_ROOT = Path("pretrained")
 UPDATE_PREFIX = "updated_"
-SUPPORTING_MODEL_LIST = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet", "mobilevit", "vit"]
+SUPPORTING_MODEL_LIST = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet", "mobilevit", "vit", "efficientformer"]
 MODEL_PRETRAINED_DICT = {
     "atomixnet_l": PRETRAINED_ROOT / "backbones" / "atomixnet" / "atomixnet_l.pth",
     "atomixnet_m": PRETRAINED_ROOT / "backbones" / "atomixnet" / "atomixnet_m.pth",
