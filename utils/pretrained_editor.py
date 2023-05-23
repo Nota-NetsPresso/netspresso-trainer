@@ -28,6 +28,11 @@ def convert_state_dict_to_model(model_name, model, state_dict):
     def convert_string(x): return f"{x}"
     def exclude_string(x): return False
     """
+    
+    """efficientformer
+    def convert_string(x): return f"{x}"
+    def exclude_string(x): return False
+    """
 
     """vanila
     """

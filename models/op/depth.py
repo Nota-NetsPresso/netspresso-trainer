@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 
 # Copied from transformers.models.convnext.modeling_convnext.drop_path
 def drop_path(input, drop_prob: float = 0.0, training: bool = False, scale_by_keep=True):
@@ -19,3 +20,14 @@ def drop_path(input, drop_prob: float = 0.0, training: bool = False, scale_by_ke
     random_tensor.floor_()  # binarize
     output = input.div(keep_prob) * random_tensor
     return output
+
+class DropPath(nn.Module):
+    """Drop paths (Stochastic Depth) per sample  (when applied in main path of residual blocks).
+    """
+    def __init__(self, drop_prob: float = 0., scale_by_keep: bool = True):
+        super(DropPath, self).__init__()
+        self.drop_prob = drop_prob
+        self.scale_by_keep = scale_by_keep
+
+    def forward(self, x):
+        return drop_path(x, self.drop_prob, self.training, self.scale_by_keep)
