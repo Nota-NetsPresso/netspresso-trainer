@@ -24,6 +24,7 @@ MODEL_PRETRAINED_DICT = {
     "pidnet": PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
     "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
     "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_tiny.pth",
+    "efficientformer": PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
 }
 
 def load_pretrained_checkpoint(model_name: str):
