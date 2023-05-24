@@ -14,9 +14,6 @@ from utils.logger import set_logger
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 MAX_SAMPLE_RESULT = 10
-_RECOMMEND_CSV_LOG_PATH = "results.csv"
-_RECOMMEND_OUTPUT_DIR = './'
-_RECOMMEND_OUTPUT_DIR_NAME = 'exp'
 
 
 class ClassificationPipeline(BasePipeline):
@@ -45,9 +42,6 @@ class ClassificationPipeline(BasePipeline):
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
-        
-        output_dir = Path(_RECOMMEND_OUTPUT_DIR) / self.args.train.project / _RECOMMEND_OUTPUT_DIR_NAME
-        output_dir.mkdir(exist_ok=True, parents=True)
 
     def train_step(self, batch):
         self.model.train()
