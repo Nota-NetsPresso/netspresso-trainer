@@ -333,7 +333,7 @@ def meta_blocks(dim, index, layers,
 
 class EfficientFormer(SeparateForwardModule):
 
-    def __init__(self, layers, embed_dims=None,
+    def __init__(self, task, layers, embed_dims=None,
                  mlp_ratios=4, downsamples=None,
                  pool_size=3,
                  norm_layer=nn.LayerNorm, act_layer=nn.GELU,
@@ -341,7 +341,6 @@ class EfficientFormer(SeparateForwardModule):
                  down_patch_size=3, down_stride=2, down_pad=1,
                  drop_rate=0., drop_path_rate=0.,
                  use_layer_scale=True, layer_scale_init_value=1e-5,
-                 fork_feat=False,
                  init_cfg=None,
                  pretrained=None,
                  vit_num=1,
@@ -349,11 +348,11 @@ class EfficientFormer(SeparateForwardModule):
                  **kwargs):
 
         super().__init__()
+        
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
 
-        if not fork_feat:
-            self.num_classes = num_classes
-        self.fork_feat = fork_feat
-
+        self.num_classes = num_classes
         self.patch_embed = stem(3, embed_dims[0])
 
         # set the main block in network
@@ -382,7 +381,7 @@ class EfficientFormer(SeparateForwardModule):
 
         self.network = nn.ModuleList(network)
 
-        if self.fork_feat:
+        if self.intermediate_features:
             # add a norm layer for each output
             self.out_indices = [0, 2, 4, 6]
             for i_emb, i_layer in enumerate(self.out_indices):
@@ -408,7 +407,7 @@ class EfficientFormer(SeparateForwardModule):
 
         self.init_cfg = copy.deepcopy(init_cfg)
         # load pre-trained model
-        if self.fork_feat and (
+        if self.intermediate_features and (
                 self.init_cfg is not None or pretrained is not None):
             self.init_weights()
 
@@ -471,13 +470,13 @@ class EfficientFormer(SeparateForwardModule):
             if len(x.size()) == 4:
                 B, C, H, W = x.shape
             x = block(x)
-            if self.fork_feat and idx in self.out_indices:
+            if self.intermediate_features and idx in self.out_indices:
                 norm_layer = getattr(self, f'norm{idx}')
                 if len(x.size()) != 4:
                     x = x.transpose(1, 2).reshape(B, C, H, W)
                 x_out = norm_layer(x)
                 outs.append(x_out)
-        if self.fork_feat:
+        if self.intermediate_features:
             # output the features of four stages for dense prediction
             return outs
         # output only the features of last layer for image classification
@@ -486,9 +485,9 @@ class EfficientFormer(SeparateForwardModule):
     def forward_training(self, x):
         x = self.patch_embed(x)
         x = self.forward_tokens(x)
-        if self.fork_feat:
+        if self.intermediate_features:
             # otuput features of four stages for dense prediction
-            return x
+            return {'intermediate_features': x}
         x = self.norm(x)
         x = x.mean(-2)
         # if self.dist:
@@ -512,12 +511,13 @@ class EfficientFormer(SeparateForwardModule):
         return task.lower() in SUPPORTING_TASK
 
 
-def efficientformer(num_class=1000, **extra_params) -> EfficientFormer:
+def efficientformer(task, num_class=1000, **extra_params) -> EfficientFormer:
     return EfficientFormer(
+        task=task,
         layers=EfficientFormer_depth['l1'],
         embed_dims=EfficientFormer_width['l1'],
+        num_classes=num_class,
         downsamples=[True, True, True, True],
-        fork_feat=False, # TODO: True for segmentation and detection
         vit_num=1,
         **extra_params
     )

@@ -5,6 +5,12 @@ import torch.nn as nn
 from models.configuration.segformer import SegformerConfig
 from models.utils import SeparateForwardModule
 
+EfficientFormer_width = {
+    'l1': [48, 96, 224, 448],
+    'l3': [64, 128, 320, 512],
+    'l7': [96, 192, 384, 768],
+}
+
 class SegformerMLP(nn.Module):
     """
     Linear Embedding.
@@ -21,9 +27,8 @@ class SegformerMLP(nn.Module):
 
 
 class SegformerDecodeHead(SeparateForwardModule):
-    def __init__(self, num_classes):
+    def __init__(self, config, num_classes):
         super().__init__()
-        config = SegformerConfig()
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
         for i in range(config.num_encoder_blocks):
@@ -93,4 +98,9 @@ class SegformerDecodeHead(SeparateForwardModule):
 
 
 def segformer_decode_head(feature_dim, num_classes):
-    return SegformerDecodeHead(num_classes=num_classes)
+    config = SegformerConfig()
+    return SegformerDecodeHead(config, num_classes=num_classes)
+
+def efficientformer_decode_head(feature_dim, num_classes):
+    config = SegformerConfig(hidden_sizes=EfficientFormer_width['l1'])
+    return SegformerDecodeHead(config, num_classes=num_classes)
