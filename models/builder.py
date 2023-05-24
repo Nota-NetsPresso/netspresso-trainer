@@ -48,7 +48,9 @@ class AssembleModel(nn.Module):
         self.backbone: nn.Module = eval(f"backbones.{backbone_name}")(task=self.task)
         try:
             model_state_dict = load_pretrained_checkpoint(backbone_name)
-            self.backbone.load_state_dict(model_state_dict)
+            missing_keys, unexpected_keys = self.backbone.load_state_dict(model_state_dict, strict=False)
+            logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
+            logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
         except AssertionError as e:
             logger.warning(str(e))
         # self._freeze_backbone()
