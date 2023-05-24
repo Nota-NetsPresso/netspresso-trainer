@@ -24,10 +24,12 @@ class MobileViT(nn.Module):
     This class implements the `MobileViT architecture <https://arxiv.org/abs/2110.02178?context=cs.LG>`_
     """
 
-    def __init__(self, opts, *args, **kwargs) -> None:
+    def __init__(self, task, opts, *args, **kwargs) -> None:
         # classifier_dropout = getattr(
         #     opts, "model.classification.classifier_dropout", 0.0
         # )
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
 
         pool_type = getattr(opts, "model.layer.global_pool", "mean")
         image_channels = 3
@@ -422,5 +424,5 @@ class MobileViT(nn.Module):
         return {'last_feature': x}
 
 
-def mobilevit(*args, **kwargs):
-    return MobileViT(opts=None)
+def mobilevit(task, *args, **kwargs):
+    return MobileViT(task, opts=None)

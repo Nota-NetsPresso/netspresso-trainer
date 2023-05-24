@@ -228,8 +228,10 @@ class SegformerLayer(nn.Module):
 
 
 class SegformerEncoder(SeparateForwardModule):
-    def __init__(self, num_classes=None):
+    def __init__(self, task, num_classes=None):
         super().__init__()
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
         self.config = SegformerConfig()
 
         # stochastic depth decay rule
@@ -283,15 +285,15 @@ class SegformerEncoder(SeparateForwardModule):
     def last_channels(self):
         return self._last_channels
 
-    def task_support(self, task):
-        return task.lower() in SUPPORTING_TASK
+    def task_support(self):
+        return self.task in SUPPORTING_TASK
 
-    def forward_training(self, x, intermediate_features=True):
+    def forward_training(self, x):
 
         batch_size = x.shape[0]
 
         hidden_states = x
-        all_hidden_states = () if intermediate_features else None
+        all_hidden_states = () if self.intermediate_features else None
         for idx, _layers in enumerate(zip(self.patch_embeddings, self.block, self.layer_norm)):
             embedding_layer, block_layer, norm_layer = _layers
 
@@ -312,13 +314,13 @@ class SegformerEncoder(SeparateForwardModule):
             ):
                 hidden_states = hidden_states.reshape(batch_size, height, width, -1).permute(0, 3, 1, 2).contiguous()
 
-            if intermediate_features:
+            if self.intermediate_features:
                 all_hidden_states = all_hidden_states + (hidden_states,)
 
         hidden_states = self.avgpool(hidden_states).reshape(-1, hidden_states.size(1))  # B x (self.last_channel)
         return_dict = {'last_feature': hidden_states}
 
-        if not intermediate_features:
+        if not self.intermediate_features:
             return return_dict
 
         return_dict.update({'intermediate_features': all_hidden_states})
@@ -329,5 +331,5 @@ class SegformerEncoder(SeparateForwardModule):
 
 
 
-def segformer(num_class=1000, **extra_params) -> SegformerEncoder:
-    return SegformerEncoder(**extra_params)
+def segformer(task, num_class=1000, **extra_params) -> SegformerEncoder:
+    return SegformerEncoder(task, num_class, **extra_params)

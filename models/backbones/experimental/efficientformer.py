@@ -333,7 +333,7 @@ def meta_blocks(dim, index, layers,
 
 class EfficientFormer(SeparateForwardModule):
 
-    def __init__(self, layers, embed_dims=None,
+    def __init__(self, task, layers, embed_dims=None,
                  mlp_ratios=4, downsamples=None,
                  pool_size=3,
                  norm_layer=nn.LayerNorm, act_layer=nn.GELU,
@@ -349,6 +349,9 @@ class EfficientFormer(SeparateForwardModule):
                  **kwargs):
 
         super().__init__()
+        
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
 
         if not fork_feat:
             self.num_classes = num_classes
@@ -512,8 +515,9 @@ class EfficientFormer(SeparateForwardModule):
         return task.lower() in SUPPORTING_TASK
 
 
-def efficientformer(num_class=1000, **extra_params) -> EfficientFormer:
+def efficientformer(task, num_class=1000, **extra_params) -> EfficientFormer:
     return EfficientFormer(
+        task=task,
         layers=EfficientFormer_depth['l1'],
         embed_dims=EfficientFormer_width['l1'],
         downsamples=[True, True, True, True],

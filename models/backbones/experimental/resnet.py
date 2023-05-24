@@ -151,6 +151,7 @@ class ResNet(SeparateForwardModule):
 
     def __init__(
         self,
+        task: str,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
         num_class: int = 1000,
@@ -161,6 +162,10 @@ class ResNet(SeparateForwardModule):
         norm_layer: Optional[Callable[..., nn.Module]] = None
     ) -> None:
         super(ResNet, self).__init__()
+        
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
+        
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
         self._norm_layer = norm_layer
@@ -263,11 +268,11 @@ class ResNet(SeparateForwardModule):
         return task.lower() in SUPPORTING_TASK
 
 
-def resnet50(num_class=1000, **extra_params) -> ResNet:
+def resnet50(task, num_class=1000, **extra_params) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
+    return ResNet(task, Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
 
 
 def resnet101(num_class=1000, **extra_params) -> ResNet:

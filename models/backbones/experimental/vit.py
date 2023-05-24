@@ -28,7 +28,10 @@ class VisionTransformer(nn.Module):
         4. We do not add positional encoding to class token (if enabled), as suggested in `DeiT-3 paper <https://arxiv.org/abs/2204.07118>`_
     """
 
-    def __init__(self, opts, *args, **kwargs) -> None:
+    def __init__(self, task, opts, *args, **kwargs) -> None:
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
+
         image_channels = 3
         num_classes = getattr(opts, "model.classification.n_classes", 1000)
 
@@ -461,5 +464,5 @@ class VisionTransformer(nn.Module):
         x = self._forward_classifier(x, *args, **kwargs)
         return {'last_feature': x}
 
-def vit(*args, **kwargs):
-    return VisionTransformer(opts=None)
+def vit(task, *args, **kwargs):
+    return VisionTransformer(task, opts=None)

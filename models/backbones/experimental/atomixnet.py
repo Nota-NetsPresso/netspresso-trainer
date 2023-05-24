@@ -206,9 +206,11 @@ class MixDepthBlock(nn.Module):
 # AtomixNet
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 class AtomixNet(SeparateForwardModule):
-    def __init__(self, num_classes=1000, arch='supernet', dropout=None):
+    def __init__(self, task, num_classes=1000, arch='supernet', dropout=None):
         super(AtomixNet, self).__init__()
 
+        self.task = task.lower()
+        self.intermediate_features = self.task in ['segmentation', 'detection']
         # compression rate (automatically found via NAS)
         compression = {
             'supernet': None,
@@ -615,5 +617,5 @@ def atomixnet_m(num_class=1000, **extra_params):
     return AtomixNet(num_classes=num_class, arch='m', **extra_params)
 
 
-def atomixnet_s(num_class=1000, **extra_params):
-    return AtomixNet(num_classes=num_class, arch='s', **extra_params)
+def atomixnet_s(task, num_class=1000, **extra_params):
+    return AtomixNet(task, num_classes=num_class, arch='s', **extra_params)
