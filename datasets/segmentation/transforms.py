@@ -51,7 +51,6 @@ def train_transforms_segformer(args_augment):
 
     return train_transforms_composed
 
-
 def val_transforms_segformer(args_augment):
 
     args = args_augment
@@ -113,6 +112,43 @@ def infer_transforms_pidnet(args_augment):
     return
 
 
+def train_transforms_efficientformer(args_augment):
+
+    args = args_augment
+
+    crop_size_h = args.crop_size_h
+    crop_size_w = args.crop_size_w
+
+    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
+    
+    train_transforms_composed = TC.Compose([
+        TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
+        TC.RandomHorizontalFlip(p=args.fliplr),
+        TC.ColorJitter(brightness=args.color_jitter.brightness,
+                       contrast=args.color_jitter.contrast,
+                       saturation=args.color_jitter.saturation,
+                       hue=args.color_jitter.hue,
+                       p=args.color_jitter.colorjitter_p),
+        TC.ToTensor(),
+        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
+    ])
+
+    return train_transforms_composed
+
+def val_transforms_efficientformer(args_augment):
+
+    args = args_augment
+    crop_size_h = args.crop_size_h
+    crop_size_w = args.crop_size_w
+
+    val_transforms_composed = TC.Compose([
+        TC.Resize((crop_size_h, crop_size_w)),
+        TC.ToTensor(),
+        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
+    ])
+
+    return val_transforms_composed
+
 def create_segmentation_transform(args, is_training=False):
 
     if 'segformer' in args.train.architecture.values():
@@ -123,4 +159,8 @@ def create_segmentation_transform(args, is_training=False):
         if is_training:
             return train_transforms_pidnet
         return val_transforms_pidnet
+    elif 'efficientformer' in args.train.architecture.values():
+        if is_training:
+            return train_transforms_efficientformer
+        return val_transforms_efficientformer
     raise ValueError(f"No such model named: {args.train.architecture.values()} !!!")
