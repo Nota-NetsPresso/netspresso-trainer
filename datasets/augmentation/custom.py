@@ -35,6 +35,13 @@ class Compose:
             return_dict.update({'bbox': result_bbox})
         return_dict.update(additional_targets_result)
         return return_dict
+    
+class Identity:
+    def __init__(self):
+        pass
+
+    def __call__(self, image, mask=None, bbox=None):
+        return image, mask, bbox
 
 class Pad(T.Pad):
     def forward(self, image, mask=None, bbox=None):
@@ -168,6 +175,9 @@ class ToTensor(T.ToTensor):
         image = F.to_tensor(image)
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
+            
+        if bbox is not None:
+            bbox = torch.as_tensor(np.array(mask), dtype=torch.int64)
 
         return image, mask, bbox
 
