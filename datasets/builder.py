@@ -5,8 +5,10 @@ from torch.utils.data import DataLoader
 
 from datasets.classification import ClassificationCustomDataset
 from datasets.segmentation import SegmentationCustomDataset
+from datasets.detection import DetectionCustomDataset
 from datasets.classification.transforms import create_classification_transform
 from datasets.segmentation.transforms import create_segmentation_transform
+from datasets.detection.transforms import create_detection_transform
 from datasets.utils.loader import create_loader
 
 
@@ -27,12 +29,14 @@ def build_dataset(args):
 
     transform_func_for = {
         'classification': create_classification_transform,
-        'segmentation': create_segmentation_transform
+        'segmentation': create_segmentation_transform,
+        'detection': create_detection_transform
     }
 
     dataset_for = {
         'classification': ClassificationCustomDataset,
         'segmentation': SegmentationCustomDataset,
+        'detection': DetectionCustomDataset,
     }
 
     assert task in transform_func_for, f"The given task `{task}` is not supported!"
@@ -113,6 +117,36 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             args.train.data,
             _logger,
             batch_size=args.train.batch_size if model == 'pidnet' and not args.distributed else 1,
+            is_training=False,
+            num_workers=args.environment.num_workers if not profile else 1,
+            distributed=args.distributed,
+            collate_fn=None,
+            pin_memory=False,
+            kwargs=None,
+            args=args
+        )
+    elif task == 'detection':
+        collate_fn = None
+
+        train_loader = create_loader(
+            train_dataset,
+            args.train.data,
+            _logger,
+            batch_size=args.train.batch_size,
+            is_training=True,
+            num_workers=args.environment.num_workers if not profile else 1,
+            distributed=args.distributed,
+            collate_fn=collate_fn,
+            pin_memory=False,
+            kwargs=None,
+            args=args
+        )
+
+        eval_loader = create_loader(
+            eval_dataset,
+            args.train.data,
+            _logger,
+            batch_size=args.train.batch_size if not args.distributed else 1,
             is_training=False,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,

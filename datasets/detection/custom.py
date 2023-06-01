@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import logging
 import json
+from typing import List
 
 import PIL.Image as Image
 import numpy as np
@@ -56,12 +57,21 @@ class DetectionCustomDataset(BaseCustomDataset):
             self.image_dir = image_dir / TEMP_DIRECTORY_REDIRECT(self._split)
             self.annotation_dir = annotation_dir / TEMP_DIRECTORY_REDIRECT(self._split)
 
-            self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
-            self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
+            img_name_maybe: List[Path] = list(sorted([path for path in self.image_dir.iterdir()]))
+            # self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
+            self.img_name = []
+            self.ann_name = []
+            for image_path_maybe in img_name_maybe:
+                ann_path_maybe = self.annotation_dir / image_path_maybe.with_suffix('.txt').name
+                if not ann_path_maybe.exists():
+                    continue
+                self.img_name.append(image_path_maybe)
+                self.ann_name.append(ann_path_maybe)
             
+            del img_name_maybe
             self.id2label = OmegaConf.load(TEMP_COCO_LABEL_FILE)
 
-            assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are detection label files"
+            assert len(self.img_name) == len(self.ann_name), f"There must be as many images as there are detection label files! {len(self.img_name)}, {len(self.ann_name)}"
 
         else:  # self._split in ['infer', 'inference']
 
