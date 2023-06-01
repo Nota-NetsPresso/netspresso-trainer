@@ -28,7 +28,13 @@ def exist_name(candidate, folder_iterable):
 
 def get_label(label_file: Path):
     target = Path(label_file).read_text()
-    target_array = np.array([list(map(float, x.split())) for x in target.split('\n')])
+    
+    try:
+        target_array = np.array([list(map(float, box.split(' '))) for box in target.split('\n') if box.strip()])
+    except ValueError as e:
+        print(target)
+        raise e
+        
     label, boxes = target_array[:, 0], target_array[:, 1:]
     label = label[..., np.newaxis]
     return label, boxes
@@ -123,8 +129,8 @@ class DetectionCustomDataset(BaseCustomDataset):
         
         outputs = {}
 
-        label, boxes_xywhn = get_label(Path(ann_path))
-        boxes = self.xywhn2xyxy(boxes_xywhn, w, h)
+        label, boxes_yolo = get_label(Path(ann_path))
+        boxes = self.xywhn2xyxy(boxes_yolo, w, h)
         
         out = self.transform(self.args.augment)(image=img, bbox=boxes)
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'], 'label': torch.as_tensor(label, dtype=torch.int64)})
