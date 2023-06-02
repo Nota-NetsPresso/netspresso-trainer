@@ -8,12 +8,12 @@ from omegaconf import OmegaConf
 
 from datasets import build_dataset, build_dataloader
 from models import build_model
-from pipelines import ClassificationPipeline, SegmentationPipeline
+from pipelines import ClassificationPipeline, SegmentationPipeline, DetectionPipeline
 from utils.environment import set_device
 from utils.logger import set_logger
 
 
-SUPPORT_TASK = ['classification', 'segmentation']
+SUPPORT_TASK = ['classification', 'segmentation', 'detection']
 logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 
@@ -87,6 +87,11 @@ def train():
         trainer = SegmentationPipeline(args, task, model_name, model, devices,
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
                                        profile=args_parsed.profile)
+        
+    elif task == 'detection':
+        trainer = DetectionPipeline(args, task, model_name, model, devices,
+                                    train_dataloader, eval_dataloader, train_dataset.class_map,
+                                    profile=args_parsed.profile)
 
     else:
         raise AssertionError(f"No such task! (task: {task})")

@@ -1,11 +1,14 @@
 import random
 from typing import Sequence, Optional, Dict
+from collections import Sequence
 
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
 
+BBOX_CROP_KEEP_THRESHOLD = 0.5
+MAX_RETRY = 5
 class Compose:
     def __init__(self, transforms, additional_targets: Dict={}):
         self.transforms = transforms
@@ -35,12 +38,31 @@ class Compose:
             return_dict.update({'bbox': result_bbox})
         return_dict.update(additional_targets_result)
         return return_dict
+    
+class Identity:
+    def __init__(self):
+        pass
+
+    def __call__(self, image, mask=None, bbox=None):
+        return image, mask, bbox
 
 class Pad(T.Pad):
     def forward(self, image, mask=None, bbox=None):
         image = F.pad(image, self.padding, self.fill, self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
+        if bbox is not None:
+            if not isinstance(self.padding, Sequence):
+                target_padding = [self.padding]
+            else:
+                target_padding = self.padding
+                
+            padding_left, padding_top, _, _ = \
+                target_padding * (4 / len(target_padding)) # supports 1, 2, 4 length
+                
+            bbox[..., 0:4:2] += padding_left
+            bbox[..., 1:4:2] += padding_top
+            
         return image, mask, bbox
 
 class Resize(T.Resize):
@@ -49,6 +71,11 @@ class Resize(T.Resize):
         if mask is not None:
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
                             max_size=self.max_size)
+        if bbox is not None:
+            w, h = image.size
+            target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
+            bbox[..., 0:4:2] *= float(target_w / w)
+            bbox[..., 1:4:2] *= float(target_h / h)
         return image, mask, bbox
 
 class RandomHorizontalFlip:
@@ -60,6 +87,9 @@ class RandomHorizontalFlip:
             image = F.hflip(image)
             if mask is not None:
                 mask = F.hflip(mask)
+            if bbox is not None:
+                w, _ = image.size
+                bbox[..., 0:4:2] = w - bbox[..., 0:4:2]
         return image, mask, bbox
 
 class RandomVerticalFlip:
@@ -71,6 +101,9 @@ class RandomVerticalFlip:
             image = F.vflip(image)
             if mask is not None:
                 mask = F.vflip(mask)
+            if bbox is not None:
+                _, h = image.size
+                bbox[..., 1:4:2] = h - bbox[..., 1:4:2]
         return image, mask, bbox
 
 class PadIfNeeded:
@@ -103,11 +136,11 @@ class PadIfNeeded:
         image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
+        if bbox is not None:
+            padding_left, padding_top, _, _ = padding_ltrb
+            bbox[..., 0:4:2] += padding_left
+            bbox[..., 1:4:2] += padding_top
         return image, mask, bbox
-
-    def __repr__(self):
-        return self.__class__.__name__ + '(min_size={0}, fill={1}, padding_mode={2})'.\
-            format((self.new_h, self.new_w), self.fill, self.padding_mode)
 
 class ColorJitter(T.ColorJitter):
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
@@ -135,23 +168,73 @@ class RandomCrop:
     def __init__(self, size):
         self.size = size
         self.image_pad_if_needed = PadIfNeeded(self.size)
-        self.mask_pad_if_needed = PadIfNeeded(self.size, fill=255)
+        
+    def _crop_bbox(self, bbox, i, j, h, w):
+        area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+        area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+        area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+        bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+        return bbox
 
     def __call__(self, image, mask=None, bbox=None):
-        image = self.image_pad_if_needed(image)
-        crop_params = T.RandomCrop.get_params(image, (self.size, self.size))
-        image = F.crop(image, *crop_params)
+        image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
+        i, j, h, w = T.RandomCrop.get_params(image, (self.size, self.size))
+        image = F.crop(image, i, j, h, w)
         if mask is not None:
-            mask = self.mask_pad_if_needed(mask)
-            mask = F.crop(mask, *crop_params)
+            mask = F.crop(mask, i, j, h, w)
+        if bbox is not None:
+            bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+            _bbox_crop_count = 1
+            while bbox_candidate.shape[0] != 0:
+                if _bbox_crop_count == MAX_RETRY:
+                    raise ValueError(f"It seems no way to use crop augmentation for this dataset. bbox: {bbox}, (i, j, h, w): {(i, j, h, w)}")
+                bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+                _bbox_crop_count += 1
+            bbox = bbox_candidate
         return image, mask, bbox
     
 class RandomResizedCrop(T.RandomResizedCrop):
+    
+    def _crop_bbox(self, bbox, i, j, h, w):
+        area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+        area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+        area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+        bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+        return bbox
+    
     def forward(self, image, mask=None, bbox=None):
+        w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
         image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
         if mask is not None:
             mask = F.resized_crop(mask, i, j, h, w, self.size, interpolation=T.InterpolationMode.NEAREST)
+        if bbox is not None:
+            # img = crop(img, top, left, height, width)
+            bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+            _bbox_crop_count = 1
+            while bbox_candidate.shape[0] != 0:
+                if _bbox_crop_count == MAX_RETRY:
+                    raise ValueError(f"It seems no way to use crop augmentation for this dataset. bbox: {bbox}, (i, j, h, w): {(i, j, h, w)}")
+                bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+                _bbox_crop_count += 1
+            bbox = bbox_candidate
+            
+            # img = resize(img, size, interpolation)
+            w_cropped, h_cropped = np.clip(w_orig - j, 0, w), np.clip(h_orig - i, 0, h)
+            target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
+            bbox[..., 0:4:2] *= float(target_w / w_cropped)
+            bbox[..., 1:4:2] *= float(target_h / h_cropped)
+            
         return image, mask, bbox
 
 class Normalize:
@@ -168,6 +251,8 @@ class ToTensor(T.ToTensor):
         image = F.to_tensor(image)
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
+        if bbox is not None:
+            bbox = torch.as_tensor(np.array(bbox), dtype=torch.int64)
 
         return image, mask, bbox
 

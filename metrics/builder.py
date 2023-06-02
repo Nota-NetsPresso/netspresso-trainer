@@ -43,6 +43,16 @@ class MetricFactory:
                 lambda pred, target: segmentation_stats(pred, target,
                                                         ignore_index=self.ignore_index,
                                                         num_classes=self.num_classes)['pixel_acc']
+        elif task == 'detection':
+            # FIXME: metric for detection
+            self.metric_func_dict['iou'] = \
+                lambda pred, target: segmentation_stats(pred, target,
+                                                        ignore_index=self.ignore_index,
+                                                        num_classes=self.num_classes)['iou']
+            self.metric_func_dict['pixel_acc'] = \
+                lambda pred, target: segmentation_stats(pred, target,
+                                                        ignore_index=self.ignore_index,
+                                                        num_classes=self.num_classes)['pixel_acc']
         else:
             raise AssertionError
 
