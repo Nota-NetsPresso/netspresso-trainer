@@ -1,0 +1,102 @@
+trainer_launcher:
+  project_name: ~
+  project_id: &project_id efficientformer-segmentation
+  model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
+  dataset_id: &dataset_id /DATA/coco
+  trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
+  token: &token xxxxxxxx-0000-0000-0000-000000000000
+  base_architecture: &base_architecture ~
+  user_id: ~ 
+  username: ~ 
+  task: &task detection
+  model_format: pt
+train:
+  task: *task
+  architecture:
+    full: ~ # auto
+    backbone: efficientformer
+    head: efficientformer_decode_head
+  losses:
+    - criterion: cross_entropy
+      weight: ~
+      ignore_index: 255
+      
+  opt: adamw
+  lr0: 6e-5
+  lrf: 0.0
+  seed: 1
+  momentum: ~
+  weight_decay: 0.01
+  warmup_steps: 100 
+  warmup_epochs: ~
+  warmup_momentum: ~
+  warmup_bias_lr: ~
+  schd_power: 1.0
+  reduce_zero_label: &reduce_zero_label false
+  box: ~
+  cls: ~
+  cls_pw: ~ 
+  obj: ~ 
+  obj_pw: ~ 
+  iou_t: ~ 
+  anchor_t: ~
+  fl_gamma: ~ 
+  weights: *model_id
+  model_cfg: ~ 
+  model_name: *base_architecture
+  model_info: ~
+  data: *dataset_id 
+  project: *project_id
+  token: *token
+  epochs: 250
+  batch_size: 8 
+  img_size: &img_size 768 
+  exist_ok: ~ 
+  label_smoothing: ~
+  freeze: ~ 
+  patience: ~  
+environment: 
+  num_workers: 4 
+  device: '0' 
+inference: 
+  slide_eval: true 
+  stride: 512 
+  crop_h: 768
+  crop_w: 768
+augment:
+  hsv_h: ~
+  hsv_s: ~
+  hsv_v: ~
+  degrees: ~
+  translate: ~
+  scale: ~ 
+  max_scale: 2048
+  min_scale: 768
+  crop_size_h: 768
+  crop_size_w: 768
+  resize_ratio0: 0.5
+  resize_ratiof: 2.0
+  resize_add: 1
+  shear: ~
+  perspective: ~
+  flipud: ~
+  fliplr: 0.5
+  mosaic: ~
+  mixup: ~
+  copy_paste: ~
+  mixup_alpha: ~
+  cutmix_alpha: ~
+  mixup_switch_prob: ~
+  color_jitter:
+    brightness: 0.25
+    contrast: 0.25
+    saturation: 0.25
+    hue: 0.1
+    colorjitter_p: 0.5
+  reduce_zero_label: *reduce_zero_label
+logging:
+  tensorboard: false
+  csv: false
+  image: false
+  stdout: false
+  netspresso: false
