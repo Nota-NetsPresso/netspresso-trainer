@@ -6,8 +6,9 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
+import PIL.Image as Image
 
-BBOX_CROP_KEEP_THRESHOLD = 0.5
+BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
 class Compose:
     def __init__(self, transforms, additional_targets: Dict={}):
@@ -166,8 +167,14 @@ class ColorJitter(T.ColorJitter):
 
 class RandomCrop:
     def __init__(self, size):
-        self.size = size
-        self.image_pad_if_needed = PadIfNeeded(self.size)
+        
+        if not isinstance(size, (int, Sequence)):
+            raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
+        if isinstance(size, Sequence) and len(size) not in (1, 2):
+            raise ValueError("If size is a sequence, it should have 1 or 2 values")
+        self.size_h = size[0] if isinstance(size, Sequence) else size
+        self.size_w = size[1] if isinstance(size, Sequence) else size
+        self.image_pad_if_needed = PadIfNeeded((self.size_h, self.size_w))
         
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
@@ -183,14 +190,14 @@ class RandomCrop:
 
     def __call__(self, image, mask=None, bbox=None):
         image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
-        i, j, h, w = T.RandomCrop.get_params(image, (self.size, self.size))
+        i, j, h, w = T.RandomCrop.get_params(image, (self.size_h, self.size_w))
         image = F.crop(image, i, j, h, w)
         if mask is not None:
             mask = F.crop(mask, i, j, h, w)
         if bbox is not None:
             bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
             _bbox_crop_count = 1
-            while bbox_candidate.shape[0] != 0:
+            while bbox_candidate.shape[0] == 0:
                 if _bbox_crop_count == MAX_RETRY:
                     raise ValueError(f"It seems no way to use crop augmentation for this dataset. bbox: {bbox}, (i, j, h, w): {(i, j, h, w)}")
                 bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
