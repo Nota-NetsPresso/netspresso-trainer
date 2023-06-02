@@ -106,10 +106,10 @@ class DetectionCustomDataset(BaseCustomDataset):
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
         converted = original.copy()
-        # top left
+        # left, top (lt)
         converted[..., 0] = w * (original[..., 0] - original[..., 2] / 2) + padw
         converted[..., 1] = h * (original[..., 1] - original[..., 3] / 2) + padh
-        # bottom right
+        # right, bottom (rb)
         converted[..., 2] = w * (original[..., 0] + original[..., 2] / 2) + padw
         converted[..., 3] = h * (original[..., 1] + original[..., 3] / 2) + padh
         return converted
@@ -132,8 +132,10 @@ class DetectionCustomDataset(BaseCustomDataset):
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
         
-        out = self.transform(self.args.augment)(image=img, bbox=boxes)
-        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'], 'label': torch.as_tensor(label, dtype=torch.int64)})
+        out = self.transform(self.args.augment)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
+        assert out['bbox'].shape[-1] == 5  # ltrb + class_label
+        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
+                        'label': torch.as_tensor(out['bbox'][..., 4], dtype=torch.int64)})
 
 
         if self._split in ['train', 'training']:

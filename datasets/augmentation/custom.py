@@ -7,6 +7,8 @@ import torchvision.transforms as T
 import torchvision.transforms.functional as F
 import numpy as np
 
+BBOX_CROP_KEEP_THRESHOLD = 0.5
+
 class Compose:
     def __init__(self, transforms, additional_targets: Dict={}):
         self.transforms = transforms
@@ -58,8 +60,8 @@ class Pad(T.Pad):
             padding_left, padding_top, _, _ = \
                 target_padding * (4 / len(target_padding)) # supports 1, 2, 4 length
                 
-            bbox[..., 0::2] += padding_left
-            bbox[..., 1::2] += padding_top
+            bbox[..., 0:4:2] += padding_left
+            bbox[..., 1:4:2] += padding_top
             
         return image, mask, bbox
 
@@ -72,8 +74,8 @@ class Resize(T.Resize):
         if bbox is not None:
             w, h = image.size
             target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
-            bbox[..., 0::2] *= float(target_w / w)
-            bbox[..., 1::2] *= float(target_h / h)
+            bbox[..., 0:4:2] *= float(target_w / w)
+            bbox[..., 1:4:2] *= float(target_h / h)
         return image, mask, bbox
 
 class RandomHorizontalFlip:
@@ -87,7 +89,7 @@ class RandomHorizontalFlip:
                 mask = F.hflip(mask)
             if bbox is not None:
                 w, _ = image.size
-                bbox[..., 0::2] = w - bbox[..., 0::2]
+                bbox[..., 0:4:2] = w - bbox[..., 0:4:2]
         return image, mask, bbox
 
 class RandomVerticalFlip:
@@ -101,7 +103,7 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
             if bbox is not None:
                 _, h = image.size
-                bbox[..., 1::2] = h - bbox[..., 1::2]
+                bbox[..., 1:4:2] = h - bbox[..., 1:4:2]
         return image, mask, bbox
 
 class PadIfNeeded:
@@ -136,8 +138,8 @@ class PadIfNeeded:
             mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
         if bbox is not None:
             padding_left, padding_top, _, _ = padding_ltrb
-            bbox[..., 0::2] += padding_left
-            bbox[..., 1::2] += padding_top
+            bbox[..., 0:4:2] += padding_left
+            bbox[..., 1:4:2] += padding_top
         return image, mask, bbox
 
 class ColorJitter(T.ColorJitter):
@@ -166,23 +168,51 @@ class RandomCrop:
     def __init__(self, size):
         self.size = size
         self.image_pad_if_needed = PadIfNeeded(self.size)
-        self.mask_pad_if_needed = PadIfNeeded(self.size, fill=255)
 
     def __call__(self, image, mask=None, bbox=None):
-        image = self.image_pad_if_needed(image)
-        crop_params = T.RandomCrop.get_params(image, (self.size, self.size))
-        image = F.crop(image, *crop_params)
+        image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
+        i, j, h, w = T.RandomCrop.get_params(image, (self.size, self.size))
+        image = F.crop(image, i, j, h, w)
         if mask is not None:
-            mask = self.mask_pad_if_needed(mask)
-            mask = F.crop(mask, *crop_params)
+            mask = F.crop(mask, i, j, h, w)
+        if bbox is not None:
+            area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+            bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+            bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+            area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+            area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+            bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+            
         return image, mask, bbox
     
 class RandomResizedCrop(T.RandomResizedCrop):
     def forward(self, image, mask=None, bbox=None):
+        w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
         image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
         if mask is not None:
             mask = F.resized_crop(mask, i, j, h, w, self.size, interpolation=T.InterpolationMode.NEAREST)
+        if bbox is not None:
+            # img = crop(img, top, left, height, width)
+            area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+            bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+            bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+            area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+            area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+            bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+            
+            # img = resize(img, size, interpolation)
+            w_cropped, h_cropped = np.clip(w_orig - j, 0, w), np.clip(h_orig - i, 0, h)
+            target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
+            bbox[..., 0:4:2] *= float(target_w / w_cropped)
+            bbox[..., 1:4:2] *= float(target_h / h_cropped)
+            
         return image, mask, bbox
 
 class Normalize:
