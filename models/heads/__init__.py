@@ -1,1 +1,1 @@
-from models.heads import classification, segmentation
+from models.heads import classification, segmentation, detection
