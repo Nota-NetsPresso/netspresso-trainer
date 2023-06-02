@@ -8,7 +8,7 @@ import torchvision.transforms.functional as F
 import numpy as np
 
 BBOX_CROP_KEEP_THRESHOLD = 0.5
-
+MAX_RETRY = 5
 class Compose:
     def __init__(self, transforms, additional_targets: Dict={}):
         self.transforms = transforms
@@ -168,6 +168,18 @@ class RandomCrop:
     def __init__(self, size):
         self.size = size
         self.image_pad_if_needed = PadIfNeeded(self.size)
+        
+    def _crop_bbox(self, bbox, i, j, h, w):
+        area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+        area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+        area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+        bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+        return bbox
 
     def __call__(self, image, mask=None, bbox=None):
         image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
@@ -176,19 +188,30 @@ class RandomCrop:
         if mask is not None:
             mask = F.crop(mask, i, j, h, w)
         if bbox is not None:
-            area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
-
-            bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
-            bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
-
-            area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
-            area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
-
-            bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
-            
+            bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+            _bbox_crop_count = 1
+            while bbox_candidate.shape[0] != 0:
+                if _bbox_crop_count == MAX_RETRY:
+                    raise ValueError(f"It seems no way to use crop augmentation for this dataset. bbox: {bbox}, (i, j, h, w): {(i, j, h, w)}")
+                bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+                _bbox_crop_count += 1
+            bbox = bbox_candidate
         return image, mask, bbox
     
 class RandomResizedCrop(T.RandomResizedCrop):
+    
+    def _crop_bbox(self, bbox, i, j, h, w):
+        area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+
+        area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
+        area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
+
+        bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+        return bbox
+    
     def forward(self, image, mask=None, bbox=None):
         w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
@@ -197,15 +220,14 @@ class RandomResizedCrop(T.RandomResizedCrop):
             mask = F.resized_crop(mask, i, j, h, w, self.size, interpolation=T.InterpolationMode.NEAREST)
         if bbox is not None:
             # img = crop(img, top, left, height, width)
-            area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
-
-            bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
-            bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
-
-            area_cropped = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
-            area_ratio = area_cropped / (area_original + 1)  # +1 for preventing ZeroDivisionError
-
-            bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
+            bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+            _bbox_crop_count = 1
+            while bbox_candidate.shape[0] != 0:
+                if _bbox_crop_count == MAX_RETRY:
+                    raise ValueError(f"It seems no way to use crop augmentation for this dataset. bbox: {bbox}, (i, j, h, w): {(i, j, h, w)}")
+                bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
+                _bbox_crop_count += 1
+            bbox = bbox_candidate
             
             # img = resize(img, size, interpolation)
             w_cropped, h_cropped = np.clip(w_orig - j, 0, w), np.clip(h_orig - i, 0, h)
