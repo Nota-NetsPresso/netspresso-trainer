@@ -1,5 +1,6 @@
 import random
 from typing import Sequence, Optional, Dict
+from collections import Sequence
 
 import torch
 import torchvision.transforms as T
@@ -48,6 +49,18 @@ class Pad(T.Pad):
         image = F.pad(image, self.padding, self.fill, self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
+        if bbox is not None:
+            if not isinstance(self.padding, Sequence):
+                target_padding = [self.padding]
+            else:
+                target_padding = self.padding
+                
+            padding_left, padding_top, _, _ = \
+                target_padding * (4 / len(target_padding)) # supports 1, 2, 4 length
+                
+            bbox[..., 0::2] += padding_left
+            bbox[..., 1::2] += padding_top
+            
         return image, mask, bbox
 
 class Resize(T.Resize):
@@ -56,6 +69,11 @@ class Resize(T.Resize):
         if mask is not None:
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
                             max_size=self.max_size)
+        if bbox is not None:
+            w, h = image.size
+            target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
+            bbox[..., 0::2] *= float(target_w / w)
+            bbox[..., 1::2] *= float(target_h / h)
         return image, mask, bbox
 
 class RandomHorizontalFlip:
@@ -67,6 +85,9 @@ class RandomHorizontalFlip:
             image = F.hflip(image)
             if mask is not None:
                 mask = F.hflip(mask)
+            if bbox is not None:
+                w, _ = image.size
+                bbox[..., 0::2] = w - bbox[..., 0::2]
         return image, mask, bbox
 
 class RandomVerticalFlip:
@@ -78,6 +99,9 @@ class RandomVerticalFlip:
             image = F.vflip(image)
             if mask is not None:
                 mask = F.vflip(mask)
+            if bbox is not None:
+                _, h = image.size
+                bbox[..., 1::2] = h - bbox[..., 1::2]
         return image, mask, bbox
 
 class PadIfNeeded:
@@ -110,11 +134,11 @@ class PadIfNeeded:
         image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
+        if bbox is not None:
+            padding_left, padding_top, _, _ = padding_ltrb
+            bbox[..., 0::2] += padding_left
+            bbox[..., 1::2] += padding_top
         return image, mask, bbox
-
-    def __repr__(self):
-        return self.__class__.__name__ + '(min_size={0}, fill={1}, padding_mode={2})'.\
-            format((self.new_h, self.new_w), self.fill, self.padding_mode)
 
 class ColorJitter(T.ColorJitter):
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
@@ -175,7 +199,6 @@ class ToTensor(T.ToTensor):
         image = F.to_tensor(image)
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
-            
         if bbox is not None:
             bbox = torch.as_tensor(np.array(bbox), dtype=torch.int64)
 
