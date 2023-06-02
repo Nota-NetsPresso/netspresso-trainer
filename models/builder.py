@@ -61,6 +61,9 @@ class AssembleModel(nn.Module):
         if self.task == 'segmentation':
             head_module: nn.Module = eval(f"heads.{self.task}.{head}")
             self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
+        if self.task == 'detection':
+            head_module: nn.Module = eval(f"heads.{self.task}.{head}")
+            self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
 
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
@@ -71,6 +74,8 @@ class AssembleModel(nn.Module):
         if self.task == 'classification':
             out = self.head(features['last_feature'])
         elif self.task == 'segmentation':
+            out = self.head(features['intermediate_features'], label_size=label_size)
+        elif self.task == 'detection':
             out = self.head(features['intermediate_features'], label_size=label_size)
 
         return out

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from datasets.classification import ClassificationCustomDataset
 from datasets.segmentation import SegmentationCustomDataset
-from datasets.detection import DetectionCustomDataset
+from datasets.detection import DetectionCustomDataset, detection_collate_fn
 from datasets.classification.transforms import create_classification_transform
 from datasets.segmentation.transforms import create_segmentation_transform
 from datasets.detection.transforms import create_detection_transform
@@ -126,7 +126,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             args=args
         )
     elif task == 'detection':
-        collate_fn = None
+        collate_fn = detection_collate_fn
 
         train_loader = create_loader(
             train_dataset,
@@ -150,7 +150,7 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             is_training=False,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,
-            collate_fn=None,
+            collate_fn=collate_fn,
             pin_memory=False,
             kwargs=None,
             args=args

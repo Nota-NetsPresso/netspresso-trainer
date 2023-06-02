@@ -145,3 +145,35 @@ class DetectionCustomDataset(BaseCustomDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1 
         outputs.update({'org_shape': (h, w)})
         return outputs
+    
+
+def detection_collate_fn(original_batch):
+    pixel_values = []
+    bbox = []
+    label = []
+    org_shape = []
+    
+    for data_sample in original_batch:
+        if 'pixel_values' in data_sample:
+            pixel_values.append(data_sample['pixel_values'])
+        if 'bbox' in data_sample:
+            bbox.append(data_sample['bbox'])
+        if 'label' in data_sample:
+            label.append(data_sample['label'])
+        if 'org_shape' in data_sample:
+            org_shape.append(data_sample['org_shape'])
+    
+    outputs = {}
+    if len(pixel_values) != 0:
+        pixel_values = torch.stack(pixel_values, dim=0)
+        outputs.update({'pixel_values': pixel_values})
+    if len(bbox) != 0:
+        bbox = torch.cat(bbox, dim=0)
+        outputs.update({'bbox': bbox})
+    if len(label) != 0:
+        label = torch.cat(label, dim=0)
+        outputs.update({'label': label})
+    if len(org_shape) != 0:
+        outputs.update({'org_shape': org_shape})
+
+    return outputs
