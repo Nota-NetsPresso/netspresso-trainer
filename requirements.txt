@@ -7,3 +7,4 @@ opencv-python
 requests
 torch_tb_profiler
 albumentations
+pymongo[srv]==3.8.0

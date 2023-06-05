@@ -60,7 +60,7 @@ class TrainingLogger():
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=args.train.epochs) if self.use_stdout else None
         self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
-            ModelSearchServerHandler(self.project_id, self.token, start_epoch=START_EPOCH_ZERO_OR_ONE) if self.use_netspresso else None
+            ModelSearchServerHandler(task=task, model=model) if self.use_netspresso else None
         if task in LABEL_CONVERTER_PER_TASK:
             self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map)
         
@@ -186,6 +186,11 @@ class TrainingLogger():
         if self.use_netspresso:
             # TODO: async handler if it takes much more time
             self.netspresso_api_client(
+                train_losses=train_losses,
+                train_metrics=train_metrics,
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics,
+                learning_rate=learning_rate,
                 elapsed_time=elapsed_time
             )
             
