@@ -15,7 +15,7 @@ train:
   architecture:
     full: ~ # auto
     backbone: efficientformer
-    head: efficientformer_decode_head
+    head: efficientformer_detection_head
   losses:
     - criterion: cross_entropy
       weight: ~
