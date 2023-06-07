@@ -76,7 +76,7 @@ class AssembleModel(nn.Module):
         elif self.task == 'segmentation':
             out = self.head(features['intermediate_features'], label_size=label_size)
         elif self.task == 'detection':
-            out = self.head(features['intermediate_features'], label_size=label_size)
+            out = self.head(features['intermediate_features'])
 
         return out
 
