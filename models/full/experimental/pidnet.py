@@ -16,10 +16,9 @@ use_align_corners = False
 
 class PIDNet(nn.Module):
 
-    def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, augment=True, is_training=True):
+    def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True):
         super(PIDNet, self).__init__()
         self.args = args
-        self.augment = augment
         self.is_training = is_training
 
         # I Branch
@@ -93,7 +92,7 @@ class PIDNet(nn.Module):
         self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1, expansion=2)
 
         # Prediction Head
-        if self.augment:
+        if self.is_training:
             self.seghead_p = segmenthead(planes * 2, head_planes, num_classes)
             self.seghead_d = segmenthead(planes * 2, planes, 1)
 
@@ -173,31 +172,34 @@ class PIDNet(nn.Module):
             # if self.augment:
             temp_p = x_
 
-            x = self.relu(self.layer4(x))
-            x_ = self.layer4_(self.relu(x_))
-            x_d = self.layer4_d(self.relu(x_d))
+        x = self.relu(self.layer4(x))
+        x_ = self.layer4_(self.relu(x_))
+        x_d = self.layer4_d(self.relu(x_d))
 
-            x_ = self.pag4(x_, self.compression4(x))
+        x_ = self.pag4(x_, self.compression4(x))
 
-            x_d = x_d + F.interpolate(
-                self.diff4(x),
-                size=self.resize_to,
-                mode='bilinear', align_corners=use_align_corners)
+        x_d = x_d + F.interpolate(
+            self.diff4(x),
+            size=self.resize_to,
+            mode='bilinear', align_corners=use_align_corners)
+
+        if self.is_training:
             # if self.augment:
             temp_d = x_d
 
-            x_ = self.layer5_(self.relu(x_))
-            x_d = self.layer5_d(self.relu(x_d))
+        x_ = self.layer5_(self.relu(x_))
+        x_d = self.layer5_d(self.relu(x_d))
 
-            x = F.interpolate(
-                self.spp(self.layer5(x)),
-                size=self.resize_to,
-                mode='bilinear', align_corners=use_align_corners)
+        x = F.interpolate(
+            self.spp(self.layer5(x)),
+            size=self.resize_to,
+            mode='bilinear', align_corners=use_align_corners)
 
-            x_ = self.final_layer(self.dfm(x_, x, x_d))
+        x_ = self.final_layer(self.dfm(x_, x, x_d))
 
-            x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
+        x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
+        if self.is_training:
             # if self.augment:
             x_extra_p = self.seghead_p(temp_p)
             x_extra_d = self.seghead_d(temp_d)
@@ -212,41 +214,18 @@ class PIDNet(nn.Module):
             }
 
         else:
-            x = self.relu(self.layer4(x))
-            x_ = self.layer4_(self.relu(x_))
-            x_d = self.layer4_d(self.relu(x_d))
-
-            x_ = self.pag4(x_, self.compression4(x))
-
-            x_d = x_d + F.interpolate(
-                self.diff4(x),
-                size=self.resize_to,
-                mode='bilinear', align_corners=use_align_corners)
-
-            x_ = self.layer5_(self.relu(x_))
-            x_d = self.layer5_d(self.relu(x_d))
-
-            x = F.interpolate(
-                self.spp(self.layer5(x)),
-                size=self.resize_to,
-                mode='bilinear', align_corners=use_align_corners)
-
-            x_ = self.final_layer(self.dfm(x_, x, x_d))
-
-            x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
-
             return x_
 
         # return {"pred": x_}
 
 
 def pidnet(args, num_classes: int) -> PIDNet:
-    model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, augment=True)
+    model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, is_training=True)
     # if 's' in name:
-    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=32, ppm_planes=96, head_planes=128, augment=True)
+    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=32, ppm_planes=96, head_planes=128, is_training=True)
     # elif 'm' in name:
-    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=64, ppm_planes=96, head_planes=128, augment=True)
+    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=64, ppm_planes=96, head_planes=128, is_training=True)
     # else:
-    #     model = PIDNet(m=3, n=4, num_classes=num_classes, planes=64, ppm_planes=112, head_planes=256, augment=True)
+    #     model = PIDNet(m=3, n=4, num_classes=num_classes, planes=64, ppm_planes=112, head_planes=256, is_training=True)
 
     return model
