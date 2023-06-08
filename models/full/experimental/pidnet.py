@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.op.custom import BasicBlock, Bottleneck
+from models.op.custom import ConvLayer, BasicBlock, Bottleneck
 from models.op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
 from models.utils import SeparateForwardModule
 
@@ -31,12 +31,12 @@ class PIDNet(SeparateForwardModule):
 
         # I Branch
         self.conv1 = nn.Sequential(
-            nn.Conv2d(3, planes, kernel_size=3, stride=2, padding=1),
-            BatchNorm2d(planes, momentum=bn_mom),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(planes, planes, kernel_size=3, stride=2, padding=1),
-            BatchNorm2d(planes, momentum=bn_mom),
-            nn.ReLU(inplace=True),
+            ConvLayer(in_channels=3, out_channels=planes,
+                      kernel_size=3, stride=2, padding=1,
+                      norm_type='batch_norm', act_type='relu'),
+            ConvLayer(in_channels=planes, out_channels=planes,
+                      kernel_size=3, stride=2, padding=1,
+                      norm_type='batch_norm', act_type='relu')
         )
 
         self.relu = nn.ReLU(inplace=True)
@@ -48,13 +48,15 @@ class PIDNet(SeparateForwardModule):
 
         # P Branch
         self.compression3 = nn.Sequential(
-            nn.Conv2d(planes * 4, planes * 2, kernel_size=1, bias=False),
-            BatchNorm2d(planes * 2, momentum=bn_mom),
+            ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
+                      kernel_size=1, stride=1, padding=0,
+                      norm_type='batch_norm', use_act=False),
         )
 
         self.compression4 = nn.Sequential(
-            nn.Conv2d(planes * 8, planes * 2, kernel_size=1, bias=False),
-            BatchNorm2d(planes * 2, momentum=bn_mom),
+            ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                      kernel_size=1, stride=1, padding=0,
+                      norm_type='batch_norm', use_act=False),
         )
         self.pag3 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
         self.pag4 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
@@ -68,12 +70,14 @@ class PIDNet(SeparateForwardModule):
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes)
             self.layer4_d = self._make_layer(Bottleneck, planes, planes, 1, expansion=2)
             self.diff3 = nn.Sequential(
-                nn.Conv2d(planes * 4, planes, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes, momentum=bn_mom),
+                ConvLayer(in_channels=planes * 4, out_channels=planes,
+                          kernel_size=3, stride=1, padding=1,
+                          norm_type='batch_norm', use_act=False),
             )
             self.diff4 = nn.Sequential(
-                nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
+                ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                          kernel_size=3, stride=1, padding=1,
+                          norm_type='batch_norm', use_act=False),
             )
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Light_Bag(planes * 4, planes * 4)
@@ -81,12 +85,14 @@ class PIDNet(SeparateForwardModule):
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.layer4_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.diff3 = nn.Sequential(
-                nn.Conv2d(planes * 4, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
+                ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
+                          kernel_size=3, stride=1, padding=1,
+                          norm_type='batch_norm', use_act=False),
             )
             self.diff4 = nn.Sequential(
-                nn.Conv2d(planes * 8, planes * 2, kernel_size=3, padding=1, bias=False),
-                BatchNorm2d(planes * 2, momentum=bn_mom),
+                ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                          kernel_size=3, stride=1, padding=1,
+                          norm_type='batch_norm', use_act=False),
             )
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Bag(planes * 4, planes * 4)
@@ -116,9 +122,9 @@ class PIDNet(SeparateForwardModule):
             expansion = block.expansion
         if stride != 1 or inplanes != planes * expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * expansion, momentum=bn_mom),
+                ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
+                          kernel_size=1, stride=stride,
+                          norm_type='batch_norm', use_act=False),
             )
 
         layers = []
@@ -138,9 +144,9 @@ class PIDNet(SeparateForwardModule):
             expansion = block.expansion
         if stride != 1 or inplanes != planes * expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * expansion, momentum=bn_mom),
+                ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
+                          kernel_size=1, stride=stride,
+                          norm_type='batch_norm', use_act=False),
             )
 
         layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_relu=True)
