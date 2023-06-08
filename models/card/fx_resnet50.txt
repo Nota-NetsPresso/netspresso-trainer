@@ -1,0 +1,590 @@
+GraphModule(
+  (conv1): Module(
+    (block): Module(
+      (conv): Conv2d(3, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+      (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (act): ReLU()
+    )
+  )
+  (maxpool): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+  (layer1): Module(
+    (0): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (downsample): Module(
+        (block): Module(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (1): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (2): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+  )
+  (layer2): Module(
+    (0): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (downsample): Module(
+        (block): Module(
+          (conv): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (1): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (2): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (3): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+  )
+  (layer3): Module(
+    (0): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (downsample): Module(
+        (block): Module(
+          (conv): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (1): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (2): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (3): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (4): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (5): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+  )
+  (layer4): Module(
+    (0): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (downsample): Module(
+        (block): Module(
+          (conv): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (norm): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (1): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+    (2): Module(
+      (conv1): Module(
+        (block): Module(
+          (conv): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv2): Module(
+        (block): Module(
+          (conv): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+      (conv3): Module(
+        (block): Module(
+          (conv): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (norm): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (relu3): ReLU()
+    )
+  )
+  (avgpool): AdaptiveAvgPool2d(output_size=(1, 1))
+)
+
+
+
+def forward(self, x : torch.Tensor) -> torch.Tensor:
+    conv1_block_conv = self.conv1.block.conv(x);  x = None
+    conv1_block_norm = self.conv1.block.norm(conv1_block_conv);  conv1_block_conv = None
+    conv1_block_act = self.conv1.block.act(conv1_block_norm);  conv1_block_norm = None
+    maxpool = self.maxpool(conv1_block_act);  conv1_block_act = None
+    layer1_0_conv1_block_conv = getattr(self.layer1, "0").conv1.block.conv(maxpool)
+    layer1_0_conv1_block_norm = getattr(self.layer1, "0").conv1.block.norm(layer1_0_conv1_block_conv);  layer1_0_conv1_block_conv = None
+    layer1_0_conv1_block_act = getattr(self.layer1, "0").conv1.block.act(layer1_0_conv1_block_norm);  layer1_0_conv1_block_norm = None
+    layer1_0_conv2_block_conv = getattr(self.layer1, "0").conv2.block.conv(layer1_0_conv1_block_act);  layer1_0_conv1_block_act = None
+    layer1_0_conv2_block_norm = getattr(self.layer1, "0").conv2.block.norm(layer1_0_conv2_block_conv);  layer1_0_conv2_block_conv = None
+    layer1_0_conv2_block_act = getattr(self.layer1, "0").conv2.block.act(layer1_0_conv2_block_norm);  layer1_0_conv2_block_norm = None
+    layer1_0_conv3_block_conv = getattr(self.layer1, "0").conv3.block.conv(layer1_0_conv2_block_act);  layer1_0_conv2_block_act = None
+    layer1_0_conv3_block_norm = getattr(self.layer1, "0").conv3.block.norm(layer1_0_conv3_block_conv);  layer1_0_conv3_block_conv = None
+    layer1_0_downsample_block_conv = getattr(self.layer1, "0").downsample.block.conv(maxpool);  maxpool = None
+    layer1_0_downsample_block_norm = getattr(self.layer1, "0").downsample.block.norm(layer1_0_downsample_block_conv);  layer1_0_downsample_block_conv = None
+    add = layer1_0_conv3_block_norm + layer1_0_downsample_block_norm;  layer1_0_conv3_block_norm = layer1_0_downsample_block_norm = None
+    layer1_0_relu3 = getattr(self.layer1, "0").relu3(add);  add = None
+    layer1_1_conv1_block_conv = getattr(self.layer1, "1").conv1.block.conv(layer1_0_relu3)
+    layer1_1_conv1_block_norm = getattr(self.layer1, "1").conv1.block.norm(layer1_1_conv1_block_conv);  layer1_1_conv1_block_conv = None
+    layer1_1_conv1_block_act = getattr(self.layer1, "1").conv1.block.act(layer1_1_conv1_block_norm);  layer1_1_conv1_block_norm = None
+    layer1_1_conv2_block_conv = getattr(self.layer1, "1").conv2.block.conv(layer1_1_conv1_block_act);  layer1_1_conv1_block_act = None
+    layer1_1_conv2_block_norm = getattr(self.layer1, "1").conv2.block.norm(layer1_1_conv2_block_conv);  layer1_1_conv2_block_conv = None
+    layer1_1_conv2_block_act = getattr(self.layer1, "1").conv2.block.act(layer1_1_conv2_block_norm);  layer1_1_conv2_block_norm = None
+    layer1_1_conv3_block_conv = getattr(self.layer1, "1").conv3.block.conv(layer1_1_conv2_block_act);  layer1_1_conv2_block_act = None
+    layer1_1_conv3_block_norm = getattr(self.layer1, "1").conv3.block.norm(layer1_1_conv3_block_conv);  layer1_1_conv3_block_conv = None
+    add_1 = layer1_1_conv3_block_norm + layer1_0_relu3;  layer1_1_conv3_block_norm = layer1_0_relu3 = None
+    layer1_1_relu3 = getattr(self.layer1, "1").relu3(add_1);  add_1 = None
+    layer1_2_conv1_block_conv = getattr(self.layer1, "2").conv1.block.conv(layer1_1_relu3)
+    layer1_2_conv1_block_norm = getattr(self.layer1, "2").conv1.block.norm(layer1_2_conv1_block_conv);  layer1_2_conv1_block_conv = None
+    layer1_2_conv1_block_act = getattr(self.layer1, "2").conv1.block.act(layer1_2_conv1_block_norm);  layer1_2_conv1_block_norm = None
+    layer1_2_conv2_block_conv = getattr(self.layer1, "2").conv2.block.conv(layer1_2_conv1_block_act);  layer1_2_conv1_block_act = None
+    layer1_2_conv2_block_norm = getattr(self.layer1, "2").conv2.block.norm(layer1_2_conv2_block_conv);  layer1_2_conv2_block_conv = None
+    layer1_2_conv2_block_act = getattr(self.layer1, "2").conv2.block.act(layer1_2_conv2_block_norm);  layer1_2_conv2_block_norm = None
+    layer1_2_conv3_block_conv = getattr(self.layer1, "2").conv3.block.conv(layer1_2_conv2_block_act);  layer1_2_conv2_block_act = None
+    layer1_2_conv3_block_norm = getattr(self.layer1, "2").conv3.block.norm(layer1_2_conv3_block_conv);  layer1_2_conv3_block_conv = None
+    add_2 = layer1_2_conv3_block_norm + layer1_1_relu3;  layer1_2_conv3_block_norm = layer1_1_relu3 = None
+    layer1_2_relu3 = getattr(self.layer1, "2").relu3(add_2);  add_2 = None
+    layer2_0_conv1_block_conv = getattr(self.layer2, "0").conv1.block.conv(layer1_2_relu3)
+    layer2_0_conv1_block_norm = getattr(self.layer2, "0").conv1.block.norm(layer2_0_conv1_block_conv);  layer2_0_conv1_block_conv = None
+    layer2_0_conv1_block_act = getattr(self.layer2, "0").conv1.block.act(layer2_0_conv1_block_norm);  layer2_0_conv1_block_norm = None
+    layer2_0_conv2_block_conv = getattr(self.layer2, "0").conv2.block.conv(layer2_0_conv1_block_act);  layer2_0_conv1_block_act = None
+    layer2_0_conv2_block_norm = getattr(self.layer2, "0").conv2.block.norm(layer2_0_conv2_block_conv);  layer2_0_conv2_block_conv = None
+    layer2_0_conv2_block_act = getattr(self.layer2, "0").conv2.block.act(layer2_0_conv2_block_norm);  layer2_0_conv2_block_norm = None
+    layer2_0_conv3_block_conv = getattr(self.layer2, "0").conv3.block.conv(layer2_0_conv2_block_act);  layer2_0_conv2_block_act = None
+    layer2_0_conv3_block_norm = getattr(self.layer2, "0").conv3.block.norm(layer2_0_conv3_block_conv);  layer2_0_conv3_block_conv = None
+    layer2_0_downsample_block_conv = getattr(self.layer2, "0").downsample.block.conv(layer1_2_relu3);  layer1_2_relu3 = None
+    layer2_0_downsample_block_norm = getattr(self.layer2, "0").downsample.block.norm(layer2_0_downsample_block_conv);  layer2_0_downsample_block_conv = None
+    add_3 = layer2_0_conv3_block_norm + layer2_0_downsample_block_norm;  layer2_0_conv3_block_norm = layer2_0_downsample_block_norm = None
+    layer2_0_relu3 = getattr(self.layer2, "0").relu3(add_3);  add_3 = None
+    layer2_1_conv1_block_conv = getattr(self.layer2, "1").conv1.block.conv(layer2_0_relu3)
+    layer2_1_conv1_block_norm = getattr(self.layer2, "1").conv1.block.norm(layer2_1_conv1_block_conv);  layer2_1_conv1_block_conv = None
+    layer2_1_conv1_block_act = getattr(self.layer2, "1").conv1.block.act(layer2_1_conv1_block_norm);  layer2_1_conv1_block_norm = None
+    layer2_1_conv2_block_conv = getattr(self.layer2, "1").conv2.block.conv(layer2_1_conv1_block_act);  layer2_1_conv1_block_act = None
+    layer2_1_conv2_block_norm = getattr(self.layer2, "1").conv2.block.norm(layer2_1_conv2_block_conv);  layer2_1_conv2_block_conv = None
+    layer2_1_conv2_block_act = getattr(self.layer2, "1").conv2.block.act(layer2_1_conv2_block_norm);  layer2_1_conv2_block_norm = None
+    layer2_1_conv3_block_conv = getattr(self.layer2, "1").conv3.block.conv(layer2_1_conv2_block_act);  layer2_1_conv2_block_act = None
+    layer2_1_conv3_block_norm = getattr(self.layer2, "1").conv3.block.norm(layer2_1_conv3_block_conv);  layer2_1_conv3_block_conv = None
+    add_4 = layer2_1_conv3_block_norm + layer2_0_relu3;  layer2_1_conv3_block_norm = layer2_0_relu3 = None
+    layer2_1_relu3 = getattr(self.layer2, "1").relu3(add_4);  add_4 = None
+    layer2_2_conv1_block_conv = getattr(self.layer2, "2").conv1.block.conv(layer2_1_relu3)
+    layer2_2_conv1_block_norm = getattr(self.layer2, "2").conv1.block.norm(layer2_2_conv1_block_conv);  layer2_2_conv1_block_conv = None
+    layer2_2_conv1_block_act = getattr(self.layer2, "2").conv1.block.act(layer2_2_conv1_block_norm);  layer2_2_conv1_block_norm = None
+    layer2_2_conv2_block_conv = getattr(self.layer2, "2").conv2.block.conv(layer2_2_conv1_block_act);  layer2_2_conv1_block_act = None
+    layer2_2_conv2_block_norm = getattr(self.layer2, "2").conv2.block.norm(layer2_2_conv2_block_conv);  layer2_2_conv2_block_conv = None
+    layer2_2_conv2_block_act = getattr(self.layer2, "2").conv2.block.act(layer2_2_conv2_block_norm);  layer2_2_conv2_block_norm = None
+    layer2_2_conv3_block_conv = getattr(self.layer2, "2").conv3.block.conv(layer2_2_conv2_block_act);  layer2_2_conv2_block_act = None
+    layer2_2_conv3_block_norm = getattr(self.layer2, "2").conv3.block.norm(layer2_2_conv3_block_conv);  layer2_2_conv3_block_conv = None
+    add_5 = layer2_2_conv3_block_norm + layer2_1_relu3;  layer2_2_conv3_block_norm = layer2_1_relu3 = None
+    layer2_2_relu3 = getattr(self.layer2, "2").relu3(add_5);  add_5 = None
+    layer2_3_conv1_block_conv = getattr(self.layer2, "3").conv1.block.conv(layer2_2_relu3)
+    layer2_3_conv1_block_norm = getattr(self.layer2, "3").conv1.block.norm(layer2_3_conv1_block_conv);  layer2_3_conv1_block_conv = None
+    layer2_3_conv1_block_act = getattr(self.layer2, "3").conv1.block.act(layer2_3_conv1_block_norm);  layer2_3_conv1_block_norm = None
+    layer2_3_conv2_block_conv = getattr(self.layer2, "3").conv2.block.conv(layer2_3_conv1_block_act);  layer2_3_conv1_block_act = None
+    layer2_3_conv2_block_norm = getattr(self.layer2, "3").conv2.block.norm(layer2_3_conv2_block_conv);  layer2_3_conv2_block_conv = None
+    layer2_3_conv2_block_act = getattr(self.layer2, "3").conv2.block.act(layer2_3_conv2_block_norm);  layer2_3_conv2_block_norm = None
+    layer2_3_conv3_block_conv = getattr(self.layer2, "3").conv3.block.conv(layer2_3_conv2_block_act);  layer2_3_conv2_block_act = None
+    layer2_3_conv3_block_norm = getattr(self.layer2, "3").conv3.block.norm(layer2_3_conv3_block_conv);  layer2_3_conv3_block_conv = None
+    add_6 = layer2_3_conv3_block_norm + layer2_2_relu3;  layer2_3_conv3_block_norm = layer2_2_relu3 = None
+    layer2_3_relu3 = getattr(self.layer2, "3").relu3(add_6);  add_6 = None
+    layer3_0_conv1_block_conv = getattr(self.layer3, "0").conv1.block.conv(layer2_3_relu3)
+    layer3_0_conv1_block_norm = getattr(self.layer3, "0").conv1.block.norm(layer3_0_conv1_block_conv);  layer3_0_conv1_block_conv = None
+    layer3_0_conv1_block_act = getattr(self.layer3, "0").conv1.block.act(layer3_0_conv1_block_norm);  layer3_0_conv1_block_norm = None
+    layer3_0_conv2_block_conv = getattr(self.layer3, "0").conv2.block.conv(layer3_0_conv1_block_act);  layer3_0_conv1_block_act = None
+    layer3_0_conv2_block_norm = getattr(self.layer3, "0").conv2.block.norm(layer3_0_conv2_block_conv);  layer3_0_conv2_block_conv = None
+    layer3_0_conv2_block_act = getattr(self.layer3, "0").conv2.block.act(layer3_0_conv2_block_norm);  layer3_0_conv2_block_norm = None
+    layer3_0_conv3_block_conv = getattr(self.layer3, "0").conv3.block.conv(layer3_0_conv2_block_act);  layer3_0_conv2_block_act = None
+    layer3_0_conv3_block_norm = getattr(self.layer3, "0").conv3.block.norm(layer3_0_conv3_block_conv);  layer3_0_conv3_block_conv = None
+    layer3_0_downsample_block_conv = getattr(self.layer3, "0").downsample.block.conv(layer2_3_relu3);  layer2_3_relu3 = None
+    layer3_0_downsample_block_norm = getattr(self.layer3, "0").downsample.block.norm(layer3_0_downsample_block_conv);  layer3_0_downsample_block_conv = None
+    add_7 = layer3_0_conv3_block_norm + layer3_0_downsample_block_norm;  layer3_0_conv3_block_norm = layer3_0_downsample_block_norm = None
+    layer3_0_relu3 = getattr(self.layer3, "0").relu3(add_7);  add_7 = None
+    layer3_1_conv1_block_conv = getattr(self.layer3, "1").conv1.block.conv(layer3_0_relu3)
+    layer3_1_conv1_block_norm = getattr(self.layer3, "1").conv1.block.norm(layer3_1_conv1_block_conv);  layer3_1_conv1_block_conv = None
+    layer3_1_conv1_block_act = getattr(self.layer3, "1").conv1.block.act(layer3_1_conv1_block_norm);  layer3_1_conv1_block_norm = None
+    layer3_1_conv2_block_conv = getattr(self.layer3, "1").conv2.block.conv(layer3_1_conv1_block_act);  layer3_1_conv1_block_act = None
+    layer3_1_conv2_block_norm = getattr(self.layer3, "1").conv2.block.norm(layer3_1_conv2_block_conv);  layer3_1_conv2_block_conv = None
+    layer3_1_conv2_block_act = getattr(self.layer3, "1").conv2.block.act(layer3_1_conv2_block_norm);  layer3_1_conv2_block_norm = None
+    layer3_1_conv3_block_conv = getattr(self.layer3, "1").conv3.block.conv(layer3_1_conv2_block_act);  layer3_1_conv2_block_act = None
+    layer3_1_conv3_block_norm = getattr(self.layer3, "1").conv3.block.norm(layer3_1_conv3_block_conv);  layer3_1_conv3_block_conv = None
+    add_8 = layer3_1_conv3_block_norm + layer3_0_relu3;  layer3_1_conv3_block_norm = layer3_0_relu3 = None
+    layer3_1_relu3 = getattr(self.layer3, "1").relu3(add_8);  add_8 = None
+    layer3_2_conv1_block_conv = getattr(self.layer3, "2").conv1.block.conv(layer3_1_relu3)
+    layer3_2_conv1_block_norm = getattr(self.layer3, "2").conv1.block.norm(layer3_2_conv1_block_conv);  layer3_2_conv1_block_conv = None
+    layer3_2_conv1_block_act = getattr(self.layer3, "2").conv1.block.act(layer3_2_conv1_block_norm);  layer3_2_conv1_block_norm = None
+    layer3_2_conv2_block_conv = getattr(self.layer3, "2").conv2.block.conv(layer3_2_conv1_block_act);  layer3_2_conv1_block_act = None
+    layer3_2_conv2_block_norm = getattr(self.layer3, "2").conv2.block.norm(layer3_2_conv2_block_conv);  layer3_2_conv2_block_conv = None
+    layer3_2_conv2_block_act = getattr(self.layer3, "2").conv2.block.act(layer3_2_conv2_block_norm);  layer3_2_conv2_block_norm = None
+    layer3_2_conv3_block_conv = getattr(self.layer3, "2").conv3.block.conv(layer3_2_conv2_block_act);  layer3_2_conv2_block_act = None
+    layer3_2_conv3_block_norm = getattr(self.layer3, "2").conv3.block.norm(layer3_2_conv3_block_conv);  layer3_2_conv3_block_conv = None
+    add_9 = layer3_2_conv3_block_norm + layer3_1_relu3;  layer3_2_conv3_block_norm = layer3_1_relu3 = None
+    layer3_2_relu3 = getattr(self.layer3, "2").relu3(add_9);  add_9 = None
+    layer3_3_conv1_block_conv = getattr(self.layer3, "3").conv1.block.conv(layer3_2_relu3)
+    layer3_3_conv1_block_norm = getattr(self.layer3, "3").conv1.block.norm(layer3_3_conv1_block_conv);  layer3_3_conv1_block_conv = None
+    layer3_3_conv1_block_act = getattr(self.layer3, "3").conv1.block.act(layer3_3_conv1_block_norm);  layer3_3_conv1_block_norm = None
+    layer3_3_conv2_block_conv = getattr(self.layer3, "3").conv2.block.conv(layer3_3_conv1_block_act);  layer3_3_conv1_block_act = None
+    layer3_3_conv2_block_norm = getattr(self.layer3, "3").conv2.block.norm(layer3_3_conv2_block_conv);  layer3_3_conv2_block_conv = None
+    layer3_3_conv2_block_act = getattr(self.layer3, "3").conv2.block.act(layer3_3_conv2_block_norm);  layer3_3_conv2_block_norm = None
+    layer3_3_conv3_block_conv = getattr(self.layer3, "3").conv3.block.conv(layer3_3_conv2_block_act);  layer3_3_conv2_block_act = None
+    layer3_3_conv3_block_norm = getattr(self.layer3, "3").conv3.block.norm(layer3_3_conv3_block_conv);  layer3_3_conv3_block_conv = None
+    add_10 = layer3_3_conv3_block_norm + layer3_2_relu3;  layer3_3_conv3_block_norm = layer3_2_relu3 = None
+    layer3_3_relu3 = getattr(self.layer3, "3").relu3(add_10);  add_10 = None
+    layer3_4_conv1_block_conv = getattr(self.layer3, "4").conv1.block.conv(layer3_3_relu3)
+    layer3_4_conv1_block_norm = getattr(self.layer3, "4").conv1.block.norm(layer3_4_conv1_block_conv);  layer3_4_conv1_block_conv = None
+    layer3_4_conv1_block_act = getattr(self.layer3, "4").conv1.block.act(layer3_4_conv1_block_norm);  layer3_4_conv1_block_norm = None
+    layer3_4_conv2_block_conv = getattr(self.layer3, "4").conv2.block.conv(layer3_4_conv1_block_act);  layer3_4_conv1_block_act = None
+    layer3_4_conv2_block_norm = getattr(self.layer3, "4").conv2.block.norm(layer3_4_conv2_block_conv);  layer3_4_conv2_block_conv = None
+    layer3_4_conv2_block_act = getattr(self.layer3, "4").conv2.block.act(layer3_4_conv2_block_norm);  layer3_4_conv2_block_norm = None
+    layer3_4_conv3_block_conv = getattr(self.layer3, "4").conv3.block.conv(layer3_4_conv2_block_act);  layer3_4_conv2_block_act = None
+    layer3_4_conv3_block_norm = getattr(self.layer3, "4").conv3.block.norm(layer3_4_conv3_block_conv);  layer3_4_conv3_block_conv = None
+    add_11 = layer3_4_conv3_block_norm + layer3_3_relu3;  layer3_4_conv3_block_norm = layer3_3_relu3 = None
+    layer3_4_relu3 = getattr(self.layer3, "4").relu3(add_11);  add_11 = None
+    layer3_5_conv1_block_conv = getattr(self.layer3, "5").conv1.block.conv(layer3_4_relu3)
+    layer3_5_conv1_block_norm = getattr(self.layer3, "5").conv1.block.norm(layer3_5_conv1_block_conv);  layer3_5_conv1_block_conv = None
+    layer3_5_conv1_block_act = getattr(self.layer3, "5").conv1.block.act(layer3_5_conv1_block_norm);  layer3_5_conv1_block_norm = None
+    layer3_5_conv2_block_conv = getattr(self.layer3, "5").conv2.block.conv(layer3_5_conv1_block_act);  layer3_5_conv1_block_act = None
+    layer3_5_conv2_block_norm = getattr(self.layer3, "5").conv2.block.norm(layer3_5_conv2_block_conv);  layer3_5_conv2_block_conv = None
+    layer3_5_conv2_block_act = getattr(self.layer3, "5").conv2.block.act(layer3_5_conv2_block_norm);  layer3_5_conv2_block_norm = None
+    layer3_5_conv3_block_conv = getattr(self.layer3, "5").conv3.block.conv(layer3_5_conv2_block_act);  layer3_5_conv2_block_act = None
+    layer3_5_conv3_block_norm = getattr(self.layer3, "5").conv3.block.norm(layer3_5_conv3_block_conv);  layer3_5_conv3_block_conv = None
+    add_12 = layer3_5_conv3_block_norm + layer3_4_relu3;  layer3_5_conv3_block_norm = layer3_4_relu3 = None
+    layer3_5_relu3 = getattr(self.layer3, "5").relu3(add_12);  add_12 = None
+    layer4_0_conv1_block_conv = getattr(self.layer4, "0").conv1.block.conv(layer3_5_relu3)
+    layer4_0_conv1_block_norm = getattr(self.layer4, "0").conv1.block.norm(layer4_0_conv1_block_conv);  layer4_0_conv1_block_conv = None
+    layer4_0_conv1_block_act = getattr(self.layer4, "0").conv1.block.act(layer4_0_conv1_block_norm);  layer4_0_conv1_block_norm = None
+    layer4_0_conv2_block_conv = getattr(self.layer4, "0").conv2.block.conv(layer4_0_conv1_block_act);  layer4_0_conv1_block_act = None
+    layer4_0_conv2_block_norm = getattr(self.layer4, "0").conv2.block.norm(layer4_0_conv2_block_conv);  layer4_0_conv2_block_conv = None
+    layer4_0_conv2_block_act = getattr(self.layer4, "0").conv2.block.act(layer4_0_conv2_block_norm);  layer4_0_conv2_block_norm = None
+    layer4_0_conv3_block_conv = getattr(self.layer4, "0").conv3.block.conv(layer4_0_conv2_block_act);  layer4_0_conv2_block_act = None
+    layer4_0_conv3_block_norm = getattr(self.layer4, "0").conv3.block.norm(layer4_0_conv3_block_conv);  layer4_0_conv3_block_conv = None
+    layer4_0_downsample_block_conv = getattr(self.layer4, "0").downsample.block.conv(layer3_5_relu3);  layer3_5_relu3 = None
+    layer4_0_downsample_block_norm = getattr(self.layer4, "0").downsample.block.norm(layer4_0_downsample_block_conv);  layer4_0_downsample_block_conv = None
+    add_13 = layer4_0_conv3_block_norm + layer4_0_downsample_block_norm;  layer4_0_conv3_block_norm = layer4_0_downsample_block_norm = None
+    layer4_0_relu3 = getattr(self.layer4, "0").relu3(add_13);  add_13 = None
+    layer4_1_conv1_block_conv = getattr(self.layer4, "1").conv1.block.conv(layer4_0_relu3)
+    layer4_1_conv1_block_norm = getattr(self.layer4, "1").conv1.block.norm(layer4_1_conv1_block_conv);  layer4_1_conv1_block_conv = None
+    layer4_1_conv1_block_act = getattr(self.layer4, "1").conv1.block.act(layer4_1_conv1_block_norm);  layer4_1_conv1_block_norm = None
+    layer4_1_conv2_block_conv = getattr(self.layer4, "1").conv2.block.conv(layer4_1_conv1_block_act);  layer4_1_conv1_block_act = None
+    layer4_1_conv2_block_norm = getattr(self.layer4, "1").conv2.block.norm(layer4_1_conv2_block_conv);  layer4_1_conv2_block_conv = None
+    layer4_1_conv2_block_act = getattr(self.layer4, "1").conv2.block.act(layer4_1_conv2_block_norm);  layer4_1_conv2_block_norm = None
+    layer4_1_conv3_block_conv = getattr(self.layer4, "1").conv3.block.conv(layer4_1_conv2_block_act);  layer4_1_conv2_block_act = None
+    layer4_1_conv3_block_norm = getattr(self.layer4, "1").conv3.block.norm(layer4_1_conv3_block_conv);  layer4_1_conv3_block_conv = None
+    add_14 = layer4_1_conv3_block_norm + layer4_0_relu3;  layer4_1_conv3_block_norm = layer4_0_relu3 = None
+    layer4_1_relu3 = getattr(self.layer4, "1").relu3(add_14);  add_14 = None
+    layer4_2_conv1_block_conv = getattr(self.layer4, "2").conv1.block.conv(layer4_1_relu3)
+    layer4_2_conv1_block_norm = getattr(self.layer4, "2").conv1.block.norm(layer4_2_conv1_block_conv);  layer4_2_conv1_block_conv = None
+    layer4_2_conv1_block_act = getattr(self.layer4, "2").conv1.block.act(layer4_2_conv1_block_norm);  layer4_2_conv1_block_norm = None
+    layer4_2_conv2_block_conv = getattr(self.layer4, "2").conv2.block.conv(layer4_2_conv1_block_act);  layer4_2_conv1_block_act = None
+    layer4_2_conv2_block_norm = getattr(self.layer4, "2").conv2.block.norm(layer4_2_conv2_block_conv);  layer4_2_conv2_block_conv = None
+    layer4_2_conv2_block_act = getattr(self.layer4, "2").conv2.block.act(layer4_2_conv2_block_norm);  layer4_2_conv2_block_norm = None
+    layer4_2_conv3_block_conv = getattr(self.layer4, "2").conv3.block.conv(layer4_2_conv2_block_act);  layer4_2_conv2_block_act = None
+    layer4_2_conv3_block_norm = getattr(self.layer4, "2").conv3.block.norm(layer4_2_conv3_block_conv);  layer4_2_conv3_block_conv = None
+    add_15 = layer4_2_conv3_block_norm + layer4_1_relu3;  layer4_2_conv3_block_norm = layer4_1_relu3 = None
+    layer4_2_relu3 = getattr(self.layer4, "2").relu3(add_15);  add_15 = None
+    avgpool = self.avgpool(layer4_2_relu3);  layer4_2_relu3 = None
+    flatten = torch.flatten(avgpool, 1);  avgpool = None
+    return {'last_feature': flatten}

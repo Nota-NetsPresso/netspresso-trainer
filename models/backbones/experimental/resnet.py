@@ -2,13 +2,13 @@
 Based on the Torchvision implementation of ResNet.
 https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
-from typing import Type, Any, Callable, Union, List, Optional
+from typing import Type, Union, List, Optional
 
 import torch
 from torch import Tensor
 import torch.nn as nn
 
-from models.utils import SeparateForwardModule
+from models.op.custom import ConvLayer
 
 
 __all__ = ['resnet50', 'resnet101']
@@ -27,17 +27,6 @@ SUPPORTING_TASK = ['classification']
 # 'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth'
 
 
-def conv3x3(in_planes: int, out_planes: int, stride: int = 1, groups: int = 1, dilation: int = 1) -> nn.Conv2d:
-    """3x3 convolution with padding"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
-                     padding=dilation, groups=groups, bias=False, dilation=dilation)
-
-
-def conv1x1(in_planes: int, out_planes: int, stride: int = 1) -> nn.Conv2d:
-    """1x1 convolution"""
-    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False)
-
-
 class BasicBlock(nn.Module):
     expansion: int = 1
 
@@ -50,33 +39,32 @@ class BasicBlock(nn.Module):
         groups: int = 1,
         base_width: int = 64,
         dilation: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[str] = None
     ) -> None:
         super(BasicBlock, self).__init__()
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = 'batch_norm'
         if groups != 1 or base_width != 64:
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv3x3(inplanes, planes, stride)
-        self.bn1 = norm_layer(planes)
-        self.relu = nn.ReLU()
-        self.conv2 = conv3x3(planes, planes)
-        self.bn2 = norm_layer(planes)
+
+        self.conv1 = ConvLayer(in_channels=inplanes, out_channels=planes,
+                               kernel_size=3, stride=stride, dilation=1, padding=1, groups=1,
+                               norm_type=norm_layer, act_type='relu')
+
+        self.conv2 = ConvLayer(in_channels=planes, out_channels=planes,
+                               kernel_size=3, stride=1, dilation=1, padding=1, groups=1,
+                               norm_type=norm_layer, use_act=False)
+
         self.downsample = downsample
-        self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
 
         out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
-
         out = self.conv2(out)
-        out = self.bn2(out)
 
         if self.downsample is not None:
             identity = self.downsample(x)
@@ -105,38 +93,36 @@ class Bottleneck(nn.Module):
         groups: int = 1,
         base_width: int = 64,
         dilation: int = 1,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[str] = None
     ) -> None:
         super(Bottleneck, self).__init__()
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = 'batch_norm'
         width = int(planes * (base_width / 64.)) * groups
         # Both self.conv2 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = conv1x1(inplanes, width)
-        self.bn1 = norm_layer(width)
-        self.relu1 = nn.ReLU()
-        self.conv2 = conv3x3(width, width, stride, groups, dilation)
-        self.bn2 = norm_layer(width)
-        self.relu2 = nn.ReLU()
-        self.conv3 = conv1x1(width, planes * self.expansion)
-        self.bn3 = norm_layer(planes * self.expansion)
+
+        self.conv1 = ConvLayer(in_channels=inplanes, out_channels=width,
+                               kernel_size=1, stride=1,
+                               norm_type=norm_layer, act_type='relu')
+
+        self.conv2 = ConvLayer(in_channels=width, out_channels=width,
+                               kernel_size=3, stride=stride, dilation=dilation, padding=dilation, groups=groups,
+                               norm_type=norm_layer, act_type='relu')
+
+        self.conv3 = ConvLayer(in_channels=width, out_channels=planes * self.expansion,
+                               kernel_size=1, stride=1,
+                               norm_type=norm_layer, use_act=False)
+
         self.relu3 = nn.ReLU()
+
         self.downsample = downsample
-        self.stride = stride
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
 
         out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu1(out)
-
         out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu2(out)
-
         out = self.conv3(out)
-        out = self.bn3(out)
 
         if self.downsample is not None:
             identity = self.downsample(x)
@@ -147,7 +133,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(SeparateForwardModule):
+class ResNet(nn.Module):
 
     def __init__(
         self,
@@ -159,15 +145,15 @@ class ResNet(SeparateForwardModule):
         groups: int = 1,
         width_per_group: int = 64,
         replace_stride_with_dilation: Optional[List[bool]] = None,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[str] = None
     ) -> None:
         super(ResNet, self).__init__()
-        
+
         self.task = task.lower()
         self.intermediate_features = self.task in ['segmentation', 'detection']
-        
+
         if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
+            norm_layer = 'batch_norm'
         self._norm_layer = norm_layer
 
         self.inplanes = 64
@@ -181,10 +167,11 @@ class ResNet(SeparateForwardModule):
                              "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
         self.groups = groups
         self.base_width = width_per_group
-        self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=7, stride=2, padding=3,
-                               bias=False)
-        self.bn1 = norm_layer(self.inplanes)
-        self.relu = nn.ReLU()
+
+        self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
+                               kernel_size=7, stride=2, padding=3,
+                               bias=False, norm_type='batch_norm', act_type='relu')
+
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
         self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
@@ -223,9 +210,10 @@ class ResNet(SeparateForwardModule):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                conv1x1(self.inplanes, planes * block.expansion, stride),
-                norm_layer(planes * block.expansion),
+            downsample = ConvLayer(
+                in_channels=self.inplanes, out_channels=planes * block.expansion,
+                kernel_size=1, stride=stride, bias=False,
+                norm_type=norm_layer, use_act=False
             )
 
         layers = []
@@ -239,11 +227,9 @@ class ResNet(SeparateForwardModule):
 
         return nn.Sequential(*layers)
 
-    def forward_training(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         # See note [TorchScript super()]
         x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
         x = self.maxpool(x)
 
         x = self.layer1(x)
@@ -256,9 +242,6 @@ class ResNet(SeparateForwardModule):
         # x = self.fc(x)
 
         return {'last_feature': x}
-    
-    def forward_inference(self, x: Tensor) -> Tensor:
-        return self.forward_training(x)
 
     @property
     def last_channels(self):
@@ -275,8 +258,8 @@ def resnet50(task, num_class=1000, **extra_params) -> ResNet:
     return ResNet(task, Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
 
 
-def resnet101(num_class=1000, **extra_params) -> ResNet:
+def resnet101(task, num_class=1000, **extra_params) -> ResNet:
     """
         ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(Bottleneck, [3, 4, 23, 3], num_class=num_class, **extra_params)
+    return ResNet(task, Bottleneck, [3, 4, 23, 3], num_class=num_class, **extra_params)
