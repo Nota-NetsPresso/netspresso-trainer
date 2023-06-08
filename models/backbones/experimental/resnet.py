@@ -8,7 +8,6 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 
-from models.utils import SeparateForwardModule
 from models.op.custom import ConvLayer
 
 
@@ -134,7 +133,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(SeparateForwardModule):
+class ResNet(nn.Module):
 
     def __init__(
         self,
@@ -228,7 +227,7 @@ class ResNet(SeparateForwardModule):
 
         return nn.Sequential(*layers)
 
-    def forward_training(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.maxpool(x)
@@ -243,9 +242,6 @@ class ResNet(SeparateForwardModule):
         # x = self.fc(x)
 
         return {'last_feature': x}
-
-    def forward_inference(self, x: Tensor) -> Tensor:
-        return self.forward_training(x)
 
     @property
     def last_channels(self):
