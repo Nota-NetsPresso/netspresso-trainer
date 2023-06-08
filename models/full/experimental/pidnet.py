@@ -8,8 +8,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.op.pidnet import BasicBlock, Bottleneck, segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from models.op.custom import BasicBlock, Bottleneck
+from models.op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
 from models.utils import SeparateForwardModule
+
 
 def imagenet_pretrained_path(x):
     return f"pretrained/PIDNet_{x.upper()}_ImageNet.pth.tar"
@@ -42,7 +44,7 @@ class PIDNet(SeparateForwardModule):
         self.layer2 = self._make_layer(BasicBlock, planes, planes * 2, m, stride=2)
         self.layer3 = self._make_layer(BasicBlock, planes * 2, planes * 4, n, stride=2)
         self.layer4 = self._make_layer(BasicBlock, planes * 4, planes * 8, n, stride=2)
-        self.layer5 = self._make_layer(Bottleneck, planes * 8, planes * 8, 2, stride=2)
+        self.layer5 = self._make_layer(Bottleneck, planes * 8, planes * 8, 2, stride=2, expansion=2)
 
         # P Branch
         self.compression3 = nn.Sequential(
@@ -59,12 +61,12 @@ class PIDNet(SeparateForwardModule):
 
         self.layer3_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
         self.layer4_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
-        self.layer5_ = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
+        self.layer5_ = self._make_layer(Bottleneck, planes * 2, planes * 2, 1, expansion=2)
 
         # D Branch
         if m == 2:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes)
-            self.layer4_d = self._make_layer(Bottleneck, planes, planes, 1)
+            self.layer4_d = self._make_layer(Bottleneck, planes, planes, 1, expansion=2)
             self.diff3 = nn.Sequential(
                 nn.Conv2d(planes * 4, planes, kernel_size=3, padding=1, bias=False),
                 BatchNorm2d(planes, momentum=bn_mom),
@@ -89,7 +91,7 @@ class PIDNet(SeparateForwardModule):
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Bag(planes * 4, planes * 4)
 
-        self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1)
+        self.layer5_d = self._make_layer(Bottleneck, planes * 2, planes * 2, 1, expansion=2)
 
         # Prediction Head
         if self.augment:
@@ -108,36 +110,40 @@ class PIDNet(SeparateForwardModule):
         self.original_to = (512, 512)
         self.resize_to = (512 // 8, 512 // 8)
 
-    def _make_layer(self, block, inplanes, planes, blocks, stride=1):
+    def _make_layer(self, block, inplanes, planes, blocks, stride=1, expansion=None):
         downsample = None
-        if stride != 1 or inplanes != planes * block.expansion:
+        if expansion is None:
+            expansion = block.expansion
+        if stride != 1 or inplanes != planes * expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * block.expansion,
+                nn.Conv2d(inplanes, planes * expansion,
                           kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * block.expansion, momentum=bn_mom),
+                nn.BatchNorm2d(planes * expansion, momentum=bn_mom),
             )
 
         layers = []
-        layers.append(block(inplanes, planes, stride, downsample))
-        inplanes = planes * block.expansion
+        layers.append(block(inplanes, planes, stride, downsample, expansion=expansion))
+        inplanes = planes * expansion
         for i in range(1, blocks):
             if i == (blocks-1):
-                layers.append(block(inplanes, planes, stride=1, no_relu=True))
+                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_relu=True))
             else:
-                layers.append(block(inplanes, planes, stride=1, no_relu=False))
+                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_relu=False))
 
         return nn.Sequential(*layers)
 
-    def _make_single_layer(self, block, inplanes, planes, stride=1):
+    def _make_single_layer(self, block, inplanes, planes, stride=1, expansion=None):
         downsample = None
-        if stride != 1 or inplanes != planes * block.expansion:
+        if expansion is None:
+            expansion = block.expansion
+        if stride != 1 or inplanes != planes * expansion:
             downsample = nn.Sequential(
-                nn.Conv2d(inplanes, planes * block.expansion,
+                nn.Conv2d(inplanes, planes * expansion,
                           kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * block.expansion, momentum=bn_mom),
+                nn.BatchNorm2d(planes * expansion, momentum=bn_mom),
             )
 
-        layer = block(inplanes, planes, stride, downsample, no_relu=True)
+        layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_relu=True)
 
         return layer
 
@@ -201,9 +207,9 @@ class PIDNet(SeparateForwardModule):
         }
 
         # return {"pred": x_}
-    
+
     def forward_inference(self, x, label_size=None):
-        
+
         # assert H == x.size(2)
         # assert W == x.size(3)
 
@@ -245,6 +251,7 @@ class PIDNet(SeparateForwardModule):
         x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
         return x_
+
 
 def pidnet(args, num_classes: int) -> PIDNet:
     model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, augment=True)
