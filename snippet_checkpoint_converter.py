@@ -3,14 +3,14 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import torch
 
-from models.backbones.experimental.resnet import resnet50
+from models.full.experimental.pidnet import pidnet
 from utils.pretrained_editor import convert_state_dict_to_model
 
-yaml_path = Path("models/card") / "resnet50.yaml"
+yaml_path = Path("models/card") / "pidnet_s.yaml"
 
-model = resnet50(task='classification')
+model = pidnet(args=None, num_classes=10)
 
-checkpoint_path = Path("pretrained") / "backbones_backup" / "resnet" / "resnet50.pth"
+checkpoint_path = Path("pretrained") / "full_backup" / "pidnet" / "PIDNet_S_ImageNet.pth.tar"
 state_dict = torch.load(str(checkpoint_path))
 
 convert_state_dict_to_model(yaml_path,

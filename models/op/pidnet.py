@@ -12,83 +12,84 @@ algc = False
 INTERPOLATE_TO_SIZE = (512 // 8, 512 // 8)
 PAPPM_DAPPM_RESIZE_TO = (8, 8)
 
-class BasicBlock(nn.Module):
-    expansion = 1
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, no_relu=False):
-        super(BasicBlock, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
-        self.bn1 = BatchNorm2d(planes, momentum=bn_mom)
-        self.relu = nn.ReLU(inplace=True)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
-                               padding=1, bias=False)
-        self.bn2 = BatchNorm2d(planes, momentum=bn_mom)
-        self.downsample = downsample
-        self.stride = stride
-        self.no_relu = no_relu
+# class BasicBlock(nn.Module):
+#     expansion = 1
 
-    def forward(self, x):
-        residual = x
+#     def __init__(self, inplanes, planes, stride=1, downsample=None, no_relu=False):
+#         super(BasicBlock, self).__init__()
+#         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=3, stride=stride,
+#                                padding=1, bias=False)
+#         self.bn1 = BatchNorm2d(planes, momentum=bn_mom)
+#         self.relu = nn.ReLU(inplace=True)
+#         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3,
+#                                padding=1, bias=False)
+#         self.bn2 = BatchNorm2d(planes, momentum=bn_mom)
+#         self.downsample = downsample
+#         self.stride = stride
+#         self.no_relu = no_relu
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+#     def forward(self, x):
+#         residual = x
 
-        out = self.conv2(out)
-        out = self.bn2(out)
+#         out = self.conv1(x)
+#         out = self.bn1(out)
+#         out = self.relu(out)
 
-        if self.downsample is not None:
-            residual = self.downsample(x)
+#         out = self.conv2(out)
+#         out = self.bn2(out)
 
-        out += residual
+#         if self.downsample is not None:
+#             residual = self.downsample(x)
 
-        if self.no_relu:
-            return out
-        else:
-            return self.relu(out)
+#         out += residual
+
+#         if self.no_relu:
+#             return out
+#         else:
+#             return self.relu(out)
 
 
-class Bottleneck(nn.Module):
-    expansion = 2
+# class Bottleneck(nn.Module):
+#     expansion = 2
 
-    def __init__(self, inplanes, planes, stride=1, downsample=None, no_relu=True):
-        super(Bottleneck, self).__init__()
-        self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
-        self.bn1 = BatchNorm2d(planes, momentum=bn_mom)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
-                               padding=1, bias=False)
-        self.bn2 = BatchNorm2d(planes, momentum=bn_mom)
-        self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
-                               bias=False)
-        self.bn3 = BatchNorm2d(planes * self.expansion, momentum=bn_mom)
-        self.relu = nn.ReLU(inplace=True)
-        self.downsample = downsample
-        self.stride = stride
-        self.no_relu = no_relu
+#     def __init__(self, inplanes, planes, stride=1, downsample=None, no_relu=True):
+#         super(Bottleneck, self).__init__()
+#         self.conv1 = nn.Conv2d(inplanes, planes, kernel_size=1, bias=False)
+#         self.bn1 = BatchNorm2d(planes, momentum=bn_mom)
+#         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride,
+#                                padding=1, bias=False)
+#         self.bn2 = BatchNorm2d(planes, momentum=bn_mom)
+#         self.conv3 = nn.Conv2d(planes, planes * self.expansion, kernel_size=1,
+#                                bias=False)
+#         self.bn3 = BatchNorm2d(planes * self.expansion, momentum=bn_mom)
+#         self.relu = nn.ReLU(inplace=True)
+#         self.downsample = downsample
+#         self.stride = stride
+#         self.no_relu = no_relu
 
-    def forward(self, x):
-        residual = x
+#     def forward(self, x):
+#         residual = x
 
-        out = self.conv1(x)
-        out = self.bn1(out)
-        out = self.relu(out)
+#         out = self.conv1(x)
+#         out = self.bn1(out)
+#         out = self.relu(out)
 
-        out = self.conv2(out)
-        out = self.bn2(out)
-        out = self.relu(out)
+#         out = self.conv2(out)
+#         out = self.bn2(out)
+#         out = self.relu(out)
 
-        out = self.conv3(out)
-        out = self.bn3(out)
+#         out = self.conv3(out)
+#         out = self.bn3(out)
 
-        if self.downsample is not None:
-            residual = self.downsample(x)
+#         if self.downsample is not None:
+#             residual = self.downsample(x)
 
-        out += residual
-        if self.no_relu:
-            return out
-        else:
-            return self.relu(out)
+#         out += residual
+#         if self.no_relu:
+#             return out
+#         else:
+#             return self.relu(out)
 
 
 class segmenthead(nn.Module):
@@ -188,8 +189,8 @@ class DAPPM(nn.Module):
                                                    size=self.resize_to,
                                                    mode='bilinear', align_corners=algc)+x_list[0])))
         x_list.append(self.process2((F.interpolate(self.scale2(x),
-                                                    size=self.resize_to,
-                                                    mode='bilinear', align_corners=algc)+x_list[1])))
+                                                   size=self.resize_to,
+                                                   mode='bilinear', align_corners=algc)+x_list[1])))
         x_list.append(self.process3((F.interpolate(self.scale3(x),
                                                    size=self.resize_to,
                                                    mode='bilinear', align_corners=algc)+x_list[2])))

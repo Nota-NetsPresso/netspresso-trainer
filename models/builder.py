@@ -92,7 +92,9 @@ def build_model(args, num_classes):
         model: nn.Module = eval(f"full.{model_name}")(args, num_classes)
 
         model_state_dict = load_pretrained_checkpoint(model_name)
-        model.load_state_dict(model_state_dict, strict=False)
+        missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
+        logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
+        logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
         return model
 
     model = AssembleModel(args, num_classes)
