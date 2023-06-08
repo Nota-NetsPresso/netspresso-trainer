@@ -1,20 +1,11 @@
-import torch
-import torch.nn as nn
-import torch.fx as fx
-
-from models.backbones.experimental.resnet import resnet50
-
-
-def convert_graphmodule(model):
-    try:
-        _graph = fx.Tracer().trace(model)
-        model = fx.GraphModule(model, _graph)
-        return model
-    except Exception as e:
-        raise e
-
+from utils.fx import convert_graphmodule
 
 if __name__ == '__main__':
-    model = resnet50(task='')
+    from models.builder import AssembleModel
+    from omegaconf import OmegaConf
+
+    yaml_path = "config/resnet.yaml"
+    config = OmegaConf.load(yaml_path)
+    model = AssembleModel(config, num_classes=20)
     fx_model = convert_graphmodule(model)
     print(fx_model)

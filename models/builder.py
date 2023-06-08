@@ -70,6 +70,10 @@ class AssembleModel(nn.Module):
         for m in self.backbone.parameters():
             m.requires_grad = False
 
+    @property
+    def device(self):
+        return next(self.parameters()).device
+
     def forward(self, x, label_size=None):
         features = self.backbone(x)
         if self.task == 'classification':

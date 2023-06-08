@@ -12,6 +12,8 @@ from losses.builder import build_losses
 from metrics.builder import build_metrics
 from utils.timer import Timer
 from utils.logger import set_logger
+from utils.fx import save_graphmodule
+from utils.onnx import save_onnx
 from loggers.builder import build_logger, START_EPOCH_ZERO_OR_ONE
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -118,6 +120,11 @@ class BasePipeline(ABC):
         if self.single_gpu_or_rank_zero:
             # TODO: self.tensorboard.add_graph()
             pass
+
+        model = self.model.module if hasattr(self.model, 'module') else self.model
+        torch.save(model.state_dict(), 'model.pth')
+        save_graphmodule(model, 'model.pt')
+        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, 256, 256)))
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
