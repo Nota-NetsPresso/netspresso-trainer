@@ -124,7 +124,7 @@ class BasePipeline(ABC):
         model = self.model.module if hasattr(self.model, 'module') else self.model
         torch.save(model.state_dict(), 'model.pth')
         save_graphmodule(model, 'model.pt')
-        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, 256, 256)))
+        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, self.args.train.img_size, self.args.train.img_size)))
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
