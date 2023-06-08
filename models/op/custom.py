@@ -161,7 +161,7 @@ class BasicBlock(nn.Module):
 
 
 class Bottleneck(nn.Module):
-    expansion = 2
+    expansion: int = 4
 
     def __init__(
         self,
