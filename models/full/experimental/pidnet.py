@@ -39,17 +39,14 @@ class PIDNet(nn.Module):
         self.layer5 = self._make_layer(Bottleneck, planes * 8, planes * 8, 2, stride=2, expansion=2)
 
         # P Branch
-        self.compression3 = nn.Sequential(
-            ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
-                      kernel_size=1, stride=1, padding=0,
-                      norm_type='batch_norm', use_act=False),
-        )
+        self.compression3 = ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
+                                      kernel_size=1, stride=1, padding=0,
+                                      norm_type='batch_norm', use_act=False)
 
-        self.compression4 = nn.Sequential(
-            ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
-                      kernel_size=1, stride=1, padding=0,
-                      norm_type='batch_norm', use_act=False),
-        )
+        self.compression4 = ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                                      kernel_size=1, stride=1, padding=0,
+                                      norm_type='batch_norm', use_act=False)
+
         self.pag3 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
         self.pag4 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
 
@@ -61,31 +58,23 @@ class PIDNet(nn.Module):
         if m == 2:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes)
             self.layer4_d = self._make_layer(Bottleneck, planes, planes, 1, expansion=2)
-            self.diff3 = nn.Sequential(
-                ConvLayer(in_channels=planes * 4, out_channels=planes,
-                          kernel_size=3, stride=1, padding=1,
-                          norm_type='batch_norm', use_act=False),
-            )
-            self.diff4 = nn.Sequential(
-                ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
-                          kernel_size=3, stride=1, padding=1,
-                          norm_type='batch_norm', use_act=False),
-            )
+            self.diff3 = ConvLayer(in_channels=planes * 4, out_channels=planes,
+                                   kernel_size=3, stride=1, padding=1,
+                                   norm_type='batch_norm', use_act=False)
+            self.diff4 = ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                                   kernel_size=3, stride=1, padding=1,
+                                   norm_type='batch_norm', use_act=False)
             self.spp = PAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Light_Bag(planes * 4, planes * 4)
         else:
             self.layer3_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
             self.layer4_d = self._make_single_layer(BasicBlock, planes * 2, planes * 2)
-            self.diff3 = nn.Sequential(
-                ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
-                          kernel_size=3, stride=1, padding=1,
-                          norm_type='batch_norm', use_act=False),
-            )
-            self.diff4 = nn.Sequential(
-                ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
-                          kernel_size=3, stride=1, padding=1,
-                          norm_type='batch_norm', use_act=False),
-            )
+            self.diff3 = ConvLayer(in_channels=planes * 4, out_channels=planes * 2,
+                                   kernel_size=3, stride=1, padding=1,
+                                   norm_type='batch_norm', use_act=False)
+            self.diff4 = ConvLayer(in_channels=planes * 8, out_channels=planes * 2,
+                                   kernel_size=3, stride=1, padding=1,
+                                   norm_type='batch_norm', use_act=False)
             self.spp = DAPPM(planes * 16, ppm_planes, planes * 4)
             self.dfm = Bag(planes * 4, planes * 4)
 
@@ -113,11 +102,9 @@ class PIDNet(nn.Module):
         if expansion is None:
             expansion = block.expansion
         if stride != 1 or inplanes != planes * expansion:
-            downsample = nn.Sequential(
-                ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
-                          kernel_size=1, stride=stride,
-                          norm_type='batch_norm', use_act=False),
-            )
+            downsample = ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
+                                   kernel_size=1, stride=stride,
+                                   norm_type='batch_norm', use_act=False)
 
         layers = []
         layers.append(block(inplanes, planes, stride, downsample, expansion=expansion))
@@ -135,11 +122,9 @@ class PIDNet(nn.Module):
         if expansion is None:
             expansion = block.expansion
         if stride != 1 or inplanes != planes * expansion:
-            downsample = nn.Sequential(
-                ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
-                          kernel_size=1, stride=stride,
-                          norm_type='batch_norm', use_act=False),
-            )
+            downsample = ConvLayer(in_channels=inplanes, out_channels=planes * expansion,
+                                   kernel_size=1, stride=stride,
+                                   norm_type='batch_norm', use_act=False)
 
         layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_relu=True)
 
