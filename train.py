@@ -59,7 +59,7 @@ def train():
     assert task in SUPPORT_TASK
     model_name = args.train.architecture.full \
         if args.train.architecture.full is not None \
-            else args.train.architecture.backbone
+        else args.train.architecture.backbone
     model_name = str(model_name).lower()
 
     if args.distributed and args.rank != 0:
@@ -87,7 +87,7 @@ def train():
         trainer = SegmentationPipeline(args, task, model_name, model, devices,
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
                                        profile=args_parsed.profile)
-        
+
     elif task == 'detection':
         trainer = DetectionPipeline(args, task, model_name, model, devices,
                                     train_dataloader, eval_dataloader, train_dataset.class_map,
