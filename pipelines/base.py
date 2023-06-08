@@ -12,6 +12,8 @@ from losses.builder import build_losses
 from metrics.builder import build_metrics
 from utils.timer import Timer
 from utils.logger import set_logger
+from utils.fx import save_graphmodule
+from utils.onnx import save_onnx
 from loggers.builder import build_logger, START_EPOCH_ZERO_OR_ONE
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -25,6 +27,7 @@ PROFILE_ACTIVE = 10
 PROFILE_REPEAT = 1
 
 NUM_SAMPLES = 16
+
 
 class BasePipeline(ABC):
     def __init__(self, args, task, model_name, model, devices,
@@ -53,7 +56,7 @@ class BasePipeline(ABC):
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
-        
+
         self.train_logger = build_logger(self.args, self.task, self.model_name,
                                          step_per_epoch=self.train_step_per_epoch, class_map=class_map,
                                          num_sample_images=NUM_SAMPLES)
@@ -68,7 +71,7 @@ class BasePipeline(ABC):
     @abstractmethod
     def set_train(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def train_step(self, batch):
         raise NotImplementedError
@@ -98,30 +101,35 @@ class BasePipeline(ABC):
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
             # FIXME: multi-gpu sample counting & validation
             validation_samples = self.validate() if with_valid_logging else None
-            
+
             self.timer.end_record(name=f'train_epoch_{num_epoch}')
             time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
-            
+
             if self.single_gpu_or_rank_zero:
                 self.log_end_epoch(epoch=num_epoch,
                                    time_for_epoch=time_for_epoch,
                                    validation_samples=validation_samples,
                                    valid_logging=with_valid_logging)
-            
+
             self.scheduler.step()  # call after reporting the current `learning_rate`
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
         logger.info(f"Total time: {self.timer.get(name='train_all'):.2f} s")
-        
+
         if self.single_gpu_or_rank_zero:
             # TODO: self.tensorboard.add_graph()
             pass
 
+        model = self.model.module if hasattr(self.model, 'module') else self.model
+        torch.save(model.state_dict(), 'model.pth')
+        save_graphmodule(model, 'model.pt')
+        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, 256, 256)))
+
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
-        
+
     @torch.no_grad()
     def validate(self, num_samples=NUM_SAMPLES):
         num_returning_samples = 0
@@ -132,11 +140,11 @@ class BasePipeline(ABC):
                 returning_samples.append(out)
                 num_returning_samples += len(out['pred'])
         return returning_samples
-            
-    def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):        
+
+    def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):
         train_losses = self.loss.result('train')
         train_metrics = self.metric.result('train')
-        
+
         valid_losses = self.loss.result('valid') if valid_logging else None
         valid_metrics = self.metric.result('valid') if valid_logging else None
 
