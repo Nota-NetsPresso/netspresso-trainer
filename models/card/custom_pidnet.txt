@@ -50,10 +50,8 @@ PIDNet(
         (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(32, 64, kernel_size=(1, 1), stride=(2, 2), bias=False)
-          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(32, 64, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
@@ -82,10 +80,8 @@ PIDNet(
         (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
-          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
@@ -126,10 +122,8 @@ PIDNet(
         (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
-          (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(128, 256, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (norm): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
@@ -175,10 +169,8 @@ PIDNet(
         (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
-          (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+        (norm): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
@@ -201,16 +193,12 @@ PIDNet(
     )
   )
   (compression3): Sequential(
-    (0): Sequential(
-      (conv): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
-      (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    )
+    (conv): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
   )
   (compression4): Sequential(
-    (0): Sequential(
-      (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
-      (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    )
+    (conv): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+    (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
   )
   (pag3): PagFM(
     (f_x): Sequential(
@@ -301,10 +289,8 @@ PIDNet(
         (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
-          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
@@ -320,10 +306,8 @@ PIDNet(
       (norm): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
     )
     (downsample): Sequential(
-      (0): Sequential(
-        (conv): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
-        (norm): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-      )
+      (conv): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False)
+      (norm): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
     )
     (final_act): Identity()
   )
@@ -344,25 +328,19 @@ PIDNet(
         (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
-          (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(32, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
   )
   (diff3): Sequential(
-    (0): Sequential(
-      (conv): Conv2d(128, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
-      (norm): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    )
+    (conv): Conv2d(128, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (norm): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
   )
   (diff4): Sequential(
-    (0): Sequential(
-      (conv): Conv2d(256, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
-      (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-    )
+    (conv): Conv2d(256, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+    (norm): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
   )
   (spp): PAPPM(
     (scale1): Sequential(
@@ -437,10 +415,8 @@ PIDNet(
         (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (downsample): Sequential(
-        (0): Sequential(
-          (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
-          (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
-        )
+        (conv): Conv2d(64, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (norm): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
       )
       (final_act): ReLU()
     )
