@@ -10,24 +10,17 @@ import torch.nn.functional as F
 
 from models.op.custom import ConvLayer, BasicBlock, Bottleneck
 from models.op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
-from models.utils import SeparateForwardModule
+
+use_align_corners = False
 
 
-def imagenet_pretrained_path(x):
-    return f"pretrained/PIDNet_{x.upper()}_ImageNet.pth.tar"
+class PIDNet(nn.Module):
 
-
-BatchNorm2d = nn.BatchNorm2d
-bn_mom = 0.1
-algc = False
-
-
-class PIDNet(SeparateForwardModule):
-
-    def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, augment=True):
+    def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, augment=True, is_training=True):
         super(PIDNet, self).__init__()
         self.args = args
         self.augment = augment
+        self.is_training = is_training
 
         # I Branch
         self.conv1 = nn.Sequential(
@@ -109,7 +102,7 @@ class PIDNet(SeparateForwardModule):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
-            elif isinstance(m, BatchNorm2d):
+            elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
@@ -153,7 +146,11 @@ class PIDNet(SeparateForwardModule):
 
         return layer
 
-    def forward_training(self, x, label_size=None):
+    @property
+    def device(self):
+        return next(self.parameters()).device
+
+    def forward(self, x):
 
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -170,93 +167,77 @@ class PIDNet(SeparateForwardModule):
         x_d = x_d + F.interpolate(
             self.diff3(x),
             size=self.resize_to,
-            mode='bilinear', align_corners=algc)
-        # if self.augment:
-        temp_p = x_
+            mode='bilinear', align_corners=use_align_corners)
 
-        x = self.relu(self.layer4(x))
-        x_ = self.layer4_(self.relu(x_))
-        x_d = self.layer4_d(self.relu(x_d))
+        if self.is_training:
+            # if self.augment:
+            temp_p = x_
 
-        x_ = self.pag4(x_, self.compression4(x))
+            x = self.relu(self.layer4(x))
+            x_ = self.layer4_(self.relu(x_))
+            x_d = self.layer4_d(self.relu(x_d))
 
-        x_d = x_d + F.interpolate(
-            self.diff4(x),
-            size=self.resize_to,
-            mode='bilinear', align_corners=algc)
-        # if self.augment:
-        temp_d = x_d
+            x_ = self.pag4(x_, self.compression4(x))
 
-        x_ = self.layer5_(self.relu(x_))
-        x_d = self.layer5_d(self.relu(x_d))
+            x_d = x_d + F.interpolate(
+                self.diff4(x),
+                size=self.resize_to,
+                mode='bilinear', align_corners=use_align_corners)
+            # if self.augment:
+            temp_d = x_d
 
-        x = F.interpolate(
-            self.spp(self.layer5(x)),
-            size=self.resize_to,
-            mode='bilinear', align_corners=algc)
+            x_ = self.layer5_(self.relu(x_))
+            x_d = self.layer5_d(self.relu(x_d))
 
-        x_ = self.final_layer(self.dfm(x_, x, x_d))
+            x = F.interpolate(
+                self.spp(self.layer5(x)),
+                size=self.resize_to,
+                mode='bilinear', align_corners=use_align_corners)
 
-        x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
+            x_ = self.final_layer(self.dfm(x_, x, x_d))
 
-        # if self.augment:
-        x_extra_p = self.seghead_p(temp_p)
-        x_extra_d = self.seghead_d(temp_d)
+            x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
-        x_extra_p = F.interpolate(x_extra_p, size=self.original_to, mode='bilinear', align_corners=True)
-        x_extra_d = F.interpolate(x_extra_d, size=self.original_to, mode='bilinear', align_corners=True)
+            # if self.augment:
+            x_extra_p = self.seghead_p(temp_p)
+            x_extra_d = self.seghead_d(temp_d)
 
-        return {
-            "extra_p": x_extra_p,
-            "extra_d": x_extra_d,
-            "pred": x_
-        }
+            x_extra_p = F.interpolate(x_extra_p, size=self.original_to, mode='bilinear', align_corners=True)
+            x_extra_d = F.interpolate(x_extra_d, size=self.original_to, mode='bilinear', align_corners=True)
+
+            return {
+                "extra_p": x_extra_p,
+                "extra_d": x_extra_d,
+                "pred": x_
+            }
+
+        else:
+            x = self.relu(self.layer4(x))
+            x_ = self.layer4_(self.relu(x_))
+            x_d = self.layer4_d(self.relu(x_d))
+
+            x_ = self.pag4(x_, self.compression4(x))
+
+            x_d = x_d + F.interpolate(
+                self.diff4(x),
+                size=self.resize_to,
+                mode='bilinear', align_corners=use_align_corners)
+
+            x_ = self.layer5_(self.relu(x_))
+            x_d = self.layer5_d(self.relu(x_d))
+
+            x = F.interpolate(
+                self.spp(self.layer5(x)),
+                size=self.resize_to,
+                mode='bilinear', align_corners=use_align_corners)
+
+            x_ = self.final_layer(self.dfm(x_, x, x_d))
+
+            x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
+
+            return x_
 
         # return {"pred": x_}
-
-    def forward_inference(self, x, label_size=None):
-
-        # assert H == x.size(2)
-        # assert W == x.size(3)
-
-        x = self.conv1(x)
-        x = self.layer1(x)
-        x = self.relu(self.layer2(self.relu(x)))
-        x_ = self.layer3_(x)
-        x_d = self.layer3_d(x)
-
-        x = self.relu(self.layer3(x))
-        x_ = self.pag3(x_, self.compression3(x))
-
-        x_d = x_d + F.interpolate(
-            self.diff3(x),
-            size=self.resize_to,
-            mode='bilinear', align_corners=algc)
-
-        x = self.relu(self.layer4(x))
-        x_ = self.layer4_(self.relu(x_))
-        x_d = self.layer4_d(self.relu(x_d))
-
-        x_ = self.pag4(x_, self.compression4(x))
-
-        x_d = x_d + F.interpolate(
-            self.diff4(x),
-            size=self.resize_to,
-            mode='bilinear', align_corners=algc)
-
-        x_ = self.layer5_(self.relu(x_))
-        x_d = self.layer5_d(self.relu(x_d))
-
-        x = F.interpolate(
-            self.spp(self.layer5(x)),
-            size=self.resize_to,
-            mode='bilinear', align_corners=algc)
-
-        x_ = self.final_layer(self.dfm(x_, x, x_d))
-
-        x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
-
-        return x_
 
 
 def pidnet(args, num_classes: int) -> PIDNet:
