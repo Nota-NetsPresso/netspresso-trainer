@@ -50,6 +50,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
             self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
             self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
+            # TODO: get paired data from regex pattern matching (args.datasets.path.pattern)
 
             assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are segmentation maps"
 
