@@ -11,8 +11,6 @@ from datasets.segmentation.transforms import generate_edge, reduce_label
 
 _logger = logging.getLogger(__name__)
 
-ID2LABEL_FILENAME = "id2label.json"
-
 
 def exist_name(candidate, folder_iterable):
     try:
@@ -45,14 +43,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
         )
 
         if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
-            image_dir = Path(self._root) / 'image'
-            annotation_dir = Path(self._root) / 'mask'
-            if not annotation_dir.exists():
-                annotation_dir = Path(self._root) / 'annotation'
-            self.image_dir = image_dir / self._split
-            self.annotation_dir = annotation_dir / self._split
+            self.image_dir = Path(self._root) / args.datasets.path.train.image
+            self.annotation_dir = Path(self._root) / args.datasets.path.train.mask
 
-            self.id2label = read_json(Path(self._root) / ID2LABEL_FILENAME)
+            self.id2label = args.datasets.id_mapping
 
             self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
             self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
@@ -60,7 +54,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
             assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are segmentation maps"
 
         else:  # self._split in ['infer', 'inference']
-
+            raise NotImplementedError
             try:  # a folder with multiple images
                 self.img_name = list(sorted([path for path in Path(self.data_dir).iterdir()]))
             except:  # single image
@@ -79,7 +73,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
     @property
     def num_classes(self):
         return len(self.id2label)
-    
+
     @property
     def class_map(self):
         return self.id2label
@@ -96,13 +90,13 @@ class SegmentationCustomDataset(BaseCustomDataset):
         if self._split in ['infer', 'inference']:
             out = self.transform(self.args.augment)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
-        
+
         outputs = {}
 
         label = Image.open(str(ann_path)).convert('L')
         if self.args.augment.reduce_zero_label:
             label = reduce_label(np.array(label))
-        
+
         if self.args.train.architecture.full == 'pidnet':
             edge = generate_edge(np.array(label))
             out = self.transform(self.args.augment)(image=img, mask=label, edge=edge)
@@ -111,11 +105,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
             out = self.transform(self.args.augment)(image=img, mask=label)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
-
         if self._split in ['train', 'training']:
             return outputs
 
         assert self._split in ['val', 'valid', 'test']
-        # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1 
+        # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs
