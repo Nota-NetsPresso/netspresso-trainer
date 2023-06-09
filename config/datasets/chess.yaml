@@ -6,10 +6,4 @@ datasets:
       image: train # directory for training images
     valid:
       image: val  # directory for valid images
-  id_mapping:  # Dict[directory_name, class_name]
-    Bishop: class_1_bishop
-    King: best_king
-    Knight: class_2_knight
-    Pawn: class_3_pawn
-    Queen: best_queen
-    Rook: class_4_rook
+  id_mapping: ~
