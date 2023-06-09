@@ -1,0 +1,14 @@
+datasets:
+  task: classification
+  path:
+    root: /PATH/TO/DATASET # dataset root
+    train:
+      image: train # directory for training images
+    valid:
+      image: val  # directory for valid images
+  id_mapping:  # Dict[directory_name, class_name]
+    directory_1: curry
+    directory_2: ramen
+    directory_3: rice
+    directory_4: sushi
+  
