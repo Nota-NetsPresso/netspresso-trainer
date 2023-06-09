@@ -2,8 +2,9 @@ import logging
 import time
 
 import torch.distributed as dist
+from omegaconf import OmegaConf, DictConfig, ListConfig
 
-__all__ = ['set_logger']
+__all__ = ['set_logger', 'yaml_for_logging']
 
 
 class RankFilter(logging.Filter):
@@ -50,6 +51,25 @@ def set_logger(logger_name, level):
     elif _level == 'CRITICAL':
         logger.setLevel(logging.CRITICAL)
     return logger
+
+
+def _yaml_for_logging(config: DictConfig) -> DictConfig:
+    # TODO: better configuration logging
+    list_maximum_index = 2
+    new_config = OmegaConf.create()
+    for k, v in config.items():
+        if isinstance(v, DictConfig):
+            new_config.update({k: _yaml_for_logging(v)})
+        elif isinstance(v, ListConfig):
+            new_config.update({k: list(map(str, v[:list_maximum_index])) + ['...']})
+        else:
+            new_config.update({k: v})
+    return new_config
+
+
+def yaml_for_logging(config: DictConfig):
+    config_summarized = OmegaConf.create(_yaml_for_logging(config))
+    return OmegaConf.to_yaml(config_summarized)
 
 
 if __name__ == '__main__':

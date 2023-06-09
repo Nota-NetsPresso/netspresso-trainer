@@ -1,0 +1,6 @@
+logging:
+  tensorboard: true
+  csv: true
+  image: true
+  stdout: true
+  netspresso: false

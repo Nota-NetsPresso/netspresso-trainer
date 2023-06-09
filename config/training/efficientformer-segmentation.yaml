@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id pidnet-tensorboard-test
+  project_id: &project_id efficientformer-segmentation
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id /DATA/VOC12Dataset
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -9,20 +9,15 @@ trainer_launcher:
   user_id: ~ 
   username: ~ 
   task: &task segmentation
-  model_format: bin_json
+  model_format: pt
 train:
   task: *task
   architecture:
-    full: pidnet
-    backbone: ~
-    head: ~
+    full: ~ # auto
+    backbone: efficientformer
+    head: efficientformer_decode_head
   losses:
-    - criterion: pidnet_cross_entropy
-      weight: ~
-      ignore_index: 255
-    - criterion: boundary_loss
-      weight: 20.0
-    - criterion: pidnet_cross_entropy_with_boundary
+    - criterion: cross_entropy
       weight: ~
       ignore_index: 255
       
@@ -54,8 +49,8 @@ train:
   project: *project_id
   token: *token
   epochs: 250
-  batch_size: 16
-  img_size: &img_size 512 
+  batch_size: 8 
+  img_size: &img_size 768 
   exist_ok: ~ 
   label_smoothing: ~
   freeze: ~ 
@@ -64,10 +59,10 @@ environment:
   num_workers: 4 
   device: '0' 
 inference: 
-  slide_eval: false 
-  stride: ~ 
-  crop_h: 512
-  crop_w: 512
+  slide_eval: true 
+  stride: 512 
+  crop_h: 768
+  crop_w: 768
 augment:
   hsv_h: ~
   hsv_s: ~
@@ -75,11 +70,11 @@ augment:
   degrees: ~
   translate: ~
   scale: ~ 
-  max_scale: 1024
-  min_scale: 512
-  crop_size_h: 512
-  crop_size_w: 512
-  resize_ratio0: 1.0
+  max_scale: 2048
+  min_scale: 768
+  crop_size_h: 768
+  crop_size_w: 768
+  resize_ratio0: 0.5
   resize_ratiof: 2.0
   resize_add: 1
   shear: ~
@@ -99,9 +94,3 @@ augment:
     hue: 0.1
     colorjitter_p: 0.5
   reduce_zero_label: *reduce_zero_label
-logging:
-  tensorboard: true
-  csv: true
-  image: true
-  stdout: true
-  netspresso: true
