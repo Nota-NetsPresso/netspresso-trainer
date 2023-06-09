@@ -1,8 +1,8 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id pidnet-tensorboard-test
+  project_id: &project_id lpcvc-pidnet-vanilla-compressed
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
-  dataset_id: &dataset_id /DATA/VOC12Dataset
+  dataset_id: &dataset_id /DATA/LPCVC
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
   token: &token xxxxxxxx-0000-0000-0000-000000000000
   base_architecture: &base_architecture ~
@@ -53,8 +53,8 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 250
-  batch_size: 16
+  epochs: 200
+  batch_size: 32
   img_size: &img_size 512 
   exist_ok: ~ 
   label_smoothing: ~

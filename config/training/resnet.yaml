@@ -48,8 +48,8 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 100
-  batch_size: 16 
+  epochs: 3
+  batch_size: 32
   img_size: &img_size 256 
   exist_ok: ~ 
   label_smoothing: 0.01 
@@ -98,4 +98,4 @@ logging:
   csv: true
   image: true
   stdout: true
-  netspresso: true
+  netspresso: false
