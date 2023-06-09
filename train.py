@@ -24,9 +24,19 @@ def parse_args_netspresso():
     # -------- User arguments ----------------------------------------
 
     parser.add_argument(
+        '--data', type=str, default='',
+        dest='data',
+        help="Config for dataset information")
+
+    parser.add_argument(
         '--config', type=str, default='',
         dest='config',
         help="Config path")
+
+    parser.add_argument(
+        '--logging', type=str, default='config/logging.yaml',
+        dest='logging',
+        help="Config for logging options")
 
     parser.add_argument(
         '-o', '--output_dir', type=str, default='..',
@@ -37,10 +47,6 @@ def parse_args_netspresso():
         '--profile', action='store_true',
         help="Whether to use profile mode")
 
-    parser.add_argument(
-        '--report-modelsearch-api', action='store_true',
-        help="Report elapsed time for single epoch to NetsPresso Modelsearch API")
-
     args, _ = parser.parse_known_args()
 
     return args
@@ -48,7 +54,9 @@ def parse_args_netspresso():
 
 def train():
     args_parsed = parse_args_netspresso()
+    args_dataset = OmegaConf.load(args_parsed.data)
     args = OmegaConf.load(args_parsed.config)
+    args = OmegaConf.merge(args, args_dataset)
     distributed, world_size, rank, devices = set_device(args)
 
     args.distributed = distributed
