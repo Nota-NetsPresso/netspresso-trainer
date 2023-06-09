@@ -143,11 +143,12 @@ def create_loader(
         use_multi_epochs_loader=False,
         persistent_workers=True,
         worker_seeding='all',
-        kwargs=None,
-        args=None
+        world_size=1,
+        rank=0,
+        kwargs=None
 ):
 
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=args.world_size, rank=args.rank)
+    sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank)
 
     loader_args = dict(
         batch_size=batch_size,
@@ -165,5 +166,5 @@ def create_loader(
     except TypeError as e:
         loader_args.pop('persistent_workers')  # only in Pytorch 1.7+
         loader = DataLoader(dataset, **loader_args)
-    
+
     return loader

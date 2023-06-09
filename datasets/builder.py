@@ -21,8 +21,8 @@ def build_dataset(args):
     _logger.info('-'*40)
     _logger.info('==> Loading data...')
 
-    task = args.train.task
-    data_dir = args.train.data
+    task = args.datasets.task
+    data_dir = args.datasets.path.root
 
     assert Path(data_dir).exists(), \
         f"No such directory {data_dir}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
@@ -60,9 +60,8 @@ def build_dataset(args):
     return train_dataset, eval_dataset
 
 
-def build_dataloader(args, model, train_dataset, eval_dataset, profile):
+def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
-    task = str(args.train.task).lower()
     if task == 'classification':
         collate_fn = None
 
@@ -77,8 +76,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
 
         eval_loader = create_loader(
@@ -92,8 +92,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=None,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
     elif task == 'segmentation':
         collate_fn = None
@@ -108,8 +109,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
 
         eval_loader = create_loader(
@@ -122,8 +124,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=None,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
     elif task == 'detection':
         collate_fn = detection_collate_fn
@@ -138,8 +141,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
 
         eval_loader = create_loader(
@@ -152,8 +156,9 @@ def build_dataloader(args, model, train_dataset, eval_dataset, profile):
             distributed=args.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            kwargs=None,
-            args=args
+            world_size=args.world_size,
+            rank=args.rank,
+            kwargs=None
         )
 
         # train_loader = DataLoader(train_dataset, batch_size=args.train.batch_size,

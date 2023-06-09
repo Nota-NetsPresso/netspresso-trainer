@@ -83,7 +83,7 @@ def train():
     model = build_model(args, train_dataset.num_classes)
 
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
+        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
     if args.distributed:
