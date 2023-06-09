@@ -68,7 +68,12 @@ class TensorboardLogger:
     def log_images_with_dict(self, image_dict, mode='train'):
         for k, v in image_dict.items():
             self._log_image(k, v, mode)
-    
+
+    def log_hparams(self, hp, final_metrics={}):
+        # TODO: logging hp in recursive way
+        hp_for_log = {key: value for key, value in dict(hp).items() if isinstance(value, float) or isinstance(value, int)}
+        self.tensorboard.add_hparams(hp_for_log, metric_dict=final_metrics)
+
     def __call__(self,
                  train_losses, train_metrics, valid_losses, valid_metrics,
                  train_images, valid_images, learning_rate, elapsed_time,

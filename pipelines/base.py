@@ -115,11 +115,11 @@ class BasePipeline(ABC):
             logger.info("-" * 40)
 
         self.timer.end_record(name='train_all')
-        logger.info(f"Total time: {self.timer.get(name='train_all'):.2f} s")
+        total_train_time = self.timer.get(name='train_all')
+        logger.info(f"Total time: {total_train_time:.2f} s")
 
         if self.single_gpu_or_rank_zero:
-            # TODO: self.tensorboard.add_graph()
-            pass
+            self.train_logger.log_end_of_traning(final_metrics={'total_train_time': total_train_time})
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         torch.save(model.state_dict(), 'model.pth')
