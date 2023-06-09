@@ -54,9 +54,11 @@ def parse_args_netspresso():
 
 def train():
     args_parsed = parse_args_netspresso()
-    args_dataset = OmegaConf.load(args_parsed.data)
+    args_datasets = OmegaConf.load(args_parsed.data)
+    args_logging = OmegaConf.load(args_parsed.logging)
     args = OmegaConf.load(args_parsed.config)
-    args = OmegaConf.merge(args, args_dataset)
+    args = OmegaConf.merge(args, args_datasets)
+    args = OmegaConf.merge(args, args_logging)
     distributed, world_size, rank, devices = set_device(args)
 
     args.distributed = distributed
