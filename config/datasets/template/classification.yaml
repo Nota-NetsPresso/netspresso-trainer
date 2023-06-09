@@ -6,7 +6,7 @@ datasets:
       image: train # directory for training images
     valid:
       image: val  # directory for valid images
-  id_mapping:  # Dict[directory_name, class_name]
+  id_mapping:  # Dict[directory_name, class_name]. If None, set the directory name same with class name
     directory_1: curry
     directory_2: ramen
     directory_3: rice
