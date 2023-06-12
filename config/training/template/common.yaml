@@ -3,10 +3,10 @@ training:
   opt: adamw
   lr0: 6e-5
   lrf: 0.0
-  momentum: ~
+  momentum: 0.937
   weight_decay: 0.01
-  warmup_steps: 100 
-  warmup_epochs: ~
+  warmup_steps: ~ 
+  warmup_epochs: 5
   warmup_momentum: ~
   warmup_bias_lr: ~
   schd_power: 1.0
