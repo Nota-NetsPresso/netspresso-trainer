@@ -27,18 +27,18 @@ class ClassificationPipeline(BasePipeline):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.args.train.opt,
-                                         lr=self.args.train.lr0,
-                                         wd=self.args.train.weight_decay,
-                                         momentum=self.args.train.momentum)
+                                         opt=self.args.training.opt,
+                                         lr=self.args.training.lr0,
+                                         wd=self.args.training.weight_decay,
+                                         momentum=self.args.training.momentum)
         sched_args = OmegaConf.create({
-            'epochs': self.args.train.epochs,
+            'epochs': self.args.training.epochs,
             'lr_noise': None,
             'sched': 'poly',
-            'decay_rate': self.args.train.schd_power,
-            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.train.lrf`
-            'warmup_lr': 0.00001, # self.args.train.lr0
-            'warmup_epochs': 5, # self.args.train.warmup_epochs
+            'decay_rate': self.args.training.schd_power,
+            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
+            'warmup_lr': 0.00001,  # self.args.training.lr0
+            'warmup_epochs': 5,  # self.args.training.warmup_epochs
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
@@ -57,7 +57,6 @@ class ClassificationPipeline(BasePipeline):
 
         self.loss.backward()
         self.optimizer.step()
-        
 
         # # TODO: fn(out)
         # fn = lambda x: x

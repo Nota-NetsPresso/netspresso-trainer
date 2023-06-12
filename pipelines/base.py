@@ -87,7 +87,7 @@ class BasePipeline(ABC):
         self.timer.start_record(name='train_all')
         self._is_ready()
 
-        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.args.train.epochs + START_EPOCH_ZERO_OR_ONE):
+        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.args.training.epochs + START_EPOCH_ZERO_OR_ONE):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
             self.loss = build_losses(self.args, ignore_index=self.ignore_index)
             self.metric = build_metrics(self.args, ignore_index=self.ignore_index, num_classes=self.num_classes)
@@ -124,7 +124,7 @@ class BasePipeline(ABC):
         model = self.model.module if hasattr(self.model, 'module') else self.model
         torch.save(model.state_dict(), 'model.pth')
         save_graphmodule(model, 'model.pt')
-        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, self.args.train.img_size, self.args.train.img_size)))
+        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):

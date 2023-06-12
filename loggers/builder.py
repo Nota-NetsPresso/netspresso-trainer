@@ -60,7 +60,7 @@ class TrainingLogger():
             TensorboardLogger(task=task, model=model, result_dir=result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
-            StdOutLogger(task=task, model=model, total_epochs=args.train.epochs) if self.use_stdout else None
+            StdOutLogger(task=task, model=model, total_epochs=args.training.epochs) if self.use_stdout else None
         self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
             ModelSearchServerHandler(task=task, model=model) if self.use_netspresso else None
         if task in LABEL_CONVERTER_PER_TASK:
