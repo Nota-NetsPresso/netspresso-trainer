@@ -39,6 +39,11 @@ def parse_args_netspresso():
         help="Config for logging options")
 
     parser.add_argument(
+        '--training', type=str, default='',
+        dest='training',
+        help="Config for training options")
+
+    parser.add_argument(
         '-o', '--output_dir', type=str, default='..',
         dest='output_dir',
         help="Checkpoint and result saving directory")
@@ -56,9 +61,11 @@ def train():
     args_parsed = parse_args_netspresso()
     args_datasets = OmegaConf.load(args_parsed.data)
     args_logging = OmegaConf.load(args_parsed.logging)
+    args_training = OmegaConf.load(args_parsed.training)
     args = OmegaConf.load(args_parsed.config)
     args = OmegaConf.merge(args, args_datasets)
     args = OmegaConf.merge(args, args_logging)
+    args = OmegaConf.merge(args, args_training)
     distributed, world_size, rank, devices = set_device(args)
 
     args.distributed = distributed
