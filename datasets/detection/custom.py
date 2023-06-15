@@ -13,10 +13,6 @@ from datasets.base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 
-ID2LABEL_FILENAME = "id2label.json"
-
-TEMP_DIRECTORY_REDIRECT = lambda x: f"{x}2017"
-TEMP_COCO_LABEL_FILE = "datasets/detection/coco.yaml"
 
 
 def exist_name(candidate, folder_iterable):
@@ -56,10 +52,8 @@ class DetectionCustomDataset(BaseCustomDataset):
         )
 
         if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
-            image_dir = Path(self._root) / 'images'
-            annotation_dir = Path(self._root) / 'labels'
-            self.image_dir = image_dir / TEMP_DIRECTORY_REDIRECT(self._split)
-            self.annotation_dir = annotation_dir / TEMP_DIRECTORY_REDIRECT(self._split)
+            self.image_dir = Path(self._root) / args.datasets.path.train.image
+            self.annotation_dir = Path(self._root) / args.datasets.path.train.label
 
             img_name_maybe: List[Path] = list(sorted([path for path in self.image_dir.iterdir()]))
             # self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
@@ -72,7 +66,7 @@ class DetectionCustomDataset(BaseCustomDataset):
                 self.img_name.append(image_path_maybe)
                 self.ann_name.append(ann_path_maybe)
             del img_name_maybe
-            self.id2label = OmegaConf.load(TEMP_COCO_LABEL_FILE)
+            self.id2label = args.datasets.id_mapping
 
             assert len(self.img_name) == len(self.ann_name), f"There must be as many images as there are detection label files! {len(self.img_name)}, {len(self.ann_name)}"
 
@@ -94,11 +88,10 @@ class DetectionCustomDataset(BaseCustomDataset):
 
     @property
     def num_classes(self):
-        return self.id2label.num_classes
-
-    @property
+        return len(self.id2label)
+    
     def class_map(self):
-        return {idx: name for idx, name in enumerate(self.id2label.names)}
+        return {idx: name for idx, name in enumerate(self.id2label.id_mapping)}
 
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
