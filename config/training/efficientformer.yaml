@@ -1,0 +1,16 @@
+training:
+  seed: 1
+  opt: adamw
+  lr0: 6e-5
+  lrf: 0.0
+  momentum: ~
+  weight_decay: 0.01
+  warmup_steps: 100 
+  warmup_epochs: ~
+  warmup_momentum: ~
+  warmup_bias_lr: ~
+  schd_power: 1.0
+  epochs: 3
+  batch_size: 16 
+  img_size: &img_size 512
+  freeze: ~ 
