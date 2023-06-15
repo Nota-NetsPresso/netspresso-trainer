@@ -3,12 +3,16 @@ import torch
 
 from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
+
 class VOCColorize(object):
-    def __init__(self, class_map):
+    def __init__(self, class_map, pallete=None):
         n = len(class_map)
-        self.cmap = _voc_color_map(n)
+        if pallete is None:
+            self.cmap = _voc_color_map(n)
+        else:
+            self.cmap = np.array(pallete[:n], dtype=np.uint8)
         self.cmap = torch.from_numpy(self.cmap[:n])
-        
+
     def _convert(self, gray_image):
         assert len(gray_image.shape) == 2
         size = gray_image.shape
@@ -31,14 +35,12 @@ class VOCColorize(object):
             images = []
             for _real_gray_image in gray_image:
                 images.append(self._convert(_real_gray_image)[np.newaxis, ...])
-            
+
             return np.concatenate(images, axis=0)
         elif len(gray_image.shape) == 2:
             return self._convert(gray_image)
         else:
             raise IndexError(f"gray_image.shape should be either 2 or 3, but {gray_image.shape} were indexed.")
-        
-        
 
 
 def _voc_color_map(N=256, normalized=False):
@@ -61,6 +63,7 @@ def _voc_color_map(N=256, normalized=False):
     cmap = cmap / 255 if normalized else cmap
     return cmap
 
+
 def _as_image_array(img: np.ndarray):
     min_, max_ = np.amin(img), np.amax(img)
     is_int_array = img.dtype in [np.uint8, np.uint16, np.int8, np.int16, np.int32, np.int64]
@@ -79,11 +82,11 @@ def _as_image_array(img: np.ndarray):
             # denormalize with mean and std
             img = np.clip(img * (np.array(IMAGENET_DEFAULT_STD, dtype=np.float32) * 255.0) + np.array(IMAGENET_DEFAULT_MEAN, dtype=np.float32) * 255.0, 0, 255).astype(np.uint8)
 
-
     if img.shape[-1] != 1 and img.shape[-1] != 3:
         img = np.expand_dims(np.concatenate([img[..., i] for i in range(img.shape[-1])], axis=0), -1)
     img = np.clip(img, a_min=0, a_max=255)
     return img
+
 
 def magic_image_handler(img):
     if img.ndim == 3:
@@ -97,5 +100,3 @@ def magic_image_handler(img):
         return img_new
     else:
         raise ValueError(f'img ndim is {img.ndim}, should be either 2, 3, or 4')
-
-    

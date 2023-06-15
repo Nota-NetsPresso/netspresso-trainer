@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 import torch
-import numpy as np 
+import numpy as np
 from omegaconf import OmegaConf
 
 from optimizers.builder import build_optimizer
@@ -26,18 +26,18 @@ class SegmentationPipeline(BasePipeline):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.args.train.opt,
-                                         lr=self.args.train.lr0,
-                                         wd=self.args.train.weight_decay,
-                                         momentum=self.args.train.momentum)
+                                         opt=self.args.training.opt,
+                                         lr=self.args.training.lr0,
+                                         wd=self.args.training.weight_decay,
+                                         momentum=self.args.training.momentum)
         sched_args = OmegaConf.create({
-            'epochs': self.args.train.epochs,
+            'epochs': self.args.training.epochs,
             'lr_noise': None,
             'sched': 'poly',
-            'decay_rate': self.args.train.schd_power,
-            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.train.lrf`
-            'warmup_lr': 0.00001, # self.args.train.lr0
-            'warmup_epochs': 5, # self.args.train.warmup_epochs
+            'decay_rate': self.args.training.schd_power,
+            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
+            'warmup_lr': 0.00001,  # self.args.training.lr0
+            'warmup_epochs': 5,  # self.args.training.warmup_epochs
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
@@ -47,13 +47,13 @@ class SegmentationPipeline(BasePipeline):
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
         target = target.long().to(self.devices)
-        
+
         if 'edges' in batch:
             bd_gt = batch['edges']
             bd_gt = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
-        out = self.model(images, label_size=target.size())
+        out = self.model(images)
         if 'edges' in batch:
             self.loss(out, target, bd_gt=bd_gt, mode='train')
         else:
@@ -61,10 +61,9 @@ class SegmentationPipeline(BasePipeline):
 
         self.loss.backward()
         self.optimizer.step()
-        
+
         out = {k: v.detach() for k, v in out.items()}
         self.metric(out['pred'], target, mode='train')
-
 
         # # TODO: fn(out)
         # fn = lambda x: x
@@ -78,12 +77,12 @@ class SegmentationPipeline(BasePipeline):
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
         target = target.long().to(self.devices)
-        
+
         if 'edges' in batch:
             bd_gt = batch['edges']
             bd_gt = bd_gt.to(self.devices)
 
-        out = self.model(images, label_size=target.size())
+        out = self.model(images)
         if 'edges' in batch:
             self.loss(out, target, bd_gt=bd_gt, mode='valid')
         else:
@@ -93,7 +92,7 @@ class SegmentationPipeline(BasePipeline):
 
         if self.args.distributed:
             torch.distributed.barrier()
-        
+
         output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
 
         logs = {

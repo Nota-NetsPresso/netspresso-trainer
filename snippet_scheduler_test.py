@@ -66,21 +66,21 @@ if __name__ == '__main__':
     model.cuda()
 
     optimizer = build_optimizer(model,
-                                opt=args.train.opt,
-                                lr=args.train.lr0,
-                                wd=args.train.weight_decay,
-                                momentum=args.train.momentum)
+                                opt=args.training.opt,
+                                lr=args.training.lr0,
+                                wd=args.training.weight_decay,
+                                momentum=args.training.momentum)
 
     dataloader = torch.utils.data.DataLoader(SampleDataset(samples=25), batch_size=5)
 
     sched_args = OmegaConf.create({
-        'epochs': args.train.epochs,
+        'epochs': args.training.epochs,
         'lr_noise': None,
         'sched': 'poly',
-        'decay_rate': args.train.schd_power,
-        'min_lr': args.train.lrf, 
-        'warmup_lr': 0.00001, # args.train.warmup_bias_lr
-        'warmup_epochs': 5, # args.train.warmup_epochs
+        'decay_rate': args.training.schd_power,
+        'min_lr': args.training.lrf,
+        'warmup_lr': 0.00001,  # args.training.warmup_bias_lr
+        'warmup_epochs': 5,  # args.train.warmup_epochs
         'cooldown_epochs': 0,
     })
 
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     loss_func = nn.MSELoss()
 
     steps = 0
-    for epoch in range(args.train.epochs):
+    for epoch in range(args.training.epochs):
         for x, y in dataloader:
             x = x.cuda()
             y = y.cuda()

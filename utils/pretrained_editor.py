@@ -8,9 +8,12 @@ UPDATE_PREFIX = "updated_"
 
 def convert_state_dict_to_model(yaml_path, model, state_dict):
 
-    mapping = OmegaConf.load(yaml_path)['mapping']
+    config = OmegaConf.load(yaml_path)
+    mapping = config.mapping
 
     model_state_dict = model.state_dict()
+    state_dict = state_dict[config.pretrained.state_dict_key]
+
     print(list(model_state_dict.keys())[:5])
     print(list(state_dict.keys())[:5])
 
@@ -29,11 +32,13 @@ def convert_state_dict_to_model(yaml_path, model, state_dict):
 
     no_match_layers = set(model_state_dict).difference(set(extracted_state_dict))
     no_match_layers = sorted(list(no_match_layers))
+
     print(f"no_match_layers: \n{no_match_layers[:]}")
     print(f"NO MATCH COUNT: {len(no_match_layers)}")
-    model.load_state_dict(dict(extracted_state_dict))
+    model.load_state_dict(dict(extracted_state_dict), strict=False)
     _save_extracted_state_dict(extracted_state_dict, "result.pth")
 
+    print("Complete!")
     return model
 
 

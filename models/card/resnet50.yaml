@@ -1,6 +1,7 @@
 pretrained:
   original_link: https://download.pytorch.org/models/resnet50-0676ba61.pth
   state_dict_key: ~
+example_input: [1, 3, 256, 256]
 mapping:
   conv1.weight: conv1.block.conv.weight
   bn1.running_mean: conv1.block.norm.running_mean

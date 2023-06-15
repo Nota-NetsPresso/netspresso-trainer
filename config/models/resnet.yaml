@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id efficientformer-classification
+  project_id: &project_id xxxxxxxx-079a-431b-85a0-787b8c1d9975 
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id data/classification
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -14,7 +14,7 @@ train:
   task: *task
   architecture:
     full: ~ # auto
-    backbone: efficientformer
+    backbone: resnet50
     head: fc
   losses:
     - criterion: label_smoothing_cross_entropy
@@ -48,8 +48,8 @@ train:
   data: *dataset_id 
   project: *project_id
   token: *token
-  epochs: 100
-  batch_size: 16 
+  epochs: 3
+  batch_size: 32
   img_size: &img_size 256 
   exist_ok: ~ 
   label_smoothing: 0.01 
@@ -93,9 +93,3 @@ augment:
     saturation: ~
     hue: ~ 
     colorjitter_p: ~ 
-logging:
-  tensorboard: true
-  csv: true
-  image: true
-  stdout: true
-  netspresso: true

@@ -15,10 +15,7 @@ _logger = logging.getLogger(__name__)
 
 ID2LABEL_FILENAME = "id2label.json"
 
-
-def TEMP_DIRECTORY_REDIRECT(x): return f"{x}2017"
-
-
+TEMP_DIRECTORY_REDIRECT = lambda x: f"{x}2017"
 TEMP_COCO_LABEL_FILE = "datasets/detection/coco.yaml"
 
 
@@ -31,13 +28,11 @@ def exist_name(candidate, folder_iterable):
 
 def get_label(label_file: Path):
     target = Path(label_file).read_text()
-
     try:
         target_array = np.array([list(map(float, box.split(' '))) for box in target.split('\n') if box.strip()])
     except ValueError as e:
         print(target)
         raise e
-
     label, boxes = target_array[:, 0], target_array[:, 1:]
     label = label[..., np.newaxis]
     return label, boxes
@@ -76,7 +71,6 @@ class DetectionCustomDataset(BaseCustomDataset):
                     continue
                 self.img_name.append(image_path_maybe)
                 self.ann_name.append(ann_path_maybe)
-
             del img_name_maybe
             self.id2label = OmegaConf.load(TEMP_COCO_LABEL_FILE)
 
@@ -129,12 +123,10 @@ class DetectionCustomDataset(BaseCustomDataset):
         if self._split in ['infer', 'inference']:
             out = self.transform(self.args.augment)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
-
         outputs = {}
 
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
-
         out = self.transform(self.args.augment)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
         assert out['bbox'].shape[-1] == 5  # ltrb + class_label
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
@@ -154,7 +146,6 @@ def detection_collate_fn(original_batch):
     bbox = []
     label = []
     org_shape = []
-
     for data_sample in original_batch:
         if 'pixel_values' in data_sample:
             pixel_values.append(data_sample['pixel_values'])
@@ -164,7 +155,6 @@ def detection_collate_fn(original_batch):
             label.append(data_sample['label'])
         if 'org_shape' in data_sample:
             org_shape.append(data_sample['org_shape'])
-
     outputs = {}
     if len(pixel_values) != 0:
         pixel_values = torch.stack(pixel_values, dim=0)

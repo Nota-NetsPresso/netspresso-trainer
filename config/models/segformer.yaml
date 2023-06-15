@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id efficientformer-segmentation
+  project_id: &project_id segformer-model-fix-plz
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id /DATA/VOC12Dataset
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -9,18 +9,18 @@ trainer_launcher:
   user_id: ~ 
   username: ~ 
   task: &task segmentation
-  model_format: pt
+  model_format: bin_json
 train:
-  task: *task
+  task: 'segmentation'
   architecture:
     full: ~ # auto
-    backbone: efficientformer
-    head: efficientformer_segmentation_head
+    backbone: segformer
+    head: segformer_decode_head
   losses:
     - criterion: cross_entropy
       weight: ~
       ignore_index: 255
-      
+
   opt: adamw
   lr0: 6e-5
   lrf: 0.0
@@ -94,9 +94,3 @@ augment:
     hue: 0.1
     colorjitter_p: 0.5
   reduce_zero_label: *reduce_zero_label
-logging:
-  tensorboard: true
-  csv: true
-  image: true
-  stdout: true
-  netspresso: true

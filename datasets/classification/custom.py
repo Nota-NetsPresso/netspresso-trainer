@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Optional
 
 import PIL.Image as Image
 
@@ -33,10 +34,10 @@ class ClassificationCustomDataset(BaseCustomDataset):
         self.transform = transform
         self._consecutive_errors = 0
 
-        _class_map_maybe = Path(self.args.train.data) / _MAPPING_TXT_FILE
-        class_map = _class_map_maybe if _class_map_maybe.exists() else None
+        _class_map: Optional[dict] = dict(self.args.datasets.id_mapping) \
+            if self.args.datasets.id_mapping is not None else None
 
-        self.parser = create_parser(name='', root=self._root, split=self._split, class_map=class_map)
+        self.parser = create_parser(name='', root=self._root, split=self._split, class_map=_class_map)
         self._num_classes = self.parser.num_classes
 
         self.load_bytes = load_bytes
@@ -44,10 +45,10 @@ class ClassificationCustomDataset(BaseCustomDataset):
     @property
     def num_classes(self):
         return self._num_classes
-    
+
     @property
     def class_map(self):
-        return self.parser.get_idx_to_class()
+        return self.parser.idx_to_class
 
     def __len__(self):
         return len(self.parser)
@@ -65,7 +66,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
                 raise e
         self._consecutive_errors = 0
         if self.transform is not None:
-            out = self.transform(args_augment=self.args.augment, img_size=self.args.train.img_size)(img)
+            out = self.transform(args_augment=self.args.augment, img_size=self.args.training.img_size)(img)
         if target is None:
             target = -1
         return out['image'], target

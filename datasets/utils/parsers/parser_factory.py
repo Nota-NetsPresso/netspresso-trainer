@@ -2,10 +2,8 @@ from datasets.utils.parsers.parser_image_folder import ParserImageFolder
 import os
 from pathlib import Path
 
-_RECOMMEND_DATASET_DIR = "./data"
 
-
-def create_parser(name, root, split='train', class_map=_RECOMMEND_DATASET_DIR, **kwargs):
+def create_parser(name, root, split='train', class_map=None, **kwargs):
     # name = name.lower()
 
     _root = Path(root) / split

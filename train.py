@@ -24,9 +24,24 @@ def parse_args_netspresso():
     # -------- User arguments ----------------------------------------
 
     parser.add_argument(
+        '--data', type=str, default='',
+        dest='data',
+        help="Config for dataset information")
+
+    parser.add_argument(
         '--config', type=str, default='',
         dest='config',
         help="Config path")
+
+    parser.add_argument(
+        '--logging', type=str, default='config/logging.yaml',
+        dest='logging',
+        help="Config for logging options")
+
+    parser.add_argument(
+        '--training', type=str, default='',
+        dest='training',
+        help="Config for training options")
 
     parser.add_argument(
         '-o', '--output_dir', type=str, default='..',
@@ -37,10 +52,6 @@ def parse_args_netspresso():
         '--profile', action='store_true',
         help="Whether to use profile mode")
 
-    parser.add_argument(
-        '--report-modelsearch-api', action='store_true',
-        help="Report elapsed time for single epoch to NetsPresso Modelsearch API")
-
     args, _ = parser.parse_known_args()
 
     return args
@@ -48,7 +59,13 @@ def parse_args_netspresso():
 
 def train():
     args_parsed = parse_args_netspresso()
+    args_datasets = OmegaConf.load(args_parsed.data)
+    args_logging = OmegaConf.load(args_parsed.logging)
+    args_training = OmegaConf.load(args_parsed.training)
     args = OmegaConf.load(args_parsed.config)
+    args = OmegaConf.merge(args, args_datasets)
+    args = OmegaConf.merge(args, args_logging)
+    args = OmegaConf.merge(args, args_training)
     distributed, world_size, rank, devices = set_device(args)
 
     args.distributed = distributed
@@ -59,7 +76,7 @@ def train():
     assert task in SUPPORT_TASK
     model_name = args.train.architecture.full \
         if args.train.architecture.full is not None \
-            else args.train.architecture.backbone
+        else args.train.architecture.backbone
     model_name = str(model_name).lower()
 
     if args.distributed and args.rank != 0:
@@ -73,7 +90,7 @@ def train():
     model = build_model(args, train_dataset.num_classes)
 
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
+        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
     if args.distributed:
@@ -88,6 +105,11 @@ def train():
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
                                        profile=args_parsed.profile)
         
+    elif task == 'detection':
+        trainer = DetectionPipeline(args, task, model_name, model, devices,
+                                    train_dataloader, eval_dataloader, train_dataset.class_map,
+                                    profile=args_parsed.profile)
+
     elif task == 'detection':
         trainer = DetectionPipeline(args, task, model_name, model, devices,
                                     train_dataloader, eval_dataloader, train_dataset.class_map,
