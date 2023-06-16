@@ -412,6 +412,7 @@ class EfficientFormer(SeparateForwardModule):
             self.init_weights()
 
         self._last_channels = embed_dims[-1]
+        self._embed_dims = embed_dims
 
     # init for classification
     def cls_init_weights(self, m):
@@ -506,6 +507,10 @@ class EfficientFormer(SeparateForwardModule):
     @property
     def last_channels(self):
         return self._last_channels
+    
+    @property
+    def intermediate_dims(self):
+        return self._embed_dims
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
