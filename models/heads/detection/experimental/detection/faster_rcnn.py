@@ -15,7 +15,7 @@ from torchvision.ops import misc as misc_nn_ops
 # from ..resnet import resnet50, ResNet50_Weights
 from ._utils import overwrite_eps
 from .anchor_utils import AnchorGenerator
-from .backbone_utils import _mobilenet_extractor, _resnet_fpn_extractor, _validate_trainable_layers
+# from .backbone_utils import _mobilenet_extractor, _resnet_fpn_extractor, _validate_trainable_layers
 from .generalized_rcnn import GeneralizedRCNN
 from .roi_heads import RoIHeads
 from .rpn import RegionProposalNetwork, RPNHead
@@ -164,7 +164,7 @@ class FasterRCNN(GeneralizedRCNN):
 
     def __init__(
         self,
-        backbone,
+        feature_dim,
         num_classes=None,
         # transform parameters
         min_size=800,
@@ -199,12 +199,12 @@ class FasterRCNN(GeneralizedRCNN):
         **kwargs,
     ):
 
-        if not hasattr(backbone, "out_channels"):
-            raise ValueError(
-                "backbone should contain an attribute out_channels "
-                "specifying the number of output channels (assumed to be the "
-                "same for all the levels)"
-            )
+        # if not hasattr(backbone, "out_channels"):
+        #     raise ValueError(
+        #         "backbone should contain an attribute out_channels "
+        #         "specifying the number of output channels (assumed to be the "
+        #         "same for all the levels)"
+        #     )
 
         if not isinstance(rpn_anchor_generator, (AnchorGenerator, type(None))):
             raise TypeError(
@@ -222,7 +222,7 @@ class FasterRCNN(GeneralizedRCNN):
             if box_predictor is None:
                 raise ValueError("num_classes should not be None when box_predictor is not specified")
 
-        out_channels = backbone.out_channels
+        out_channels = feature_dim
 
         if rpn_anchor_generator is None:
             rpn_anchor_generator = _default_anchorgen()
@@ -278,7 +278,7 @@ class FasterRCNN(GeneralizedRCNN):
             image_std = [0.229, 0.224, 0.225]
         transform = GeneralizedRCNNTransform(min_size, max_size, image_mean, image_std, **kwargs)
 
-        super().__init__(backbone, rpn, roi_heads, transform)
+        super().__init__(rpn, roi_heads, transform)
 
 
 class TwoMLPHead(nn.Module):

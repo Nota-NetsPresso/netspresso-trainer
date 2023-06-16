@@ -11,6 +11,7 @@ from . import _utils as det_utils
 from .anchor_utils import AnchorGenerator  # noqa: 401
 from .image_list import ImageList
 
+IMAGE_SIZE = (512, 512)
 
 class RPNHead(nn.Module):
     """
@@ -178,6 +179,8 @@ class RegionProposalNetwork(torch.nn.Module):
         self.nms_thresh = nms_thresh
         self.score_thresh = score_thresh
         self.min_size = 1e-3
+        
+        self.image_size = IMAGE_SIZE  # TODO: get from configuration
 
     def pre_nms_top_n(self) -> int:
         if self.training:
@@ -334,7 +337,7 @@ class RegionProposalNetwork(torch.nn.Module):
 
     def forward(
         self,
-        images: ImageList,
+        # images: ImageList,
         features: Dict[str, Tensor],
         targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[List[Tensor], Dict[str, Tensor]]:
@@ -358,7 +361,7 @@ class RegionProposalNetwork(torch.nn.Module):
         # RPN uses all feature maps that are available
         features = list(features.values())
         objectness, pred_bbox_deltas = self.head(features)
-        anchors = self.anchor_generator(images, features)
+        anchors = self.anchor_generator(features)
 
         num_images = len(anchors)
         num_anchors_per_level_shape_tensors = [o[0].shape for o in objectness]
@@ -369,19 +372,20 @@ class RegionProposalNetwork(torch.nn.Module):
         # the proposals
         proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
-        boxes, scores = self.filter_proposals(proposals, objectness, images.image_sizes, num_anchors_per_level)
+        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features), num_anchors_per_level)
 
-        losses = {}
-        if self.training:
-            if targets is None:
-                raise ValueError("targets should not be None")
-            labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
-            regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
-            loss_objectness, loss_rpn_box_reg = self.compute_loss(
-                objectness, pred_bbox_deltas, labels, regression_targets
-            )
-            losses = {
-                "loss_objectness": loss_objectness,
-                "loss_rpn_box_reg": loss_rpn_box_reg,
-            }
-        return boxes, losses
+        return boxes
+        # losses = {}
+        # if self.training:
+        #     if targets is None:
+        #         raise ValueError("targets should not be None")
+        #     labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
+        #     regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
+        #     loss_objectness, loss_rpn_box_reg = self.compute_loss(
+        #         objectness, pred_bbox_deltas, labels, regression_targets
+        #     )
+        #     losses = {
+        #         "loss_objectness": loss_objectness,
+        #         "loss_rpn_box_reg": loss_rpn_box_reg,
+        #     }
+        # return boxes, losses

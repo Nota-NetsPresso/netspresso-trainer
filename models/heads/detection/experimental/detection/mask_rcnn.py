@@ -5,9 +5,10 @@ from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
 from torchvision.ops import misc as misc_nn_ops 
 
-from ._utils import overwrite_eps
-from .backbone_utils import _resnet_fpn_extractor, _validate_trainable_layers
-from .faster_rcnn import _default_anchorgen, FasterRCNN, FastRCNNConvFCHead, RPNHead
+# from ._utils import overwrite_eps
+# from .backbone_utils import _resnet_fpn_extractor, _validate_trainable_layers
+# from .faster_rcnn import _default_anchorgen, FasterRCNN, FastRCNNConvFCHead, RPNHead
+from .faster_rcnn import FasterRCNN
 
 
 __all__ = [

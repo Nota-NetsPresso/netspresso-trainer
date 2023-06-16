@@ -13,12 +13,12 @@ from torchvision.ops import MultiScaleRoIAlign
 
 from models.heads.detection.experimental.detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
 
-
+IMAGE_SIZE = (512, 512)
 
 class DetectionHead(FasterRCNN):
     def __init__(
         self,
-        backbone,
+        feature_dim,
         num_classes=None,
         # transform parameters
         min_size=800,
@@ -66,7 +66,7 @@ class DetectionHead(FasterRCNN):
             if mask_predictor is not None:
                 raise ValueError("num_classes should be None when mask_predictor is specified")
 
-        out_channels = backbone.out_channels
+        out_channels = feature_dim
 
         if mask_roi_pool is None:
             mask_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=14, sampling_ratio=2)
@@ -82,7 +82,7 @@ class DetectionHead(FasterRCNN):
             mask_predictor = MaskRCNNPredictor(mask_predictor_in_channels, mask_dim_reduced, num_classes)
 
         super().__init__(
-            backbone,
+            feature_dim,
             num_classes,
             # transform parameters
             min_size,
@@ -121,28 +121,15 @@ class DetectionHead(FasterRCNN):
         self.roi_heads.mask_head = mask_head
         self.roi_heads.mask_predictor = mask_predictor
         
-        self.image_sizes = ()  # TODO: from configuration
+        self.image_sizes = IMAGE_SIZE  # TODO: from configuration
         
-    def forward(self, features):
-
-        if isinstance(features, torch.Tensor):
-            features = OrderedDict([("0", features)])
-        proposals, proposal_losses = self.rpn(images, features, targets)
-        detections, detector_losses = self.roi_heads(features, proposals, images.image_sizes, targets)
-        detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)  # type: ignore[operator]
-
-        # losses = {}
-        # losses.update(detector_losses)
-        # losses.update(proposal_losses)
-
-        # if torch.jit.is_scripting():
-        #     if not self._has_warned:
-        #         warnings.warn("RCNN always returns a (Losses, Detections) tuple in scripting")
-        #         self._has_warned = True
-        #     return losses, detections
-        # else:
-        #     return self.eager_outputs(losses, detections)
+    def forward(self, features, targets=None):
+        print(features.size())
+        proposals = self.rpn(features, targets=targets)
+        detections = self.roi_heads(features, proposals, [self.image_size] * len(features), targets=targets)
+        
         return detections
+        
 
 def efficientformer_detection_head(feature_dim, num_classes):
-    return DetectionHead(backbone=None, num_classes=num_classes)
+    return DetectionHead(feature_dim=feature_dim, num_classes=num_classes)
