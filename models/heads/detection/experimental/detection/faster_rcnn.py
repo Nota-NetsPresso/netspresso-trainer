@@ -36,7 +36,8 @@ __all__ = [
 
 
 def _default_anchorgen():
-    anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+    # anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+    anchor_sizes = ((64,), (128,), (256,), (512,))
     aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
     return AnchorGenerator(anchor_sizes, aspect_ratios)
 

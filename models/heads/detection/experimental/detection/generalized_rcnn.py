@@ -104,7 +104,7 @@ class GeneralizedRCNN(nn.Module):
         # if isinstance(features, torch.Tensor):
         #     features = OrderedDict([("0", features)])
         proposals = self.rpn(features, targets=targets)
-        detections = self.roi_heads(features, proposals, [self.image_size] * len(features), targets=targets)
+        detections = self.roi_heads(features, proposals, [self.image_size] * len(features[0]), targets=targets)
         
         return detections
         # detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)  # type: ignore[operator]

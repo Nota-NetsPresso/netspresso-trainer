@@ -372,9 +372,9 @@ class RegionProposalNetwork(torch.nn.Module):
         # the proposals
         proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
-        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features), num_anchors_per_level)
+        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features[0]), num_anchors_per_level)
 
-        return boxes
+        return boxes, proposals
         # losses = {}
         # if self.training:
         #     if targets is None:

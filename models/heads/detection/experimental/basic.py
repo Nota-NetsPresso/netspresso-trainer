@@ -214,18 +214,18 @@ class DetectionHead(FasterRCNN):
 
         out_channels = feature_dim
         
-        if mask_roi_pool is None:
-            mask_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=14, sampling_ratio=2)
+        # if mask_roi_pool is None:
+        #     mask_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=14, sampling_ratio=2)
 
-        if mask_head is None:
-            mask_layers = (256, 256, 256, 256)
-            mask_dilation = 1
-            mask_head = MaskRCNNHeads(out_channels, mask_layers, mask_dilation)
+        # if mask_head is None:
+        #     mask_layers = (256, 256, 256, 256)
+        #     mask_dilation = 1
+        #     mask_head = MaskRCNNHeads(out_channels, mask_layers, mask_dilation)
 
-        if mask_predictor is None:
-            mask_predictor_in_channels = 256  # == mask_layers[-1]
-            mask_dim_reduced = 256
-            mask_predictor = MaskRCNNPredictor(mask_predictor_in_channels, mask_dim_reduced, num_classes)
+        # if mask_predictor is None:
+        #     mask_predictor_in_channels = 256  # == mask_layers[-1]
+        #     mask_dim_reduced = 256
+        #     mask_predictor = MaskRCNNPredictor(mask_predictor_in_channels, mask_dim_reduced, num_classes)
 
         super().__init__(
             feature_dim,
@@ -263,21 +263,22 @@ class DetectionHead(FasterRCNN):
             **kwargs,
         )
 
-        self.roi_heads.mask_roi_pool = mask_roi_pool
-        self.roi_heads.mask_head = mask_head
-        self.roi_heads.mask_predictor = mask_predictor
+        # self.roi_heads.mask_roi_pool = mask_roi_pool
+        # self.roi_heads.mask_head = mask_head
+        # self.roi_heads.mask_predictor = mask_predictor
         
         self.neck = FPN(in_channels=[48, 96, 224, 448], out_channels=feature_dim, num_outs=4)
         
-    def forward(self, features, targets=None):
+    def forward(self, features, targets):
+        assert targets is not None
         features = self.neck(features)
-        features = {k: v for k, v in enumerate(features)}
-        proposals = self.rpn(features, targets=targets)
-        detections = self.roi_heads(features, proposals, [self.image_size] * len(features), targets=targets)
+        features = {str(k): v for k, v in enumerate(features)}
+        boxes, proposals = self.rpn(features, targets=targets)
+        detections = self.roi_heads(features, proposals, [self.image_size] * features["0"].size(0), targets=targets)
         
+        print({k: v.size() for k, v in detections.items()})
         return detections
         
 
 def efficientformer_detection_head(feature_dim, num_classes):
-    print(feature_dim)
     return DetectionHead(feature_dim=feature_dim, num_classes=num_classes)

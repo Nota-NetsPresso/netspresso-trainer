@@ -43,11 +43,11 @@ class DetectionPipeline(BasePipeline):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        labels = labels.to(self.devices)
-        bboxes = bboxes.to(self.devices)
+        # labels = labels.to(self.devices)
+        # bboxes = bboxes.to(self.devices)
 
         self.optimizer.zero_grad()
-        out = self.model(images)
+        out = self.model(images, targets={'boxes': bboxes, 'labels': labels})
         self.loss(out, (labels, bboxes), mode='train')
 
         self.loss.backward()

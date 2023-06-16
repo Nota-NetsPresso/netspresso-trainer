@@ -259,7 +259,7 @@ class ToTensor(T.ToTensor):
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
         if bbox is not None:
-            bbox = torch.as_tensor(np.array(bbox), dtype=torch.int64)
+            bbox = torch.as_tensor(np.array(bbox), dtype=torch.float)
 
         return image, mask, bbox
 
