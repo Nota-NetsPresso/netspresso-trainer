@@ -11,7 +11,7 @@ from . import _utils as det_utils
 from .anchor_utils import AnchorGenerator  # noqa: 401
 from .image_list import ImageList
 
-IMAGE_SIZE = (512, 512)
+IMAGE_SIZE = (768, 768)
 
 class RPNHead(nn.Module):
     """

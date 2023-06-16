@@ -6,7 +6,7 @@ from torch import nn, Tensor
 
 from .image_list import ImageList
 
-IMAGE_SIZE = (512, 512)
+IMAGE_SIZE = (768, 768)
 
 class AnchorGenerator(nn.Module):
     """
@@ -86,7 +86,7 @@ class AnchorGenerator(nn.Module):
     # output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.
     def grid_anchors(self, grid_sizes: List[List[int]], strides: List[List[Tensor]]) -> List[Tensor]:
         anchors = []
-        cell_anchors = self.cell_anchors
+        cell_anchors = self.cell_anchors        
         torch._assert(cell_anchors is not None, "cell_anchors should not be None")
         torch._assert(
             len(grid_sizes) == len(strides) == len(cell_anchors),

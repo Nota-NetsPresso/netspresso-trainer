@@ -11,7 +11,7 @@ from torch import nn, Tensor
 
 # from ...utils import _log_api_usage_once
 
-IMAGE_SIZE = (512, 512)
+IMAGE_SIZE = (768, 768)
 
 class GeneralizedRCNN(nn.Module):
     """
