@@ -6,7 +6,7 @@ from torch import nn, Tensor
 
 from .image_list import ImageList
 
-IMAGE_SIZE = (768, 768)
+IMAGE_SIZE = (512, 512)
 
 class AnchorGenerator(nn.Module):
     """
