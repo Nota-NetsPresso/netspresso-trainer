@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Union
 from itertools import chain
 
 import torch
@@ -8,6 +8,7 @@ from losses.common import CrossEntropyLoss
 from losses.classification.label_smooth import LabelSmoothingCrossEntropy
 from losses.classification.soft_target import SoftTargetCrossEntropy
 from losses.segmentation.pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
+from losses.detection.fastrcnn import RoiHeadLoss, RPNLoss
 from utils.common import AverageMeter
 
 MODE = ['train', 'valid', 'test']
@@ -20,6 +21,8 @@ LOSS_DICT = {
     'pidnet_cross_entropy': PIDNetCrossEntropy,
     'boundary_loss': BondaryLoss,
     'pidnet_cross_entropy_with_boundary': PIDNetBoundaryAwareCrossEntropy,
+    'roi_head_loss': RoiHeadLoss,
+    'rpn_loss': RPNLoss,
 }
 
 class LossFactory:
@@ -67,7 +70,7 @@ class LossFactory:
         if 'boundary_loss' in self.loss_func_dict:
             assert 'bd_gt' in kwargs, "BoundaryLoss failed!"
 
-    def __call__(self, out: Dict, target: torch.Tensor, mode='train', *args: Any, **kwargs: Any) -> None:
+    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], mode='train', *args: Any, **kwargs: Any) -> None:
         _mode = mode.lower()
         assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
         

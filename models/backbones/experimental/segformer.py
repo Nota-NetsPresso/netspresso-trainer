@@ -284,6 +284,10 @@ class SegformerEncoder(SeparateForwardModule):
     @property
     def last_channels(self):
         return self._last_channels
+    
+    @property
+    def intermediate_dims(self):
+        return self.config.hidden_sizes
 
     def task_support(self):
         return self.task in SUPPORTING_TASK

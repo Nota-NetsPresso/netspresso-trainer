@@ -15,7 +15,7 @@ def train_transforms_efficientformer(args_augment):
     crop_size_w = args.crop_size_w
     
     train_transforms_composed = TC.Compose([
-        TC.RandomCrop(size=(crop_size_h, crop_size_w)),
+        TC.Resize(size=(crop_size_h, crop_size_w)),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ])

@@ -1,6 +1,6 @@
 trainer_launcher:
   project_name: ~
-  project_id: &project_id efficientformer-segmentation
+  project_id: &project_id efficientformer-detection-noaug
   model_id: &model_id xxxxxxxx-5ace-4abc-8672-2fd3498898a5
   dataset_id: &dataset_id /DATA/coco
   trial_id: &trial_id xxxxxxxx-8c1b-4304-ba92-4948c1098432
@@ -17,9 +17,10 @@ train:
     backbone: efficientformer
     head: efficientformer_detection_head
   losses:
-    - criterion: cross_entropy
+    - criterion: roi_head_loss
       weight: ~
-      ignore_index: 255
+    - criterion: rpn_loss
+      weight: ~
       
   opt: adamw
   lr0: 6e-5
@@ -49,8 +50,8 @@ train:
   project: *project_id
   token: *token
   epochs: 250
-  batch_size: 8 
-  img_size: &img_size 768 
+  batch_size: 8
+  img_size: &img_size 512 
   exist_ok: ~ 
   label_smoothing: ~
   freeze: ~ 
@@ -72,8 +73,8 @@ augment:
   scale: ~ 
   max_scale: 2048
   min_scale: 768
-  crop_size_h: 768
-  crop_size_w: 768
+  crop_size_h: *img_size
+  crop_size_w: *img_size
   resize_ratio0: 0.5
   resize_ratiof: 2.0
   resize_add: 1

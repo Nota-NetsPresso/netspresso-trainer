@@ -153,10 +153,8 @@ def detection_collate_fn(original_batch):
         pixel_values = torch.stack(pixel_values, dim=0)
         outputs.update({'pixel_values': pixel_values})
     if len(bbox) != 0:
-        bbox = torch.cat(bbox, dim=0)
         outputs.update({'bbox': bbox})
     if len(label) != 0:
-        label = torch.cat(label, dim=0)
         outputs.update({'label': label})
     if len(org_shape) != 0:
         outputs.update({'org_shape': org_shape})

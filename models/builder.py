@@ -74,14 +74,14 @@ class AssembleModel(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, x, label_size=None):
+    def forward(self, x, label_size=None, targets=None):
         features = self.backbone(x)
         if self.task == 'classification':
             out = self.head(features['last_feature'])
         elif self.task == 'segmentation':
             out = self.head(features['intermediate_features'], label_size=label_size)
         elif self.task == 'detection':
-            out = self.head(features['intermediate_features'])
+            out = self.head(features['intermediate_features'], targets=targets)
 
         return out
 
