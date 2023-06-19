@@ -273,12 +273,14 @@ class DetectionHead(FasterRCNN):
         assert targets is not None
         features = self.neck(features)
         features = {str(k): v for k, v in enumerate(features)}
-        boxes, proposals = self.rpn(features, targets=targets)
-        detections = self.roi_heads(features, proposals, [self.image_size] * features["0"].size(0), targets=targets)
+        rpn_features = self.rpn(features)
+        roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0), targets=targets)
         
-        print({k: v.size() for k, v in detections.items()})
-        return detections
+        out_features = dict()
+        out_features.update(rpn_features)
+        out_features.update(roi_features)
         
+        return out_features        
 
 def efficientformer_detection_head(feature_dim, num_classes):
     return DetectionHead(feature_dim=feature_dim, num_classes=num_classes)

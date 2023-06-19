@@ -17,9 +17,10 @@ train:
     backbone: efficientformer
     head: efficientformer_detection_head
   losses:
-    - criterion: cross_entropy
+    - criterion: roi_head_loss
       weight: ~
-      ignore_index: 255
+    - criterion: rpn_loss
+      weight: ~
       
   opt: adamw
   lr0: 6e-5

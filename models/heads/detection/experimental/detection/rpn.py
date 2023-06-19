@@ -339,7 +339,6 @@ class RegionProposalNetwork(torch.nn.Module):
         self,
         # images: ImageList,
         features: Dict[str, Tensor],
-        targets: Optional[List[Dict[str, Tensor]]] = None,
     ) -> Tuple[List[Tensor], Dict[str, Tensor]]:
 
         """
@@ -374,18 +373,10 @@ class RegionProposalNetwork(torch.nn.Module):
         proposals = proposals.view(num_images, -1, 4)
         boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features[0]), num_anchors_per_level)
 
-        return boxes, proposals
-        # losses = {}
-        # if self.training:
-        #     if targets is None:
-        #         raise ValueError("targets should not be None")
-        #     labels, matched_gt_boxes = self.assign_targets_to_anchors(anchors, targets)
-        #     regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
-        #     loss_objectness, loss_rpn_box_reg = self.compute_loss(
-        #         objectness, pred_bbox_deltas, labels, regression_targets
-        #     )
-        #     losses = {
-        #         "loss_objectness": loss_objectness,
-        #         "loss_rpn_box_reg": loss_rpn_box_reg,
-        #     }
-        # return boxes, losses
+        return {
+            'boxes': boxes,
+            'proposals': proposals,
+            'anchors': anchors,
+            'objectness': objectness,
+            'pred_bbox_deltas': pred_bbox_deltas,
+        }
