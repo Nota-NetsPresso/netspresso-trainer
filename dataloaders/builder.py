@@ -4,7 +4,7 @@ import logging
 from torch.utils.data import DataLoader
 
 from dataloaders.classification import create_classification_dataset, create_classification_transform
-from dataloaders.segmentation import SegmentationCustomDataset
+from dataloaders.segmentation import create_segmentation_dataset, create_segmentation_transform
 from dataloaders.detection import DetectionCustomDataset, detection_collate_fn
 from dataloaders.segmentation.transforms import create_segmentation_transform
 from dataloaders.detection.transforms import create_detection_transform
@@ -29,7 +29,7 @@ def build_dataset(args):
 
     dataset_for = {
         'classification': create_classification_dataset,
-        'segmentation': SegmentationCustomDataset,
+        'segmentation': create_segmentation_dataset,
         'detection': DetectionCustomDataset,
     }
 
