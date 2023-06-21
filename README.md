@@ -46,8 +46,7 @@ For classification and segmentation, see [`train_classification.sh`](./train_cla
 Each shell sciprt contains two commands: (1) multi-gpu training and (2) single-gpu training.
 A default option is using **single-gpu**, but you can edit the script if you needed.
 
-> Note
-> `2023.06.21` Work in progress for detection (It won't work for now)
+> :warning: `2023.06.21` Work in progress for detection (It won't work for now)
 
 ### Tensorboard
 
