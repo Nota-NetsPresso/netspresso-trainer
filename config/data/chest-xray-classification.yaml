@@ -1,0 +1,10 @@
+data:
+  task: classification
+  format: huggingface
+  metadata:
+    custom_cache_dir: /DATA/huggingface 
+    repo: keremberke/chest-xray-classification
+    subset: full
+    features:
+      image: image
+      label: labels

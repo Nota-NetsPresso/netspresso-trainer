@@ -6,7 +6,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
 
-from datasets import build_dataset, build_dataloader
+from dataloaders import build_dataset, build_dataloader
 from models import build_model
 from pipelines import ClassificationPipeline, SegmentationPipeline, DetectionPipeline
 from utils.environment import set_device
@@ -59,11 +59,11 @@ def parse_args_netspresso():
 
 def train():
     args_parsed = parse_args_netspresso()
-    args_datasets = OmegaConf.load(args_parsed.data)
+    args_data = OmegaConf.load(args_parsed.data)
     args_logging = OmegaConf.load(args_parsed.logging)
     args_training = OmegaConf.load(args_parsed.training)
     args = OmegaConf.load(args_parsed.config)
-    args = OmegaConf.merge(args, args_datasets)
+    args = OmegaConf.merge(args, args_data)
     args = OmegaConf.merge(args, args_logging)
     args = OmegaConf.merge(args, args_training)
     distributed, world_size, rank, devices = set_device(args)

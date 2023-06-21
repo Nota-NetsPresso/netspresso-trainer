@@ -42,8 +42,8 @@ This code provides some example scripts and snippets to help you understand abou
 
 ### Training example model
 
-For classification and segmentation, see [`train_classification.sh`](./train_classification.sh) [`train_segmentation.sh`](./train_segmentation.sh) for each.  
-Each shell sciprt contains two commands: (1) multi-gpu training and (2) single-gpu training.
+For classification and segmentation, see [`train_classification.sh`](./train_classification.sh) and [`train_segmentation.sh`](./train_segmentation.sh) for each.  
+Each shell sciprt contains two commands: (1) single-gpu training and (2) multi-gpu training.
 A default option is using **single-gpu**, but you can edit the script if you needed.
 
 > :warning: `2023.06.21` Work in progress for detection (It won't work for now)
@@ -52,3 +52,16 @@ A default option is using **single-gpu**, but you can edit the script if you nee
 
 Please refer to [`run_tensorboard.sh`](./run_tensorboard.sh).
 To execute on background, you may run this script with `tmux`, `screen`, or `bg`.
+
+### Training with HuggingFace datasets
+
+We do our best to give you a good experience in training process. We integrate [HuggingFace(HF) datasets](https://huggingface.co/datasets) into our training pipeline. Note that we apply our custom augmentation methods in training datasets, instead of albumentations which is mostly used in HF datasets.
+
+To do so, firstly you need to install additional libraries with the following command:
+
+```bash
+pip install -r requirements-data.txt
+```
+
+Then, you can write your own data configuration for HF datasets. Please refer to [data configuration template](./config/data/template).  
+Some datasets in HF datasets needs `login`. You can login with `huggingface-cli login` with their [official guide](https://huggingface.co/docs/huggingface_hub/quick-start#login).
