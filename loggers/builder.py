@@ -44,7 +44,7 @@ class TrainingLogger():
         self.token = args.train.token
 
         result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.project_id
-        result_dir.mkdir(exist_ok=True)
+        result_dir.mkdir(exist_ok=True, parents=True)
 
         self.use_tensorboard: bool = self.args.logging.tensorboard
         self.use_csvlogger: bool = self.args.logging.csv
