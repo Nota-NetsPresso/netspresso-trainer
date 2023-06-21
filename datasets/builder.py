@@ -25,7 +25,7 @@ def build_dataset(args):
     data_dir = args.datasets.path.root
 
     assert Path(data_dir).exists(), \
-        f"No such directory {data_dir}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
+        f"No such directory {data_dir}!"
 
     transform_func_for = {
         'classification': create_classification_transform,

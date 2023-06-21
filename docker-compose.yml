@@ -1,23 +1,29 @@
 version: "3.9"
 
-# docker compose run --service-ports --name modelsearch-trainer-allinone modelsearch-trainer-allinone bash
+# docker compose run --service-ports --name trainer-allinone-dev modelsearch-trainer-allinone bash
 
 services:
   modelsearch-trainer-allinone:
-    image: pytorch/pytorch:1.12.0-cuda11.3-cudnn8-devel
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: modelsearch-trainer-allinone:${TAG}
     container_name: modelsearch-trainer-allinone
     ipc: host
     ports:
-      - "50012:50002"
-      - "50013:50003"
+      # HOST_PORT for tensorboard
+      - "50001:50001"
     volumes:
-      - /ssd1/hksong/modelsearch-trainer-allinone-dev:/workspace
-      - /ssd1/hksong/DATA:/DATA
-      - /ssd1/hksong/LOG:/LOG
+      # from path: your working directory
+      - /PATH/TO/modelsearch-trainer-allinone:/workspace
+      # from path: your dataset directory
+      - /PATH/TO/DATA:/DATA
+      # from path: your checkpoint directory
+      - /PATH/TO/CHECKPOINT:/CHECKPOINT 
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              device_ids: [ '0', '1', '2', '3', '4', '5', '6', '7' ]
+              device_ids: [ '0', '1', '2', '3' ] # your GPU id(s)
               capabilities: [ gpu ]

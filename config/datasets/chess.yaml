@@ -1,7 +1,7 @@
 datasets:
   task: classification
   path:
-    root: ./data/classification # dataset root
+    root: /DATA/classification-example # dataset root
     train:
       image: train # directory for training images
     valid:
