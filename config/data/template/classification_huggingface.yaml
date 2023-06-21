@@ -1,0 +1,8 @@
+data:
+  task: classification
+  format: huggingface # local, huggingface
+  metadata:
+    name: HUGGINGFACE_DATASETS_REPO_NAME
+    features:
+      image: image
+      label: labels

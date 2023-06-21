@@ -1,0 +1,8 @@
+data:
+  task: classification
+  format: huggingface
+  metadata:
+    name: beans
+    features:
+      image: image
+      label: labels

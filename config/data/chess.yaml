@@ -1,0 +1,10 @@
+data:
+  task: classification
+  format: local
+  path:
+    root: /DATA/classification-example # dataset root
+    train:
+      image: train # directory for training images
+    valid:
+      image: val  # directory for valid images
+  id_mapping: ~
