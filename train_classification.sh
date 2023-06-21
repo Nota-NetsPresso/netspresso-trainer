@@ -6,6 +6,6 @@
 #   --training config/training/resnet.yaml
 
 python train.py\
-  --data config/data/chess.yaml\
+  --data config/data/chest-xray-classification.yaml\
   --config config/models/resnet.yaml\
   --training config/training/resnet.yaml

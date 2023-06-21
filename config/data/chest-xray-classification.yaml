@@ -3,8 +3,8 @@ data:
   format: huggingface
   metadata:
     custom_cache_dir: /DATA/huggingface 
-    repo: beans
-    subset: ~
+    repo: keremberke/chest-xray-classification
+    subset: full
     features:
       image: image
       label: labels

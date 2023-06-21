@@ -3,8 +3,8 @@ data:
   format: huggingface
   metadata:
     custom_cache_dir: /DATA/huggingface 
-    repo: beans
-    subset: ~
+    repo: huggan/wikiart
+    subset:
     features:
       image: image
-      label: labels
+      label: artist

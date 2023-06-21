@@ -3,8 +3,8 @@ data:
   format: huggingface
   metadata:
     custom_cache_dir: /DATA/huggingface 
-    repo: beans
+    repo: marmal88/skin_cancer
     subset: ~
     features:
       image: image
-      label: labels
+      label: dx
