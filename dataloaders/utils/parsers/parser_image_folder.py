@@ -1,10 +1,10 @@
 from pathlib import Path
 import re
-from datasets.utils.parsers.misc import natural_key
+from dataloaders.utils.parsers.misc import natural_key
 
-from datasets.utils.parsers.parser import Parser
-from datasets.utils.parsers.class_map import load_class_map
-from datasets.utils.constants import IMG_EXTENSIONS
+from dataloaders.utils.parsers.parser import Parser
+from dataloaders.utils.parsers.class_map import load_class_map
+from dataloaders.utils.constants import IMG_EXTENSIONS
 
 
 def _natural_key(string_):

@@ -4,11 +4,11 @@ from typing import Optional
 
 import PIL.Image as Image
 
-from datasets.utils.parsers import create_parser
-from datasets.base import BaseCustomDataset
+from dataloaders.utils.parsers import create_parser
+from dataloaders.base import BaseCustomDataset
 from utils.logger import set_logger
 
-logger = set_logger('datasets', level=os.getenv('LOG_LEVEL', default='INFO'))
+logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 _ERROR_RETRY = 50
 _MAPPING_TXT_FILE = "mapping.txt"
@@ -34,8 +34,8 @@ class ClassificationCustomDataset(BaseCustomDataset):
         self.transform = transform
         self._consecutive_errors = 0
 
-        _class_map: Optional[dict] = dict(self.args.datasets.id_mapping) \
-            if self.args.datasets.id_mapping is not None else None
+        _class_map: Optional[dict] = dict(self.args.data.id_mapping) \
+            if self.args.data.id_mapping is not None else None
 
         self.parser = create_parser(name='', root=self._root, split=self._split, class_map=_class_map)
         self._num_classes = self.parser.num_classes

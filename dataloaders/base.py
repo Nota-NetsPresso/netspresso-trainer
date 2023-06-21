@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-from datasets.utils.parsers import create_parser
+from dataloaders.utils.parsers import create_parser
 
 _logger = logging.getLogger(__name__)
 

@@ -9,14 +9,14 @@ import numpy as np
 from omegaconf import OmegaConf
 import torch
 
-from datasets.base import BaseCustomDataset
+from dataloaders.base import BaseCustomDataset
 
 _logger = logging.getLogger(__name__)
 
 ID2LABEL_FILENAME = "id2label.json"
 
 TEMP_DIRECTORY_REDIRECT = lambda x: f"{x}2017"
-TEMP_COCO_LABEL_FILE = "datasets/detection/coco.yaml"
+TEMP_COCO_LABEL_FILE = "data/detection/coco.yaml"
 
 
 def exist_name(candidate, folder_iterable):

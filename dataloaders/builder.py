@@ -3,17 +3,16 @@ import logging
 
 from torch.utils.data import DataLoader
 
-from datasets.classification import ClassificationCustomDataset
-from datasets.segmentation import SegmentationCustomDataset
-from datasets.detection import DetectionCustomDataset, detection_collate_fn
-from datasets.classification.transforms import create_classification_transform
-from datasets.segmentation.transforms import create_segmentation_transform
-from datasets.detection.transforms import create_detection_transform
-from datasets.utils.loader import create_loader
+from dataloaders.classification import ClassificationCustomDataset
+from dataloaders.segmentation import SegmentationCustomDataset
+from dataloaders.detection import DetectionCustomDataset, detection_collate_fn
+from dataloaders.classification.transforms import create_classification_transform
+from dataloaders.segmentation.transforms import create_segmentation_transform
+from dataloaders.detection.transforms import create_detection_transform
+from dataloaders.utils.loader import create_loader
 
 
 _logger = logging.getLogger(__name__)
-_RECOMMEND_DATASET_DIR = "./datasets"
 
 
 def build_dataset(args):
@@ -21,8 +20,8 @@ def build_dataset(args):
     _logger.info('-'*40)
     _logger.info('==> Loading data...')
 
-    task = args.datasets.task
-    data_dir = args.datasets.path.root
+    task = args.data.task
+    data_dir = args.data.path.root
 
     assert Path(data_dir).exists(), \
         f"No such directory {data_dir}!"

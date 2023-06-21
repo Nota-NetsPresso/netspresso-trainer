@@ -6,8 +6,8 @@ import json
 import PIL.Image as Image
 import numpy as np
 
-from datasets.base import BaseCustomDataset
-from datasets.segmentation.transforms import generate_edge, reduce_label
+from dataloaders.base import BaseCustomDataset
+from dataloaders.segmentation.transforms import generate_edge, reduce_label
 
 _logger = logging.getLogger(__name__)
 
@@ -43,14 +43,14 @@ class SegmentationCustomDataset(BaseCustomDataset):
         )
 
         if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
-            self.image_dir = Path(self._root) / args.datasets.path.train.image
-            self.annotation_dir = Path(self._root) / args.datasets.path.train.mask
+            self.image_dir = Path(self._root) / args.data.path.train.image
+            self.annotation_dir = Path(self._root) / args.data.path.train.mask
 
-            self.id2label = args.datasets.id_mapping
+            self.id2label = args.data.id_mapping
 
             self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
             self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
-            # TODO: get paired data from regex pattern matching (args.datasets.path.pattern)
+            # TODO: get paired data from regex pattern matching (args.data.path.pattern)
 
             assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are segmentation maps"
 

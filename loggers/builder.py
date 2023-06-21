@@ -64,7 +64,7 @@ class TrainingLogger():
         self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
             ModelSearchServerHandler(task=task, model=model) if self.use_netspresso else None
         if task in LABEL_CONVERTER_PER_TASK:
-            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=args.datasets.pallete)
+            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=args.data.pallete)
 
     def update_epoch(self, epoch: int):
         self.epoch = epoch
