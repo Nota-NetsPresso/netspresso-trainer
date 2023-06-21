@@ -3,9 +3,15 @@ import logging
 
 from torch.utils.data import DataLoader
 
-from dataloaders.classification import create_classification_dataset, create_classification_transform
-from dataloaders.segmentation import create_segmentation_dataset, create_segmentation_transform
-from dataloaders.detection import DetectionCustomDataset, detection_collate_fn
+from dataloaders.classification import (
+    create_classification_dataset, create_classification_transform
+)
+from dataloaders.segmentation import (
+    create_segmentation_dataset, create_segmentation_transform
+)
+from dataloaders.detection import (
+    create_detection_dataset, create_detection_transform, detection_collate_fn
+)
 from dataloaders.segmentation.transforms import create_segmentation_transform
 from dataloaders.detection.transforms import create_detection_transform
 from dataloaders.utils.loader import create_loader
@@ -30,7 +36,7 @@ def build_dataset(args):
     dataset_for = {
         'classification': create_classification_dataset,
         'segmentation': create_segmentation_dataset,
-        'detection': DetectionCustomDataset,
+        'detection': create_detection_dataset,
     }
 
     assert task in transform_func_for, f"The given task `{task}` is not supported!"

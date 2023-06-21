@@ -9,7 +9,7 @@ import numpy as np
 from omegaconf import OmegaConf
 import torch
 
-from dataloaders.base import BaseCustomDataset
+from dataloaders.base import BaseCustomDataset, BaseHFDataset
 
 _logger = logging.getLogger(__name__)
 
@@ -45,12 +45,11 @@ class DetectionCustomDataset(BaseCustomDataset):
     def __init__(
             self,
             args,
-            root,
             split,
             transform=None,
             target_transform=None,
-            load_bytes=False,
     ):
+        root = args.data.path.root
         super(DetectionCustomDataset, self).__init__(
             args,
             root,
@@ -90,7 +89,6 @@ class DetectionCustomDataset(BaseCustomDataset):
                 self.img_name = [self.data_dir]
 
         self.transform = transform
-        self.load_bytes = load_bytes
 
     def __len__(self):
         return len(self.img_name)
@@ -145,7 +143,55 @@ class DetectionCustomDataset(BaseCustomDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1 
         outputs.update({'org_shape': (h, w)})
         return outputs
+
+
+class DetectionHFDataset(BaseHFDataset):
+
+    def __init__(
+            self,
+            args,
+            split,
+            transform=None,
+            target_transform=None,
+    ):
+        root = args.data.metadata.repo
+        super(DetectionHFDataset, self).__init__(
+            args,
+            root,
+            split
+        )
+
+        raise NotImplementedError
+        
+
+    def __len__(self):
+        raise NotImplementedError
+        return len(self.img_name)
+
+    @property
+    def num_classes(self):
+        raise NotImplementedError
+        return self.id2label.num_classes
     
+    @property
+    def class_map(self):
+        raise NotImplementedError
+        return {idx: name for idx, name in enumerate(self.id2label.names)}
+    
+    @staticmethod
+    def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
+        converted = original.copy()
+        # left, top (lt)
+        converted[..., 0] = w * (original[..., 0] - original[..., 2] / 2) + padw
+        converted[..., 1] = h * (original[..., 1] - original[..., 3] / 2) + padh
+        # right, bottom (rb)
+        converted[..., 2] = w * (original[..., 0] + original[..., 2] / 2) + padw
+        converted[..., 3] = h * (original[..., 1] + original[..., 3] / 2) + padh
+        return converted
+
+    def __getitem__(self, index):
+        raise NotImplementedError
+
 
 def detection_collate_fn(original_batch):
     pixel_values = []
@@ -177,3 +223,14 @@ def detection_collate_fn(original_batch):
         outputs.update({'org_shape': org_shape})
 
     return outputs
+
+def create_detection_dataset(args, split, transform, target_transform=None):
+    data_format = args.data.format
+    if data_format == 'local':
+        return DetectionCustomDataset(args, split=split,
+                                      transform=transform, target_transform=target_transform)
+    elif data_format == 'huggingface':
+        return DetectionHFDataset(args, split=split,
+                                  transform=transform, target_transform=target_transform)
+    else:
+        raise AssertionError(f"No such data format named {data_format}!")
