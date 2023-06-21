@@ -2,7 +2,9 @@ data:
   task: classification
   format: huggingface # local, huggingface
   metadata:
-    name: HUGGINGFACE_DATASETS_REPO_NAME
+    custom_cache_dir: /DATA/huggingface # If None, it follows HF datasets default (.cache/huggingface/datasets)
+    repo: HUGGINGFACE_DATASETS_REPO_NAME
+    subset: DATASETS_SUBSET_NAME_IF_EXISTS
     features:
       image: image
       label: labels

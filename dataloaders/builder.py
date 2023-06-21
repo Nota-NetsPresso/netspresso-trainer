@@ -3,10 +3,9 @@ import logging
 
 from torch.utils.data import DataLoader
 
-from dataloaders.classification import ClassificationCustomDataset
+from dataloaders.classification import create_classification_dataset, create_classification_transform
 from dataloaders.segmentation import SegmentationCustomDataset
 from dataloaders.detection import DetectionCustomDataset, detection_collate_fn
-from dataloaders.classification.transforms import create_classification_transform
 from dataloaders.segmentation.transforms import create_segmentation_transform
 from dataloaders.detection.transforms import create_detection_transform
 from dataloaders.utils.loader import create_loader
@@ -21,10 +20,6 @@ def build_dataset(args):
     _logger.info('==> Loading data...')
 
     task = args.data.task
-    data_dir = args.data.path.root
-
-    assert Path(data_dir).exists(), \
-        f"No such directory {data_dir}!"
 
     transform_func_for = {
         'classification': create_classification_transform,
@@ -33,7 +28,7 @@ def build_dataset(args):
     }
 
     dataset_for = {
-        'classification': ClassificationCustomDataset,
+        'classification': create_classification_dataset,
         'segmentation': SegmentationCustomDataset,
         'detection': DetectionCustomDataset,
     }
@@ -45,11 +40,11 @@ def build_dataset(args):
     eval_transform = transform_func_for[task](args, is_training=False)
 
     train_dataset = dataset_for[task](
-        args, root=data_dir, split='train',
+        args, split='train',
         transform=train_transform, target_transform=None  # TODO: apply target_transform
     )
     eval_dataset = dataset_for[task](
-        args, root=data_dir, split='val',
+        args, split='val',
         transform=eval_transform, target_transform=None  # TODO: apply target_transform
     )
 
