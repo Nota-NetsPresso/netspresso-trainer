@@ -1,12 +1,17 @@
+.vscode/
+*.jpg
+*.png
 *.onnx
 *.pt
 *.pth
 
 __pycache__/
 
+data/
 log/
 pretrained/
 
 **/*/exp/
 **/*/events*
 outputs/*
+!config/data/
