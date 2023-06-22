@@ -751,13 +751,14 @@ class RoIHeads(nn.Module):
                     if not t["keypoints"].dtype == torch.float32:
                         raise TypeError(f"target keypoints must of float type, instead got {t['keypoints'].dtype}")
 
-        if self.training:
-            proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
-        else:
-            labels = None
-            regression_targets = None
-            matched_idxs = None
-
+        # if self.training:
+        #     proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
+        # else:
+        #     labels = None
+        #     regression_targets = None
+        #     matched_idxs = None
+            
+        proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)
         box_features = self.box_roi_pool(features, proposals, image_shapes)
         box_features = self.box_head(box_features)
         class_logits, box_regression = self.box_predictor(box_features)

@@ -70,7 +70,7 @@ class DetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-
+        
         out = self.model(images, targets=targets)
         self.loss(out, target=targets, mode='valid')
 
@@ -81,8 +81,8 @@ class DetectionPipeline(BasePipeline):
             torch.distributed.barrier()
         logs = {
             'images': images.detach().cpu().numpy(),
-            'label': labels.detach().cpu().numpy(),
-            'bbox': bboxes.detach().cpu().numpy(),
-            'pred': out['pred'].detach().cpu().numpy()
+            'label': [label.detach().cpu().numpy() for label in labels],
+            'bbox': [bbox.detach().cpu().numpy() for bbox in bboxes],
+            'pred': out['proposals'].detach().cpu().numpy()
         }
         return {k: v for k, v in logs.items()}
