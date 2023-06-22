@@ -1,0 +1,14 @@
+datasets:
+  task: detection
+  path:
+    root: /DATA/traffic-sign # dataset root
+    train:
+      image: images/train # directory for training images
+      label: labels/train # directory for training labels
+    valid:
+      image: image/val  # directory for valid images
+      label: labels/val  # directory for valid labels
+    pattern:
+      image: ~
+      label: ~
+  id_mapping: ['prohibitory', 'danger', 'mandatory', 'other']  # class names
