@@ -5,6 +5,11 @@ data:
     root: /DATA/classification-example # dataset root
     train:
       image: train # directory for training images
+      label: ~ # label for training labels
     valid:
       image: val  # directory for valid images
+      label: ~
+    test:
+      image: ~  # directory for test images
+      label: ~
   id_mapping: ~

@@ -19,6 +19,17 @@ from dataloaders.utils.loader import create_loader
 
 _logger = logging.getLogger(__name__)
 
+TRANSFORMER_COMPOSER = {
+    'classification': create_classification_transform,
+    'segmentation': create_segmentation_transform,
+    'detection': create_detection_transform
+}
+
+DATASET_BUILDER = {
+    'classification': create_classification_dataset,
+    'segmentation': create_segmentation_dataset,
+    'detection': create_detection_dataset,
+}
 
 def build_dataset(args):
 
@@ -27,37 +38,23 @@ def build_dataset(args):
 
     task = args.data.task
 
-    transform_func_for = {
-        'classification': create_classification_transform,
-        'segmentation': create_segmentation_transform,
-        'detection': create_detection_transform
-    }
+    assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
+    assert task in DATASET_BUILDER, f"The given task `{task}` is not supported!"
 
-    dataset_for = {
-        'classification': create_classification_dataset,
-        'segmentation': create_segmentation_dataset,
-        'detection': create_detection_dataset,
-    }
+    train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
+    eval_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
 
-    assert task in transform_func_for, f"The given task `{task}` is not supported!"
-    assert task in dataset_for, f"The given task `{task}` is not supported!"
-
-    train_transform = transform_func_for[task](args, is_training=True)
-    eval_transform = transform_func_for[task](args, is_training=False)
-
-    train_dataset = dataset_for[task](
-        args, split='train',
-        transform=train_transform, target_transform=None  # TODO: apply target_transform
-    )
-    eval_dataset = dataset_for[task](
-        args, split='val',
-        transform=eval_transform, target_transform=None  # TODO: apply target_transform
+    train_dataset, valid_dataset, test_dataset = DATASET_BUILDER[task](
+        args, transform=train_transform, target_transform=eval_transform
     )
 
     _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
-    _logger.info(f'Summary | Evaluation dataset: {len(eval_dataset)} sample(s)')
+    if valid_dataset is not None:
+        _logger.info(f'Summary | Validation dataset: {len(valid_dataset)} sample(s)')
+    if test_dataset is not None:
+        _logger.info(f'Summary | Test dataset: {len(test_dataset)} sample(s)')
 
-    return train_dataset, eval_dataset
+    return train_dataset, valid_dataset, test_dataset
 
 
 def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):

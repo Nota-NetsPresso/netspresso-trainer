@@ -5,8 +5,13 @@ data:
     root: /PATH/TO/DATASET # dataset root
     train:
       image: train # directory for training images
+      label: ~  # label for training images
     valid:
       image: val  # directory for valid images
+      label: ~  # label for valid images
+    test:
+      image: ~  # directory for test images
+      label: ~  # label for test images
   id_mapping:  # Dict[directory_name, class_name]. If None, set the directory name same with class name
     directory_1: curry
     directory_2: ramen
