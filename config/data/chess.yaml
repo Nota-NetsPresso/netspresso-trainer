@@ -7,4 +7,6 @@ data:
       image: train # directory for training images
     valid:
       image: val  # directory for valid images
+    test:
+      image: ~  # directory for test images
   id_mapping: ~

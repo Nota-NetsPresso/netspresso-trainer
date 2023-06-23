@@ -82,7 +82,7 @@ def train():
     if args.distributed and args.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
 
-    train_dataset, eval_dataset = build_dataset(args)
+    train_dataset, valid_dataset, test_dataset = build_dataset(args)
 
     if args.distributed and args.rank == 0:
         torch.distributed.barrier()
@@ -90,7 +90,7 @@ def train():
     model = build_model(args, train_dataset.num_classes)
 
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
+        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
     if args.distributed:
