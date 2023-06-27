@@ -762,10 +762,14 @@ class RoIHeads(nn.Module):
         box_features = self.box_roi_pool(features, proposals, image_shapes)
         box_features = self.box_head(box_features)
         class_logits, box_regression = self.box_predictor(box_features)
+        post_boxes, post_scores, post_labels = self.postprocess_detections(class_logits, box_regression, proposals, image_shapes)
 
         return {
             'class_logits': class_logits,
             'box_regression': box_regression,
             'labels': labels,
             'regression_targets': regression_targets,
+            'post_boxes': post_boxes,
+            'post_scores': post_scores,
+            'post_labels': post_labels
         }

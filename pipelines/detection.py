@@ -81,8 +81,9 @@ class DetectionPipeline(BasePipeline):
             torch.distributed.barrier()
         logs = {
             'images': images.detach().cpu().numpy(),
-            'label': [label.detach().cpu().numpy() for label in labels],
-            'bbox': [bbox.detach().cpu().numpy() for bbox in bboxes],
-            'pred': out['proposals'].detach().cpu().numpy()
+            'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                       for bbox, label in zip(bboxes, labels)],
+            'pred': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                       for bbox, label in zip(out['post_boxes'], out['post_labels'])],                
         }
         return {k: v for k, v in logs.items()}
