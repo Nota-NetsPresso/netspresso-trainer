@@ -68,12 +68,12 @@ class Pad(T.Pad):
 
 class Resize(T.Resize):
     def forward(self, image, mask=None, bbox=None):
+        w, h = image.size
         image = F.resize(image, self.size, self.interpolation, self.max_size, self.antialias)
         if mask is not None:
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
                             max_size=self.max_size)
         if bbox is not None:
-            w, h = image.size
             target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
             bbox[..., 0:4:2] *= float(target_w / w)
             bbox[..., 1:4:2] *= float(target_h / h)
@@ -84,12 +84,12 @@ class RandomHorizontalFlip:
         self.p = p
 
     def __call__(self, image, mask=None, bbox=None):
+        w, _ = image.size
         if random.random() < self.p:
             image = F.hflip(image)
             if mask is not None:
                 mask = F.hflip(mask)
             if bbox is not None:
-                w, _ = image.size
                 bbox[..., 0:4:2] = w - bbox[..., 0:4:2]
         return image, mask, bbox
 
@@ -98,12 +98,12 @@ class RandomVerticalFlip:
         self.p = p
 
     def __call__(self, image, mask=None, bbox=None):
+        _, h = image.size
         if random.random() < self.p:
             image = F.vflip(image)
             if mask is not None:
                 mask = F.vflip(mask)
             if bbox is not None:
-                _, h = image.size
                 bbox[..., 1:4:2] = h - bbox[..., 1:4:2]
         return image, mask, bbox
 
