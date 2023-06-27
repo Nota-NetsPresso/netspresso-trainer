@@ -90,8 +90,9 @@ class DetectionCustomDataset(BaseCustomDataset):
     def num_classes(self):
         return len(self.id2label)
     
+    @property
     def class_map(self):
-        return {idx: name for idx, name in enumerate(self.id2label.id_mapping)}
+        return {idx: name for idx, name in enumerate(self.id2label)}
 
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
