@@ -12,3 +12,4 @@ datasets:
       image: ~
       label: ~
   id_mapping: ['prohibitory', 'danger', 'mandatory', 'other']  # class names
+  pallete: ~
