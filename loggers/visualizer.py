@@ -39,7 +39,6 @@ class DetectionVisualizer:
             image = image.copy()
             bbox_list, class_index_list = result
             for bbox_label, class_label in zip(bbox_list, class_index_list):
-                print(bbox_label, class_label)
                 class_name = self.class_map[class_label]
 
                 # unnormalize depending on the visualizing image size
@@ -52,7 +51,6 @@ class DetectionVisualizer:
                 image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
                 text_size, _ = cv2.getTextSize(str(class_name), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
                 text_w, text_h = text_size
-                print(text_w, text_h)
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
                 image = cv2.putText(image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             
