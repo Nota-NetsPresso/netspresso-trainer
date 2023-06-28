@@ -6,7 +6,6 @@ import torch
 
 from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-
 class DetectionVisualizer:
     def __init__(self, class_map, pallete=None):
         n = len(class_map)
@@ -15,6 +14,7 @@ class DetectionVisualizer:
         else:
             self.cmap = np.array(pallete[:n], dtype=np.uint8)
         self.class_map = class_map
+
 
     def _convert(self, gray_image):
         assert len(gray_image.shape) == 2
@@ -98,7 +98,6 @@ class VOCColorize(object):
             return self._convert(results)
         else:
             raise IndexError(f"gray_image.shape should be either 2 or 3, but {results.shape} were indexed.")
-
 
 def _voc_color_map(N=256, normalized=False):
     def bitget(byteval, idx):

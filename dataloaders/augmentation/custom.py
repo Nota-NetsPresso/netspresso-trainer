@@ -69,6 +69,7 @@ class Pad(T.Pad):
 class Resize(T.Resize):
     def forward(self, image, mask=None, bbox=None):
         w, h = image.size
+
         image = F.resize(image, self.size, self.interpolation, self.max_size, self.antialias)
         if mask is not None:
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
