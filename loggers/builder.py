@@ -45,7 +45,7 @@ class TrainingLogger():
         self.token = args.train.token
 
         result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.project_id
-        result_dir.mkdir(exist_ok=True)
+        result_dir.mkdir(exist_ok=True, parents=True)
 
         self.use_tensorboard: bool = self.args.logging.tensorboard
         self.use_csvlogger: bool = self.args.logging.csv
@@ -65,7 +65,7 @@ class TrainingLogger():
         self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
             ModelSearchServerHandler(task=task, model=model) if self.use_netspresso else None
         if task in LABEL_CONVERTER_PER_TASK:
-            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=args.datasets.pallete)
+            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=args.data.pallete)
 
     def update_epoch(self, epoch: int):
         self.epoch = epoch
@@ -99,7 +99,6 @@ class TrainingLogger():
                 continue
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
-        
 
     def _convert_imagedict_as_readable(self, images_dict: Dict):
         assert 'images' in images_dict

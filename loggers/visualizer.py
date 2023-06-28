@@ -4,7 +4,8 @@ import cv2
 import numpy as np
 import torch
 
-from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+
 
 class DetectionVisualizer:
     def __init__(self, class_map, pallete=None):

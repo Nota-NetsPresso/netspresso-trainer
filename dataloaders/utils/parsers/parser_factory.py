@@ -1,4 +1,4 @@
-from datasets.utils.parsers.parser_image_folder import ParserImageFolder
+from dataloaders.utils.parsers.parser_image_folder import ParserImageFolder
 import os
 from pathlib import Path
 

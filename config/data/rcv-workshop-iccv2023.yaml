@@ -1,0 +1,15 @@
+data:
+  task: classification
+  format: local
+  path:
+    root: /DATA/rcv-workshop-iccv2023 # dataset root
+    train:
+      image: umnist_iccv_1024/train # directory for training images
+      label: umnist_iccv_1024/train.csv # label for training labels
+    valid:
+      image: ~  # directory for valid images
+      label: ~  # label for valid labels
+    test:
+      image: umnist_iccv_1024/test  # directory for test images
+      label: ~  # label for test labels
+  id_mapping: ~

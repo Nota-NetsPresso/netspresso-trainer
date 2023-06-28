@@ -1,8 +1,8 @@
 from typing import Optional
 
-import datasets.augmentation.custom as TC
-from datasets.utils.augmentation.transforms import str_to_interp_mode
-from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+import dataloaders.augmentation.custom as TC
+from dataloaders.utils.augmentation.transforms import str_to_interp_mode
+from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def transforms_custom_train(args_augment, img_size=64):

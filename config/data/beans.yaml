@@ -1,0 +1,10 @@
+data:
+  task: classification
+  format: huggingface
+  metadata:
+    custom_cache_dir: /DATA/huggingface 
+    repo: beans
+    subset: ~
+    features:
+      image: image
+      label: labels

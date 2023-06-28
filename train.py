@@ -6,7 +6,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
 
-from datasets import build_dataset, build_dataloader
+from dataloaders import build_dataset, build_dataloader
 from models import build_model
 from pipelines import ClassificationPipeline, SegmentationPipeline, DetectionPipeline
 from utils.environment import set_device
@@ -59,11 +59,11 @@ def parse_args_netspresso():
 
 def train():
     args_parsed = parse_args_netspresso()
-    args_datasets = OmegaConf.load(args_parsed.data)
+    args_data = OmegaConf.load(args_parsed.data)
     args_logging = OmegaConf.load(args_parsed.logging)
     args_training = OmegaConf.load(args_parsed.training)
     args = OmegaConf.load(args_parsed.config)
-    args = OmegaConf.merge(args, args_datasets)
+    args = OmegaConf.merge(args, args_data)
     args = OmegaConf.merge(args, args_logging)
     args = OmegaConf.merge(args, args_training)
     distributed, world_size, rank, devices = set_device(args)
@@ -82,7 +82,7 @@ def train():
     if args.distributed and args.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
 
-    train_dataset, eval_dataset = build_dataset(args)
+    train_dataset, valid_dataset, test_dataset = build_dataset(args)
 
     if args.distributed and args.rank == 0:
         torch.distributed.barrier()
@@ -90,7 +90,7 @@ def train():
     model = build_model(args, train_dataset.num_classes)
 
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=eval_dataset, profile=args_parsed.profile)
+        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset, profile=args_parsed.profile)
 
     model = model.to(device=devices)
     if args.distributed:
@@ -105,6 +105,11 @@ def train():
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
                                        profile=args_parsed.profile)
         
+    elif task == 'detection':
+        trainer = DetectionPipeline(args, task, model_name, model, devices,
+                                    train_dataloader, eval_dataloader, train_dataset.class_map,
+                                    profile=args_parsed.profile)
+
     elif task == 'detection':
         trainer = DetectionPipeline(args, task, model_name, model, devices,
                                     train_dataloader, eval_dataloader, train_dataset.class_map,

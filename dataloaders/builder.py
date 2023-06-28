@@ -3,61 +3,58 @@ import logging
 
 from torch.utils.data import DataLoader
 
-from datasets.classification import ClassificationCustomDataset
-from datasets.segmentation import SegmentationCustomDataset
-from datasets.detection import DetectionCustomDataset, detection_collate_fn
-from datasets.classification.transforms import create_classification_transform
-from datasets.segmentation.transforms import create_segmentation_transform
-from datasets.detection.transforms import create_detection_transform
-from datasets.utils.loader import create_loader
+from dataloaders.classification import (
+    create_classification_dataset, create_classification_transform
+)
+from dataloaders.segmentation import (
+    create_segmentation_dataset, create_segmentation_transform
+)
+from dataloaders.detection import (
+    create_detection_dataset, create_detection_transform, detection_collate_fn
+)
+from dataloaders.segmentation.transforms import create_segmentation_transform
+from dataloaders.detection.transforms import create_detection_transform
+from dataloaders.utils.loader import create_loader
 
 
 _logger = logging.getLogger(__name__)
-_RECOMMEND_DATASET_DIR = "./datasets"
 
+TRANSFORMER_COMPOSER = {
+    'classification': create_classification_transform,
+    'segmentation': create_segmentation_transform,
+    'detection': create_detection_transform
+}
+
+DATASET_BUILDER = {
+    'classification': create_classification_dataset,
+    'segmentation': create_segmentation_dataset,
+    'detection': create_detection_dataset,
+}
 
 def build_dataset(args):
 
     _logger.info('-'*40)
     _logger.info('==> Loading data...')
 
-    task = args.datasets.task
-    data_dir = args.datasets.path.root
+    task = args.data.task
 
-    assert Path(data_dir).exists(), \
-        f"No such directory {data_dir}! It would be recommended as {_RECOMMEND_DATASET_DIR}"
+    assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
+    assert task in DATASET_BUILDER, f"The given task `{task}` is not supported!"
 
-    transform_func_for = {
-        'classification': create_classification_transform,
-        'segmentation': create_segmentation_transform,
-        'detection': create_detection_transform
-    }
+    train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
+    eval_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
 
-    dataset_for = {
-        'classification': ClassificationCustomDataset,
-        'segmentation': SegmentationCustomDataset,
-        'detection': DetectionCustomDataset,
-    }
-
-    assert task in transform_func_for, f"The given task `{task}` is not supported!"
-    assert task in dataset_for, f"The given task `{task}` is not supported!"
-
-    train_transform = transform_func_for[task](args, is_training=True)
-    eval_transform = transform_func_for[task](args, is_training=False)
-
-    train_dataset = dataset_for[task](
-        args, root=data_dir, split='train',
-        transform=train_transform, target_transform=None  # TODO: apply target_transform
-    )
-    eval_dataset = dataset_for[task](
-        args, root=data_dir, split='val',
-        transform=eval_transform, target_transform=None  # TODO: apply target_transform
+    train_dataset, valid_dataset, test_dataset = DATASET_BUILDER[task](
+        args, transform=train_transform, target_transform=eval_transform
     )
 
     _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
-    _logger.info(f'Summary | Evaluation dataset: {len(eval_dataset)} sample(s)')
+    if valid_dataset is not None:
+        _logger.info(f'Summary | Validation dataset: {len(valid_dataset)} sample(s)')
+    if test_dataset is not None:
+        _logger.info(f'Summary | Test dataset: {len(test_dataset)} sample(s)')
 
-    return train_dataset, eval_dataset
+    return train_dataset, valid_dataset, test_dataset
 
 
 def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):

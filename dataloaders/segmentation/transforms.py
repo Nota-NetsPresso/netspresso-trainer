@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 import PIL.Image as Image
 
-import datasets.augmentation.custom as TC
-from datasets.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+import dataloaders.augmentation.custom as TC
+from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 EDGE_SIZE = 4
 Y_K_SIZE = 6

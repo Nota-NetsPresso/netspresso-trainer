@@ -12,7 +12,7 @@ from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 
-PRETRAINED_ROOT = Path("pretrained")
+PRETRAINED_ROOT = Path("/CHECKPOINT")  # TODO: as an option
 UPDATE_PREFIX = "updated_"
 SUPPORTING_MODEL_LIST = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet", "mobilevit", "vit", "efficientformer"]
 MODEL_PRETRAINED_DICT = {
