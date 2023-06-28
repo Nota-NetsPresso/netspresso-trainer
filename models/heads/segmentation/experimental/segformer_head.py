@@ -101,6 +101,6 @@ def segformer_decode_head(feature_dim, num_classes):
     config = SegformerConfig()
     return SegformerDecodeHead(config, num_classes=num_classes)
 
-def efficientformer_decode_head(feature_dim, num_classes):
+def efficientformer_segmentation_head(feature_dim, num_classes):
     config = SegformerConfig(hidden_sizes=EfficientFormer_width['l1'])
     return SegformerDecodeHead(config, num_classes=num_classes)

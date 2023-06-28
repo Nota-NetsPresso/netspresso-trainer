@@ -12,7 +12,7 @@ from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
 from loggers.netspresso import ModelSearchServerHandler
-from loggers.visualizer import VOCColorize, magic_image_handler
+from loggers.visualizer import VOCColorize, magic_image_handler, DetectionVisualizer
 from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
@@ -25,7 +25,8 @@ CSV_LOGGER_TASK_SPECIFIC = {
 }
 
 LABEL_CONVERTER_PER_TASK = {
-    'segmentation': VOCColorize
+    'segmentation': VOCColorize,
+    'detection': DetectionVisualizer,
 }
 
 
@@ -100,16 +101,18 @@ class TrainingLogger():
         return scalar_dict
 
     def _convert_imagedict_as_readable(self, images_dict: Dict):
+        assert 'images' in images_dict
+        image_new: np.ndarray = magic_image_handler(images_dict['images'])
+        image_new = image_new.astype(np.uint8)
+        images_dict.update({'images': image_new[:self.num_sample_images]})
         for k, v in images_dict.items():
-            if len(v) > self.num_sample_images:
-                v = v[:self.num_sample_images, ...]
-            if 'images' in k:
-                v_new: np.ndarray = magic_image_handler(v)
-                v_new = v_new.astype(np.uint8)
-                images_dict.update({k: v_new})
+            if k == 'images':
                 continue
+            
             # target, pred, bg_gt
-            v_new: np.ndarray = magic_image_handler(self.label_converter(v))
+            v = v[:self.num_sample_images]
+            v_new: np.ndarray = magic_image_handler(
+                self.label_converter(v, images=images_dict['images']))
             v_new = v_new.astype(np.uint8)
             images_dict.update({k: v_new})
         return images_dict

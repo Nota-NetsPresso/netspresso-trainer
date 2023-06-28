@@ -43,18 +43,19 @@ class DetectionPipeline(BasePipeline):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        labels = labels.to(self.devices)
-        bboxes = bboxes.to(self.devices)
-
+        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+                   for box, label in zip(bboxes, labels)]
+        
         self.optimizer.zero_grad()
-        out = self.model(images)
-        self.loss(out, (labels, bboxes), mode='train')
+        out = self.model(images, targets=targets)
+        self.loss(out, target=targets, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
 
-        out = {k: v.detach() for k, v in out.items()}
-        self.metric(out['pred'], (labels, bboxes), mode='train')
+        # TODO: metric update
+        # out = {k: v.detach() for k, v in out.items()}
+        # self.metric(out['pred'], target=targets, mode='train')
 
         # # TODO: fn(out)
         # fn = lambda x: x
@@ -67,21 +68,22 @@ class DetectionPipeline(BasePipeline):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        labels = labels.to(self.devices)
-        bboxes = bboxes.to(self.devices)
+        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+                   for box, label in zip(bboxes, labels)]
+        
+        out = self.model(images, targets=targets)
+        self.loss(out, target=targets, mode='valid')
 
-        out = self.model(images)
-        self.loss(out, (labels, bboxes), mode='valid')
-
-        self.metric(out['pred'], (labels, bboxes), mode='valid')
+        # TODO: metric update
+        # self.metric(out['pred'], (labels, bboxes), mode='valid')
 
         if self.args.distributed:
             torch.distributed.barrier()
-
         logs = {
             'images': images.detach().cpu().numpy(),
-            'label': labels.detach().cpu().numpy(),
-            'bbox': bboxes.detach().cpu().numpy(),
-            'pred': out['pred'].detach().cpu().numpy()
+            'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                       for bbox, label in zip(bboxes, labels)],
+            'pred': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                       for bbox, label in zip(out['post_boxes'], out['post_labels'])],                
         }
         return {k: v for k, v in logs.items()}
