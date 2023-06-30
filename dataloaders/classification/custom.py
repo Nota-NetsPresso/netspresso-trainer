@@ -10,7 +10,6 @@ import torch
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 
-from dataloaders.utils.parsers import create_parser
 from dataloaders.base import BaseCustomDataset, BaseHFDataset
 from dataloaders.utils.constants import IMG_EXTENSIONS
 from dataloaders.utils.misc import natural_key
@@ -206,14 +205,18 @@ def load_data(args_data: DictConfig, file_or_dir_to_idx, split='train'):
             for dir_name, dir_idx in dir_to_idx.items():
                 _dir = Path(image_dir) / dir_name
                 for ext in IMG_EXTENSIONS:
-                    images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in _dir.glob(f'*{ext}')])
-                    images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in _dir.glob(f'*{ext.upper()}')])
+                    images_and_targets.extend([{'image': str(file), 'label': dir_idx}
+                                               for file in chain(_dir.glob(f'*{ext}'), _dir.glob(f'*{ext.upper()}'))])
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
     elif split == 'test':
         for ext in IMG_EXTENSIONS:
-            images_and_targets.extend([{'image': str(file), 'label': None} for file in image_dir.glob(f'*{ext}')])
-            images_and_targets.extend([{'image': str(file), 'label': None} for file in image_dir.glob(f'*{ext.upper()}')])
+            images_and_targets.extend([{'image': str(file), 'label': None}
+                                       for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
+        images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
+
+    else:
+        raise AssertionError(f"split should be either {['train', 'valid', 'test']}")
 
     return images_and_targets
 
@@ -248,7 +251,6 @@ def load_samples(args_data):
 def create_classification_dataset(args, transform, target_transform=None):
     data_format = args.data.format
     if data_format == 'local':
-        # TODO: Load train/valid/test data samples
         train_samples, valid_samples, test_samples, misc = load_samples(args.data)
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         

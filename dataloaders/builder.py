@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import logging
 
@@ -15,9 +16,10 @@ from dataloaders.detection import (
 from dataloaders.segmentation.transforms import create_segmentation_transform
 from dataloaders.detection.transforms import create_detection_transform
 from dataloaders.utils.loader import create_loader
+from utils.logger import set_logger
 
 
-_logger = logging.getLogger(__name__)
+_logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 TRANSFORMER_COMPOSER = {
     'classification': create_classification_transform,

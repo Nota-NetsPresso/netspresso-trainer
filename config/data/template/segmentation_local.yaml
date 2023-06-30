@@ -5,13 +5,16 @@ data:
     root: /PATH/TO/DATASET # dataset root
     train:
       image: image/train # directory for training images
-      mask: mask/train # directory for training labels
+      label: mask/train # directory for training labels
     valid:
       image: image/val  # directory for valid images
-      mask: mask/val  # directory for valid labels
+      label: mask/val  # directory for valid labels
+    test:
+      image: ~  # directory for test images
+      label: ~  # directory for test labels
     pattern:
       image: "[0-9]{4}_([0-9]{6})\\.jpg"  # regex for filepath whose id is grouped. If None, jointly paired with sorted lists
-      mask: "[0-9]{4}_([0-9]{6})\\.png"  # regex for filepath whose id is grouped. If None, jointly paired with sorted lists
+      label: "[0-9]{4}_([0-9]{6})\\.png"  # regex for filepath whose id is grouped. If None, jointly paired with sorted lists
   id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
   pallete:  # color [R, G, B] value for each id. If None, auto-selected by VOCColorizer
     - [0, 0, 0]
