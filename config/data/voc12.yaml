@@ -5,13 +5,16 @@ data:
     root: /DATA/VOC12Dataset
     train:
       image: image/train
-      mask: mask/train
+      label: mask/train
     valid:
       image: image/val
-      mask: mask/val
+      label: mask/val
+    test:
+      image: ~  # directory for test images
+      label: ~  # directory for test labels
     pattern:
       image: ~
-      valid: ~
+      label: ~
   id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
   pallete:
     - [0, 0, 0]
