@@ -1,0 +1,11 @@
+data:
+  task: segmentation
+  format: huggingface # local, huggingface
+  metadata:
+    custom_cache_dir: /DATA/huggingface # If None, it follows HF datasets default (.cache/huggingface/datasets)
+    repo: HUGGINGFACE_DATASETS_REPO_NAME
+    subset: DATASETS_SUBSET_NAME_IF_EXISTS
+    features:
+      image: pixel_values
+      label: label
+    id_mapping: ['background', 'curry', 'ramen', 'rice', 'sushi']

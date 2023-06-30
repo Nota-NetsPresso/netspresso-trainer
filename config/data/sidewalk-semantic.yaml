@@ -1,0 +1,11 @@
+data:
+  task: segmentation
+  format: huggingface # local, huggingface
+  metadata:
+    custom_cache_dir: /DATA/huggingface # If None, it follows HF datasets default (.cache/huggingface/datasets)
+    repo: segments/sidewalk-semantic
+    subset: ~
+    features:
+      image: pixel_values
+      label: label
+    id_mapping: ['unlabeled', 'flat-road', 'flat-sidewalk', 'flat-crosswalk', 'flat-cyclinglane', 'flat-parkingdriveway', 'flat-railtrack', 'flat-curb', 'human-person', 'human-rider', 'vehicle-car', 'vehicle-truck', 'vehicle-bus', 'vehicle-tramtrain', 'vehicle-motorcycle', 'vehicle-bicycle', 'vehicle-caravan', 'vehicle-cartrailer', 'construction-building', 'construction-door', 'construction-wall', 'construction-fenceguardrail', 'construction-bridge', 'construction-tunnel', 'construction-stairs', 'object-pole', 'object-trafficsign', 'object-trafficlight', 'nature-vegetation', 'nature-terrain', 'sky', 'void-ground', 'void-dynamic', 'void-static', 'void-unclear']
