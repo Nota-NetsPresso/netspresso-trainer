@@ -110,10 +110,10 @@ class SegmentationHFDataset(BaseHFDataset):
     def __init__(
             self,
             args,
+            idx_to_class,
             split,
+            huggingface_dataset,
             transform=None,
-            target_transform=None,
-            load_bytes=False,
     ):
         root = args.data.metadata.repo
         super(SegmentationHFDataset, self).__init__(
@@ -122,73 +122,50 @@ class SegmentationHFDataset(BaseHFDataset):
             split
         )
         
-        raise NotImplementedError
-
-        if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
-            self.image_dir = Path(self._root) / args.data.path.train.image
-            self.annotation_dir = Path(self._root) / args.data.path.train.mask
-
-            self.id2label = args.data.id_mapping
-
-            self.img_name = list(sorted([path for path in self.image_dir.iterdir()]))
-            self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
-            # TODO: get paired data from regex pattern matching (args.data.path.pattern)
-
-            assert len(self.img_name) == len(self.ann_name), "There must be as many images as there are segmentation maps"
-
-        else:  # self._split in ['infer', 'inference']
-            raise NotImplementedError
-            try:  # a folder with multiple images
-                self.img_name = list(sorted([path for path in Path(self.data_dir).iterdir()]))
-            except:  # single image
-                raise AssertionError
-                # TODO: check the case for single image
-                self.file_name = [self.data_dir.split('/')[-1]]
-                self.img_name = [self.data_dir]
-
         self.transform = transform
-
-    def __len__(self):
-        raise NotImplementedError
-        return len(self.img_name)
+        self.idx_to_class = idx_to_class
+        self.samples = huggingface_dataset
+        
+        self.image_feature_name = args.data.metadata.features.image
+        self.label_feature_name = args.data.metadata.features.label
 
     @property
     def num_classes(self):
-        raise NotImplementedError
-        return len(self.id2label)
+        return len(self.idx_to_class)
 
     @property
     def class_map(self):
-        raise NotImplementedError
-        return self.id2label
+        return self.idx_to_class
+
+    def __len__(self):
+        return self.samples.num_rows
 
     def __getitem__(self, index):
-        raise NotImplementedError
-        img_path = self.img_name[index]
-        ann_path = self.ann_name[index]
-        img = Image.open(str(img_path)).convert('RGB')
+        
+        img_name =  f"{index:06d}"
+        img = self.samples[index][self.image_feature_name]
+        label = self.samples[index][self.label_feature_name] if self.label_feature_name in self.samples[index] else None
 
         org_img = img.copy()
 
         w, h = img.size
 
-        if self._split in ['infer', 'inference']:
+        if label is None:
             out = self.transform(self.args.augment)(image=img)
-            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
+            return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
 
-        label = Image.open(str(ann_path)).convert('L')
         if self.args.augment.reduce_zero_label:
             label = reduce_label(np.array(label))
 
         if self.args.train.architecture.full == 'pidnet':
             edge = generate_edge(np.array(label))
             out = self.transform(self.args.augment)(image=img, mask=label, edge=edge)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
         else:
             out = self.transform(self.args.augment)(image=img, mask=label)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
         if self._split in ['train', 'training']:
             return outputs
@@ -231,7 +208,7 @@ def load_data(args_data: DictConfig, split='train'):
     return images_and_targets
 
 
-def load_samples(args_data):
+def load_samples_local(args_data):
     assert args_data.path.train.image is not None
     root_dir = Path(args_data.path.root)
     assert args_data.id_mapping is not None
@@ -258,12 +235,43 @@ def load_samples(args_data):
     
     return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
 
+def load_samples_huggingface(args_data):
+    from datasets import load_dataset
+    
+    cache_dir = Path(args_data.metadata.custom_cache_dir)
+    root = args_data.metadata.repo
+    subset_name = args_data.metadata.subset
+    if cache_dir is not None:
+        Path(cache_dir).mkdir(exist_ok=True, parents=True)
+    total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
+    
+    assert args_data.metadata.id_mapping is not None
+    id_mapping: Optional[list] = list(args_data.metadata.id_mapping)
+    idx_to_class = load_custom_class_map(id_mapping=id_mapping)
+    
+    exists_valid = 'validation' in total_dataset
+    exists_test = 'test' in total_dataset
+    
+    train_samples = total_dataset['train']
+    valid_samples = None
+    if exists_valid:
+        valid_samples = total_dataset['validation']
+    test_samples = None
+    if exists_test:
+        test_samples = total_dataset['test']
+
+    if not exists_valid:
+        splitted_datasets = train_samples.train_test_split(test_size=(1 - TRAIN_VALID_SPLIT_RATIO))
+        train_samples = splitted_datasets['train']
+        valid_samples = splitted_datasets['test']
+    return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+    
 
 def create_segmentation_dataset(args, transform, target_transform=None):
     data_format = args.data.format
     if data_format == 'local':
         # TODO: Load train/valid/test data samples
-        train_samples, valid_samples, test_samples, misc = load_samples(args.data)
+        train_samples, valid_samples, test_samples, misc = load_samples_local(args.data)
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         
         train_dataset = SegmentationCustomDataset(
@@ -287,6 +295,28 @@ def create_segmentation_dataset(args, transform, target_transform=None):
         
         return train_dataset, valid_dataset, test_dataset        
     elif data_format == 'huggingface':
-        return SegmentationHFDataset(args, transform=transform, target_transform=target_transform)
+        train_samples, valid_samples, test_samples, misc = load_samples_huggingface(args.data)
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        
+        train_dataset = SegmentationHFDataset(
+            args, idx_to_class=idx_to_class, split='train',
+            huggingface_dataset=train_samples, transform=transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = SegmentationHFDataset(
+                args, idx_to_class=idx_to_class, split='valid',
+                huggingface_dataset=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = SegmentationHFDataset(
+                args, idx_to_class=idx_to_class, split='test',
+                huggingface_dataset=test_samples, transform=target_transform
+            )
+        
+        return train_dataset, valid_dataset, test_dataset     
     else:
         raise AssertionError(f"No such data format named {data_format}!")
