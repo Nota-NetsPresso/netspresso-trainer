@@ -5,12 +5,12 @@ from typing import Optional, Union, Tuple, List, Dict
 from collections import Counter
 from itertools import chain
 
-import PIL.Image as Image
 import torch
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 
-from dataloaders.base import BaseCustomDataset, BaseHFDataset
+from dataloaders.classification.local import ClassificationCustomDataset
+from dataloaders.classification.huggingface import ClassificationHFDataset
 from dataloaders.utils.constants import IMG_EXTENSIONS
 from dataloaders.utils.misc import natural_key
 from utils.logger import set_logger
@@ -20,117 +20,11 @@ logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 TRAIN_VALID_SPLIT_RATIO = 0.9
 _ERROR_RETRY = 50
 
-class ClassificationCustomDataset(BaseCustomDataset):
 
-    def __init__(
-            self,
-            args,
-            idx_to_class,
-            split,
-            samples,
-            transform=None,
-    ):
-        root = args.data.path.root
-        super(ClassificationCustomDataset, self).__init__(
-            args,
-            root,
-            split
-        )
-
-        self.transform = transform
-
-        self.samples = samples
-        self.idx_to_class = idx_to_class
-        self._num_classes = len(self.idx_to_class)
-
-    @property
-    def num_classes(self):
-        return self._num_classes
-
-    @property
-    def class_map(self):
-        return self.idx_to_class
-
-    def __len__(self):
-        return len(self.samples)
-
-    def __getitem__(self, index):
-        img = self.samples[index]['image']
-        target = self.samples[index]['label'] if 'label' in self.samples[index] else None
-        img = Image.open(img).convert('RGB')
-        
-        if self.transform is not None:
-            out = self.transform(args_augment=self.args.augment, img_size=self.args.training.img_size)(img)
-        
-        if target is None:
-            target = -1  # To be ignored at cross-entropy loss
-        return out['image'], target
-
-
-class ClassificationHFDataset(BaseHFDataset):
-
-    def __init__(
-            self,
-            args,
-            split,
-            transform=None,
-            target_transform=None,
-    ):
-        root = args.data.metadata.repo
-        super(ClassificationHFDataset, self).__init__(
-            args,
-            root,
-            split
-        )
-        # Make sure that you additionally install `requirements-data.txt`
-
-        self.transform = transform
-        
-        subset_name = args.data.metadata.subset
-        cache_dir = args.data.metadata.custom_cache_dir
-        total_dataset = self._load_dataset(root, subset_name=subset_name, cache_dir=cache_dir)
-
-        if self._split in ['train', 'training']:
-            _dataset = total_dataset['train']
-        elif self._split in ['val', 'valid', 'validation']:
-            _dataset = total_dataset['validation']
-        else:
-            raise NotImplementedError
-            
-        image_key = args.data.metadata.features.image
-        label_key = args.data.metadata.features.label
-            
-        self._class_map: Dict[int, str] = {class_idx: str(class_name)
-                                      for class_idx, class_name
-                                      in enumerate(sorted(set([x[label_key] for x in _dataset])))}
-        self._class_name_as_index: Dict[str, int] = {str(v): k for k, v in self._class_map.items()}
-            
-        self._num_classes = len(self._class_map)
-        
-        self.parser: Dict[Tuple[Image.Image, int]] = [(x[image_key], self._class_name_as_index[str(x[label_key])]) for x in _dataset]
-
-    @property
-    def num_classes(self):
-        return self._num_classes
-
-    @property
-    def class_map(self):
-        return self._class_map
-
-    def __len__(self):
-        return len(self.parser)
-
-    def __getitem__(self, index):
-        img, target = self.parser[index]
-        if self.transform is not None:
-            out = self.transform(args_augment=self.args.augment, img_size=self.args.training.img_size)(img)
-        if target is None:
-            target = -1
-        return out['image'], target
     
-def load_custom_class_map(root_dir, train_dir,
-                          map_or_filename: Optional[Union[str, Path]]=None,
-                          id_mapping: Optional[Dict[str, str]]=None):
+def load_class_map_with_id_mapping(root_dir, train_dir,
+                                   map_or_filename: Optional[Union[str, Path]]=None,
+                                   id_mapping: Optional[Dict[str, str]]=None):
 
     if map_or_filename is None:  # may be labeled with directory
         # dir -> 
@@ -226,7 +120,7 @@ def load_samples(args_data):
     root_dir = Path(args_data.path.root)
     train_dir = root_dir / args_data.path.train.image
     id_mapping: Optional[dict] = dict(args_data.id_mapping) if args_data.id_mapping is not None else None
-    file_or_dir_to_idx, idx_to_class = load_custom_class_map(root_dir, train_dir, map_or_filename=args_data.path.train.label, id_mapping=id_mapping)
+    file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=args_data.path.train.label, id_mapping=id_mapping)
     
     exists_valid = args_data.path.valid.image is not None
     exists_test = args_data.path.test.image is not None
@@ -247,6 +141,48 @@ def load_samples(args_data):
                             generator=torch.Generator().manual_seed(42))
     
     return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+
+def load_samples_huggingface(args_data):
+    from datasets import load_dataset
+    from datasets import ClassLabel
+    
+    cache_dir = Path(args_data.metadata.custom_cache_dir)
+    root = args_data.metadata.repo
+    subset_name = args_data.metadata.subset
+    if cache_dir is not None:
+        Path(cache_dir).mkdir(exist_ok=True, parents=True)
+    total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
+    
+    label_feature_name = args_data.metadata.features.label
+    label_feature = total_dataset['train'].features[label_feature_name]
+    if isinstance(label_feature, ClassLabel):
+        labels: List[str] = label_feature.names
+    else:
+        labels = list({sample[label_feature_name] for sample in total_dataset['train']})
+        
+    if isinstance(labels[0], int):
+        # TODO: find class_map <-> idx and apply it (ex. using id_mapping)
+        idx_to_class: Dict[int, int] = {k: k for k in labels}
+    elif isinstance(labels[0], str):
+        idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(labels)}
+    
+    exists_valid = 'validation' in total_dataset
+    exists_test = 'test' in total_dataset
+    
+    train_samples = total_dataset['train']
+    valid_samples = None
+    if exists_valid:
+        valid_samples = total_dataset['validation']
+    test_samples = None
+    if exists_test:
+        test_samples = total_dataset['test']
+
+    if not exists_valid:
+        splitted_datasets = train_samples.train_test_split(test_size=(1 - TRAIN_VALID_SPLIT_RATIO))
+        train_samples = splitted_datasets['train']
+        valid_samples = splitted_datasets['test']
+    return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+    
 
 def create_classification_dataset(args, transform, target_transform=None):
     data_format = args.data.format
@@ -275,7 +211,29 @@ def create_classification_dataset(args, transform, target_transform=None):
         
         return train_dataset, valid_dataset, test_dataset
     elif data_format == 'huggingface':
-        return ClassificationHFDataset(args, split='train',
-                                       transform=transform, target_transform=target_transform)
+        train_samples, valid_samples, test_samples, misc = load_samples_huggingface(args.data)
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        
+        train_dataset = ClassificationHFDataset(
+            args, idx_to_class=idx_to_class, split='train',
+            huggingface_dataset=train_samples, transform=transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = ClassificationHFDataset(
+                args, idx_to_class=idx_to_class, split='valid',
+                huggingface_dataset=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = ClassificationHFDataset(
+                args, idx_to_class=idx_to_class, split='test',
+                huggingface_dataset=test_samples, transform=target_transform
+            )
+            
+        return train_dataset, valid_dataset, test_dataset     
+
     else:
         raise AssertionError(f"No such data format named {data_format}!")
