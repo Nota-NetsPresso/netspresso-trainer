@@ -13,8 +13,6 @@ from dataloaders.segmentation import (
 from dataloaders.detection import (
     create_detection_dataset, create_detection_transform, detection_collate_fn
 )
-from dataloaders.segmentation.transforms import create_segmentation_transform
-from dataloaders.detection.transforms import create_detection_transform
 from dataloaders.utils.loader import create_loader
 from utils.logger import set_logger
 
@@ -149,7 +147,8 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
             eval_dataset,
             args.train.data,
             _logger,
-            batch_size=args.training.batch_size if not args.distributed else 1,
+            # TODO: support batch size 1 inference
+            batch_size=args.training.batch_size if not args.distributed else 2,
             is_training=False,
             num_workers=args.environment.num_workers if not profile else 1,
             distributed=args.distributed,

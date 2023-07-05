@@ -1,13 +1,17 @@
-datasets:
+data:
   task: detection
+  format: local # local, huggingface
   path:
     root: /DATA/traffic-sign # dataset root
     train:
       image: images/train # directory for training images
       label: labels/train # directory for training labels
     valid:
-      image: image/val  # directory for valid images
+      image: images/val  # directory for valid images
       label: labels/val  # directory for valid labels
+    test:
+      image: ~  # directory for test images
+      label: ~  # directory for test labels
     pattern:
       image: ~
       label: ~

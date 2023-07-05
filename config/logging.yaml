@@ -1,6 +1,6 @@
 logging:
   tensorboard: true
-  csv: true
+  csv: false
   image: true
   stdout: true
   netspresso: false
