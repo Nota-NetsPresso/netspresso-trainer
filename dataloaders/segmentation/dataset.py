@@ -65,7 +65,6 @@ def load_data(args_data: DictConfig, split='train'):
 
 def load_samples_local(args_data):
     assert args_data.path.train.image is not None
-    root_dir = Path(args_data.path.root)
     assert args_data.id_mapping is not None
     id_mapping: Optional[list] = list(args_data.id_mapping)
     idx_to_class = load_custom_class_map(id_mapping=id_mapping)
