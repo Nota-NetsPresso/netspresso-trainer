@@ -7,8 +7,8 @@ augment:
   scale: ~ 
   max_scale: 2048
   min_scale: 768
-  crop_size_h: *img_size
-  crop_size_w: *img_size
+  crop_size_h: 512
+  crop_size_w: 512
   resize_ratio0: 0.5
   resize_ratiof: 2.0
   resize_add: 1
