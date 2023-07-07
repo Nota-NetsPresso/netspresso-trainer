@@ -1,0 +1,31 @@
+augment:
+  hsv_h: ~
+  hsv_s: ~
+  hsv_v: ~
+  degrees: ~
+  translate: ~
+  scale: ~ 
+  max_scale: 1024
+  min_scale: 512
+  crop_size_h: 512
+  crop_size_w: 512
+  resize_ratio0: 1.0
+  resize_ratiof: 2.0
+  resize_add: 1
+  shear: ~
+  perspective: ~
+  flipud: ~
+  fliplr: 0.5
+  mosaic: ~
+  mixup: ~
+  copy_paste: ~
+  mixup_alpha: ~
+  cutmix_alpha: ~
+  mixup_switch_prob: ~
+  color_jitter:
+    brightness: 0.25
+    contrast: 0.25
+    saturation: 0.25
+    hue: 0.1
+    colorjitter_p: 0.5
+  reduce_zero_label: *reduce_zero_label

@@ -1,0 +1,10 @@
+model:
+  task: 'segmentation'
+  architecture:
+    full: ~ # auto
+    backbone: segformer
+    head: segformer_decode_head
+  losses:
+    - criterion: cross_entropy
+      weight: ~
+      ignore_index: 255

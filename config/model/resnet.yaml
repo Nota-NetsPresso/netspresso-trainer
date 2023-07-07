@@ -1,0 +1,10 @@
+model:
+  task: *task
+  architecture:
+    full: ~ # auto
+    backbone: resnet50
+    head: fc
+  losses:
+    - criterion: label_smoothing_cross_entropy
+      smoothing: 0.01
+      weight: ~
