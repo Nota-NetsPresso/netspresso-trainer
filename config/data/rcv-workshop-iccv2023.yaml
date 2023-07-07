@@ -1,4 +1,5 @@
 data:
+  name: rcv_iccv2023_inference
   task: classification
   format: local
   path:

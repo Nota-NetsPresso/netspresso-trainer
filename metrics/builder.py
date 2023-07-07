@@ -28,7 +28,7 @@ class MetricFactory:
 
     def _build_metric(self, args):
         # TODO: decide metrics by arguments
-        task = args.train.task
+        task = args.model.task
 
         if task == 'classification':
             self.metric_func_dict['Acc@1'] = lambda pred, target: accuracy_topk(pred, target, topk=(1, ))[0]

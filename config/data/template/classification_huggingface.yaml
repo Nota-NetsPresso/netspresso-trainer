@@ -1,4 +1,5 @@
 data:
+  name: dataset_name
   task: classification
   format: huggingface # local, huggingface
   metadata:

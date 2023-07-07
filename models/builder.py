@@ -42,9 +42,9 @@ def load_pretrained_checkpoint(model_name: str):
 class AssembleModel(nn.Module):
     def __init__(self, args, num_classes) -> None:
         super(AssembleModel, self).__init__()
-        self.task = args.train.task
-        backbone_name = args.train.architecture.backbone
-        head = args.train.architecture.head
+        self.task = args.model.task
+        backbone_name = args.model.architecture.backbone
+        head = args.model.architecture.head
 
         self.backbone: nn.Module = eval(f"backbones.{backbone_name}")(task=self.task)
         try:
@@ -87,8 +87,8 @@ class AssembleModel(nn.Module):
 
 
 def build_model(args, num_classes):
-    if args.train.architecture.full is not None:
-        model_name = args.train.architecture.full
+    if args.model.architecture.full is not None:
+        model_name = args.model.architecture.full
         model: nn.Module = eval(f"full.{model_name}")(args, num_classes)
 
         model_state_dict = load_pretrained_checkpoint(model_name)

@@ -24,29 +24,34 @@ def parse_args_netspresso():
     # -------- User arguments ----------------------------------------
 
     parser.add_argument(
-        '--data', type=str, default='',
+        '--data', type=str, required=True,
         dest='data',
         help="Config for dataset information")
+    
+    parser.add_argument(
+        '--augmentation', type=str, required=True,
+        dest='augmentation',
+        help="Config for data augmentation")
+    
+    parser.add_argument(
+        '--model', type=str, required=True,
+        dest='model',
+        help="Config for the model architecture")
 
     parser.add_argument(
-        '--config', type=str, default='',
-        dest='config',
-        help="Config path")
-
+        '--training', type=str, required=True,
+        dest='training',
+        help="Config for training options")
+    
     parser.add_argument(
         '--logging', type=str, default='config/logging.yaml',
         dest='logging',
         help="Config for logging options")
-
+    
     parser.add_argument(
-        '--training', type=str, default='',
-        dest='training',
-        help="Config for training options")
-
-    parser.add_argument(
-        '-o', '--output_dir', type=str, default='..',
-        dest='output_dir',
-        help="Checkpoint and result saving directory")
+        '--environment', type=str, default='config/environment.yaml',
+        dest='environment',
+        help="Config for training environment (# workers, etc.)")
 
     parser.add_argument(
         '--profile', action='store_true',
@@ -60,23 +65,31 @@ def parse_args_netspresso():
 def train():
     args_parsed = parse_args_netspresso()
     args_data = OmegaConf.load(args_parsed.data)
-    args_logging = OmegaConf.load(args_parsed.logging)
+    args_augmentation = OmegaConf.load(args_parsed.augmentation)
+    args_model = OmegaConf.load(args_parsed.model)
     args_training = OmegaConf.load(args_parsed.training)
-    args = OmegaConf.load(args_parsed.config)
+    args_logging = OmegaConf.load(args_parsed.logging)
+    args_environment = OmegaConf.load(args_parsed.environment)
+    
+    args = OmegaConf.create()
     args = OmegaConf.merge(args, args_data)
-    args = OmegaConf.merge(args, args_logging)
+    args = OmegaConf.merge(args, args_augmentation)
+    args = OmegaConf.merge(args, args_model)
     args = OmegaConf.merge(args, args_training)
+    args = OmegaConf.merge(args, args_logging)
+    args = OmegaConf.merge(args, args_environment)
+    
     distributed, world_size, rank, devices = set_device(args)
 
     args.distributed = distributed
     args.world_size = world_size
     args.rank = rank
 
-    task = str(args.train.task).lower()
+    task = str(args.model.task).lower()
     assert task in SUPPORT_TASK
-    model_name = args.train.architecture.full \
-        if args.train.architecture.full is not None \
-        else args.train.architecture.backbone
+    model_name = args.model.architecture.full \
+        if args.model.architecture.full is not None \
+        else args.model.architecture.backbone
     model_name = str(model_name).lower()
 
     if args.distributed and args.rank != 0:
@@ -105,21 +118,6 @@ def train():
                                        train_dataloader, eval_dataloader, train_dataset.class_map,
                                        profile=args_parsed.profile)
         
-    elif task == 'detection':
-        trainer = DetectionPipeline(args, task, model_name, model, devices,
-                                    train_dataloader, eval_dataloader, train_dataset.class_map,
-                                    profile=args_parsed.profile)
-
-    elif task == 'detection':
-        trainer = DetectionPipeline(args, task, model_name, model, devices,
-                                    train_dataloader, eval_dataloader, train_dataset.class_map,
-                                    profile=args_parsed.profile)
-
-    elif task == 'detection':
-        trainer = DetectionPipeline(args, task, model_name, model, devices,
-                                    train_dataloader, eval_dataloader, train_dataset.class_map,
-                                    profile=args_parsed.profile)
-
     elif task == 'detection':
         trainer = DetectionPipeline(args, task, model_name, model, devices,
                                     train_dataloader, eval_dataloader, train_dataset.class_map,

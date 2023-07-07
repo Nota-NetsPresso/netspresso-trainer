@@ -1,4 +1,5 @@
 data:
+  name: coco_for_yolo_model
   task: detection
   format: local # local, huggingface
   path:

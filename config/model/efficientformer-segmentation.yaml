@@ -1,0 +1,10 @@
+model:
+  task: segmentation
+  architecture:
+    full: ~ # auto
+    backbone: efficientformer
+    head: efficientformer_segmentation_head
+  losses:
+    - criterion: cross_entropy
+      weight: ~
+      ignore_index: 255

@@ -80,7 +80,7 @@ if __name__ == '__main__':
         'decay_rate': args.training.schd_power,
         'min_lr': args.training.lrf,
         'warmup_lr': 0.00001,  # args.training.warmup_bias_lr
-        'warmup_epochs': 5,  # args.train.warmup_epochs
+        'warmup_epochs': 5,  # args.training.warmup_epochs
         'cooldown_epochs': 0,
     })
 

@@ -1,0 +1,11 @@
+model:
+  task: detection
+  architecture:
+    full: ~ # auto
+    backbone: efficientformer
+    head: efficientformer_detection_head
+  losses:
+    - criterion: roi_head_loss
+      weight: ~
+    - criterion: rpn_loss
+      weight: ~

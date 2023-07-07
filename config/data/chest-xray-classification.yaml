@@ -1,4 +1,5 @@
 data:
+  name: chest_xray_classification
   task: classification
   format: huggingface
   metadata:

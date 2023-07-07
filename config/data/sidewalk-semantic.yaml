@@ -1,4 +1,5 @@
 data:
+  name: sidewalk_semantic
   task: segmentation
   format: huggingface # local, huggingface
   metadata:

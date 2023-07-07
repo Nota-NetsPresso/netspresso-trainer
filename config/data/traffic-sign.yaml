@@ -1,4 +1,5 @@
 data:
+  name: traffic_sign_yolo
   task: detection
   format: local # local, huggingface
   path:

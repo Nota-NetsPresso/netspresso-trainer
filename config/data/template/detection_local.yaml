@@ -1,4 +1,5 @@
 data:
+  name: dataset_name
   task: detection
   format: local # local, huggingface
   path:

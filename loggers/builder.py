@@ -41,8 +41,7 @@ class TrainingLogger():
         self.epoch = epoch
         self.num_sample_images = num_sample_images
 
-        self.project_id = args.train.project
-        self.token = args.train.token
+        self.project_id = args.logging.project_id
 
         result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.project_id
         result_dir.mkdir(exist_ok=True, parents=True)

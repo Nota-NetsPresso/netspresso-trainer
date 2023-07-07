@@ -1,4 +1,5 @@
 data:
+  name: beans
   task: classification
   format: huggingface
   metadata:

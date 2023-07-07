@@ -1,0 +1,3 @@
+environment: 
+  num_workers: 4 
+  device: '0' 

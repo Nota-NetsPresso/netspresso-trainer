@@ -50,7 +50,7 @@ class LossFactory:
 
     def _build_losses(self, args):
 
-        for loss_element in args.train.losses:
+        for loss_element in args.model.losses:
             criterion = loss_element.criterion
             loss_config = {k: v for k, v in loss_element.items() if k not in ['criterion', 'weight']}
             loss = LOSS_DICT[criterion](**loss_config)
