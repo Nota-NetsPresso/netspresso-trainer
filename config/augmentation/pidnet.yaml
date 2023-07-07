@@ -28,4 +28,3 @@ augment:
     saturation: 0.25
     hue: 0.1
     colorjitter_p: 0.5
-  reduce_zero_label: *reduce_zero_label
