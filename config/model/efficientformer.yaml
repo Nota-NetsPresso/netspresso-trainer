@@ -1,5 +1,5 @@
 model:
-  task: *task
+  task: classification
   architecture:
     full: ~ # auto
     backbone: efficientformer

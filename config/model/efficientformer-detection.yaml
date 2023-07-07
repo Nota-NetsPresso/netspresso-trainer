@@ -1,5 +1,5 @@
 model:
-  task: *task
+  task: detection
   architecture:
     full: ~ # auto
     backbone: efficientformer

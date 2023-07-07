@@ -1,5 +1,5 @@
 model:
-  task: 'segmentation'
+  task: segmentation
   architecture:
     full: ~ # auto
     backbone: segformer
