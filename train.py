@@ -71,7 +71,7 @@ def train():
     args_logging = OmegaConf.load(args_parsed.logging)
     args_environment = OmegaConf.load(args_parsed.environment)
     
-    args = OmegaConf.load(args_parsed.config)
+    args = OmegaConf.create()
     args = OmegaConf.merge(args, args_data)
     args = OmegaConf.merge(args, args_augmentation)
     args = OmegaConf.merge(args, args_model)
