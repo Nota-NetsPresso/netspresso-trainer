@@ -85,11 +85,11 @@ def train():
     args.world_size = world_size
     args.rank = rank
 
-    task = str(args.train.task).lower()
+    task = str(args.model.task).lower()
     assert task in SUPPORT_TASK
-    model_name = args.train.architecture.full \
-        if args.train.architecture.full is not None \
-        else args.train.architecture.backbone
+    model_name = args.model.architecture.full \
+        if args.model.architecture.full is not None \
+        else args.model.architecture.backbone
     model_name = str(model_name).lower()
 
     if args.distributed and args.rank != 0:

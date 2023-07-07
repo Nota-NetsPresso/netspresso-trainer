@@ -63,7 +63,7 @@ class SegmentationHFDataset(BaseHFDataset):
         if self.args.augment.reduce_zero_label:
             label = reduce_label(np.array(label))
 
-        if self.args.train.architecture.full == 'pidnet':
+        if self.args.model.architecture.full == 'pidnet':
             edge = generate_edge(np.array(label))
             out = self.transform(self.args.augment)(image=img, mask=label, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})

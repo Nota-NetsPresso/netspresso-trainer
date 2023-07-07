@@ -64,7 +64,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         train_loader = create_loader(
             train_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             input_size=args.training.img_size,
             batch_size=args.training.batch_size,
@@ -80,7 +80,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         eval_loader = create_loader(
             eval_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             input_size=args.training.img_size,
             batch_size=args.training.batch_size,
@@ -98,7 +98,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         train_loader = create_loader(
             train_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             batch_size=args.training.batch_size,
             is_training=True,
@@ -113,7 +113,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         eval_loader = create_loader(
             eval_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             batch_size=args.training.batch_size if model == 'pidnet' and not args.distributed else 1,
             is_training=False,
@@ -130,7 +130,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         train_loader = create_loader(
             train_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             batch_size=args.training.batch_size,
             is_training=True,
@@ -145,7 +145,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
 
         eval_loader = create_loader(
             eval_dataset,
-            args.train.data,
+            args.data.name,
             _logger,
             # TODO: support batch size 1 inference
             batch_size=args.training.batch_size if not args.distributed else 2,
