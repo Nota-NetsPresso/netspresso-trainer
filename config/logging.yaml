@@ -1,4 +1,6 @@
 logging:
+  project_id: test
+  output_dir: ./outputs
   tensorboard: true
   csv: false
   image: true
