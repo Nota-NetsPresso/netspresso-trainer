@@ -1,4 +1,5 @@
 data:
+  name: voc2012
   task: segmentation
   format: local
   path:

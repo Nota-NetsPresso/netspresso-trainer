@@ -1,4 +1,5 @@
 data:
+  name: skin_cancer
   task: classification
   format: huggingface
   metadata:

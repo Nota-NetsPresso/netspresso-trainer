@@ -1,4 +1,5 @@
 data:
+  name: chess
   task: classification
   format: local
   path:
