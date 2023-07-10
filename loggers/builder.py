@@ -41,10 +41,15 @@ class TrainingLogger():
         self.epoch = epoch
         self.num_sample_images = num_sample_images
 
-        self.project_id = args.logging.project_id
+        self.project_id = args.logging.project_id if args.logging.project_id is not None else f"{self.task}_{self.model}"
 
-        result_dir: Path = Path(OUTPUT_ROOT_DIR) / self.project_id
+        version_idx = 0
+        result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
+        while result_dir.exists():
+            version_idx += 1
+            result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
         result_dir.mkdir(exist_ok=True, parents=True)
+        self._result_dir = result_dir
 
         self.use_tensorboard: bool = self.args.logging.tensorboard
         self.use_csvlogger: bool = self.args.logging.csv
@@ -53,11 +58,11 @@ class TrainingLogger():
         self.use_netspresso: bool = self.args.logging.netspresso
 
         self.csv_logger: Optional[BaseCSVLogger] = \
-            CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=result_dir) if self.use_csvlogger else None
+            CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
         self.image_saver: Optional[ImageSaver] = \
-            ImageSaver(model=model, result_dir=result_dir) if self.use_imagesaver else None
+            ImageSaver(model=model, result_dir=self._result_dir) if self.use_imagesaver else None
         self.tensorboard_logger: Optional[TensorboardLogger] = \
-            TensorboardLogger(task=task, model=model, result_dir=result_dir,
+            TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=args.training.epochs) if self.use_stdout else None
@@ -66,6 +71,10 @@ class TrainingLogger():
         if task in LABEL_CONVERTER_PER_TASK:
             pallete = args.data.pallete if 'pallete' in args.data else None
             self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=pallete)
+            
+    @property
+    def result_dir(self):
+        return self._result_dir
 
     def update_epoch(self, epoch: int):
         self.epoch = epoch
@@ -200,8 +209,9 @@ class TrainingLogger():
             )
 
     def log_end_of_traning(self, final_metrics={}):
-        if self.use_tensorboard:
-            self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
+        pass
+        # if self.use_tensorboard:
+        #     self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
 
 
 def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict, num_sample_images: int, epoch: Optional[int] = None):
