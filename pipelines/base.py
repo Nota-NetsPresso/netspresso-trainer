@@ -120,7 +120,7 @@ class BasePipeline(ABC):
         logger.info(f"Total time: {total_train_time:.2f} s")
 
         if self.single_gpu_or_rank_zero:
-            self.train_logger.log_end_of_traning()
+            self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
 
             model = self.model.module if hasattr(self.model, 'module') else self.model
             

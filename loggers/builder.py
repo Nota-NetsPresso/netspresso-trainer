@@ -209,9 +209,8 @@ class TrainingLogger():
             )
 
     def log_end_of_traning(self, final_metrics={}):
-        pass
-        # if self.use_tensorboard:
-        #     self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
+        if self.use_tensorboard:
+            self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
 
 
 def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict, num_sample_images: int, epoch: Optional[int] = None):
