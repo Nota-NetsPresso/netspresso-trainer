@@ -9,7 +9,7 @@ class ImageSaver:
     def __init__(self, model, result_dir) -> None:
         super(ImageSaver, self).__init__()
         self.model = model
-        self.save_dir: Path = Path(result_dir) / "result"
+        self.save_dir: Path = Path(result_dir) / "result_image"
         self.save_dir.mkdir(exist_ok=True)
         self._epoch = None
     

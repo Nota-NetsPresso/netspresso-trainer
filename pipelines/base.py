@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import os
 from itertools import chain
 from statistics import mean
+from pathlib import Path
 
 
 import torch
@@ -119,12 +120,17 @@ class BasePipeline(ABC):
         logger.info(f"Total time: {total_train_time:.2f} s")
 
         if self.single_gpu_or_rank_zero:
-            self.train_logger.log_end_of_traning()
+            self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
 
-        model = self.model.module if hasattr(self.model, 'module') else self.model
-        torch.save(model.state_dict(), 'model.pth')
-        save_graphmodule(model, 'model.pt')
-        save_onnx(model, 'model.onnx', sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
+            model = self.model.module if hasattr(self.model, 'module') else self.model
+            
+            result_dir = self.train_logger.result_dir
+            model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
+            
+            torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+            save_onnx(model, model_path.with_suffix(".onnx"),
+                      sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):

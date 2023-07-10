@@ -1,8 +1,8 @@
 logging:
-  project_id: test
+  project_id: ~
   output_dir: ./outputs
   tensorboard: true
-  csv: false
+  csv: true
   image: true
   stdout: true
   netspresso: false

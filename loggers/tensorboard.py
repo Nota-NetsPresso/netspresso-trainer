@@ -5,6 +5,8 @@ import math
 import numpy as np
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torch.utils.tensorboard.summary import hparams
+from omegaconf import OmegaConf
 
 
 class TensorboardLogger:
@@ -68,11 +70,38 @@ class TensorboardLogger:
     def log_images_with_dict(self, image_dict, mode='train'):
         for k, v in image_dict.items():
             self._log_image(k, v, mode)
+    
+    def _get_rasterized_hparam(self, hparams):
+        if not isinstance(hparams, dict):
+            stem = hparams
+            if not isinstance(hparams, (int, float, str, bool, torch.Tensor)):
+                return str(stem)
+            return stem
+        
+        rasterized_dict = {}
+        for key, value in hparams.items():
+            if isinstance(value, dict):
+                rasterized_value = self._get_rasterized_hparam({f"{key}/{k}": v for k, v in value.items()})
+                for k, v in rasterized_value.items():
+                    rasterized_dict[k] = v
+                continue
+            rasterized_value = self._get_rasterized_hparam(value)
+            rasterized_dict[key] = rasterized_value
+        return rasterized_dict
 
-    def log_hparams(self, hp, final_metrics={}):
-        # TODO: logging hp in recursive way
-        hp_for_log = {key: value for key, value in dict(hp).items() if isinstance(value, float) or isinstance(value, int)}
-        self.tensorboard.add_hparams(hp_for_log, metric_dict=final_metrics)
+    def log_hparams(self, hp_omegaconf: Union[Dict, List], final_metrics={}):
+        
+        final_metrics = {f"hparams_metrics/{k}": v for k, v in final_metrics.items()}
+        
+        hp_dict = OmegaConf.to_container(hp_omegaconf, resolve=True)
+        hp_for_log = self._get_rasterized_hparam(hp_dict)
+        
+        exp, ssi, sei = hparams(hparam_dict=hp_for_log, metric_dict=final_metrics)   
+        self.tensorboard.file_writer.add_summary(exp)
+        self.tensorboard.file_writer.add_summary(ssi)
+        self.tensorboard.file_writer.add_summary(sei)
+        for k, v in final_metrics.items():
+            self.tensorboard.add_scalar(k, v)
 
     def __call__(self,
                  train_losses, train_metrics, valid_losses, valid_metrics,
