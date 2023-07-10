@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Optional, Union
 import numpy as np
 import torch
 import PIL.Image as Image
+from omegaconf import OmegaConf
 
 from loggers.base import BaseCSVLogger
 from loggers.classification import ClassificationCSVLogger
@@ -50,6 +51,7 @@ class TrainingLogger():
             result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
         result_dir.mkdir(exist_ok=True, parents=True)
         self._result_dir = result_dir
+        OmegaConf.save(config=self.args, f=(result_dir / "hparams.yaml"))
 
         self.use_tensorboard: bool = self.args.logging.tensorboard
         self.use_csvlogger: bool = self.args.logging.csv
