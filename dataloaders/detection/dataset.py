@@ -128,35 +128,3 @@ def load_samples_local(args_data):
                             generator=torch.Generator().manual_seed(42))
     
     return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
-
-
-def create_detection_dataset(args, transform, target_transform=None):
-    data_format = args.data.format
-    if data_format == 'local':
-        train_samples, valid_samples, test_samples, misc = load_samples_local(args.data)
-        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
-        
-        train_dataset = DetectionCustomDataset(
-            args, idx_to_class=idx_to_class, split='train',
-            samples=train_samples, transform=transform
-        )
-        
-        valid_dataset = None
-        if valid_samples is not None:
-            valid_dataset = DetectionCustomDataset(
-                args, idx_to_class=idx_to_class, split='valid',
-                samples=valid_samples, transform=target_transform
-            )
-        
-        test_dataset = None
-        if test_samples is not None:
-            test_dataset = DetectionCustomDataset(
-                args, idx_to_class=idx_to_class, split='test',
-                samples=test_samples, transform=target_transform
-            )
-        
-        return train_dataset, valid_dataset, test_dataset 
-    elif data_format == 'huggingface':
-        raise NotImplementedError(f"Currently, detection training with Hugging Face dataset is not supported.")
-    else:
-        raise AssertionError(f"No such data format named {data_format}!")

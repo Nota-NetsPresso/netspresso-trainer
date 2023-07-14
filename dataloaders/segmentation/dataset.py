@@ -18,13 +18,6 @@ logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def exist_name(candidate, folder_iterable):
-    try:
-        return list(filter(lambda x: candidate[0] in x, folder_iterable))[0]
-    except:
-        return list(filter(lambda x: candidate[1] in x, folder_iterable))[0]
-
-
 def read_json(json_path):
     with open(json_path, 'r') as f:
         data = json.load(f)
@@ -119,58 +112,3 @@ def load_samples_huggingface(args_data):
         train_samples = splitted_datasets['train']
         valid_samples = splitted_datasets['test']
     return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
-    
-
-def create_segmentation_dataset(args, transform, target_transform=None):
-    data_format = args.data.format
-    if data_format == 'local':
-        # TODO: Load train/valid/test data samples
-        train_samples, valid_samples, test_samples, misc = load_samples_local(args.data)
-        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
-        
-        train_dataset = SegmentationCustomDataset(
-            args, idx_to_class=idx_to_class, split='train',
-            samples=train_samples, transform=transform
-        )
-        
-        valid_dataset = None
-        if valid_samples is not None:
-            valid_dataset = SegmentationCustomDataset(
-                args, idx_to_class=idx_to_class, split='valid',
-                samples=valid_samples, transform=target_transform
-            )
-        
-        test_dataset = None
-        if test_samples is not None:
-            test_dataset = SegmentationCustomDataset(
-                args, idx_to_class=idx_to_class, split='test',
-                samples=test_samples, transform=target_transform
-            )
-        
-        return train_dataset, valid_dataset, test_dataset        
-    elif data_format == 'huggingface':
-        train_samples, valid_samples, test_samples, misc = load_samples_huggingface(args.data)
-        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
-        
-        train_dataset = SegmentationHFDataset(
-            args, idx_to_class=idx_to_class, split='train',
-            huggingface_dataset=train_samples, transform=transform
-        )
-        
-        valid_dataset = None
-        if valid_samples is not None:
-            valid_dataset = SegmentationHFDataset(
-                args, idx_to_class=idx_to_class, split='valid',
-                huggingface_dataset=valid_samples, transform=target_transform
-            )
-        
-        test_dataset = None
-        if test_samples is not None:
-            test_dataset = SegmentationHFDataset(
-                args, idx_to_class=idx_to_class, split='test',
-                huggingface_dataset=test_samples, transform=target_transform
-            )
-        
-        return train_dataset, valid_dataset, test_dataset     
-    else:
-        raise AssertionError(f"No such data format named {data_format}!")

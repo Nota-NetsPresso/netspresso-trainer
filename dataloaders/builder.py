@@ -5,13 +5,13 @@ import logging
 from torch.utils.data import DataLoader
 
 from dataloaders.classification import (
-    create_classification_dataset, create_classification_transform
+    ClassificationCustomDataset, ClassificationHFDataset, create_classification_transform
 )
 from dataloaders.segmentation import (
-    create_segmentation_dataset, create_segmentation_transform
+    SegmentationCustomDataset, SegmentationHFDataset, create_segmentation_transform
 )
 from dataloaders.detection import (
-    create_detection_dataset, create_detection_transform, detection_collate_fn
+    DetectionCustomDataset, create_detection_transform, detection_collate_fn
 )
 from dataloaders.utils.loader import create_loader
 from utils.logger import set_logger
@@ -25,11 +25,17 @@ TRANSFORMER_COMPOSER = {
     'detection': create_detection_transform
 }
 
-DATASET_BUILDER = {
-    'classification': create_classification_dataset,
-    'segmentation': create_segmentation_dataset,
-    'detection': create_detection_dataset,
+CUSTOM_DATASET = {
+    'classification': ClassificationCustomDataset,
+    'segmentation': SegmentationCustomDataset,
+    'detection': DetectionCustomDataset
 }
+
+HUGGINGFACE_DATASET = {
+    'classification': ClassificationHFDataset,
+    'segmentation': SegmentationHFDataset
+}
+
 
 def build_dataset(args):
 
@@ -39,14 +45,63 @@ def build_dataset(args):
     task = args.data.task
 
     assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
-    assert task in DATASET_BUILDER, f"The given task `{task}` is not supported!"
 
     train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
-    eval_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
-
-    train_dataset, valid_dataset, test_dataset = DATASET_BUILDER[task](
-        args, transform=train_transform, target_transform=eval_transform
-    )
+    target_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
+    
+    data_format = args.data.format
+    
+    assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
+    
+    if data_format == 'local':
+        assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
+        
+        train_samples, valid_samples, test_samples, misc = load_samples(args.data)
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        
+        train_dataset = CUSTOM_DATASET[task](
+            args, idx_to_class=idx_to_class, split='train',
+            samples=train_samples, transform=train_transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = CUSTOM_DATASET[task](
+                args, idx_to_class=idx_to_class, split='valid',
+                samples=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = CUSTOM_DATASET[task](
+                args, idx_to_class=idx_to_class, split='test',
+                samples=test_samples, transform=target_transform
+            )
+            
+    elif data_format == 'huggingface':
+        assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
+        
+        train_samples, valid_samples, test_samples, misc = load_samples_huggingface(args.data)
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        
+        train_dataset = HUGGINGFACE_DATASET[task](
+            args, idx_to_class=idx_to_class, split='train',
+            huggingface_dataset=train_samples, transform=train_transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = HUGGINGFACE_DATASET[task](
+                args, idx_to_class=idx_to_class, split='valid',
+                huggingface_dataset=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = HUGGINGFACE_DATASET[task](
+                args, idx_to_class=idx_to_class, split='test',
+                huggingface_dataset=test_samples, transform=target_transform
+            )
 
     _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
     if valid_dataset is not None:
