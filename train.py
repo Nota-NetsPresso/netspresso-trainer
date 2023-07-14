@@ -61,8 +61,7 @@ def parse_args_netspresso():
 
     return args
 
-
-def train():
+def set_arguments():
     args_parsed = parse_args_netspresso()
     args_data = OmegaConf.load(args_parsed.data)
     args_augmentation = OmegaConf.load(args_parsed.augmentation)
@@ -79,6 +78,11 @@ def train():
     args = OmegaConf.merge(args, args_logging)
     args = OmegaConf.merge(args, args_environment)
     
+    return args_parsed, args
+
+def train():
+    args_parsed, args = set_arguments()
+    
     distributed, world_size, rank, devices = set_device(args.training.seed)
 
     args.distributed = distributed
@@ -87,6 +91,7 @@ def train():
 
     task = str(args.model.task).lower()
     assert task in SUPPORT_TASK
+    
     model_name = args.model.architecture.full \
         if args.model.architecture.full is not None \
         else args.model.architecture.backbone
