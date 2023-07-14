@@ -6,17 +6,16 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 
 
-def set_device(args):
+def set_device(seed):
     # Torch settings
     cudnn.enabled = False
 
     # Reproducibility (except cudnn deterministicity)
-    if args.training.seed is not None:
-        torch.manual_seed(args.training.seed)  # for cpu
-        if args.environment.device:
-            torch.cuda.manual_seed(args.training.seed)  # for gpu
-        random.seed(args.training.seed)
-        np.random.seed(args.training.seed)
+    if seed is not None:
+        torch.manual_seed(seed)  # for cpu
+        torch.cuda.manual_seed(seed)  # for gpu
+        random.seed(seed)
+        np.random.seed(seed)
 
     # prepare device
     devices = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -26,7 +25,7 @@ def set_device(args):
     world_size = 1
     rank = 0  # global rank
     if distributed:
-        assert args.training.seed is not None and cudnn.benchmark == False, "distributed training requires reproducibility"
+        assert seed is not None and cudnn.benchmark == False, "distributed training requires reproducibility"
         torch.distributed.init_process_group(backend='nccl', init_method='env://')
         rank = torch.distributed.get_rank()
         devices = torch.device(f'cuda:{rank}')

@@ -8,7 +8,7 @@ import torch.nn as nn
 import numpy as np
 from omegaconf import OmegaConf
 
-from optimizers.builder import build_optimizer
+from optimizers import build_optimizer
 from schedulers import build_scheduler
 from utils.logger import set_logger
 

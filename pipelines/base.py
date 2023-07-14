@@ -9,13 +9,13 @@ import torch
 from tqdm import tqdm
 from omegaconf import OmegaConf
 
-from losses.builder import build_losses
-from metrics.builder import build_metrics
+from losses import build_losses
+from metrics import build_metrics
+from loggers import build_logger, START_EPOCH_ZERO_OR_ONE
 from utils.timer import Timer
 from utils.logger import set_logger, yaml_for_logging
 from utils.fx import save_graphmodule
 from utils.onnx import save_onnx
-from loggers.builder import build_logger, START_EPOCH_ZERO_OR_ONE
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 

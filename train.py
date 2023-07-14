@@ -8,7 +8,7 @@ from omegaconf import OmegaConf
 
 from dataloaders import build_dataset, build_dataloader
 from models import build_model
-from pipelines import ClassificationPipeline, SegmentationPipeline, DetectionPipeline
+from pipelines import build_pipeline
 from utils.environment import set_device
 from utils.logger import set_logger
 
@@ -61,8 +61,7 @@ def parse_args_netspresso():
 
     return args
 
-
-def train():
+def set_arguments():
     args_parsed = parse_args_netspresso()
     args_data = OmegaConf.load(args_parsed.data)
     args_augmentation = OmegaConf.load(args_parsed.augmentation)
@@ -79,7 +78,12 @@ def train():
     args = OmegaConf.merge(args, args_logging)
     args = OmegaConf.merge(args, args_environment)
     
-    distributed, world_size, rank, devices = set_device(args)
+    return args_parsed, args
+
+def train():
+    args_parsed, args = set_arguments()
+    
+    distributed, world_size, rank, devices = set_device(args.training.seed)
 
     args.distributed = distributed
     args.world_size = world_size
@@ -87,6 +91,7 @@ def train():
 
     task = str(args.model.task).lower()
     assert task in SUPPORT_TASK
+    
     model_name = args.model.architecture.full \
         if args.model.architecture.full is not None \
         else args.model.architecture.backbone
@@ -109,22 +114,9 @@ def train():
     if args.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
-    if task == 'classification':
-        trainer = ClassificationPipeline(args, task, model_name, model, devices,
-                                         train_dataloader, eval_dataloader, train_dataset.class_map,
-                                         profile=args_parsed.profile)
-    elif task == 'segmentation':
-        trainer = SegmentationPipeline(args, task, model_name, model, devices,
-                                       train_dataloader, eval_dataloader, train_dataset.class_map,
-                                       profile=args_parsed.profile)
-        
-    elif task == 'detection':
-        trainer = DetectionPipeline(args, task, model_name, model, devices,
-                                    train_dataloader, eval_dataloader, train_dataset.class_map,
-                                    profile=args_parsed.profile)
-
-    else:
-        raise AssertionError(f"No such task! (task: {task})")
+    trainer = build_pipeline(args, task, model_name, model,
+                             devices, train_dataloader, eval_dataloader,
+                             class_map=train_dataset.class_map, profile=args_parsed.profile)
 
     trainer.set_train()
     trainer.train()
