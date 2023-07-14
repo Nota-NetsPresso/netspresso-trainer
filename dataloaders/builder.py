@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
 import logging
+from typing import List, Dict, Union, Optional, Type
 
 from torch.utils.data import DataLoader
+
+from dataloaders.base import BaseCustomDataset, BaseHFDataset
 
 from dataloaders.classification import (
     ClassificationCustomDataset, ClassificationHFDataset, create_classification_transform
@@ -25,13 +28,13 @@ TRANSFORMER_COMPOSER = {
     'detection': create_detection_transform
 }
 
-CUSTOM_DATASET = {
+CUSTOM_DATASET: Dict[str, Type[BaseCustomDataset]] = {
     'classification': ClassificationCustomDataset,
     'segmentation': SegmentationCustomDataset,
     'detection': DetectionCustomDataset
 }
 
-HUGGINGFACE_DATASET = {
+HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
     'classification': ClassificationHFDataset,
     'segmentation': SegmentationHFDataset
 }
@@ -58,6 +61,7 @@ def build_dataset(args):
         
         train_samples, valid_samples, test_samples, misc = load_samples(args.data)
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = CUSTOM_DATASET[task](
             args, idx_to_class=idx_to_class, split='train',
@@ -75,7 +79,8 @@ def build_dataset(args):
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
                 args, idx_to_class=idx_to_class, split='test',
-                samples=test_samples, transform=target_transform
+                samples=test_samples, transform=target_transform,
+                with_label=test_with_label
             )
             
     elif data_format == 'huggingface':

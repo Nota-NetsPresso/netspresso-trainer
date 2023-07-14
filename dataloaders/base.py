@@ -26,12 +26,14 @@ class BaseCustomDataset(data.Dataset):
             self,
             args,
             root,
-            split
+            split,
+            with_label
     ):
         super(BaseCustomDataset, self).__init__()
         self.args = args
         self._root = root
         self._split = split
+        self._with_label = with_label
 
     @abstractmethod
     def __getitem__(self, index):
@@ -57,6 +59,10 @@ class BaseCustomDataset(data.Dataset):
     def mode(self):
         return self._split
     
+    @property
+    def with_label(self):
+        return self._with_label
+    
     
 class BaseHFDataset(data.Dataset):
 
@@ -64,12 +70,14 @@ class BaseHFDataset(data.Dataset):
             self,
             args,
             root,
-            split
+            split,
+            with_label
     ):
         super(BaseHFDataset, self).__init__()
         self.args = args
         self._root = root
         self._split = split
+        self._with_label = with_label
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):         
         from datasets import load_dataset
@@ -101,6 +109,10 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
+    
+    @property
+    def with_label(self):
+        return self._with_label
 
 
 def BaseLocalSampler(ABC):
