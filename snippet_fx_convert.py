@@ -1,7 +1,7 @@
 from utils.fx import convert_graphmodule
 
 if __name__ == '__main__':
-    from models.builder import AssembleModel
+    from models import AssembleModel
     from omegaconf import OmegaConf
 
     yaml_path = "config/resnet.yaml"

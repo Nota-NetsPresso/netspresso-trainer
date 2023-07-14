@@ -1,2 +1,1 @@
-from models.builder import build_model
-from models.utils import SeparateForwardModule
+from models.builder import build_model, AssembleModel
