@@ -6,8 +6,8 @@ from omegaconf import OmegaConf
 import torch
 from torch.cuda.amp import autocast
 
-from optimizers.builder import build_optimizer
-from schedulers.builder import build_scheduler
+from optimizers import build_optimizer
+from schedulers import build_scheduler
 from pipelines.base import BasePipeline
 from utils.logger import set_logger
 
