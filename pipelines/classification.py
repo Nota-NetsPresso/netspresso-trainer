@@ -71,12 +71,24 @@ class ClassificationPipeline(BasePipeline):
         images = images.to(self.devices)
         target = target.to(self.devices)
 
-        with autocast():
-            out = self.model(images)
-            self.loss(out, target, mode='valid')
-            self.metric(out['pred'], target, mode='valid')
+        out = self.model(images)
+        self.loss(out, target, mode='valid')
+        self.metric(out['pred'], target, mode='valid')
 
         # self.one_epoch_result.append(self.loss.result('valid'))
 
         if self.args.distributed:
             torch.distributed.barrier()
+
+    def test_step(self, batch):
+        self.model.eval()
+        images, _ = batch
+        images = images.to(self.devices)
+
+        out = self.model(images.unsqueeze(0))
+        _, pred = out['pred'].topk(1, 1, True, True)
+
+        if self.args.distributed:
+            torch.distributed.barrier()
+            
+        return pred

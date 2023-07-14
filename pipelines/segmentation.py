@@ -105,3 +105,14 @@ class SegmentationPipeline(BasePipeline):
                 'bd_gt': bd_gt.detach().cpu().numpy()
             })
         return {k: v for k, v in logs.items()}
+
+    def test_step(self, batch):
+        self.model.eval()
+        images = batch['pixel_values']
+        images = images.to(self.devices)
+
+        out = self.model(images.unsqueeze(0))
+
+        output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
+
+        return output_seg

@@ -120,6 +120,9 @@ def train():
 
     trainer.set_train()
     trainer.train()
+    
+    if test_dataset:
+        trainer.inference(test_dataset)
 
 
 if __name__ == '__main__':
