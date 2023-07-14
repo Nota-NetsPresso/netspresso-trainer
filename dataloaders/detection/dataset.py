@@ -10,8 +10,7 @@ from omegaconf import DictConfig
 from torch.utils.data import random_split
 import torch
 
-from dataloaders.detection.local import DetectionCustomDataset
-# from dataloaders.detection.huggingface import DetectionHFDataset
+from dataloaders.base import BaseDataSampler
 from dataloaders.utils.constants import IMG_EXTENSIONS
 from dataloaders.utils.misc import natural_key
 from utils.logger import set_logger
@@ -39,6 +38,11 @@ def get_label(label_file: Path):
     label, boxes = target_array[:, 0], target_array[:, 1:]
     label = label[..., np.newaxis]
     return label, boxes
+
+class DetectionDataSampler:
+    pass
+
+
 
 def load_custom_class_map(id_mapping: List[str]):
     idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(id_mapping)}

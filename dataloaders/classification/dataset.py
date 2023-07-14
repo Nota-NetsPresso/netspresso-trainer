@@ -9,8 +9,7 @@ import torch
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 
-from dataloaders.classification.local import ClassificationCustomDataset
-from dataloaders.classification.huggingface import ClassificationHFDataset
+from dataloaders.base import BaseDataSampler
 from dataloaders.utils.constants import IMG_EXTENSIONS
 from dataloaders.utils.misc import natural_key
 from utils.logger import set_logger
@@ -20,6 +19,8 @@ logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 TRAIN_VALID_SPLIT_RATIO = 0.9
 _ERROR_RETRY = 50
 
+class ClassficationDataSampler:
+    pass
 
     
 def load_class_map_with_id_mapping(root_dir, train_dir,

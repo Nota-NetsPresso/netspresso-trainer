@@ -115,10 +115,18 @@ class BaseHFDataset(data.Dataset):
         return self._with_label
 
 
-def BaseLocalSampler(ABC):
+class BaseDataSampler(ABC):
     def __init__(self):
         pass
     
     @abstractmethod
     def load_data(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def load_samples(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def load_huggingface_samples(self):
         raise NotImplementedError

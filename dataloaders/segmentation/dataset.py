@@ -8,8 +8,7 @@ import torch
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 
-from dataloaders.segmentation.local import SegmentationCustomDataset
-from dataloaders.segmentation.huggingface import SegmentationHFDataset
+from dataloaders.base import BaseDataSampler
 from dataloaders.utils.constants import IMG_EXTENSIONS
 from dataloaders.utils.misc import natural_key
 from utils.logger import set_logger
@@ -26,6 +25,10 @@ def read_json(json_path):
 def load_custom_class_map(id_mapping: List[str]):
     idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(id_mapping)}
     return idx_to_class
+
+
+class SegmentationDataSampler:
+    pass
 
 def load_data(args_data: DictConfig, split='train'):
     data_root = Path(args_data.path.root)
