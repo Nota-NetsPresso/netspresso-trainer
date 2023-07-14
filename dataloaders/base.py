@@ -1,6 +1,7 @@
 import os
 import logging
-from abc import abstractmethod, abstractproperty
+import json
+from abc import ABC, abstractmethod, abstractproperty
 from itertools import repeat
 from pathlib import Path
 
@@ -8,8 +9,16 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-_logger = logging.getLogger(__name__)
+from utils.logger import set_logger
 
+_logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
+
+TRAIN_VALID_SPLIT_RATIO = 0.9
+
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 class BaseCustomDataset(data.Dataset):
 
@@ -92,3 +101,12 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
+
+
+def BaseLocalSampler(ABC):
+    def __init__(self):
+        pass
+    
+    @abstractmethod
+    def load_data(self):
+        raise NotImplementedError
