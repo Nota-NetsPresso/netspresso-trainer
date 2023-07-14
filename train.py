@@ -79,7 +79,7 @@ def train():
     args = OmegaConf.merge(args, args_logging)
     args = OmegaConf.merge(args, args_environment)
     
-    distributed, world_size, rank, devices = set_device(args)
+    distributed, world_size, rank, devices = set_device(args.training.seed)
 
     args.distributed = distributed
     args.world_size = world_size
