@@ -4,26 +4,11 @@ from itertools import chain
 import torch
 import torch.nn as nn
 
-from losses.common import CrossEntropyLoss
-from losses.classification.label_smooth import LabelSmoothingCrossEntropy
-from losses.classification.soft_target import SoftTargetCrossEntropy
-from losses.segmentation.pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
-from losses.detection.fastrcnn import RoiHeadLoss, RPNLoss
+from losses.registry import LOSS_DICT
 from utils.common import AverageMeter
 
 MODE = ['train', 'valid', 'test']
 IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
-
-LOSS_DICT = {
-    'cross_entropy': CrossEntropyLoss,
-    'soft_target_cross_entropy': SoftTargetCrossEntropy,
-    'label_smoothing_cross_entropy': LabelSmoothingCrossEntropy,
-    'pidnet_cross_entropy': PIDNetCrossEntropy,
-    'boundary_loss': BondaryLoss,
-    'pidnet_cross_entropy_with_boundary': PIDNetBoundaryAwareCrossEntropy,
-    'roi_head_loss': RoiHeadLoss,
-    'rpn_loss': RPNLoss,
-}
 
 class LossFactory:
     def __init__(self, args, **kwargs) -> None:

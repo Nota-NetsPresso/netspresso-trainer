@@ -7,29 +7,16 @@ import PIL.Image as Image
 from omegaconf import OmegaConf
 
 from loggers.base import BaseCSVLogger
-from loggers.classification import ClassificationCSVLogger
-from loggers.segmentation import SegmentationCSVLogger
+from loggers.registry import CSV_LOGGER_TASK_SPECIFIC, LABEL_CONVERTER_PER_TASK
 from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
 from loggers.netspresso import ModelSearchServerHandler
-from loggers.visualizer import VOCColorize, magic_image_handler, DetectionVisualizer
+from loggers.visualizer import magic_image_handler
 from utils.common import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1
-
-
-CSV_LOGGER_TASK_SPECIFIC = {
-    'classification': ClassificationCSVLogger,
-    'segmentation': SegmentationCSVLogger
-}
-
-LABEL_CONVERTER_PER_TASK = {
-    'segmentation': VOCColorize,
-    'detection': DetectionVisualizer,
-}
-
 
 class TrainingLogger():
     def __init__(self, args, task: str, model: str, class_map: Dict,
