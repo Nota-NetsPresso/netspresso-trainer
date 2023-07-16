@@ -11,7 +11,7 @@ from dataloaders.classification import (
     ClassificationCustomDataset, ClassificationHFDataset, ClassficationDataSampler, create_classification_transform
 )
 from dataloaders.segmentation import (
-    SegmentationCustomDataset, SegmentationHFDataset, create_segmentation_transform
+    SegmentationCustomDataset, SegmentationHFDataset, SegmentationDataSampler, create_segmentation_transform
 )
 from dataloaders.detection import (
     DetectionCustomDataset, create_detection_transform, detection_collate_fn
@@ -40,7 +40,8 @@ HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
 }
 
 DATA_SAMPLER: Dict[str, Type[BaseDataSampler]] = {
-    'classification': ClassficationDataSampler
+    'classification': ClassficationDataSampler,
+    'segmentation': SegmentationDataSampler
 }
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
