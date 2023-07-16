@@ -13,8 +13,6 @@ from utils.logger import set_logger
 
 _logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-TRAIN_VALID_SPLIT_RATIO = 0.9
-
 def read_json(json_path):
     with open(json_path, 'r') as f:
         data = json.load(f)
@@ -116,8 +114,9 @@ class BaseHFDataset(data.Dataset):
 
 
 class BaseDataSampler(ABC):
-    def __init__(self):
-        pass
+    def __init__(self, args_data, train_valid_split_ratio):
+        self.args_data = args_data
+        self.train_valid_split_ratio = train_valid_split_ratio
     
     @abstractmethod
     def load_data(self):

@@ -5,10 +5,10 @@ from typing import List, Dict, Union, Optional, Type
 
 from torch.utils.data import DataLoader
 
-from dataloaders.base import BaseCustomDataset, BaseHFDataset
+from dataloaders.base import BaseCustomDataset, BaseHFDataset, BaseDataSampler
 
 from dataloaders.classification import (
-    ClassificationCustomDataset, ClassificationHFDataset, create_classification_transform
+    ClassificationCustomDataset, ClassificationHFDataset, ClassficationDataSampler, create_classification_transform
 )
 from dataloaders.segmentation import (
     SegmentationCustomDataset, SegmentationHFDataset, create_segmentation_transform
@@ -39,6 +39,11 @@ HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
     'segmentation': SegmentationHFDataset
 }
 
+DATA_SAMPLER: Dict[str, Type[BaseDataSampler]] = {
+    'classification': ClassficationDataSampler
+}
+
+TRAIN_VALID_SPLIT_RATIO = 0.9
 
 def build_dataset(args):
 
@@ -48,6 +53,7 @@ def build_dataset(args):
     task = args.data.task
 
     assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
+    assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
     train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
     target_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
@@ -58,8 +64,9 @@ def build_dataset(args):
     
     if data_format == 'local':
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
+        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
         
-        train_samples, valid_samples, test_samples, misc = load_samples(args.data)
+        train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
@@ -85,9 +92,13 @@ def build_dataset(args):
             
     elif data_format == 'huggingface':
         assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
+        assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
         
-        train_samples, valid_samples, test_samples, misc = load_samples_huggingface(args.data)
+        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        
+        train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = HUGGINGFACE_DATASET[task](
             args, idx_to_class=idx_to_class, split='train',
