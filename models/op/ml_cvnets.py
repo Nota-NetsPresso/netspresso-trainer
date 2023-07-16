@@ -725,42 +725,6 @@ class MobileViTBlock(nn.Module):
         self.n_blocks = n_transformer_blocks
         self.conv_ksize = conv_ksize
 
-    def __repr__(self) -> str:
-        repr_str = "{}(".format(self.__class__.__name__)
-
-        repr_str += "\n\t Local representations"
-        if isinstance(self.local_rep, nn.Sequential):
-            for m in self.local_rep:
-                repr_str += "\n\t\t {}".format(m)
-        else:
-            repr_str += "\n\t\t {}".format(self.local_rep)
-
-        repr_str += "\n\t Global representations with patch size of {}x{}".format(
-            self.patch_h, self.patch_w
-        )
-        if isinstance(self.global_rep, nn.Sequential):
-            for m in self.global_rep:
-                repr_str += "\n\t\t {}".format(m)
-        else:
-            repr_str += "\n\t\t {}".format(self.global_rep)
-
-        if isinstance(self.conv_proj, nn.Sequential):
-            for m in self.conv_proj:
-                repr_str += "\n\t\t {}".format(m)
-        else:
-            repr_str += "\n\t\t {}".format(self.conv_proj)
-
-        if self.fusion is not None:
-            repr_str += "\n\t Feature fusion"
-            if isinstance(self.fusion, nn.Sequential):
-                for m in self.fusion:
-                    repr_str += "\n\t\t {}".format(m)
-            else:
-                repr_str += "\n\t\t {}".format(self.fusion)
-
-        repr_str += "\n)"
-        return repr_str
-
     def unfolding(self, feature_map: Tensor) -> Tuple[Tensor, Dict]:
         patch_w, patch_h = self.patch_w, self.patch_h
         patch_area = int(patch_w * patch_h)
@@ -1089,18 +1053,6 @@ class TransformerEncoder(nn.Module):
         act_layer = nn.SiLU(inplace=False)
         return act_layer
 
-    def __repr__(self) -> str:
-        return "{}(embed_dim={}, ffn_dim={}, dropout={}, ffn_dropout={}, attn_fn={}, act_fn={}, norm_fn={})".format(
-            self.__class__.__name__,
-            self.embed_dim,
-            self.ffn_dim,
-            self.std_dropout,
-            self.ffn_dropout,
-            self.attn_fn_name,
-            self.act_fn_name,
-            self.norm_type,
-        )
-
     def forward(
         self,
         x: Tensor,
@@ -1182,11 +1134,6 @@ class SingleHeadAttention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
         self.embed_dim = embed_dim
         self.scaling = self.embed_dim**-0.5
-
-    def __repr__(self) -> str:
-        return "{}(embed_dim={}, attn_dropout={})".format(
-            self.__class__.__name__, self.embed_dim, self.attn_dropout.p
-        )
 
     def forward(
         self,
@@ -1340,11 +1287,6 @@ class MultiHeadAttention(nn.Module):
         self.embed_dim = embed_dim
         self.coreml_compatible = coreml_compatible
         self.use_separate_proj_weight = embed_dim != output_dim
-
-    def __repr__(self):
-        return "{}(head_dim={}, num_heads={}, attn_dropout={})".format(
-            self.__class__.__name__, self.head_dim, self.num_heads, self.attn_dropout.p
-        )
 
     def forward_tracing(
         self,
