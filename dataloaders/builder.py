@@ -1,17 +1,20 @@
 import os
 from pathlib import Path
 import logging
+from typing import List, Dict, Union, Optional, Type
 
 from torch.utils.data import DataLoader
 
+from dataloaders.base import BaseCustomDataset, BaseHFDataset, BaseDataSampler
+
 from dataloaders.classification import (
-    create_classification_dataset, create_classification_transform
+    ClassificationCustomDataset, ClassificationHFDataset, ClassficationDataSampler, create_classification_transform
 )
 from dataloaders.segmentation import (
-    create_segmentation_dataset, create_segmentation_transform
+    SegmentationCustomDataset, SegmentationHFDataset, SegmentationDataSampler, create_segmentation_transform
 )
 from dataloaders.detection import (
-    create_detection_dataset, create_detection_transform, detection_collate_fn
+    DetectionCustomDataset, DetectionDataSampler, create_detection_transform, detection_collate_fn
 )
 from dataloaders.utils.loader import create_loader
 from utils.logger import set_logger
@@ -19,17 +22,30 @@ from utils.logger import set_logger
 
 _logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-TRANSFORMER_COMPOSER = {
+CREATE_TRANSFORM = {
     'classification': create_classification_transform,
     'segmentation': create_segmentation_transform,
     'detection': create_detection_transform
 }
 
-DATASET_BUILDER = {
-    'classification': create_classification_dataset,
-    'segmentation': create_segmentation_dataset,
-    'detection': create_detection_dataset,
+CUSTOM_DATASET: Dict[str, Type[BaseCustomDataset]] = {
+    'classification': ClassificationCustomDataset,
+    'segmentation': SegmentationCustomDataset,
+    'detection': DetectionCustomDataset
 }
+
+HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
+    'classification': ClassificationHFDataset,
+    'segmentation': SegmentationHFDataset
+}
+
+DATA_SAMPLER: Dict[str, Type[BaseDataSampler]] = {
+    'classification': ClassficationDataSampler,
+    'segmentation': SegmentationDataSampler,
+    'detection': DetectionDataSampler
+}
+
+TRAIN_VALID_SPLIT_RATIO = 0.9
 
 def build_dataset(args):
 
@@ -38,15 +54,72 @@ def build_dataset(args):
 
     task = args.data.task
 
-    assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
-    assert task in DATASET_BUILDER, f"The given task `{task}` is not supported!"
+    assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
+    assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
-    eval_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
-
-    train_dataset, valid_dataset, test_dataset = DATASET_BUILDER[task](
-        args, transform=train_transform, target_transform=eval_transform
-    )
+    train_transform = CREATE_TRANSFORM[task](args, is_training=True)
+    target_transform = CREATE_TRANSFORM[task](args, is_training=False)
+    
+    data_format = args.data.format
+    
+    assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
+    
+    if data_format == 'local':
+        assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
+        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        
+        train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
+        
+        train_dataset = CUSTOM_DATASET[task](
+            args, idx_to_class=idx_to_class, split='train',
+            samples=train_samples, transform=train_transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = CUSTOM_DATASET[task](
+                args, idx_to_class=idx_to_class, split='valid',
+                samples=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = CUSTOM_DATASET[task](
+                args, idx_to_class=idx_to_class, split='test',
+                samples=test_samples, transform=target_transform,
+                with_label=test_with_label
+            )
+            
+    elif data_format == 'huggingface':
+        assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
+        assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
+        
+        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        
+        train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
+        idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
+        
+        train_dataset = HUGGINGFACE_DATASET[task](
+            args, idx_to_class=idx_to_class, split='train',
+            huggingface_dataset=train_samples, transform=train_transform
+        )
+        
+        valid_dataset = None
+        if valid_samples is not None:
+            valid_dataset = HUGGINGFACE_DATASET[task](
+                args, idx_to_class=idx_to_class, split='valid',
+                huggingface_dataset=valid_samples, transform=target_transform
+            )
+        
+        test_dataset = None
+        if test_samples is not None:
+            test_dataset = HUGGINGFACE_DATASET[task](
+                args, idx_to_class=idx_to_class, split='test',
+                huggingface_dataset=test_samples, transform=target_transform
+            )
 
     _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
     if valid_dataset is not None:

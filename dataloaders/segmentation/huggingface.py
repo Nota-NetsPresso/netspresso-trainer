@@ -18,12 +18,14 @@ class SegmentationHFDataset(BaseHFDataset):
             split,
             huggingface_dataset,
             transform=None,
+            with_label=True
     ):
         root = args.data.metadata.repo
         super(SegmentationHFDataset, self).__init__(
             args,
             root,
-            split
+            split,
+            with_label
         )
         
         self.transform = transform

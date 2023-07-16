@@ -20,12 +20,14 @@ class SegmentationCustomDataset(BaseCustomDataset):
             split,
             samples,
             transform=None,
+            with_label=True,
     ):
         root = args.data.path.root
         super(SegmentationCustomDataset, self).__init__(
             args,
             root,
-            split
+            split,
+            with_label
         )
         
         self.transform = transform

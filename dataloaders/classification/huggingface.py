@@ -17,12 +17,14 @@ class ClassificationHFDataset(BaseHFDataset):
             split,
             huggingface_dataset,
             transform=None,
+            with_label=True
     ):
         root = args.data.metadata.repo
         super(ClassificationHFDataset, self).__init__(
             args,
             root,
-            split
+            split,
+            with_label
         )
         # Make sure that you additionally install `requirements-data.txt`
 

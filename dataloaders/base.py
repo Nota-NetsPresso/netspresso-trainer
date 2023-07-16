@@ -1,6 +1,7 @@
 import os
 import logging
-from abc import abstractmethod, abstractproperty
+import json
+from abc import ABC, abstractmethod, abstractproperty
 from itertools import repeat
 from pathlib import Path
 
@@ -8,8 +9,14 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-_logger = logging.getLogger(__name__)
+from utils.logger import set_logger
 
+_logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
+
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 class BaseCustomDataset(data.Dataset):
 
@@ -17,12 +24,14 @@ class BaseCustomDataset(data.Dataset):
             self,
             args,
             root,
-            split
+            split,
+            with_label
     ):
         super(BaseCustomDataset, self).__init__()
         self.args = args
         self._root = root
         self._split = split
+        self._with_label = with_label
 
     @abstractmethod
     def __getitem__(self, index):
@@ -48,6 +57,10 @@ class BaseCustomDataset(data.Dataset):
     def mode(self):
         return self._split
     
+    @property
+    def with_label(self):
+        return self._with_label
+    
     
 class BaseHFDataset(data.Dataset):
 
@@ -55,12 +68,14 @@ class BaseHFDataset(data.Dataset):
             self,
             args,
             root,
-            split
+            split,
+            with_label
     ):
         super(BaseHFDataset, self).__init__()
         self.args = args
         self._root = root
         self._split = split
+        self._with_label = with_label
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):         
         from datasets import load_dataset
@@ -92,3 +107,25 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
+    
+    @property
+    def with_label(self):
+        return self._with_label
+
+
+class BaseDataSampler(ABC):
+    def __init__(self, args_data, train_valid_split_ratio):
+        self.args_data = args_data
+        self.train_valid_split_ratio = train_valid_split_ratio
+    
+    @abstractmethod
+    def load_data(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def load_samples(self):
+        raise NotImplementedError
+    
+    @abstractmethod
+    def load_huggingface_samples(self):
+        raise NotImplementedError

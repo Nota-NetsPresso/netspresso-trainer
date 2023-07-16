@@ -80,6 +80,10 @@ class BasePipeline(ABC):
     @abstractmethod
     def valid_step(self, batch):
         raise NotImplementedError
+    
+    @abstractmethod
+    def test_step(self, batch):
+        raise NotImplementedError
 
     def train(self):
         logger.info(f"Training configuration:\n{yaml_for_logging(self.args)}")
@@ -146,7 +150,15 @@ class BasePipeline(ABC):
                 returning_samples.append(out)
                 num_returning_samples += len(out['pred'])
         return returning_samples
-
+    
+    @torch.no_grad()
+    def inference(self, test_dataset):
+        returning_samples = []
+        for idx, batch in enumerate(tqdm(test_dataset, leave=False)):
+            out = self.test_step(batch)
+            returning_samples.append(out)
+        return returning_samples
+        
     def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):
         train_losses = self.loss.result('train')
         train_metrics = self.metric.result('train')
