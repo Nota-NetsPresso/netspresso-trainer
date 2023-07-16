@@ -22,7 +22,7 @@ from utils.logger import set_logger
 
 _logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-TRANSFORMER_COMPOSER = {
+CREATE_TRANSFORM = {
     'classification': create_classification_transform,
     'segmentation': create_segmentation_transform,
     'detection': create_detection_transform
@@ -53,11 +53,11 @@ def build_dataset(args):
 
     task = args.data.task
 
-    assert task in TRANSFORMER_COMPOSER, f"The given task `{task}` is not supported!"
+    assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = TRANSFORMER_COMPOSER[task](args, is_training=True)
-    target_transform = TRANSFORMER_COMPOSER[task](args, is_training=False)
+    train_transform = CREATE_TRANSFORM[task](args, is_training=True)
+    target_transform = CREATE_TRANSFORM[task](args, is_training=False)
     
     data_format = args.data.format
     
