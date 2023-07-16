@@ -87,3 +87,15 @@ class DetectionPipeline(BasePipeline):
                        for bbox, label in zip(out['post_boxes'], out['post_labels'])],                
         }
         return {k: v for k, v in logs.items()}
+
+    def test_step(self, batch):
+        self.model.eval()
+        images = batch['pixel_values']
+        images = images.to(self.devices)
+
+        out = self.model(images.unsqueeze(0))
+
+        results = [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],        
+
+        return results
