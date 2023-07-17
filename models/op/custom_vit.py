@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock
+from models.op.base_metaformer import MetaFormer, MetaFormerEncoder, MetaFormerBlock
 from models.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 
@@ -499,31 +499,9 @@ class ViTModel(nn.Module):
             attentions=encoder_outputs.attentions,
         )
 
-
-class ViT(MetaFormer):
-    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
-        super().__init__()
-        self.patch_embed = nn.Identity()
-        self.blocks = nn.ModuleList(
-            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
-        )
-        self.norm = nn.Identity()
-        
-    # def forward_embeddings(self, x):
-    #     x = self.patch_embed(x)
-    #     return x
-    
-    # def forward_tokens(self, x):
-    #     for block_idx, block in enumerate(self.blocks):
-    #         x = block(x)
-    #     return x
-    
-    # def forward(self, x):
-    #     x = self.forward_embeddings(x)
-    #     x = self.forward_tokens(x)
-    #     x = self.norm(x)
-    #     return x
-    
+### New definition
+###
+###
 
 class ViTBlock(MetaFormerBlock):
     def __init__(self, hidden_size, layer_norm_eps) -> None:
@@ -545,3 +523,43 @@ class ViTBlock(MetaFormerBlock):
     #     out_final = out_final + out_token_mixer
         
     #     return out_final
+    
+    
+class ViTEncoder(MetaFormerEncoder):
+    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
+        super().__init__()
+        self.blocks = nn.ModuleList(
+            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
+        )
+    
+    def forward(self, x):
+        for block_idx, block in enumerate(self.blocks):
+            x = block(x)
+        return x
+
+class ViT(MetaFormer):
+    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
+        super().__init__()
+        self.patch_embed = nn.Identity()
+        self.encoder = ViTEncoder(num_layers, hidden_size, layer_norm_eps)
+        self.norm = nn.Identity()
+        
+    # def forward_embeddings(self, x):
+    #     x = self.patch_embed(x)
+    #     return x
+    
+    # def forward_tokens(self, x):
+    #     x = self.encoder(x)
+    #     return x
+    
+    # def forward(self, x):
+    #     x = self.patch_embed(x)
+    #     x = self.encoder(x)
+    #     x = self.norm(x)
+    #     return x
+
+    
+
+###
+###
+### END

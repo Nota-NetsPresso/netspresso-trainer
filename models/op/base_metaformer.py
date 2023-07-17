@@ -29,15 +29,24 @@ class MetaFormerBlock(nn.Module):
         out_final = out_final + out_token_mixer
         
         return out_final
-        
+    
+class MetaFormerEncoder(nn.Module):
+    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
+        super().__init__()
+        self.blocks = nn.ModuleList(
+            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
+        )
+    
+    def forward(self, x):
+        for block_idx, block in enumerate(self.blocks):
+            x = block(x)
+        return x
 
 class MetaFormer(nn.Module):
     def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
         super().__init__()
         self.patch_embed = nn.Identity()
-        self.blocks = nn.ModuleList(
-            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
-        )
+        self.encoder = MetaFormerEncoder(num_layers, hidden_size, layer_norm_eps)
         self.norm = nn.Identity()
         
     def forward_embeddings(self, x):
@@ -45,12 +54,11 @@ class MetaFormer(nn.Module):
         return x
     
     def forward_tokens(self, x):
-        for block_idx, block in enumerate(self.blocks):
-            x = block(x)
+        x = self.encoder(x)
         return x
     
     def forward(self, x):
-        x = self.forward_embeddings(x)
-        x = self.forward_tokens(x)
+        x = self.patch_embed(x)
+        x = self.encoder(x)
         x = self.norm(x)
         return x
