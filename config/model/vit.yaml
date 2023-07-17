@@ -1,5 +1,5 @@
 model:
-  task: classfication
+  task: classification
   architecture:
     full: ~ # auto
     backbone: vit

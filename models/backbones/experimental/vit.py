@@ -119,6 +119,7 @@ class VisionTransformer(nn.Module):
         # self.post_transformer_norm = get_normalization_layer(
         #     opts=opts, num_features=embed_dim, norm_type=norm_layer
         # )
+        self.post_transformer_norm = nn.LayerNorm(embed_dim)
         transformer_blocks.append(
             LayerNorm(normalized_shape=embed_dim)
         )
@@ -244,94 +245,94 @@ class VisionTransformer(nn.Module):
         return task.lower() in SUPPORTING_TASK
 
 
-    @classmethod
-    def add_arguments(cls, parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-        group = parser.add_argument_group(
-            title="".format(cls.__name__), description="".format(cls.__name__)
-        )
-        group.add_argument(
-            "--model.classification.vit.mode",
-            type=str,
-            default="tiny",
-            help="ViT mode. Default is Tiny",
-        )
-        group.add_argument(
-            "--model.classification.vit.dropout",
-            type=float,
-            default=0.0,
-            help="Dropout in ViT layers. Defaults to 0.0",
-        )
+    # @classmethod
+    # def add_arguments(cls, parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    #     group = parser.add_argument_group(
+    #         title="".format(cls.__name__), description="".format(cls.__name__)
+    #     )
+    #     group.add_argument(
+    #         "--model.classification.vit.mode",
+    #         type=str,
+    #         default="tiny",
+    #         help="ViT mode. Default is Tiny",
+    #     )
+    #     group.add_argument(
+    #         "--model.classification.vit.dropout",
+    #         type=float,
+    #         default=0.0,
+    #         help="Dropout in ViT layers. Defaults to 0.0",
+    #     )
 
-        group.add_argument(
-            "--model.classification.vit.norm-layer",
-            type=str,
-            default="layer_norm",
-            help="Normalization layer in ViT",
-        )
+    #     group.add_argument(
+    #         "--model.classification.vit.norm-layer",
+    #         type=str,
+    #         default="layer_norm",
+    #         help="Normalization layer in ViT",
+    #     )
 
-        group.add_argument(
-            "--model.classification.vit.sinusoidal-pos-emb",
-            action="store_true",
-            help="Use sinusoidal positional encoding instead of learnable",
-        )
-        group.add_argument(
-            "--model.classification.vit.no-cls-token",
-            action="store_true",
-            help="Do not use classification token",
-        )
-        group.add_argument(
-            "--model.classification.vit.use-pytorch-mha",
-            action="store_true",
-            help="Use PyTorch's native multi-head attention",
-        )
+    #     group.add_argument(
+    #         "--model.classification.vit.sinusoidal-pos-emb",
+    #         action="store_true",
+    #         help="Use sinusoidal positional encoding instead of learnable",
+    #     )
+    #     group.add_argument(
+    #         "--model.classification.vit.no-cls-token",
+    #         action="store_true",
+    #         help="Do not use classification token",
+    #     )
+    #     group.add_argument(
+    #         "--model.classification.vit.use-pytorch-mha",
+    #         action="store_true",
+    #         help="Use PyTorch's native multi-head attention",
+    #     )
 
-        group.add_argument(
-            "--model.classification.vit.use-simple-fpn",
-            action="store_true",
-            help="Add simple FPN for down-stream tasks",
-        )
+    #     group.add_argument(
+    #         "--model.classification.vit.use-simple-fpn",
+    #         action="store_true",
+    #         help="Add simple FPN for down-stream tasks",
+    #     )
 
-        group.add_argument(
-            "--model.classification.vit.checkpoint-segments",
-            type=int,
-            default=4,
-            help="Number of checkpoint segments",
-        )
+    #     group.add_argument(
+    #         "--model.classification.vit.checkpoint-segments",
+    #         type=int,
+    #         default=4,
+    #         help="Number of checkpoint segments",
+    #     )
 
-        return parser
+    #     return parser
 
-    def _extract_features(self, x: Tensor, *args, **kwargs) -> Tensor:
-        raise NotImplementedError(
-            "ViT does not support feature extraction the same way as CNN."
-        )
+    # def _extract_features(self, x: Tensor, *args, **kwargs) -> Tensor:
+    #     raise NotImplementedError(
+    #         "ViT does not support feature extraction the same way as CNN."
+    #     )
 
     def extract_patch_embeddings(self, x: Tensor) -> Tensor:
         # x -> [B, C, H, W]
-        B_ = x.shape[0]
+        B_ = x.shape[0]  # B x 3(={RGB}) x H x W
 
         # [B, C, H, W] --> [B, C, n_h, n_w]
-        patch_emb = self.patch_emb(x)
+        patch_emb = self.patch_emb(x)  # B x C(=embed_dim) x H'(=patch_size) x W'(=patch_size)
         # [B, C, n_h, n_w] --> [B, C, N]
-        patch_emb = patch_emb.flatten(2)
+        patch_emb = patch_emb.flatten(2)  # B x C x H'*W'
         # [B, C, N] --> [B, N, C]
-        patch_emb = patch_emb.transpose(1, 2).contiguous()
+        patch_emb = patch_emb.transpose(1, 2).contiguous()  # B x H'*W' x C
 
         # add classification token
         if self.cls_token is not None:
-            cls_tokens = self.cls_token.expand(B_, -1, -1)
-            patch_emb = torch.cat((cls_tokens, patch_emb), dim=1)
+            cls_tokens = self.cls_token.expand(B_, -1, -1)  # B x 1 x C
+            patch_emb = torch.cat((cls_tokens, patch_emb), dim=1)  # B x (H'*W' + 1) x C
 
-        patch_emb = self.pos_embed(patch_emb)
-        return patch_emb
+        patch_emb = self.pos_embed(patch_emb)  # B x (H'*W' + 1) x C
+        return patch_emb  # B x (H'*W' + 1) x C
 
     def _forward_classifier(self, x: Tensor, *args, **kwargs) -> Tensor:
-        x = self.extract_patch_embeddings(x)
-        x = self.transformer(x)
-        if self.use_pytorch_mha:
-            # [B, N, C] --> [N, B, C]
-            # For PyTorch MHA, we need sequence first.
-            # For custom implementation, batch is the first
-            x = x.transpose(0, 1)
+        x = self.extract_patch_embeddings(x)  # B x (H'*W' + 1) x C
+        
+        # if self.use_pytorch_mha:
+        #     # [B, N, C] --> [N, B, C]
+        #     # For PyTorch MHA, we need sequence first.
+        #     # For custom implementation, batch is the first
+        #     x = x.transpose(0, 1)
 
         # if self.gradient_checkpointing:
         #     # we use sequential checkpoint function, which divides the model into chunks and checkpoints each segment
@@ -344,7 +345,9 @@ class VisionTransformer(nn.Module):
         # else:
         # for layer in self.transformer:
         #     x = layer(x, use_pytorch_mha=self.use_pytorch_mha)
-        x = self.transformer(x)
+        
+        x = self.transformer(x)  # B x (H'*W' + 1) x C
+        x = self.post_transformer_norm(x)  # B x (H'*W' + 1) x C
 
         # [N, B, C] or [B, N, C] --> [B, C]
         if self.cls_token is not None:

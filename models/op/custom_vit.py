@@ -33,13 +33,25 @@ class ViTPatchEmbeddings(nn.Module):
 
         self.projection = nn.Conv2d(in_channels, hidden_size, kernel_size=patch_size, stride=patch_size)
 
-    def forward(self, pixel_values: torch.Tensor) -> torch.Tensor:
+    def forward(self, pixel_values: torch.Tensor, interpolate_pos_encoding: bool) -> torch.Tensor:
         _, C, H, W = pixel_values.shape
 
         # (H, W) should be matched with self.image_size
         # assert H == self.image_size[0] and W == self.image_size[1]
+        
+        if C != self.in_channels:
+            raise ValueError(
+                "Make sure that the channel dimension of the pixel values match with the one set in the configuration."
+                f" Expected {self.in_channels} but got {C}."
+            )
+        if not interpolate_pos_encoding:
+            if H != self.image_size[0] or W != self.image_size[1]:
+                raise ValueError(
+                    f"Input image size ({H}*{W}) doesn't match model"
+                    f" ({self.image_size[0]}*{self.image_size[1]})."
+                )
 
-        embeddings = self.projection(pixel_values).flatten(2).transpose(1, 2)
+        embeddings = self.projection(pixel_values).flatten(2).transpose(1, 2)  # B x (H*W) x C(=hidden_size)
         return embeddings
 
 class ViTEmbeddings(nn.Module):
@@ -51,8 +63,8 @@ class ViTEmbeddings(nn.Module):
     def __init__(self, config, use_mask_token: bool = False) -> None:
         super().__init__()
 
-        self.cls_token = nn.Parameter(torch.randn(1, 1, config.hidden_size))
-        self.mask_token = nn.Parameter(torch.zeros(1, 1, config.hidden_size)) if use_mask_token else None
+        self.cls_token = nn.Parameter(torch.randn(1, 1, config.hidden_size))  # C(=hidden_size)
+        self.mask_token = nn.Parameter(torch.zeros(1, 1, config.hidden_size)) if use_mask_token else None  # Optional[C(=hidden_size)]
         self.patch_embeddings = ViTPatchEmbeddings(config)
         num_patches = self.patch_embeddings.num_patches
         self.position_embeddings = nn.Parameter(torch.randn(1, num_patches + 1, config.hidden_size))
@@ -98,29 +110,29 @@ class ViTEmbeddings(nn.Module):
         bool_masked_pos: Optional[torch.BoolTensor] = None,
         interpolate_pos_encoding: bool = False,
     ) -> torch.Tensor:
-        batch_size, num_channels, height, width = pixel_values.shape
-        embeddings = self.patch_embeddings(pixel_values, interpolate_pos_encoding=interpolate_pos_encoding)
+        batch_size, num_channels, height, width = pixel_values.shape  # B x 3(={RGB}) x H x W
+        embeddings = self.patch_embeddings(pixel_values, interpolate_pos_encoding=interpolate_pos_encoding)  # B x H'*W'(=num_patches) x C(=hidden_size)
 
         if bool_masked_pos is not None:
-            seq_length = embeddings.shape[1]
-            mask_tokens = self.mask_token.expand(batch_size, seq_length, -1)
+            seq_length = embeddings.shape[1]  # (H*W)
+            mask_tokens = self.mask_token.expand(batch_size, seq_length, -1)  # B x H'*W' x C
             # replace the masked visual tokens by mask_tokens
             mask = bool_masked_pos.unsqueeze(-1).type_as(mask_tokens)
-            embeddings = embeddings * (1.0 - mask) + mask_tokens * mask
+            embeddings = embeddings * (1.0 - mask) + mask_tokens * mask  # B x H'*W' x C
 
         # add the [CLS] token to the embedded patch tokens
-        cls_tokens = self.cls_token.expand(batch_size, -1, -1)
-        embeddings = torch.cat((cls_tokens, embeddings), dim=1)
+        cls_tokens = self.cls_token.expand(batch_size, -1, -1)  # B x 1 x C
+        embeddings = torch.cat((cls_tokens, embeddings), dim=1)  # B x (H'*W' + 1) x C
 
         # add positional encoding to each token
         if interpolate_pos_encoding:
-            embeddings = embeddings + self.interpolate_pos_encoding(embeddings, height, width)
+            embeddings = embeddings + self.interpolate_pos_encoding(embeddings, height, width)  # B x (H'*W' + 1) x C
         else:
-            embeddings = embeddings + self.position_embeddings
+            embeddings = embeddings + self.position_embeddings  # B x (H'*W' + 1) x C
 
-        embeddings = self.dropout(embeddings)
+        embeddings = self.dropout(embeddings)  # B x (H'*W' + 1) x C
 
-        return embeddings
+        return embeddings  # B x (H'*W' + 1) x C
     
     
 class MultiHeadSelfAttention(nn.Module):
