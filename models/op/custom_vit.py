@@ -8,22 +8,9 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.swish import Swish
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock
+from models.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
-
-NORM_REGISTRY: Dict[str, nn.Module] = {
-    'batch_norm': nn.BatchNorm2d,
-    'instance_norm': nn.InstanceNorm2d,
-}
-
-ACTIVATION_REGISTRY: Dict[str, nn.Module] = {
-    'relu': nn.ReLU,
-    'prelu': nn.PReLU,
-    'leaky_relu': nn.LeakyReLU,
-    'gelu': nn.GELU,
-    'silu': nn.SiLU,
-    'swish': Swish
-}
 
 class ViTPatchEmbeddings(nn.Module):
     """
@@ -244,7 +231,7 @@ class MultiHeadSelfAttention(nn.Module):
         # return (context_layer,)
         return context_layer
     
-class MetaFormerBlock(nn.Module):
+class ViTBlock(MetaFormerBlock):
     def __init__(self, hidden_size, layer_norm_eps) -> None:
         super().__init__()
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
@@ -252,21 +239,21 @@ class MetaFormerBlock(nn.Module):
         self.token_mixer = nn.Identity()  # TODO: define token mixer
         self.channel_mlp = nn.Identity()  # TODO: define channel nlp
     
-    def forward(self, x):
-        out_token_mixer = self.layernorm_before(x)
-        out_token_mixer = self.token_mixer(out_token_mixer)
+    # def forward(self, x):
+    #     out_token_mixer = self.layernorm_before(x)
+    #     out_token_mixer = self.token_mixer(out_token_mixer)
         
-        out_token_mixer = out_token_mixer + x
+    #     out_token_mixer = out_token_mixer + x
         
-        out_final = self.layernorm_after(out_token_mixer)
-        out_final = self.channel_mlp(out_final)
+    #     out_final = self.layernorm_after(out_token_mixer)
+    #     out_final = self.channel_mlp(out_final)
         
-        out_final = out_final + out_token_mixer
+    #     out_final = out_final + out_token_mixer
         
-        return out_final
+    #     return out_final
         
 
-class MetaFormer(nn.Module):
+class ViT(MetaFormer):
     def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
         super().__init__()
         self.patch_embed = nn.Identity()
@@ -275,17 +262,17 @@ class MetaFormer(nn.Module):
         )
         self.norm = nn.Identity()
         
-    def forward_embeddings(self, x):
-        x = self.patch_embed(x)
-        return x
+    # def forward_embeddings(self, x):
+    #     x = self.patch_embed(x)
+    #     return x
     
-    def forward_tokens(self, x):
-        for block_idx, block in enumerate(self.blocks):
-            x = block(x)
-        return x
+    # def forward_tokens(self, x):
+    #     for block_idx, block in enumerate(self.blocks):
+    #         x = block(x)
+    #     return x
     
-    def forward(self, x):
-        x = self.forward_embeddings(x)
-        x = self.forward_tokens(x)
-        x = self.norm(x)
-        return x
+    # def forward(self, x):
+    #     x = self.forward_embeddings(x)
+    #     x = self.forward_tokens(x)
+    #     x = self.norm(x)
+    #     return x
