@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Type
 from pathlib import Path
 
 import torch
@@ -21,12 +21,12 @@ MODEL_PRETRAINED_DICT = {
     "efficientformer": PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
 }
 
-NORM_REGISTRY: Dict[str, nn.Module] = {
+NORM_REGISTRY: Dict[str, Type[nn.Module]] = {
     'batch_norm': nn.BatchNorm2d,
     'instance_norm': nn.InstanceNorm2d,
 }
 
-ACTIVATION_REGISTRY: Dict[str, nn.Module] = {
+ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
     'relu': nn.ReLU,
     'prelu': nn.PReLU,
     'leaky_relu': nn.LeakyReLU,
