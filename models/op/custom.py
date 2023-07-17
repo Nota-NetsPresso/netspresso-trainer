@@ -5,22 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.swish import Swish
-
-
-NORM_REGISTRY: Dict[str, nn.Module] = {
-    'batch_norm': nn.BatchNorm2d,
-    'instance_norm': nn.InstanceNorm2d,
-}
-
-ACTIVATION_REGISTRY: Dict[str, nn.Module] = {
-    'relu': nn.ReLU,
-    'prelu': nn.PReLU,
-    'leaky_relu': nn.LeakyReLU,
-    'gelu': nn.GELU,
-    'silu': nn.SiLU,
-    'swish': Swish
-}
+from models.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 
 class ConvLayer(nn.Module):

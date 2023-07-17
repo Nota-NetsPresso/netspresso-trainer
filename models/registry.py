@@ -1,4 +1,10 @@
+from typing import Dict
 from pathlib import Path
+
+import torch
+import torch.nn as nn
+
+from models.op.swish import Swish
 
 PRETRAINED_ROOT = Path("/CHECKPOINT")  # TODO: as an option
 
@@ -13,4 +19,18 @@ MODEL_PRETRAINED_DICT = {
     "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
     "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_tiny.pth",
     "efficientformer": PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
+}
+
+NORM_REGISTRY: Dict[str, nn.Module] = {
+    'batch_norm': nn.BatchNorm2d,
+    'instance_norm': nn.InstanceNorm2d,
+}
+
+ACTIVATION_REGISTRY: Dict[str, nn.Module] = {
+    'relu': nn.ReLU,
+    'prelu': nn.PReLU,
+    'leaky_relu': nn.LeakyReLU,
+    'gelu': nn.GELU,
+    'silu': nn.SiLU,
+    'swish': Swish
 }
