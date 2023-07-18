@@ -1,0 +1,157 @@
+pretrained:
+  original_link: https://docs-assets.developer.apple.com/ml-research/models/cvnets-v2/classification/vit-tiny.pt
+  state_dict_key: ~
+example_input: [1, 3, 256, 256]
+mapping:
+  cls_token: patch_embed.cls_token
+  patch_emb.block.conv.weight: patch_embed.patch_emb.block.conv.weight
+  patch_emb.block.conv.bias: patch_embed.patch_emb.block.conv.bias
+  transformer.0.pre_norm_mha.0.weight: encoder.blocks.0.layernorm_before.weight
+  transformer.0.pre_norm_mha.0.bias: encoder.blocks.0.layernorm_before.bias
+  transformer.0.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.0.token_mixer.query.weight, encoder.blocks.0.token_mixer.key.weight, encoder.blocks.0.token_mixer.value.weight]
+  transformer.0.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.0.token_mixer.query.bias, encoder.blocks.0.token_mixer.key.bias, encoder.blocks.0.token_mixer.value.bias]
+  transformer.0.pre_norm_mha.1.out_proj.weight: encoder.blocks.0.token_mixer.linear.weight
+  transformer.0.pre_norm_mha.1.out_proj.bias: encoder.blocks.0.token_mixer.linear.bias
+  transformer.0.pre_norm_ffn.0.weight: encoder.blocks.0.layernorm_after.weight
+  transformer.0.pre_norm_ffn.0.bias: encoder.blocks.0.layernorm_after.bias
+  transformer.0.pre_norm_ffn.1.weight: encoder.blocks.0.channel_mlp.ffn.0.weight
+  transformer.0.pre_norm_ffn.1.bias: encoder.blocks.0.channel_mlp.ffn.0.bias
+  transformer.0.pre_norm_ffn.4.weight: encoder.blocks.0.channel_mlp.ffn.2.weight
+  transformer.0.pre_norm_ffn.4.bias: encoder.blocks.0.channel_mlp.ffn.2.bias
+  transformer.1.pre_norm_mha.0.weight: encoder.blocks.1.layernorm_before.weight
+  transformer.1.pre_norm_mha.0.bias: encoder.blocks.1.layernorm_before.bias
+  transformer.1.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.1.token_mixer.query.weight, encoder.blocks.1.token_mixer.key.weight, encoder.blocks.1.token_mixer.value.weight]
+  transformer.1.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.1.token_mixer.query.bias, encoder.blocks.1.token_mixer.key.bias, encoder.blocks.1.token_mixer.value.bias]
+  transformer.1.pre_norm_mha.1.out_proj.weight: encoder.blocks.1.token_mixer.linear.weight
+  transformer.1.pre_norm_mha.1.out_proj.bias: encoder.blocks.1.token_mixer.linear.bias
+  transformer.1.pre_norm_ffn.0.weight: encoder.blocks.1.layernorm_after.weight
+  transformer.1.pre_norm_ffn.0.bias: encoder.blocks.1.layernorm_after.bias
+  transformer.1.pre_norm_ffn.1.weight: encoder.blocks.1.channel_mlp.ffn.0.weight
+  transformer.1.pre_norm_ffn.1.bias: encoder.blocks.1.channel_mlp.ffn.0.bias
+  transformer.1.pre_norm_ffn.4.weight: encoder.blocks.1.channel_mlp.ffn.2.weight
+  transformer.1.pre_norm_ffn.4.bias: encoder.blocks.1.channel_mlp.ffn.2.bias
+  transformer.2.pre_norm_mha.0.weight: encoder.blocks.2.layernorm_before.weight
+  transformer.2.pre_norm_mha.0.bias: encoder.blocks.2.layernorm_before.bias
+  transformer.2.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.2.token_mixer.query.weight, encoder.blocks.2.token_mixer.key.weight, encoder.blocks.2.token_mixer.value.weight]
+  transformer.2.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.2.token_mixer.query.bias, encoder.blocks.2.token_mixer.key.bias, encoder.blocks.2.token_mixer.value.bias]
+  transformer.2.pre_norm_mha.1.out_proj.weight: encoder.blocks.2.token_mixer.linear.weight
+  transformer.2.pre_norm_mha.1.out_proj.bias: encoder.blocks.2.token_mixer.linear.bias
+  transformer.2.pre_norm_ffn.0.weight: encoder.blocks.2.layernorm_after.weight
+  transformer.2.pre_norm_ffn.0.bias: encoder.blocks.2.layernorm_after.bias
+  transformer.2.pre_norm_ffn.1.weight: encoder.blocks.2.channel_mlp.ffn.0.weight
+  transformer.2.pre_norm_ffn.1.bias: encoder.blocks.2.channel_mlp.ffn.0.bias
+  transformer.2.pre_norm_ffn.4.weight: encoder.blocks.2.channel_mlp.ffn.2.weight
+  transformer.2.pre_norm_ffn.4.bias: encoder.blocks.2.channel_mlp.ffn.2.bias
+  transformer.3.pre_norm_mha.0.weight: encoder.blocks.3.layernorm_before.weight
+  transformer.3.pre_norm_mha.0.bias: encoder.blocks.3.layernorm_before.bias
+  transformer.3.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.3.token_mixer.query.weight, encoder.blocks.3.token_mixer.key.weight, encoder.blocks.3.token_mixer.value.weight]
+  transformer.3.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.3.token_mixer.query.bias, encoder.blocks.3.token_mixer.key.bias, encoder.blocks.3.token_mixer.value.bias]
+  transformer.3.pre_norm_mha.1.out_proj.weight: encoder.blocks.3.token_mixer.linear.weight
+  transformer.3.pre_norm_mha.1.out_proj.bias: encoder.blocks.3.token_mixer.linear.bias
+  transformer.3.pre_norm_ffn.0.weight: encoder.blocks.3.layernorm_after.weight
+  transformer.3.pre_norm_ffn.0.bias: encoder.blocks.3.layernorm_after.bias
+  transformer.3.pre_norm_ffn.1.weight: encoder.blocks.3.channel_mlp.ffn.0.weight
+  transformer.3.pre_norm_ffn.1.bias: encoder.blocks.3.channel_mlp.ffn.0.bias
+  transformer.3.pre_norm_ffn.4.weight: encoder.blocks.3.channel_mlp.ffn.2.weight
+  transformer.3.pre_norm_ffn.4.bias: encoder.blocks.3.channel_mlp.ffn.2.bias
+  transformer.4.pre_norm_mha.0.weight: encoder.blocks.4.layernorm_before.weight
+  transformer.4.pre_norm_mha.0.bias: encoder.blocks.4.layernorm_before.bias
+  transformer.4.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.4.token_mixer.query.weight, encoder.blocks.4.token_mixer.key.weight, encoder.blocks.4.token_mixer.value.weight]
+  transformer.4.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.4.token_mixer.query.bias, encoder.blocks.4.token_mixer.key.bias, encoder.blocks.4.token_mixer.value.bias]
+  transformer.4.pre_norm_mha.1.out_proj.weight: encoder.blocks.4.token_mixer.linear.weight
+  transformer.4.pre_norm_mha.1.out_proj.bias: encoder.blocks.4.token_mixer.linear.bias
+  transformer.4.pre_norm_ffn.0.weight: encoder.blocks.4.layernorm_after.weight
+  transformer.4.pre_norm_ffn.0.bias: encoder.blocks.4.layernorm_after.bias
+  transformer.4.pre_norm_ffn.1.weight: encoder.blocks.4.channel_mlp.ffn.0.weight
+  transformer.4.pre_norm_ffn.1.bias: encoder.blocks.4.channel_mlp.ffn.0.bias
+  transformer.4.pre_norm_ffn.4.weight: encoder.blocks.4.channel_mlp.ffn.2.weight
+  transformer.4.pre_norm_ffn.4.bias: encoder.blocks.4.channel_mlp.ffn.2.bias
+  transformer.5.pre_norm_mha.0.weight: encoder.blocks.5.layernorm_before.weight
+  transformer.5.pre_norm_mha.0.bias: encoder.blocks.5.layernorm_before.bias
+  transformer.5.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.5.token_mixer.query.weight, encoder.blocks.5.token_mixer.key.weight, encoder.blocks.5.token_mixer.value.weight]
+  transformer.5.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.5.token_mixer.query.bias, encoder.blocks.5.token_mixer.key.bias, encoder.blocks.5.token_mixer.value.bias]
+  transformer.5.pre_norm_mha.1.out_proj.weight: encoder.blocks.5.token_mixer.linear.weight
+  transformer.5.pre_norm_mha.1.out_proj.bias: encoder.blocks.5.token_mixer.linear.bias
+  transformer.5.pre_norm_ffn.0.weight: encoder.blocks.5.layernorm_after.weight
+  transformer.5.pre_norm_ffn.0.bias: encoder.blocks.5.layernorm_after.bias
+  transformer.5.pre_norm_ffn.1.weight: encoder.blocks.5.channel_mlp.ffn.0.weight
+  transformer.5.pre_norm_ffn.1.bias: encoder.blocks.5.channel_mlp.ffn.0.bias
+  transformer.5.pre_norm_ffn.4.weight: encoder.blocks.5.channel_mlp.ffn.2.weight
+  transformer.5.pre_norm_ffn.4.bias: encoder.blocks.5.channel_mlp.ffn.2.bias
+  transformer.6.pre_norm_mha.0.weight: encoder.blocks.6.layernorm_before.weight
+  transformer.6.pre_norm_mha.0.bias: encoder.blocks.6.layernorm_before.bias
+  transformer.6.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.6.token_mixer.query.weight, encoder.blocks.6.token_mixer.key.weight, encoder.blocks.6.token_mixer.value.weight]
+  transformer.6.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.6.token_mixer.query.bias, encoder.blocks.6.token_mixer.key.bias, encoder.blocks.6.token_mixer.value.bias]
+  transformer.6.pre_norm_mha.1.out_proj.weight: encoder.blocks.6.token_mixer.linear.weight
+  transformer.6.pre_norm_mha.1.out_proj.bias: encoder.blocks.6.token_mixer.linear.bias
+  transformer.6.pre_norm_ffn.0.weight: encoder.blocks.6.layernorm_after.weight
+  transformer.6.pre_norm_ffn.0.bias: encoder.blocks.6.layernorm_after.bias
+  transformer.6.pre_norm_ffn.1.weight: encoder.blocks.6.channel_mlp.ffn.0.weight
+  transformer.6.pre_norm_ffn.1.bias: encoder.blocks.6.channel_mlp.ffn.0.bias
+  transformer.6.pre_norm_ffn.4.weight: encoder.blocks.6.channel_mlp.ffn.2.weight
+  transformer.6.pre_norm_ffn.4.bias: encoder.blocks.6.channel_mlp.ffn.2.bias
+  transformer.7.pre_norm_mha.0.weight: encoder.blocks.7.layernorm_before.weight
+  transformer.7.pre_norm_mha.0.bias: encoder.blocks.7.layernorm_before.bias
+  transformer.7.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.7.token_mixer.query.weight, encoder.blocks.7.token_mixer.key.weight, encoder.blocks.7.token_mixer.value.weight]
+  transformer.7.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.7.token_mixer.query.bias, encoder.blocks.7.token_mixer.key.bias, encoder.blocks.7.token_mixer.value.bias]
+  transformer.7.pre_norm_mha.1.out_proj.weight: encoder.blocks.7.token_mixer.linear.weight
+  transformer.7.pre_norm_mha.1.out_proj.bias: encoder.blocks.7.token_mixer.linear.bias
+  transformer.7.pre_norm_ffn.0.weight: encoder.blocks.7.layernorm_after.weight
+  transformer.7.pre_norm_ffn.0.bias: encoder.blocks.7.layernorm_after.bias
+  transformer.7.pre_norm_ffn.1.weight: encoder.blocks.7.channel_mlp.ffn.0.weight
+  transformer.7.pre_norm_ffn.1.bias: encoder.blocks.7.channel_mlp.ffn.0.bias
+  transformer.7.pre_norm_ffn.4.weight: encoder.blocks.7.channel_mlp.ffn.2.weight
+  transformer.7.pre_norm_ffn.4.bias: encoder.blocks.7.channel_mlp.ffn.2.bias
+  transformer.8.pre_norm_mha.0.weight: encoder.blocks.8.layernorm_before.weight
+  transformer.8.pre_norm_mha.0.bias: encoder.blocks.8.layernorm_before.bias
+  transformer.8.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.8.token_mixer.query.weight, encoder.blocks.8.token_mixer.key.weight, encoder.blocks.8.token_mixer.value.weight]
+  transformer.8.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.8.token_mixer.query.bias, encoder.blocks.8.token_mixer.key.bias, encoder.blocks.8.token_mixer.value.bias]
+  transformer.8.pre_norm_mha.1.out_proj.weight: encoder.blocks.8.token_mixer.linear.weight
+  transformer.8.pre_norm_mha.1.out_proj.bias: encoder.blocks.8.token_mixer.linear.bias
+  transformer.8.pre_norm_ffn.0.weight: encoder.blocks.8.layernorm_after.weight
+  transformer.8.pre_norm_ffn.0.bias: encoder.blocks.8.layernorm_after.bias
+  transformer.8.pre_norm_ffn.1.weight: encoder.blocks.8.channel_mlp.ffn.0.weight
+  transformer.8.pre_norm_ffn.1.bias: encoder.blocks.8.channel_mlp.ffn.0.bias
+  transformer.8.pre_norm_ffn.4.weight: encoder.blocks.8.channel_mlp.ffn.2.weight
+  transformer.8.pre_norm_ffn.4.bias: encoder.blocks.8.channel_mlp.ffn.2.bias
+  transformer.9.pre_norm_mha.0.weight: encoder.blocks.9.layernorm_before.weight
+  transformer.9.pre_norm_mha.0.bias: encoder.blocks.9.layernorm_before.bias
+  transformer.9.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.9.token_mixer.query.weight, encoder.blocks.9.token_mixer.key.weight, encoder.blocks.9.token_mixer.value.weight]
+  transformer.9.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.9.token_mixer.query.bias, encoder.blocks.9.token_mixer.key.bias, encoder.blocks.9.token_mixer.value.bias]
+  transformer.9.pre_norm_mha.1.out_proj.weight: encoder.blocks.9.token_mixer.linear.weight
+  transformer.9.pre_norm_mha.1.out_proj.bias: encoder.blocks.9.token_mixer.linear.bias
+  transformer.9.pre_norm_ffn.0.weight: encoder.blocks.9.layernorm_after.weight
+  transformer.9.pre_norm_ffn.0.bias: encoder.blocks.9.layernorm_after.bias
+  transformer.9.pre_norm_ffn.1.weight: encoder.blocks.9.channel_mlp.ffn.0.weight
+  transformer.9.pre_norm_ffn.1.bias: encoder.blocks.9.channel_mlp.ffn.0.bias
+  transformer.9.pre_norm_ffn.4.weight: encoder.blocks.9.channel_mlp.ffn.2.weight
+  transformer.9.pre_norm_ffn.4.bias: encoder.blocks.9.channel_mlp.ffn.2.bias
+  transformer.10.pre_norm_mha.0.weight: encoder.blocks.10.layernorm_before.weight
+  transformer.10.pre_norm_mha.0.bias: encoder.blocks.10.layernorm_before.bias
+  transformer.10.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.10.token_mixer.query.weight, encoder.blocks.10.token_mixer.key.weight, encoder.blocks.10.token_mixer.value.weight]
+  transformer.10.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.10.token_mixer.query.bias, encoder.blocks.10.token_mixer.key.bias, encoder.blocks.10.token_mixer.value.bias]
+  transformer.10.pre_norm_mha.1.out_proj.weight: encoder.blocks.10.token_mixer.linear.weight
+  transformer.10.pre_norm_mha.1.out_proj.bias: encoder.blocks.10.token_mixer.linear.bias
+  transformer.10.pre_norm_ffn.0.weight: encoder.blocks.10.layernorm_after.weight
+  transformer.10.pre_norm_ffn.0.bias: encoder.blocks.10.layernorm_after.bias
+  transformer.10.pre_norm_ffn.1.weight: encoder.blocks.10.channel_mlp.ffn.0.weight
+  transformer.10.pre_norm_ffn.1.bias: encoder.blocks.10.channel_mlp.ffn.0.bias
+  transformer.10.pre_norm_ffn.4.weight: encoder.blocks.10.channel_mlp.ffn.2.weight
+  transformer.10.pre_norm_ffn.4.bias: encoder.blocks.10.channel_mlp.ffn.2.bias
+  transformer.11.pre_norm_mha.0.weight: encoder.blocks.11.layernorm_before.weight
+  transformer.11.pre_norm_mha.0.bias: encoder.blocks.11.layernorm_before.bias
+  transformer.11.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.11.token_mixer.query.weight, encoder.blocks.11.token_mixer.key.weight, encoder.blocks.11.token_mixer.value.weight]
+  transformer.11.pre_norm_mha.1.qkv_proj.bias: [encoder.blocks.11.token_mixer.query.bias, encoder.blocks.11.token_mixer.key.bias, encoder.blocks.11.token_mixer.value.bias]
+  transformer.11.pre_norm_mha.1.out_proj.weight: encoder.blocks.11.token_mixer.linear.weight
+  transformer.11.pre_norm_mha.1.out_proj.bias: encoder.blocks.11.token_mixer.linear.bias
+  transformer.11.pre_norm_ffn.0.weight: encoder.blocks.11.layernorm_after.weight
+  transformer.11.pre_norm_ffn.0.bias: encoder.blocks.11.layernorm_after.bias
+  transformer.11.pre_norm_ffn.1.weight: encoder.blocks.11.channel_mlp.ffn.0.weight
+  transformer.11.pre_norm_ffn.1.bias: encoder.blocks.11.channel_mlp.ffn.0.bias
+  transformer.11.pre_norm_ffn.4.weight: encoder.blocks.11.channel_mlp.ffn.2.weight
+  transformer.11.pre_norm_ffn.4.bias: encoder.blocks.11.channel_mlp.ffn.2.bias
+  transformer.12.weight: norm.weight
+  transformer.12.bias: norm.bias
+  classifier.weight: ~
+  classifier.bias: ~
+  pos_embed.pe: patch_embed.pos_embed.pe
