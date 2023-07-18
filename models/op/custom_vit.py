@@ -203,45 +203,48 @@ class MultiHeadSelfAttention(nn.Module):
         self,
         query_states: Tensor,
         key_value_states: Optional[Tensor] = None,
-        value_states: Optional[Tensor] = None,
         head_mask: Optional[Tensor] = None
     ) -> Union[Tuple[Tensor, Tensor], Tuple[Tensor]]:
-        mixed_query_layer = self.query(query_states)
+        # Let S_s(source): S_q(query) (= H'*W' + 1)
+        # Let S_t(target): S_k(key) = S_v(value)
+        # If self-attention, S_s = S_t
+        # Let C: C_split * {head}(=num_attention_heads) = (mostly) hidden_size
+        # query_states: B x S_s x C
+        mixed_query_layer = self.query(query_states)  # B x S_s x C
         
         if key_value_states is None:  # Self-attention
-            key_value_states = query_states
+            key_value_states = query_states  # B x S_t(=S_s) x C
 
-        key_layer = self.transpose_for_scores(self.key(key_value_states))
-        value_layer = self.transpose_for_scores(self.value(key_value_states))
-        query_layer = self.transpose_for_scores(mixed_query_layer)
+        key_layer = self.transpose_for_scores(self.key(key_value_states))  # B x {head} x S_t x C_split
+        value_layer = self.transpose_for_scores(self.value(key_value_states))  # B x {head} x S_t x C_split
+        query_layer = self.transpose_for_scores(mixed_query_layer)  # B x {head} x S_s x C_split
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))  # B x {head} x S_s x S_t
 
-        attention_scores = attention_scores / self.attention_scale
+        attention_scores = attention_scores / self.attention_scale  # B x {head} x S_s x S_t
 
         # Normalize the attention scores to probabilities.
-        attention_probs = nn.functional.softmax(attention_scores, dim=-1)
+        attention_probs = nn.functional.softmax(attention_scores, dim=-1)  # B x {head} x S_s x S_t
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
-        attention_probs = self.dropout(attention_probs)
+        attention_probs = self.dropout(attention_probs)  # B x {head} x S_s x S_t
 
         # Mask heads if we want to
         if head_mask is not None:
-            attention_probs = attention_probs * head_mask
+            attention_probs = attention_probs * head_mask  # B x {head} x S_s x S_t
 
-        context_layer = torch.matmul(attention_probs, value_layer)
+        context_layer = torch.matmul(attention_probs, value_layer)  # B x {head} x S_s x C_split
 
-        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
+        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()  # B x S_s x {head} x C_split
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
-        context_layer = context_layer.view(new_context_layer_shape)
+        context_layer = context_layer.view(new_context_layer_shape)  # B x S_s x C
 
         if self.output_with_attentions:
             return (context_layer, attention_probs)
         
-        # return (context_layer,)
-        return context_layer
+        return context_layer  # B x S_s x C
     
     
 class ViTSelfOutput(nn.Module):
@@ -256,18 +259,21 @@ class ViTSelfOutput(nn.Module):
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
-        hidden_states = self.dense(hidden_states)
-        hidden_states = self.dropout(hidden_states)
+        # hidden_states: B x S_s x C
+        hidden_states = self.dense(hidden_states)  # B x S_s x C
+        hidden_states = self.dropout(hidden_states)  # B x S_s x C
 
         return hidden_states
     
 class ViTAttention(nn.Module):
-    def __init__(self, hidden_size, num_attention_heads, attention_scale, hidden_dropout_prob) -> None:
+    def __init__(self, hidden_size, num_attention_heads, attention_scale, hidden_dropout_prob, output_with_attentions: bool = False) -> None:
         super().__init__()
+        self.output_with_attentions = output_with_attentions
         self.attention = MultiHeadSelfAttention(        
             hidden_size,
             num_attention_heads,
-            attention_scale
+            attention_scale,
+            output_with_attentions=self.output_with_attentions
         )
         self.output = ViTSelfOutput(hidden_size, hidden_dropout_prob)
 
@@ -275,14 +281,24 @@ class ViTAttention(nn.Module):
         self,
         hidden_states: torch.Tensor,
         head_mask: Optional[torch.Tensor] = None,
-        output_attentions: bool = False,
     ) -> Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor]]:
-        self_outputs = self.attention(hidden_states, head_mask, output_attentions)
+        # Let S: (H'*W' + 1)
+        # hidden_states: B x S x C
+        self_outputs = self.attention(hidden_states, head_mask=head_mask)  # B x S x C
+        
+        if self.output_with_attentions:
+            attention_output = self_outputs[0]
+        else:
+            attention_output = self_outputs
 
-        attention_output = self.output(self_outputs[0], hidden_states)
+        attention_output = self.output(attention_output, hidden_states)  # B x S_s x C_out(=C, =hidden_size)
 
-        outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
-        return outputs
+        if self.output_with_attentions:
+            outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
+            return outputs
+
+        outputs = attention_output
+        return outputs  # B x S_s x C_out
     
     
 class ViTIntermediate(nn.Module):
@@ -330,8 +346,10 @@ class ViTLayer(nn.Module):
         head_mask: Optional[torch.Tensor] = None,
         output_attentions: bool = False,
     ) -> Union[Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor]]:
+        # hidden_states: B x (H'*W' + 1) x C
+        hidden_states = self.layernorm_before(hidden_states)  # B x (H'*W' + 1) x C
         self_attention_outputs = self.attention(
-            self.layernorm_before(hidden_states),  # in ViT, layernorm is applied before self-attention
+            hidden_states,
             head_mask,
             output_attentions=output_attentions,
         )
@@ -367,6 +385,7 @@ class ViTEncoder(nn.Module):
         output_hidden_states: bool = False,
         return_dict: bool = True,
     ) -> Union[tuple, Dict]:
+        # hidden_states: B x (H'*W' + 1) x C
         all_hidden_states = () if output_hidden_states else None
         all_self_attentions = () if output_attentions else None
 
@@ -475,7 +494,7 @@ class ViTModel(nn.Module):
 
         embedding_output = self.embeddings(
             pixel_values, bool_masked_pos=bool_masked_pos, interpolate_pos_encoding=interpolate_pos_encoding
-        )
+        )  # B x (H'*W' + 1) x C
 
         encoder_outputs = self.encoder(
             embedding_output,
@@ -498,68 +517,3 @@ class ViTModel(nn.Module):
             hidden_states=encoder_outputs.hidden_states,
             attentions=encoder_outputs.attentions,
         )
-
-### New definition
-###
-###
-
-class ViTBlock(MetaFormerBlock):
-    def __init__(self, hidden_size, layer_norm_eps) -> None:
-        super().__init__()
-        self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.token_mixer = nn.Identity()  # TODO: define token mixer
-        self.channel_mlp = nn.Identity()  # TODO: define channel nlp
-    
-    # def forward(self, x):
-    #     out_token_mixer = self.layernorm_before(x)
-    #     out_token_mixer = self.token_mixer(out_token_mixer)
-        
-    #     out_token_mixer = out_token_mixer + x
-        
-    #     out_final = self.layernorm_after(out_token_mixer)
-    #     out_final = self.channel_mlp(out_final)
-        
-    #     out_final = out_final + out_token_mixer
-        
-    #     return out_final
-    
-    
-class ViTEncoder(MetaFormerEncoder):
-    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
-        super().__init__()
-        self.blocks = nn.ModuleList(
-            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
-        )
-    
-    def forward(self, x):
-        for block_idx, block in enumerate(self.blocks):
-            x = block(x)
-        return x
-
-class ViT(MetaFormer):
-    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
-        super().__init__()
-        self.patch_embed = nn.Identity()
-        self.encoder = ViTEncoder(num_layers, hidden_size, layer_norm_eps)
-        self.norm = nn.Identity()
-        
-    # def forward_embeddings(self, x):
-    #     x = self.patch_embed(x)
-    #     return x
-    
-    # def forward_tokens(self, x):
-    #     x = self.encoder(x)
-    #     return x
-    
-    # def forward(self, x):
-    #     x = self.patch_embed(x)
-    #     x = self.encoder(x)
-    #     x = self.norm(x)
-    #     return x
-
-    
-
-###
-###
-### END
