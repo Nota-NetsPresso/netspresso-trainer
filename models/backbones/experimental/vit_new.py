@@ -9,39 +9,24 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from models.configuration.vit import get_configuration
-from models.op.ml_cvnets import ConvLayer, LinearLayer, SinusoidalPositionalEncoding
-from models.op.ml_cvnets import TransformerEncoder
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder
+from models.op.ml_cvnets import ConvLayer, LinearLayer
+from models.op.ml_cvnets import SinusoidalPositionalEncoding
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadSelfAttention
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
 
-
-
 class ViTEmbeddings(nn.Module):
-    def __init__(self, opts, image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=True, vocab_size=1000):
+    def __init__(self, image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=True, vocab_size=1000):
         
         image_channels = 3  # {RGB}
-        
-        vit_config = get_configuration()
-        patch_size = vit_config["patch_size"]
-        hidden_size = vit_config["embed_dim"]
-        # ffn_dim = vit_config["ffn_dim"]
-        hidden_dropout_prob = vit_config["pos_emb_drop_p"]
-        # n_transformer_layers = vit_config["n_transformer_layers"]
-        # num_heads = vit_config["n_attn_heads"]
-        # attn_dropout = vit_config["attn_dropout"]
-        # dropout = vit_config["dropout"]
-        # ffn_dropout = vit_config["ffn_dropout"]
-        # norm_layer = vit_config["norm_layer"]
         
         kernel_size = patch_size
         if patch_size % 2 == 0:
             kernel_size += 1
         
         self.patch_emb = ConvLayer(
-            opts=opts,
+            opts=None,
             in_channels=image_channels,
             out_channels=hidden_size,
             kernel_size=kernel_size,
@@ -50,10 +35,6 @@ class ViTEmbeddings(nn.Module):
             use_norm=False,
             use_act=False,
         )
-        
-        # use_cls_token = not getattr(
-        #     opts, "model.classification.vit.no_cls_token", False
-        # )
         
         self.cls_token = None
         if use_cls_token:
@@ -99,48 +80,35 @@ class ViTChannelMLP(nn.Module):
         return x
 
 class ViTBlock(MetaFormerBlock):
-    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
+    def __init__(self, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__()
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.token_mixer = nn.Identity()  # TODO: define token mixer
+        self.token_mixer = MultiHeadSelfAttention(hidden_size, num_attention_heads,
+                                                  attention_scale=(hidden_size // num_attention_heads) ** -0.5,
+                                                  attention_probs_dropout_prob=attention_probs_dropout_prob,
+                                                  use_qkv_bias=True
+                                                  )
         self.channel_mlp = ViTChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
-    
-    # def forward(self, x):
-    #     out_token_mixer = self.layernorm_before(x)
-    #     out_token_mixer = self.token_mixer(out_token_mixer)
-        
-    #     out_token_mixer = out_token_mixer + x
-        
-    #     out_final = self.layernorm_after(out_token_mixer)
-    #     out_final = self.channel_mlp(out_final)
-        
-    #     out_final = out_final + out_token_mixer
-        
-    #     return out_final
     
     
 class ViTEncoder(MetaFormerEncoder):
-    def __init__(self, num_layers, hidden_size, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
+    def __init__(self, num_blocks, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__()
         self.blocks = nn.ModuleList(
-            [ViTBlock(hidden_size, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_layers)]
+            [ViTBlock(hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
         )
-    
-    # def forward(self, x):
-    #     for block_idx, block in enumerate(self.blocks):
-    #         x = block(x)
-    #     return x
 
 class VisionTransformer(MetaFormer):
     def __init__(
         self,
         task,
-        opts,
         image_channels,
         patch_size,
         hidden_size,
         num_hidden_layers,
+        num_attention_heads,
+        attention_probs_dropout_prob,
         intermediate_size,
         hidden_dropout_prob,
         layer_norm_eps=1e-6,
@@ -148,26 +116,11 @@ class VisionTransformer(MetaFormer):
         vocab_size=1000
     ) -> None:
         super().__init__()
-        self.patch_embed = ViTEmbeddings(opts, image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
-        self.encoder = ViTEncoder(num_hidden_layers, hidden_size, intermediate_size, hidden_dropout_prob, layer_norm_eps)
+        self.task = task
+        self.intermediate_features = self.task in ['segmentation', 'detection']
+        self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
+        self.encoder = ViTEncoder(num_hidden_layers, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
         self.norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-
-    def forward_embeddings(self, x):
-        x = self.patch_embed(x)
-        return x
-    
-    def forward_tokens(self, x):
-        x = self.encoder(x)
-        return x
-    
-    def forward(self, x):
-        x = self.patch_embed(x)
-        x = self.encoder(x)
-        x = self.norm(x)
-        return x
-
-
-
 
 
 def vit(task, *args, **kwargs):
