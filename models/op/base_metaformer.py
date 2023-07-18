@@ -156,9 +156,15 @@ class MetaFormerEncoder(nn.Module):
 class MetaFormer(nn.Module):
     def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
         super().__init__()
+        self._last_channels = hidden_size
+        
         self.patch_embed = nn.Identity()
         self.encoder = MetaFormerEncoder(num_layers, hidden_size, layer_norm_eps)
         self.norm = nn.Identity()
+
+    @property
+    def last_channels(self):
+        return self._last_channels
         
     def forward_embeddings(self, x):
         x = self.patch_embed(x)
@@ -172,4 +178,5 @@ class MetaFormer(nn.Module):
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.norm(x)
-        return x
+        feat = torch.mean(x, dim=1)
+        return {'last_feature': feat}
