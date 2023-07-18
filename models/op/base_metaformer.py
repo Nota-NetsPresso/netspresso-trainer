@@ -36,9 +36,12 @@ class MultiHeadSelfAttention(nn.Module):
         self.query = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
         self.key = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
         self.value = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
+        
+        self.linear = nn.Linear(hidden_size, hidden_size)
 
         self.dropout = nn.Dropout(attention_probs_dropout_prob)
         self.output_with_attentions = output_with_attentions
+
 
         self.use_attention_bias = use_attention_bias
         # TODO: add attention bias
@@ -113,6 +116,9 @@ class MultiHeadSelfAttention(nn.Module):
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()  # B x S_s x {head} x C_split
         new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
         context_layer = context_layer.view(new_context_layer_shape)  # B x S_s x C
+        
+        context_layer = self.linear(context_layer)  # B x S_s x C
+        context_layer = self.dropout(context_layer)  # B x S_s x C
 
         if self.output_with_attentions:
             return (context_layer, attention_probs)

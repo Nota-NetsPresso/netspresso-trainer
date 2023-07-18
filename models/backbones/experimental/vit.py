@@ -69,7 +69,7 @@ class ViTEmbeddings(nn.Module):
 class ViTChannelMLP(nn.Module):
     def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob):
         super().__init__()
-        self.pre_norm_ffn = nn.ModuleList([
+        self.ffn = nn.ModuleList([
             LinearLayer(in_features=hidden_size, out_features=intermediate_size, bias=True),
             nn.SiLU(inplace=False),
             LinearLayer(in_features=intermediate_size, out_features=hidden_size, bias=True),
@@ -78,7 +78,7 @@ class ViTChannelMLP(nn.Module):
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
     
     def forward(self, x):
-        for layer in self.pre_norm_ffn:
+        for layer in self.ffn:
             x = layer(x)
         x = self.dropout(x)
         return x
@@ -128,6 +128,7 @@ class VisionTransformer(MetaFormer):
 
 
 def vit(task, *args, **kwargs):
+    # ViT tiny
     configuration = {
         "image_channels": 3,
         "patch_size": 16,
