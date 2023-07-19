@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-class MultiHeadSelfAttention(nn.Module):
+class MultiHeadAttention(nn.Module):
     def __init__(
         self,
         hidden_size,

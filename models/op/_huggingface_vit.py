@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.base_metaformer import MultiHeadSelfAttention
+from models.op.base_metaformer import MultiHeadAttention
 from models.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 
@@ -157,7 +157,7 @@ class ViTAttention(nn.Module):
     def __init__(self, hidden_size, num_attention_heads, attention_scale, hidden_dropout_prob, output_with_attentions: bool = False) -> None:
         super().__init__()
         self.output_with_attentions = output_with_attentions
-        self.attention = MultiHeadSelfAttention(        
+        self.attention = MultiHeadAttention(        
             hidden_size,
             num_attention_heads,
             attention_scale,

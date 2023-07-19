@@ -11,7 +11,7 @@ from torch import Tensor
 
 from models.op.ml_cvnets import ConvLayer, LinearLayer
 from models.op.ml_cvnets import SinusoidalPositionalEncoding
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadSelfAttention
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -88,7 +88,7 @@ class ViTBlock(MetaFormerBlock):
         super().__init__(hidden_size, layer_norm_eps)
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.token_mixer = MultiHeadSelfAttention(hidden_size, num_attention_heads,
+        self.token_mixer = MultiHeadAttention(hidden_size, num_attention_heads,
                                                   attention_scale=(hidden_size // num_attention_heads) ** -0.5,
                                                   attention_probs_dropout_prob=attention_probs_dropout_prob,
                                                   use_qkv_bias=True
