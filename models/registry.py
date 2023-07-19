@@ -4,8 +4,6 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from models.op.swish import Swish
-
 PRETRAINED_ROOT = Path("/CHECKPOINT")  # TODO: as an option
 
 SUPPORTING_MODEL_LIST = ["atomixnet_l", "atomixnet_m", "atomixnet_s", "resnet50", "segformer", "pidnet", "mobilevit", "vit", "efficientformer"]
@@ -32,5 +30,5 @@ ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
     'leaky_relu': nn.LeakyReLU,
     'gelu': nn.GELU,
     'silu': nn.SiLU,
-    'swish': Swish
+    'swish': nn.SiLU,
 }
