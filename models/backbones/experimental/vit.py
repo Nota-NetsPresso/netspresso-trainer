@@ -69,7 +69,7 @@ class ViTEmbeddings(nn.Module):
 class ViTChannelMLP(nn.Module):
     def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob):
         super().__init__()
-        self.ffn = nn.ModuleList([
+        self.ffn = nn.Sequential(*[
             LinearLayer(in_features=hidden_size, out_features=intermediate_size, bias=True),
             nn.SiLU(inplace=False),
             LinearLayer(in_features=intermediate_size, out_features=hidden_size, bias=True),
@@ -78,8 +78,7 @@ class ViTChannelMLP(nn.Module):
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
     
     def forward(self, x):
-        for layer in self.ffn:
-            x = layer(x)
+        x = self.ffn(x)
         x = self.dropout(x)
         return x
 
@@ -99,8 +98,8 @@ class ViTBlock(MetaFormerBlock):
 class ViTEncoder(MetaFormerEncoder):
     def __init__(self, num_blocks, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__(num_blocks, hidden_size, layer_norm_eps)
-        self.blocks = nn.ModuleList(
-            [ViTBlock(hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
+        self.blocks = nn.Sequential(
+            *[ViTBlock(hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
         )
 
 class VisionTransformer(MetaFormer):

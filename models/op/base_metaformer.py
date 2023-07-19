@@ -152,13 +152,12 @@ class MetaFormerBlock(nn.Module):
 class MetaFormerEncoder(nn.Module):
     def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
         super().__init__()
-        self.blocks = nn.ModuleList(
-            [MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
+        self.blocks = nn.Sequential(
+            *[MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
         )
     
     def forward(self, x):
-        for block_idx, block in enumerate(self.blocks):
-            x = block(x)
+        x = self.blocks(x)
         return x
 
 class MetaFormer(nn.Module):
