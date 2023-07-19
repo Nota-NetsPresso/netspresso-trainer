@@ -17,6 +17,7 @@ class MultiHeadAttention(nn.Module):
         attention_probs_dropout_prob = 0.0,
         use_qkv_bias = True,
         use_attention_bias = False,
+        use_cross_attention = False,
         output_with_attentions = False
     ) -> None:
         super().__init__()
@@ -69,6 +70,7 @@ class MultiHeadAttention(nn.Module):
         #     self.register_buffer('attention_bias_idxs_seg',
         #                          torch.LongTensor(idxs).view(N, N))
     
+        self.use_cross_attention = use_cross_attention
 
     def transpose_for_scores(self, x: Tensor) -> Tensor:
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
@@ -88,7 +90,7 @@ class MultiHeadAttention(nn.Module):
         # query_states: B x S_s x C
         mixed_query_layer = self.query(query_states)  # B x S_s x C
         
-        if key_value_states is None:  # Self-attention
+        if not self.use_cross_attention:  # Self-attention
             key_value_states = query_states  # B x S_t(=S_s) x C
 
         key_layer = self.transpose_for_scores(self.key(key_value_states))  # B x {head} x S_t x C_split
