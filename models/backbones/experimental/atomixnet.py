@@ -6,8 +6,10 @@ from torch import nn
 from torch.nn import ReLU
 from torch.nn import functional as F
 
-from models.op.swish import Swish
 from models.utils import SeparateForwardModule
+from models.registry import ACTIVATION_REGISTRY
+
+Swish = ACTIVATION_REGISTRY['swish']
 
 __all__ = ['atomixnet_supernet', 'atomixnet_l', 'atomixnet_m', 'atomixnet_s']
 
