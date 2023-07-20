@@ -102,7 +102,7 @@ class VisionTransformer(MetaFormer):
         use_cls_token=True,
         vocab_size=1000
     ) -> None:
-        super().__init__(num_blocks, hidden_size, layer_norm_eps)
+        super().__init__(hidden_size)
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
