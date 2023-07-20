@@ -11,7 +11,7 @@ from torch import Tensor
 
 from models.op.ml_cvnets import ConvLayer, LinearLayer
 from models.op.ml_cvnets import SinusoidalPositionalEncoding
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -66,22 +66,6 @@ class ViTEmbeddings(nn.Module):
         patch_emb = self.dropout(patch_emb)  # B x (H'*W' + 1) x C
         return patch_emb  # B x (H'*W' + 1) x C
 
-class ViTChannelMLP(nn.Module):
-    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob):
-        super().__init__()
-        self.ffn = nn.Sequential(*[
-            LinearLayer(in_features=hidden_size, out_features=intermediate_size, bias=True),
-            nn.SiLU(inplace=False),
-            LinearLayer(in_features=intermediate_size, out_features=hidden_size, bias=True),
-
-        ])
-        self.dropout = nn.Dropout(p=hidden_dropout_prob)
-    
-    def forward(self, x):
-        x = self.ffn(x)
-        x = self.dropout(x)
-        return x
-
 class ViTBlock(MetaFormerBlock):
     def __init__(self, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__(hidden_size, layer_norm_eps)
@@ -92,12 +76,12 @@ class ViTBlock(MetaFormerBlock):
                                                   attention_probs_dropout_prob=attention_probs_dropout_prob,
                                                   use_qkv_bias=True
                                                   )
-        self.channel_mlp = ViTChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
+        self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
     
     
 class ViTEncoder(MetaFormerEncoder):
     def __init__(self, num_blocks, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
-        super().__init__(num_blocks, hidden_size, layer_norm_eps)
+        super().__init__()
         self.blocks = nn.Sequential(
             *[ViTBlock(hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
         )

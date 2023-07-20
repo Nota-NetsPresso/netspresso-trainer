@@ -127,14 +127,28 @@ class MultiHeadAttention(nn.Module):
         
         return context_layer  # B x S_s x C
     
+class ChannelMLP(nn.Module):
+    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob):
+        super().__init__()
+        self.ffn = nn.Sequential(*[
+            nn.Linear(in_features=hidden_size, out_features=intermediate_size, bias=True),
+            nn.SiLU(inplace=False),
+            nn.Linear(in_features=intermediate_size, out_features=hidden_size, bias=True),
+        ])
+        self.dropout = nn.Dropout(p=hidden_dropout_prob)
+    
+    def forward(self, x):
+        x = self.ffn(x)
+        x = self.dropout(x)
+        return x
 
 class MetaFormerBlock(nn.Module):
     def __init__(self, hidden_size, layer_norm_eps) -> None:
         super().__init__()
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.token_mixer = nn.Identity()  # TODO: define token mixer
-        self.channel_mlp = nn.Identity()  # TODO: define channel nlp
+        self.token_mixer = nn.Identity()  # MultiHeadAttention()
+        self.channel_mlp = nn.Identity()  # ChannelMLP()
     
     def forward(self, x):
         out_token_mixer = self.layernorm_before(x)
@@ -150,11 +164,12 @@ class MetaFormerBlock(nn.Module):
         return out_final
     
 class MetaFormerEncoder(nn.Module):
-    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.blocks = nn.Sequential(
-            *[MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
-        )
+        self.blocks = nn.Identity()
+        # self.blocks = nn.Sequential(
+        #     *[MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
+        # )
     
     def forward(self, x):
         x = self.blocks(x)
@@ -166,7 +181,7 @@ class MetaFormer(nn.Module):
         self._last_channels = hidden_size
         
         self.patch_embed = nn.Identity()
-        self.encoder = MetaFormerEncoder(num_layers, hidden_size, layer_norm_eps)
+        self.encoder = MetaFormerEncoder()
         self.norm = nn.Identity()
 
     @property
