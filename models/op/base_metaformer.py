@@ -176,7 +176,7 @@ class MetaFormerEncoder(nn.Module):
         return x
 
 class MetaFormer(nn.Module):
-    def __init__(self, num_layers, hidden_size, layer_norm_eps) -> None:
+    def __init__(self, hidden_size) -> None:
         super().__init__()
         self._last_channels = hidden_size
         
