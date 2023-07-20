@@ -569,7 +569,7 @@ class InvertedResidual(nn.Module):
             self.stride == 1 and in_channels == out_channels and skip_connection
         )
 
-    def forward(self, x: Tensor, *args, **kwargs) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         if self.use_res_connect:
             return x + self.block(x)
         else:

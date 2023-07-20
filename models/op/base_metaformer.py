@@ -14,7 +14,7 @@ class MultiHeadAttention(nn.Module):
         hidden_size,
         num_attention_heads,
         attention_scale = None,
-        attention_probs_dropout_prob = 0.0,
+        attention_dropout_prob = 0.0,
         use_qkv_bias = True,
         use_attention_bias = False,
         use_cross_attention = False,
@@ -40,7 +40,7 @@ class MultiHeadAttention(nn.Module):
         
         self.linear = nn.Linear(hidden_size, hidden_size)
 
-        self.dropout = nn.Dropout(attention_probs_dropout_prob)
+        self.dropout = nn.Dropout(attention_dropout_prob)
         self.output_with_attentions = output_with_attentions
 
 

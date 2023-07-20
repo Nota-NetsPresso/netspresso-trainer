@@ -67,23 +67,23 @@ class ViTEmbeddings(nn.Module):
         return patch_emb  # B x (H'*W' + 1) x C
 
 class ViTBlock(MetaFormerBlock):
-    def __init__(self, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
+    def __init__(self, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__(hidden_size, layer_norm_eps)
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.token_mixer = MultiHeadAttention(hidden_size, num_attention_heads,
                                                   attention_scale=(hidden_size // num_attention_heads) ** -0.5,
-                                                  attention_probs_dropout_prob=attention_probs_dropout_prob,
+                                                  attention_dropout_prob=attention_dropout_prob,
                                                   use_qkv_bias=True
                                                   )
         self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
     
     
 class ViTEncoder(MetaFormerEncoder):
-    def __init__(self, num_blocks, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
+    def __init__(self, num_blocks, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__()
         self.blocks = nn.Sequential(
-            *[ViTBlock(hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
+            *[ViTBlock(hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
         )
 
 class VisionTransformer(MetaFormer):
@@ -95,7 +95,7 @@ class VisionTransformer(MetaFormer):
         hidden_size,
         num_blocks,
         num_attention_heads,
-        attention_probs_dropout_prob,
+        attention_dropout_prob,
         intermediate_size,
         hidden_dropout_prob,
         layer_norm_eps=1e-6,
@@ -106,7 +106,7 @@ class VisionTransformer(MetaFormer):
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
-        self.encoder = ViTEncoder(num_blocks, hidden_size, num_attention_heads, attention_probs_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
+        self.encoder = ViTEncoder(num_blocks, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
         self.norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
 
 
@@ -118,7 +118,7 @@ def vit(task, *args, **kwargs):
         "hidden_size": 192,
         "num_blocks": 12,
         "num_attention_heads": 3,
-        "attention_probs_dropout_prob": 0.0,
+        "attention_dropout_prob": 0.0,
         "intermediate_size": 192 * 4,
         "hidden_dropout_prob": 0.1
     }
