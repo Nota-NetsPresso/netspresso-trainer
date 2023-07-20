@@ -247,12 +247,13 @@ class MobileViTBlock(nn.Module):
         return out
 
 class MobileViTEncoder(MetaFormerEncoder):
-    def __init__(self, config_stages, local_kernel_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
+    def __init__(self, config_stages, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
         super().__init__()
         stages = []
         
         self.dilation = 1
         self.local_kernel_size = local_kernel_size
+        self.patch_size = patch_size
         self.num_attention_heads = num_attention_heads
         self.attention_dropout_prob = attention_dropout_prob
         self.hidden_dropout_prob = hidden_dropout_prob
@@ -273,11 +274,10 @@ class MobileViTEncoder(MetaFormerEncoder):
             dilate = config_stage['dilate']
             num_transformer_blocks = config_stage['num_transformer_blocks']
             hidden_size = config_stage['transformer_channels']
-            patch_size = config_stage['patch_h']
             intermediate_size = config_stage['ffn_dim']
             return self._make_mobilevit_blocks(
                 num_transformer_blocks, in_channels, out_channels, stride, expand_ratio,
-                hidden_size, patch_size, intermediate_size, self.local_kernel_size, self.num_attention_heads,
+                hidden_size, intermediate_size, self.patch_size, self.local_kernel_size, self.num_attention_heads,
                 self.attention_dropout_prob, self.hidden_dropout_prob, self.layer_norm_eps, self.use_fusion_layer,
                 dilate
             )
@@ -301,7 +301,7 @@ class MobileViTEncoder(MetaFormerEncoder):
         return nn.Sequential(*blocks)
     
     def _make_mobilevit_blocks(self, num_transformer_blocks, in_channels, out_channels, stride, expand_ratio,
-                               hidden_size, patch_size, intermediate_size, local_kernel_size, num_attention_heads, attention_dropout_prob,
+                               hidden_size, intermediate_size, patch_size, local_kernel_size, num_attention_heads, attention_dropout_prob,
                                hidden_dropout_prob, layer_norm_eps, use_fusion_layer, dilate: Optional[bool] = False):
         blocks = []
         if stride == 2:
@@ -344,25 +344,42 @@ class MobileViT(MetaFormer):
     def __init__(
         self,
         task,
+        config_stages,
         image_channels,
+        local_kernel_size,
         patch_size,
         hidden_size,
-        num_blocks,
         num_attention_heads,
         attention_dropout_prob,
-        intermediate_size,
         hidden_dropout_prob,
         layer_norm_eps=1e-6,
-        use_cls_token=True,
-        vocab_size=1000
+        use_fusion_layer = True,
     ) -> None:
-        super().__init__(num_blocks, hidden_size, layer_norm_eps)
+        super().__init__(hidden_size)
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
+        
         self.patch_embed = MobileViTEmbeddings(image_channels, hidden_size)
-        self.encoder = MobileViTEncoder(num_blocks, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
-        self.norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-
+        self.encoder = MobileViTEncoder(config_stages, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
+        
+        encoder_out_channel = config_stages[-1]['out_channels']
+        exp_channels = min(config_stages["last_layer_exp_factor"] * encoder_out_channel, 960)
+        self.conv_1x1_exp = ConvLayer(opts=None, in_channels=encoder_out_channel, out_channels=exp_channels,
+                                      kernel_size=1, stride=1,
+                                      use_act=True, use_norm=True)
+        self.pool = GlobalPool(pool_type="mean", keep_dim=False)
+        
+        self._last_channels = exp_channels
+        
+    def forward(self, x):
+        x = self.patch_embed(x)
+        x = self.encoder(x)
+        x = self.conv_1x1_exp(x)
+        x = self.pool(x)
+        return x
 
 def mobilevit(task, *args, **kwargs):
-    return MobileViT(task, opts=None)
+    configuration = {
+        # TODO
+    }
+    return MobileViT(task, **configuration)
