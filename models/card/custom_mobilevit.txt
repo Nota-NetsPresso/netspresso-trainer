@@ -41,7 +41,7 @@ AssembleModel(
           (0): InvertedResidual(
             (block): Sequential(
               (exp_1x1): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
-              (conv_3x3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=256, bias=False, normalization=BatchNorm2d, activation=SiLU)
               (red_1x1): Conv2d(256, 96, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
             )
           )
@@ -99,7 +99,7 @@ AssembleModel(
           (0): InvertedResidual(
             (block): Sequential(
               (exp_1x1): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
-              (conv_3x3): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(384, 384, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=384, bias=False, normalization=BatchNorm2d, activation=SiLU)
               (red_1x1): Conv2d(384, 128, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
             )
           )
@@ -195,7 +195,7 @@ AssembleModel(
           (0): InvertedResidual(
             (block): Sequential(
               (exp_1x1): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
-              (conv_3x3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=512, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=512, bias=False, normalization=BatchNorm2d, activation=SiLU)
               (red_1x1): Conv2d(512, 160, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
             )
           )
