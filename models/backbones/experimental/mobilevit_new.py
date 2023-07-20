@@ -312,7 +312,7 @@ class MobileViTEncoder(MetaFormerEncoder):
                     opts=None,
                     in_channels=in_channels,
                     out_channels=out_channels,
-                    stride=stride if dilate else 1,
+                    stride=stride if not dilate else 1,
                     expand_ratio=expand_ratio,
                     dilation=self.dilation
                 )
