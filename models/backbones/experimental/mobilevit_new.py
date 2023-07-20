@@ -5,6 +5,7 @@ https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f
 
 import argparse
 from typing import Dict, Tuple, Optional, Any, Union
+import math
 
 import torch
 import torch.nn as nn
@@ -61,6 +62,7 @@ class MobileViTBlock(nn.Module):
         super().__init__()
         self.patch_h = patch_h
         self.patch_w = patch_w
+        self.patch_area = self.patch_h * self.patch_w
         
         self.local_rep = nn.Sequential(*[
             ConvLayer(opts=None, in_channels=in_channels, out_channels=in_channels,
@@ -96,12 +98,10 @@ class MobileViTBlock(nn.Module):
                                     use_norm=True, use_act=True)
         
     def unfolding(self, feature_map: Tensor) -> Tuple[Tensor, Dict]:
-        patch_w, patch_h = self.patch_w, self.patch_h
-        patch_area = int(patch_w * patch_h)
         batch_size, in_channels, orig_h, orig_w = feature_map.size()
 
-        new_h = int(torch.ceil(orig_h / self.patch_h) * self.patch_h)
-        new_w = int(torch.ceil(orig_w / self.patch_w) * self.patch_w)
+        new_h = int(math.ceil(orig_h / self.patch_h) * self.patch_h)
+        new_w = int(math.ceil(orig_w / self.patch_w) * self.patch_w)
 
         interpolate = False
         if new_w != orig_w or new_h != orig_h:
@@ -112,24 +112,24 @@ class MobileViTBlock(nn.Module):
             interpolate = True
 
         # number of patches along width and height
-        num_patch_w = new_w // patch_w  # n_w
-        num_patch_h = new_h // patch_h  # n_h
+        num_patch_w = new_w // self.patch_w  # n_w
+        num_patch_h = new_h // self.patch_h  # n_h
         num_patches = num_patch_h * num_patch_w  # N
 
         # [B, C, H, W] --> [B * C * n_h, p_h, n_w, p_w]
         reshaped_fm = feature_map.reshape(
-            batch_size * in_channels * num_patch_h, patch_h, num_patch_w, patch_w
+            batch_size * in_channels * num_patch_h, self.patch_h, num_patch_w, self.patch_w
         )
         # [B * C * n_h, p_h, n_w, p_w] --> [B * C * n_h, n_w, p_h, p_w]
         transposed_fm = reshaped_fm.transpose(1, 2)
         # [B * C * n_h, n_w, p_h, p_w] --> [B, C, N, P] where P = p_h * p_w and N = n_h * n_w
         reshaped_fm = transposed_fm.reshape(
-            batch_size, in_channels, num_patches, patch_area
+            batch_size, in_channels, num_patches, self.patch_area
         )
         # [B, C, N, P] --> [B, P, N, C]
         transposed_fm = reshaped_fm.transpose(1, 3)
         # [B, P, N, C] --> [BP, N, C]
-        patches = transposed_fm.reshape(batch_size * patch_area, num_patches, -1)
+        patches = transposed_fm.reshape(batch_size * self.patch_area, num_patches, -1)
 
         info_dict = {
             "orig_size": (orig_h, orig_w),
@@ -247,7 +247,7 @@ class MobileViTBlock(nn.Module):
         return out
 
 class MobileViTEncoder(MetaFormerEncoder):
-    def __init__(self, config_stages, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
+    def __init__(self, config_stages, patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
         super().__init__()
         stages = []
         
@@ -259,22 +259,24 @@ class MobileViTEncoder(MetaFormerEncoder):
         self.hidden_dropout_prob = hidden_dropout_prob
         self.layer_norm_eps = layer_norm_eps
         self.use_fusion_layer = use_fusion_layer
+        
+        in_channels = patch_embedding_out_channels
         for config_stage in config_stages:
-            stages.append(self._make_block(config_stage))
+            stages.append(self._make_block(config_stage, in_channels))
+            in_channels = config_stage['out_channels']
         self.blocks = nn.Sequential(*stages)
     
-    def _make_block(self, config_stage):
+    def _make_block(self, config_stage, in_channels):
         block_type = config_stage['block_type']
         
-        in_channels = config_stage['in_channels']
         out_channels = config_stage['out_channels']
         stride = config_stage['stride']
         expand_ratio = config_stage['expand_ratio']
         if block_type.lower() == 'mobilevit':
             dilate = config_stage['dilate']
             num_transformer_blocks = config_stage['num_transformer_blocks']
-            hidden_size = config_stage['transformer_channels']
-            intermediate_size = config_stage['ffn_dim']
+            hidden_size = config_stage['hidden_size']
+            intermediate_size = config_stage['intermediate_size']
             return self._make_mobilevit_blocks(
                 num_transformer_blocks, in_channels, out_channels, stride, expand_ratio,
                 hidden_size, intermediate_size, self.patch_size, self.local_kernel_size, self.num_attention_heads,
@@ -346,24 +348,25 @@ class MobileViT(MetaFormer):
         task,
         config_stages,
         image_channels,
+        patch_embedding_out_channels,
         local_kernel_size,
         patch_size,
-        hidden_size,
         num_attention_heads,
         attention_dropout_prob,
         hidden_dropout_prob,
+        exp_factor,
         layer_norm_eps=1e-6,
         use_fusion_layer = True,
     ) -> None:
-        super().__init__(hidden_size)
+        super().__init__(patch_embedding_out_channels)
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         
-        self.patch_embed = MobileViTEmbeddings(image_channels, hidden_size)
-        self.encoder = MobileViTEncoder(config_stages, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
+        self.patch_embed = MobileViTEmbeddings(image_channels, patch_embedding_out_channels)
+        self.encoder = MobileViTEncoder(config_stages, patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
         
         encoder_out_channel = config_stages[-1]['out_channels']
-        exp_channels = min(config_stages["last_layer_exp_factor"] * encoder_out_channel, 960)
+        exp_channels = min(exp_factor * encoder_out_channel, 960)
         self.conv_1x1_exp = ConvLayer(opts=None, in_channels=encoder_out_channel, out_channels=exp_channels,
                                       kernel_size=1, stride=1,
                                       use_act=True, use_norm=True)
@@ -375,11 +378,68 @@ class MobileViT(MetaFormer):
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.conv_1x1_exp(x)
-        x = self.pool(x)
-        return x
+        feat = self.pool(x)
+        return {'last_feature': feat}
 
 def mobilevit(task, *args, **kwargs):
+    mv2_exp_mult = 4
+    num_heads = 4
     configuration = {
-        # TODO
+        "config_stages": [
+            {
+                "out_channels": 32,
+                "expand_ratio": mv2_exp_mult,
+                "num_blocks": 1,
+                "stride": 1,
+                "block_type": "mv2",
+            },
+            {
+                "out_channels": 64,
+                "expand_ratio": mv2_exp_mult,
+                "num_blocks": 3,
+                "stride": 2,
+                "block_type": "mv2",
+            },
+            {  # 28x28
+                "out_channels": 96,
+                "hidden_size": 144,
+                "intermediate_size": 288,
+                "num_transformer_blocks": 2,
+                "stride": 2,
+                "expand_ratio": mv2_exp_mult,
+                "dilate": False,
+                "block_type": "mobilevit",
+            },
+            {  # 14x14
+                "out_channels": 128,
+                "hidden_size": 192,
+                "intermediate_size": 384,
+                "num_transformer_blocks": 4,
+                "stride": 2,
+                "expand_ratio": mv2_exp_mult,
+                "dilate": False,
+                "block_type": "mobilevit",
+            },
+            {  # 7x7
+                "out_channels": 160,
+                "hidden_size": 240,
+                "intermediate_size": 480,
+                "num_transformer_blocks": 3,
+                "stride": 2,
+                "expand_ratio": mv2_exp_mult,
+                "dilate": False,
+                "block_type": "mobilevit",
+            }
+        ],
+        "image_channels": 3,
+        "patch_embedding_out_channels": 16,
+        "local_kernel_size": 3,
+        "patch_size": 2,
+        "num_attention_heads": num_heads,
+        "attention_dropout_prob": 0.1,
+        "hidden_dropout_prob": 0.0,
+        "exp_factor": 4,
+        "layer_norm_eps": 1e-5,
+        "use_fusion_layer": True,
     }
     return MobileViT(task, **configuration)
