@@ -18,7 +18,8 @@ class MultiHeadAttention(nn.Module):
         use_qkv_bias = True,
         use_attention_bias = False,
         use_cross_attention = False,
-        output_with_attentions = False
+        output_with_attentions = False,
+        sequence_reduction_ratio = 1
     ) -> None:
         super().__init__()
         if hidden_size % num_attention_heads != 0:
@@ -43,6 +44,13 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(attention_dropout_prob)
         self.output_with_attentions = output_with_attentions
 
+        self.use_sequence_reduction = False
+        if sequence_reduction_ratio > 1:
+            self.use_sequence_reduction = True
+            self.sr = nn.Conv2d(
+                hidden_size, hidden_size, kernel_size=sequence_reduction_ratio, stride=sequence_reduction_ratio
+            )
+            self.sr_layer_norm = nn.LayerNorm(hidden_size)
 
         self.use_attention_bias = use_attention_bias
         # TODO: add attention bias
@@ -76,12 +84,27 @@ class MultiHeadAttention(nn.Module):
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
         x = x.view(new_x_shape)
         return x.permute(0, 2, 1, 3)
+    
+    def sequence_reduce(self, x: Tensor, height: int, width: int) -> Tensor:
+        """SegFormer
+        """
+        batch_size, seq_len, num_channels = x.shape
+        # Reshape to (batch_size, num_channels, height, width)
+        x = x.permute(0, 2, 1).reshape(batch_size, num_channels, height, width)
+        # Apply sequence reduction
+        x = self.sr(x)
+        # Reshape back to (batch_size, seq_len, num_channels)
+        x = x.reshape(batch_size, num_channels, -1).permute(0, 2, 1)
+        x = self.sr_layer_norm(x)
+        return x
 
     def forward(
         self,
         query_states: Tensor,
         key_value_states: Optional[Tensor] = None,
-        head_mask: Optional[Tensor] = None
+        head_mask: Optional[Tensor] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None
     ) -> Union[Tuple[Tensor, Tensor], Tuple[Tensor]]:
         # Let S_s(source): S_q(query) (= H'*W' + 1)
         # Let S_t(target): S_k(key) = S_v(value)
@@ -92,6 +115,8 @@ class MultiHeadAttention(nn.Module):
         
         if not self.use_cross_attention:  # Self-attention
             key_value_states = query_states  # B x S_t(=S_s) x C
+        if self.use_sequence_reduction:
+            key_value_states = self.sequence_reduce(key_value_states, height, width)
 
         key_layer = self.transpose_for_scores(self.key(key_value_states))  # B x {head} x S_t x C_split
         value_layer = self.transpose_for_scores(self.value(key_value_states))  # B x {head} x S_t x C_split
