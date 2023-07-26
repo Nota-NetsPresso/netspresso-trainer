@@ -4,10 +4,6 @@ import math
 import torch
 import torch.nn as nn
 
-from models.op.depth import DropPath
-from models.utils import SeparateForwardModule
-
-from models.configuration.segformer import SegformerConfig
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
 from models.op.custom import ConvLayer
 from models.registry import ACTIVATION_REGISTRY
@@ -105,7 +101,6 @@ class SegformerEncoder(MetaFormerEncoder):
                  num_attention_heads, attention_dropout_prob, sr_ratio,
                  intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
         super().__init__()
-        self.config = SegformerConfig()
         # stochastic depth decay rule
         # drop_path_decays = [x.item() for x in torch.linspace(0, self.config.drop_path_rate, sum(self.config.depths))]
 
@@ -137,9 +132,7 @@ class SegFormer(MetaFormer):
         super().__init__(hidden_sizes[-1])
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
-        
-        self._last_channels = hidden_sizes[-1]
-        
+                
         self.encoder_modules = nn.ModuleList()
         for i in range(num_modules):
             module = nn.ModuleDict(
@@ -184,7 +177,6 @@ class SegFormer(MetaFormer):
             return {'intermediate_features': all_hidden_states}
 
         B, C, _, _ = x.size()
-        x = x.reshape(B, C, -1)
         feat = torch.mean(x.reshape(B, C, -1), dim=2)
         return {'last_feature': feat}
 
@@ -203,6 +195,6 @@ def segformer(task, num_class=1000, *args, **kwargs) -> SegformerEncoder:
         'hidden_activation_type': "gelu",
         'hidden_dropout_prob': 0.0,
         'attention_dropout_prob': 0.0,
-        'layer_norm_eps': 1e-6,
+        'layer_norm_eps': 1e-5,
     }
     return SegFormer(task, **configuration)
