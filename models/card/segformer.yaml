@@ -55,8 +55,8 @@ mapping:
   segformer.encoder.block.0.1.attention.self.layer_norm.bias: encoder_modules.0.encoder.blocks.1.token_mixer.sr_layer_norm.bias
   segformer.encoder.block.0.1.attention.output.dense.weight: encoder_modules.0.encoder.blocks.1.token_mixer.linear.weight
   segformer.encoder.block.0.1.attention.output.dense.bias: encoder_modules.0.encoder.blocks.1.token_mixer.linear.bias
-  segformer.encoder.block.0.1.layer_norm_2.weight: encoder_modules.0.encoder.blocks.1.token_mixer.sr_layer_norm.weight
-  segformer.encoder.block.0.1.layer_norm_2.bias: encoder_modules.0.encoder.blocks.1.token_mixer.sr_layer_norm.bias
+  segformer.encoder.block.0.1.layer_norm_2.weight: encoder_modules.0.encoder.blocks.1.layernorm_after.weight
+  segformer.encoder.block.0.1.layer_norm_2.bias: encoder_modules.0.encoder.blocks.1.layernorm_after.bias
   segformer.encoder.block.0.1.mlp.dense1.weight: encoder_modules.0.encoder.blocks.1.channel_mlp.dense1.weight
   segformer.encoder.block.0.1.mlp.dense1.bias: encoder_modules.0.encoder.blocks.1.channel_mlp.dense1.bias
   segformer.encoder.block.0.1.mlp.dwconv.dwconv.weight: encoder_modules.0.encoder.blocks.1.channel_mlp.dwconv.dwconv.weight
