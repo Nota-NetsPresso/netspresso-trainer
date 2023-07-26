@@ -101,29 +101,57 @@ class SegFormerBlock(MetaFormerBlock):
         return out_final
 
 class SegformerEncoder(MetaFormerEncoder):
-    def __init__(self, use_intermediate_features,
-                 image_channels, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
-                 num_attention_heads, attention_dropout_prob, sr_ratios,
+    def __init__(self, num_blocks, hidden_size,
+                 num_attention_heads, attention_dropout_prob, sr_ratio,
                  intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
         super().__init__()
         self.config = SegformerConfig()
-        self.use_intermediate_features = use_intermediate_features
-        self.num_blocks = num_blocks
         # stochastic depth decay rule
         # drop_path_decays = [x.item() for x in torch.linspace(0, self.config.drop_path_rate, sum(self.config.depths))]
 
-        # patch embeddings
-        blocks = nn.ModuleList()
-        for i in range(self.num_blocks):
-            block = nn.ModuleDict(
+        self.blocks = nn.ModuleList()
+        for _ in range(num_blocks):
+            self.blocks.append(
+                SegFormerBlock(
+                    hidden_size,
+                    num_attention_heads,
+                    attention_dropout_prob,
+                    sr_ratio,
+                    intermediate_ratio,
+                    hidden_dropout_prob,
+                    hidden_activation_type,
+                    layer_norm_eps
+                )
+            )
+        
+    def forward(self, x, height, width):
+        for block in self.blocks:
+            x = block(x, height, width)
+        return x      
+
+class SegFormer(MetaFormer):
+    def __init__(self, task,
+                 image_channels, num_modules, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
+                 num_attention_heads, attention_dropout_prob, sr_ratios,
+                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
+        super().__init__(hidden_sizes[-1])
+        self.task = task
+        self.use_intermediate_features = self.task in ['segmentation', 'detection']
+        
+        self._last_channels = hidden_sizes[-1]
+        
+        self.encoder_modules = nn.ModuleList()
+        for i in range(num_modules):
+            module = nn.ModuleDict(
                 {
-                    'segformer_patch_embed': SegformerOverlapPatchEmbeddings(
+                    'patch_embed': SegformerOverlapPatchEmbeddings(
                         embedding_patch_sizes[i],
                         embedding_strides[i],
                         image_channels if i == 0 else hidden_sizes[i - 1],
                         hidden_sizes[i]
                     ),
-                    'segformer_block': SegFormerBlock(
+                    'encoder': SegformerEncoder(
+                        num_blocks[i],
                         hidden_sizes[i],
                         num_attention_heads[i],
                         attention_dropout_prob,
@@ -133,20 +161,19 @@ class SegformerEncoder(MetaFormerEncoder):
                         hidden_activation_type,
                         layer_norm_eps
                     ),
-                    'segformer_layer_norm': nn.LayerNorm(hidden_sizes[i])
-                 }
+                    'norm': nn.LayerNorm(hidden_sizes[i])
+                }
             )
-            blocks.append(block)
-        self.blocks = blocks
+            self.encoder_modules.append(module)
 
     def forward(self, x):
         B = x.size(0)
         all_hidden_states = () if self.use_intermediate_features else None
         
-        for block in self.blocks:
-            x, H_embed, W_embed = block['segformer_patch_embed'](x)
-            x = block['segformer_block'](x, height=H_embed, width=W_embed)
-            x = block['segformer_layer_norm'](x)
+        for module in self.encoder_modules:
+            x, H_embed, W_embed = module['patch_embed'](x)
+            x = module['encoder'](x, height=H_embed, width=W_embed)
+            x = module['norm'](x)
             
             x = x.reshape(B, H_embed, W_embed, -1).permute(0, 3, 1, 2).contiguous()
 
@@ -154,46 +181,19 @@ class SegformerEncoder(MetaFormerEncoder):
                 all_hidden_states = all_hidden_states + (x,)
         
         if self.use_intermediate_features:
-            return all_hidden_states
-        return x
+            return {'intermediate_features': all_hidden_states}
 
-class SegFormer(MetaFormer):
-    def __init__(self, task,
-                 image_channels, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
-                 num_attention_heads, attention_dropout_prob, sr_ratios,
-                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
-        super().__init__(hidden_sizes[-1])
-        self.task = task
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
-        
-        self._last_channels = hidden_sizes[-1]
-        
-        self.patch_embed = nn.Identity()
-        self.encoder = SegformerEncoder(
-            self.use_intermediate_features,
-            image_channels, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
-            num_attention_heads, attention_dropout_prob, sr_ratios,
-            intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps    
-        )
-        self.norm = nn.Identity()
+        B, C, _, _ = x.size()
+        x = x.reshape(B, C, -1)
+        feat = torch.mean(x.reshape(B, C, -1), dim=2)
+        return {'last_feature': feat}
 
-    def forward(self, x):
-        x = self.patch_embed(x)
-        x = self.encoder(x)
-        out = self.norm(x)
-        
-        if not self.use_intermediate_features:
-            B, C, _, _ = out.size()
-            out = out.reshape(B, C, -1)
-            feat = torch.mean(out.reshape(B, C, -1), dim=2)
-            return {'last_feature': feat}
-
-        return {'intermediate_features': out}
         
 def segformer(task, num_class=1000, *args, **kwargs) -> SegformerEncoder:
     configuration = {
         'image_channels': 3,
-        'num_blocks': 4,
+        'num_modules': 4,  # `num_encoder_blocks` in original
+        'num_blocks': [2, 2, 2, 2],  # `depth` in original
         'sr_ratios': [8, 4, 2, 1],
         'hidden_sizes': [32, 64, 160, 256],
         'embedding_patch_sizes': [7, 3, 3, 3],
