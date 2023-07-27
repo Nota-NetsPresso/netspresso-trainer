@@ -11,192 +11,69 @@ import itertools
 
 import torch
 import torch.nn as nn
+from torch import Tensor
 
 from models.op.depth import DropPath
-from models.utils import SeparateForwardModule
+from models.op.base_metaformer import (
+    MetaFormer, MetaFormerBlock, MetaFormerEncoder,
+    MultiHeadAttention, ChannelMLP, Image2Sequence,
+    Pooling
+)
+from models.op.custom import ConvLayer
 
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
 
-SUPPORTING_TASK = ['classification']
-
-
-EfficientFormer_width = {
-    'l1': [48, 96, 224, 448],
-    'l3': [64, 128, 320, 512],
-    'l7': [96, 192, 384, 768],
-}
-
-EfficientFormer_depth = {
-    'l1': [3, 2, 6, 4],
-    'l3': [4, 4, 12, 6],
-    'l7': [6, 6, 18, 8],
-}
-
-
-class Attention(torch.nn.Module):
-    def __init__(self, dim=384, key_dim=32, num_heads=8,
-                 attn_ratio=4,
-                 resolution=16):
+class EfficientFormerStem(nn.Module):
+    def __init__(self, in_channels, out_channels):
         super().__init__()
-        self.num_heads = num_heads
-        self.scale = key_dim ** -0.5
-        self.key_dim = key_dim
-        self.nh_kd = nh_kd = key_dim * num_heads
-        self.d = int(attn_ratio * key_dim)
-        self.dh = int(attn_ratio * key_dim) * num_heads
-        self.attn_ratio = attn_ratio
-        h = self.dh + nh_kd * 2
-        self.qkv = nn.Linear(dim, h)
-        self.proj = nn.Linear(self.dh, dim)
-
-        points = list(itertools.product(range(resolution), range(resolution)))
-        N = len(points)
-        attention_offsets = {}
-        idxs = []
-        for p1 in points:
-            for p2 in points:
-                offset = (abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
-                if offset not in attention_offsets:
-                    attention_offsets[offset] = len(attention_offsets)
-                idxs.append(attention_offsets[offset])
-
-        self.register_buffer('attention_biases', torch.zeros(num_heads, 49))
-        self.register_buffer('attention_bias_idxs',
-                             torch.ones(49, 49).long())
-
-        self.attention_biases_seg = torch.nn.Parameter(
-            torch.zeros(num_heads, len(attention_offsets)))
-        self.register_buffer('attention_bias_idxs_seg',
-                             torch.LongTensor(idxs).view(N, N))
-
-    @torch.no_grad()
-    def train(self, mode=True):
-        super().train(mode)
-        if mode and hasattr(self, 'ab'):
-            del self.ab
-        else:
-            self.ab = self.attention_biases_seg[:, self.attention_bias_idxs_seg]
-
-    def forward(self, x):  # x (B,N,C)
-        B, N, C = x.shape
-        qkv = self.qkv(x)
-        q, k, v = qkv.reshape(B, N, self.num_heads, -1).split([self.key_dim, self.key_dim, self.d], dim=3)
-        q = q.permute(0, 2, 1, 3)
-        k = k.permute(0, 2, 1, 3)
-        v = v.permute(0, 2, 1, 3)
-
-        attn = (q @ k.transpose(-2, -1)) * self.scale
-        bias = self.attention_biases_seg[:, self.attention_bias_idxs_seg] if self.training else self.ab
-
-        bias = torch.nn.functional.interpolate(bias.unsqueeze(0), size=(attn.size(-2), attn.size(-1)), mode='bicubic')
-        attn = attn + bias
-
-        attn = attn.softmax(dim=-1)
-        x = (attn @ v).transpose(1, 2).reshape(B, N, self.dh)
-        x = self.proj(x)
+        self.stem = nn.Sequential(
+            ConvLayer(in_channels, out_channels // 2, kernel_size=3, stride=2, padding=1, bias=True,
+                      use_act=True, use_norm=True, norm_type='batch_norm', act_type='relu'),
+            ConvLayer(out_channels // 2, out_channels, kernel_size=3, stride=2, padding=1, bias=True,
+                      use_act=True, use_norm=True, norm_type='batch_norm', act_type='relu'),
+        )
+        
+    def forward(self, x):
+        x = self.stem(x)
         return x
 
 
-def stem(in_chs, out_chs):
-    return nn.Sequential(
-        nn.Conv2d(in_chs, out_chs // 2, kernel_size=3, stride=2, padding=1),
-        nn.BatchNorm2d(out_chs // 2),
-        nn.ReLU(),
-        nn.Conv2d(out_chs // 2, out_chs, kernel_size=3, stride=2, padding=1),
-        nn.BatchNorm2d(out_chs),
-        nn.ReLU(), )
-
-
-class Embedding(nn.Module):
-    """
-    Patch Embedding that is implemented by a layer of conv.
-    Input: tensor in shape [B, C, H, W]
-    Output: tensor in shape [B, C, H/stride, W/stride]
-    """
-
-    def __init__(self, patch_size=16, stride=16, padding=0,
-                 in_chans=3, embed_dim=768, norm_layer=nn.BatchNorm2d):
+class EfficientFormerEmbedding(nn.Module):
+    def __init__(self, in_channels, out_channels, patch_size, stride, padding):
         super().__init__()
-        patch_size = (patch_size, patch_size)
-        stride = (stride, stride)
-        padding = (padding, padding)
-        self.proj = nn.Conv2d(in_chans, embed_dim, kernel_size=patch_size,
-                              stride=stride, padding=padding)
-        self.norm = norm_layer(embed_dim) if norm_layer else nn.Identity()
+        self.proj = ConvLayer(
+            in_channels, out_channels, kernel_size=patch_size, stride=stride, padding=padding, bias=True,
+            use_norm=True, use_act=False, norm_type='batch_norm'
+        )
 
     def forward(self, x):
-        x = self.proj(x)
-        x = self.norm(x)
+        x = self.proj(x)  # B x C x H//stride x W//stride
         return x
 
 
-class Flat(nn.Module):
-
-    def __init__(self, ):
+class EfficientFormerMeta4DMLP(nn.Module):
+    def __init__(self, hidden_size, intermediate_size=None, hidden_dropout_prob=0., hidden_activation_type='gelu'):
+        # hidden_size: in_features
+        # intermediate_size: hidden_features
+        # hidden_activation_type = 'gelu'
+        # hidden_dropout_prob = drop = 0.
         super().__init__()
-
-    def forward(self, x):
-        x = x.flatten(2).transpose(1, 2)
-        return x
-
-
-class Pooling(nn.Module):
-    """
-    Implementation of pooling for PoolFormer
-    --pool_size: pooling size
-    """
-
-    def __init__(self, pool_size=3):
-        super().__init__()
-        self.pool = nn.AvgPool2d(
-            pool_size, stride=1, padding=pool_size // 2, count_include_pad=False)
-
-    def forward(self, x):
-        return self.pool(x) - x
-
-
-class LinearMlp(nn.Module):
-    """ MLP as used in Vision Transformer, MLP-Mixer and related networks
-    """
-
-    def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.):
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-
-        self.fc1 = nn.Linear(in_features, hidden_features)
-        self.act = act_layer()
-        self.drop1 = nn.Dropout(drop)
-        self.fc2 = nn.Linear(hidden_features, out_features)
-        self.drop2 = nn.Dropout(drop)
-
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.act(x)
-        x = self.drop1(x)
-        x = self.fc2(x)
-        x = self.drop2(x)
-        return x
-
-
-class Mlp(nn.Module):
-    """
-    Implementation of MLP with 1*1 convolutions.
-    Input: tensor with shape [B, C, H, W]
-    """
-
-    def __init__(self, in_features, hidden_features=None,
-                 out_features=None, act_layer=nn.GELU, drop=0.):
-        super().__init__()
-        out_features = out_features or in_features
-        hidden_features = hidden_features or in_features
-        self.fc1 = nn.Conv2d(in_features, hidden_features, 1)
-        self.act = act_layer()
-        self.fc2 = nn.Conv2d(hidden_features, out_features, 1)
-        self.drop = nn.Dropout(drop)
+        intermediate_size = intermediate_size or hidden_size
+        
+        self.ffn = nn.Sequential()
+        self.ffn.add_module(
+            'conv_1x1_1', ConvLayer(hidden_size, intermediate_size, kernel_size=1, bias=True,
+                                    use_norm=True, use_act=True, norm_type='batch_norm',
+                                    act_type=hidden_activation_type)
+        )
+        self.ffn.add_module('drop', nn.Dropout(p=hidden_dropout_prob))
+        self.ffn.add_module(
+            'conv_1x1_2', ConvLayer(intermediate_size, hidden_size, kernel_size=1, bias=True,
+                                    use_norm=True, use_act=False, norm_type='batch_norm')
+        )
+        
+        self.dropout = nn.Dropout(p=hidden_dropout_prob)
         self.apply(self._init_weights)
-
-        self.norm1 = nn.BatchNorm2d(hidden_features)
-        self.norm2 = nn.BatchNorm2d(out_features)
 
     def _init_weights(self, m):
         if isinstance(m, nn.Conv2d):
@@ -205,35 +82,46 @@ class Mlp(nn.Module):
                 nn.init.constant_(m.bias, 0)
 
     def forward(self, x):
-        x = self.fc1(x)
-
-        x = self.norm1(x)
-
-        x = self.act(x)
-        x = self.drop(x)
-        x = self.fc2(x)
-
-        x = self.norm2(x)
-
-        x = self.drop(x)
+        x = self.ffn(x)
+        x = self.dropout(x)
         return x
 
 
-class Meta3D(nn.Module):
+class Meta3D(MetaFormerBlock):
+    def __init__(self, hidden_size, num_attention_heads, attention_hidden_size,
+                 attention_dropout_prob, attention_ratio, attention_bias_resolution,
+                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type='gelu',
+                 layer_norm_eps=1e-5,
+                 drop_path=0., use_layer_scale=True, layer_scale_init_value=1e-5):
 
-    def __init__(self, dim, mlp_ratio=4.,
-                 act_layer=nn.GELU, norm_layer=nn.LayerNorm,
-                 drop=0., drop_path=0.,
-                 use_layer_scale=True, layer_scale_init_value=1e-5):
+        super().__init__(hidden_size, layer_norm_eps)
+        self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
 
-        super().__init__()
-
-        self.norm1 = norm_layer(dim)
-        self.token_mixer = Attention(dim)
-        self.norm2 = norm_layer(dim)
-        mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp = LinearMlp(in_features=dim, hidden_features=mlp_hidden_dim,
-                             act_layer=act_layer, drop=drop)
+        # intermediate_ratio: mlp_ratio
+        # hidden_activation_type: act_type
+        # hidden_dropout_prob: drop
+        # hidden_size: dim
+        # hidden_size: key_dim * num_attention_heads
+        
+        # self.token_mixer = Attention(dim)
+        # (dim=384, key_dim=32, num_heads=8, attn_ratio=4, resolution=16)
+        # num_attention_heads: 8
+        # hidden_size: key_dim*num_attention_heads = 32 * 8
+        # value_hidden_size: key_dim*num_attention_heads*attn_ratio = 32 * 8 * 4
+        # attention_bias_resolution: resolution = 16
+        self.token_mixer = MultiHeadAttention(
+            hidden_size, num_attention_heads,
+            attention_hidden_size=attention_hidden_size,
+            attention_dropout_prob=attention_dropout_prob,
+            value_hidden_size=attention_hidden_size*attention_ratio,
+            use_attention_bias=True,
+            attention_bias_resolution=attention_bias_resolution
+        )
+        self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
+        intermediate_size = int(hidden_size * intermediate_ratio)
+        self.channel_mlp = ChannelMLP(
+            hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type
+        )
 
         # The following two techniques are useful to train deep PoolFormers.
         self.drop_path = DropPath(drop_path) if drop_path > 0. \
@@ -241,288 +129,268 @@ class Meta3D(nn.Module):
         self.use_layer_scale = use_layer_scale
         if use_layer_scale:
             self.layer_scale_1 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+                layer_scale_init_value * torch.ones((hidden_size)), requires_grad=True)
             self.layer_scale_2 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+                layer_scale_init_value * torch.ones((hidden_size)), requires_grad=True)
 
     def forward(self, x):
         if self.use_layer_scale:
             x = x + self.drop_path(
-                self.layer_scale_1.unsqueeze(0).unsqueeze(0)
-                * self.token_mixer(self.norm1(x)))
+                self.layer_scale_1.unsqueeze(0).unsqueeze(0) * \
+                    self.token_mixer(self.layernorm_before(x))
+            )
             x = x + self.drop_path(
-                self.layer_scale_2.unsqueeze(0).unsqueeze(0)
-                * self.mlp(self.norm2(x)))
+                self.layer_scale_2.unsqueeze(0).unsqueeze(0) * \
+                    self.channel_mlp(self.layernorm_after(x))
+            )
 
         else:
-            x = x + self.drop_path(self.token_mixer(self.norm1(x)))
-            x = x + self.drop_path(self.mlp(self.norm2(x)))
+            x = x + self.drop_path(self.token_mixer(self.layernorm_before(x)))
+            x = x + self.drop_path(self.channel_mlp(self.layernorm_after(x)))
         return x
 
 
-class Meta4D(nn.Module):
-
-    def __init__(self, dim, pool_size=3, mlp_ratio=4.,
-                 act_layer=nn.GELU,
-                 drop=0., drop_path=0.,
-                 use_layer_scale=True, layer_scale_init_value=1e-5):
-
-        super().__init__()
-
-        self.token_mixer = Pooling(pool_size=pool_size)
-        mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim,
-                       act_layer=act_layer, drop=drop)
+class Meta4D(MetaFormerBlock):
+    def __init__(self, hidden_size, pool_size=3, intermediate_ratio=4.,
+                 hidden_dropout_prob=0., hidden_activation_type='gelu',
+                 drop_path=0., use_layer_scale=True, layer_scale_init_value=1e-5):
+        # intermediate_ratio: mlp_ratio
+        # hidden_size: dim
+        # hidden_dropout_prob: drop
+        # hidden_activation_type: act_type
+        super().__init__(hidden_size, 0.)
+        self.layernorm_before = nn.Identity()  # not used
+        self.layernorm_after = nn.Identity()  # not used
+        self.token_mixer = Pooling(pool_size)
+        intermediate_size = int(hidden_size * intermediate_ratio)
+        self.channel_mlp = EfficientFormerMeta4DMLP(
+            hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type
+        )
 
         self.drop_path = DropPath(drop_path) if drop_path > 0. \
             else nn.Identity()
         self.use_layer_scale = use_layer_scale
         if use_layer_scale:
             self.layer_scale_1 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+                layer_scale_init_value * torch.ones((hidden_size)), requires_grad=True)
             self.layer_scale_2 = nn.Parameter(
-                layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+                layer_scale_init_value * torch.ones((hidden_size)), requires_grad=True)
 
     def forward(self, x):
         if self.use_layer_scale:
             x = x + self.drop_path(
-                self.layer_scale_1.unsqueeze(-1).unsqueeze(-1)
-                * self.token_mixer(x))
+                self.layer_scale_1.unsqueeze(-1).unsqueeze(-1) * self.token_mixer(x)
+            )
             x = x + self.drop_path(
-                self.layer_scale_2.unsqueeze(-1).unsqueeze(-1)
-                * self.mlp(x))
+                self.layer_scale_2.unsqueeze(-1).unsqueeze(-1) * self.channel_mlp(x)
+            )
         else:
             x = x + self.drop_path(self.token_mixer(x))
-            x = x + self.drop_path(self.mlp(x))
+            x = x + self.drop_path(self.channel_mlp(x))
         return x
 
 
-def meta_blocks(dim, index, layers,
-                pool_size=3, mlp_ratio=4.,
-                act_layer=nn.GELU, norm_layer=nn.LayerNorm,
-                drop_rate=.0, drop_path_rate=0.,
-                use_layer_scale=True, layer_scale_init_value=1e-5, vit_num=1):
-    blocks = []
-    if index == 3 and vit_num == layers[index]:
-        blocks.append(Flat())
-    for block_idx in range(layers[index]):
-        block_dpr = drop_path_rate * (
-                block_idx + sum(layers[:index])) / (sum(layers) - 1)
-        if index == 3 and layers[index] - block_idx <= vit_num:
-            blocks.append(Meta3D(
-                dim, mlp_ratio=mlp_ratio,
-                act_layer=act_layer, norm_layer=norm_layer,
-                drop=drop_rate, drop_path=block_dpr,
-                use_layer_scale=use_layer_scale,
-                layer_scale_init_value=layer_scale_init_value,
-            ))
-        else:
-            blocks.append(Meta4D(
-                dim, pool_size=pool_size, mlp_ratio=mlp_ratio,
-                act_layer=act_layer,
-                drop=drop_rate, drop_path=block_dpr,
-                use_layer_scale=use_layer_scale,
-                layer_scale_init_value=layer_scale_init_value,
-            ))
-            if index == 3 and layers[index] - block_idx - 1 == vit_num:
-                blocks.append(Flat())
-
-    blocks = nn.Sequential(*blocks)
-    return blocks
-
-
-class EfficientFormer(SeparateForwardModule):
-
-    def __init__(self, task, layers, embed_dims=None,
-                 mlp_ratios=4, downsamples=None,
-                 pool_size=3,
-                 norm_layer=nn.LayerNorm, act_layer=nn.GELU,
-                 num_classes=1000,
-                 down_patch_size=3, down_stride=2, down_pad=1,
-                 drop_rate=0., drop_path_rate=0.,
-                 use_layer_scale=True, layer_scale_init_value=1e-5,
-                 init_cfg=None,
-                 pretrained=None,
-                 vit_num=1,
-                 distillation=True,
-                 **kwargs):
-
-        super().__init__()
+class EfficientFormerEncoder(MetaFormerEncoder):
+    def __init__(self, use_intermediate_features, num_blocks, hidden_sizes,
+                num_attention_heads, attention_hidden_size, attention_dropout_prob,
+                attention_ratio, attention_bias_resolution,
+                pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+                layer_norm_eps,
+                drop_path_rate, use_layer_scale, layer_scale_init_value,
+                downsamples, down_patch_size, down_stride, down_pad,
+                vit_num=1):
+        # intermediate_ratio: mlp_ratio
+        # hidden_size: dim
+        # hidden_dropout_prob: drop
+        # hidden_activation_type: act_type
         
-        self.task = task.lower()
-        self.intermediate_features = self.task in ['segmentation', 'detection']
-
-        self.num_classes = num_classes
-        self.patch_embed = stem(3, embed_dims[0])
-
-        # set the main block in network
-        network = []
-        for i in range(len(layers)):
-            stage = meta_blocks(embed_dims[i], i, layers,
-                                pool_size=pool_size, mlp_ratio=mlp_ratios,
-                                act_layer=act_layer, norm_layer=norm_layer,
-                                drop_rate=drop_rate,
-                                drop_path_rate=drop_path_rate,
-                                use_layer_scale=use_layer_scale,
-                                layer_scale_init_value=layer_scale_init_value,
-                                vit_num=vit_num)
-            network.append(stage)
-            if i >= len(layers) - 1:
+        # intermediate_ratio: mlp_ratio
+        # hidden_activation_type: act_type
+        # hidden_dropout_prob: drop
+        # hidden_size: dim
+        # attention_hidden_size: key_dim * num_attention_heads
+        
+        # self.token_mixer = Attention(dim)
+        # (dim=384, key_dim=32, num_heads=8, attn_ratio=4, resolution=16)
+        # num_attention_heads: 8
+        # hidden_size: key_dim*num_attention_heads = 32 * 8
+        # value_hidden_size: key_dim*num_attention_heads*attn_ratio = 32 * 8 * 4
+        # attention_bias_resolution: resolution = 16
+        
+        super().__init__()
+        self.use_intermediate_features = use_intermediate_features
+         
+        blocks = []
+        for module_idx in range(len(num_blocks)):
+            stage = self.meta_blocks(
+                num_blocks, module_idx, hidden_sizes[module_idx],
+                num_attention_heads, attention_hidden_size, attention_dropout_prob,
+                attention_ratio, attention_bias_resolution,
+                pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+                layer_norm_eps,
+                drop_path_rate, use_layer_scale, layer_scale_init_value,
+                vit_num
+            )
+            blocks.append(stage)
+            if module_idx >= len(num_blocks) - 1:
                 break
-            if downsamples[i] or embed_dims[i] != embed_dims[i + 1]:
+            if downsamples[module_idx] or hidden_sizes[module_idx] != hidden_sizes[module_idx + 1]:
                 # downsampling between two stages
-                network.append(
-                    Embedding(
-                        patch_size=down_patch_size, stride=down_stride,
-                        padding=down_pad,
-                        in_chans=embed_dims[i], embed_dim=embed_dims[i + 1]
+                blocks.append(
+                    EfficientFormerEmbedding(
+                        hidden_sizes[module_idx],
+                        hidden_sizes[module_idx + 1],
+                        down_patch_size,
+                        down_stride,
+                        down_pad
                     )
                 )
 
-        self.network = nn.ModuleList(network)
-
-        if self.intermediate_features:
+        self.blocks = nn.ModuleList(blocks)
+        
+        if self.use_intermediate_features:
             # add a norm layer for each output
-            self.out_indices = [0, 2, 4, 6]
-            for i_emb, i_layer in enumerate(self.out_indices):
+            self.intermediate_features_indices = [0, 2, 4, 6]
+            for i_emb, i_layer in enumerate(self.intermediate_features_indices):
                 if i_emb == 0 and os.environ.get('FORK_LAST3', None):
                     layer = nn.Identity()
                 else:
-                    layer = nn.GroupNorm(1, embed_dims[i_emb])
-                layer_name = f'norm{i_layer}'
-                self.add_module(layer_name, layer)
-        else:
-            # Classifier head
-            self.norm = norm_layer(embed_dims[-1])
-            # self.head = nn.Linear(
-            #     embed_dims[-1], num_classes) if num_classes > 0 \
-            #     else nn.Identity()
-            # self.dist = distillation
-            # if self.dist:
-            #     self.dist_head = nn.Linear(
-            #         embed_dims[-1], num_classes) if num_classes > 0 \
-            #         else nn.Identity()
+                    layer = nn.GroupNorm(1, hidden_sizes[i_emb])
+                self.add_module(f'norm{i_layer}', layer)
 
-        self.apply(self.cls_init_weights)
+    @staticmethod
+    def meta_blocks(num_blocks, module_idx, hidden_size,
+                    num_attention_heads, attention_hidden_size, attention_dropout_prob,
+                    attention_ratio, attention_bias_resolution,
+                    pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+                    layer_norm_eps,
+                    drop_path_rate, use_layer_scale, layer_scale_init_value,
+                    vit_num=1):
+        
+        blocks = []
+        if module_idx == 3 and vit_num == num_blocks[module_idx]:
+            blocks.append(Image2Sequence())
+        for block_idx in range(num_blocks[module_idx]):
+            block_dpr = drop_path_rate * (block_idx + sum(num_blocks[:module_idx])) / (sum(num_blocks) - 1)
+            if module_idx == 3 and num_blocks[module_idx] - block_idx <= vit_num:
+                blocks.append(Meta3D(
+                    hidden_size, num_attention_heads, attention_hidden_size,
+                    attention_dropout_prob,
+                    attention_ratio,
+                    attention_bias_resolution,
+                    intermediate_ratio,
+                    hidden_dropout_prob,
+                    hidden_activation_type,
+                    layer_norm_eps,
+                    block_dpr,
+                    use_layer_scale,
+                    layer_scale_init_value
+                ))
+            else:
+                blocks.append(Meta4D(
+                    hidden_size, pool_size, intermediate_ratio,
+                    hidden_dropout_prob,
+                    hidden_activation_type,
+                    block_dpr,
+                    use_layer_scale,
+                    layer_scale_init_value
+                ))
+                if module_idx == 3 and num_blocks[module_idx] - block_idx - 1 == vit_num:
+                    blocks.append(Image2Sequence())
 
-        self.init_cfg = copy.deepcopy(init_cfg)
-        # load pre-trained model
-        if self.intermediate_features and (
-                self.init_cfg is not None or pretrained is not None):
-            self.init_weights()
-
-        self._last_channels = embed_dims[-1]
-        self._embed_dims = embed_dims
-
-    # init for classification
-    def cls_init_weights(self, m):
-        if isinstance(m, nn.Linear):
-            torch.nn.init.trunc_normal_(m.weight, std=.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-
-    # # init for mmdetection or mmsegmentation by loading
-    # # imagenet pre-trained weights
-    # def init_weights(self, pretrained=None):
-    #     logger = get_root_logger()
-    #     if self.init_cfg is None and pretrained is None:
-    #         logger.warn(f'No pre-trained weights for '
-    #                     f'{self.__class__.__name__}, '
-    #                     f'training start from scratch')
-    #         pass
-    #     else:
-    #         assert 'checkpoint' in self.init_cfg, f'Only support ' \
-    #                                               f'specify `Pretrained` in ' \
-    #                                               f'`init_cfg` in ' \
-    #                                               f'{self.__class__.__name__} '
-    #         if self.init_cfg is not None:
-    #             ckpt_path = self.init_cfg['checkpoint']
-    #         elif pretrained is not None:
-    #             ckpt_path = pretrained
-
-    #         ckpt = _load_checkpoint(
-    #             ckpt_path, logger=logger, map_location='cpu')
-    #         if 'state_dict' in ckpt:
-    #             _state_dict = ckpt['state_dict']
-    #         elif 'model' in ckpt:
-    #             _state_dict = ckpt['model']
-    #         else:
-    #             _state_dict = ckpt
-
-    #         state_dict = _state_dict
-    #         missing_keys, unexpected_keys = \
-    #             self.load_state_dict(state_dict, False)
-
-    def get_classifier(self):
-        return self.head
-
-    def reset_classifier(self, num_classes):
-        self.num_classes = num_classes
-        self.head = nn.Linear(
-            self.embed_dim, num_classes) if num_classes > 0 else nn.Identity()
-
-    def forward_tokens(self, x):
-        outs = []
-        B = 0
-        C = 0
-        H = 0
-        W = 0
-        for idx, block in enumerate(self.network):
+        blocks = nn.Sequential(*blocks)
+        return blocks
+    
+    def forward(self, x):
+        all_hidden_states = () if self.use_intermediate_features else None
+        for idx, block in enumerate(self.blocks):
             if len(x.size()) == 4:
                 B, C, H, W = x.shape
             x = block(x)
-            if self.intermediate_features and idx in self.out_indices:
+            if self.use_intermediate_features and idx in self.intermediate_features_indices:
                 norm_layer = getattr(self, f'norm{idx}')
                 if len(x.size()) != 4:
                     x = x.transpose(1, 2).reshape(B, C, H, W)
-                x_out = norm_layer(x)
-                outs.append(x_out)
-        if self.intermediate_features:
+                x = norm_layer(x)
+                all_hidden_states = all_hidden_states + (x,)
+        
+        if self.use_intermediate_features:
             # output the features of four stages for dense prediction
-            return outs
+            return all_hidden_states
         # output only the features of last layer for image classification
         return x
 
-    def forward_training(self, x):
-        x = self.patch_embed(x)
-        x = self.forward_tokens(x)
-        if self.intermediate_features:
-            # otuput features of four stages for dense prediction
-            return {'intermediate_features': x}
-        x = self.norm(x)
-        x = x.mean(-2)
-        # if self.dist:
-        #     x = self.head(x.mean(-2)), self.dist_head(x.mean(-2))
-        #     if not self.training:
-        #         x = (x[0] + x[1]) / 2
-        # else:
-        #     x = self.head(x.mean(-2))
-        # # for image classification
-        return {'last_feature': x}
-    
-        
-    def forward_inference(self, x):
-        return self.forward_training(x)
+class EfficientFormer(MetaFormer):
 
-    @property
-    def last_channels(self):
-        return self._last_channels
-    
-    @property
-    def intermediate_dims(self):
-        return self._embed_dims
+    def __init__(
+        self, task, num_blocks, hidden_sizes,
+        num_attention_heads, attention_hidden_size, attention_dropout_prob,
+        attention_ratio, attention_bias_resolution,
+        pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+        layer_norm_eps,
+        drop_path_rate=0., use_layer_scale=True, layer_scale_init_value=1e-5,
+        downsamples=None, down_patch_size=3, down_stride=2, down_pad=1, 
+        vit_num=1
+    ):
 
+        super().__init__(hidden_sizes[-1])
+        self.task = task.lower()
+        self.use_intermediate_features = self.task in ['segmentation', 'detection']
+
+        image_channels = 3
+        self.patch_embed = EfficientFormerStem(in_channels=image_channels, out_channels=hidden_sizes[0])
+
+        self.encoder = EfficientFormerEncoder(
+            self.use_intermediate_features, num_blocks, hidden_sizes,
+            num_attention_heads, attention_hidden_size, attention_dropout_prob,
+            attention_ratio, attention_bias_resolution,
+            pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+            layer_norm_eps,
+            drop_path_rate, use_layer_scale, layer_scale_init_value,
+            downsamples, down_patch_size, down_stride, down_pad,
+            vit_num=vit_num
+        )
+
+        self.norm = nn.LayerNorm(hidden_sizes[-1], eps=layer_norm_eps)
+    
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
+    def forward(self, x: Tensor):
+        x = self.patch_embed(x)
+        x = self.encoder(x)
+        if self.use_intermediate_features:
+            all_hidden_states = x  # (features)
+            return {'intermediate_features': all_hidden_states}
+        x = self.norm(x)  # B x N x C
+        feat = torch.mean(x, dim=-2)
+        return {'last_feature': feat}
 
-def efficientformer(task, num_class=1000, **extra_params) -> EfficientFormer:
-    return EfficientFormer(
-        task=task,
-        layers=EfficientFormer_depth['l1'],
-        embed_dims=EfficientFormer_width['l1'],
-        num_classes=num_class,
-        downsamples=[True, True, True, True],
-        vit_num=1,
-        **extra_params
-    )
+def efficientformer(task, num_class=1000, *args, **kwargs) -> EfficientFormer:
+    
+    # configuration for l1
+    attention_hidden_size_splitted = 32
+    configuration = {
+        'num_blocks': [3, 2, 6, 4],
+        'hidden_sizes': [48, 96, 224, 448],
+        'num_attention_heads': 8,
+        'attention_hidden_size': 32 * 8, # attention_hidden_size_splitted * num_attention_heads
+        'attention_dropout_prob': 0.,
+        'attention_ratio': 4,
+        'attention_bias_resolution': 16,
+        'pool_size': 3,
+        'intermediate_ratio': 4,
+        'hidden_dropout_prob': 0.,
+        'hidden_activation_type': 'gelu',
+        'layer_norm_eps': 1e-5,
+        'drop_path_rate': 0.,
+        'use_layer_scale': True,
+        'layer_scale_init_value': 1e-5,
+        'downsamples': [True, True, True, True],
+        'down_patch_size': 3,
+        'down_stride': 2,
+        'down_pad': 1,
+        'vit_num': 1
+    }
+
+    return EfficientFormer(task, **configuration)

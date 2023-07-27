@@ -1,0 +1,349 @@
+MaskRCNN(
+  (backbone): efficientformer_l1_feat(
+    (patch_embed): Sequential(
+      (0): Conv2d(3, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+      (1): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU()
+      (3): Conv2d(24, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+      (4): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU()
+    )
+    (network): ModuleList(
+      (0): Sequential(
+        (0): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (1): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (2): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+      )
+      (1): Embedding(
+        (proj): Conv2d(48, 96, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        (norm): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (2): Sequential(
+        (0): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (1): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+      )
+      (3): Embedding(
+        (proj): Conv2d(96, 224, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (4): Sequential(
+        (0): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (1): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (2): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (3): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (4): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (5): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+      )
+      (5): Embedding(
+        (proj): Conv2d(224, 448, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+        (norm): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+      (6): Sequential(
+        (0): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (1): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (2): Meta4D(
+          (token_mixer): Pooling(
+            (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+          )
+          (mlp): Mlp(
+            (fc1): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+            (act): GELU(approximate=none)
+            (fc2): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+            (drop): Dropout(p=0.0, inplace=False)
+            (norm1): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (norm2): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+          (drop_path): Identity()
+        )
+        (3): Flat()
+        (4): Meta3D(
+          (norm1): LayerNorm((448,), eps=1e-05, elementwise_affine=True)
+          (token_mixer): Attention(
+            (qkv): Linear(in_features=448, out_features=1536, bias=True)
+            (proj): Linear(in_features=1024, out_features=448, bias=True)
+          )
+          (norm2): LayerNorm((448,), eps=1e-05, elementwise_affine=True)
+          (mlp): LinearMlp(
+            (fc1): Linear(in_features=448, out_features=1792, bias=True)
+            (act): GELU(approximate=none)
+            (drop1): Dropout(p=0.0, inplace=False)
+            (fc2): Linear(in_features=1792, out_features=448, bias=True)
+            (drop2): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+        )
+      )
+    )
+    (norm0): GroupNorm(1, 48, eps=1e-05, affine=True)
+    (norm2): GroupNorm(1, 96, eps=1e-05, affine=True)
+    (norm4): GroupNorm(1, 224, eps=1e-05, affine=True)
+    (norm6): GroupNorm(1, 448, eps=1e-05, affine=True)
+  )
+  (neck): FPN(
+    (lateral_convs): ModuleList(
+      (0): ConvModule(
+        (conv): Conv2d(48, 256, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (1): ConvModule(
+        (conv): Conv2d(96, 256, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (2): ConvModule(
+        (conv): Conv2d(224, 256, kernel_size=(1, 1), stride=(1, 1))
+      )
+      (3): ConvModule(
+        (conv): Conv2d(448, 256, kernel_size=(1, 1), stride=(1, 1))
+      )
+    )
+    (fpn_convs): ModuleList(
+      (0): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      )
+      (1): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      )
+      (2): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      )
+      (3): ConvModule(
+        (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      )
+    )
+  )
+  init_cfg={'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}
+  (rpn_head): RPNHead(
+    (loss_cls): CrossEntropyLoss(avg_non_ignore=False)
+    (loss_bbox): L1Loss()
+    (rpn_conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (rpn_cls): Conv2d(256, 3, kernel_size=(1, 1), stride=(1, 1))
+    (rpn_reg): Conv2d(256, 12, kernel_size=(1, 1), stride=(1, 1))
+  )
+  init_cfg={'type': 'Normal', 'layer': 'Conv2d', 'std': 0.01}
+  (roi_head): StandardRoIHead(
+    (bbox_roi_extractor): SingleRoIExtractor(
+      (roi_layers): ModuleList(
+        (0): RoIAlign(output_size=(7, 7), spatial_scale=0.25, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (1): RoIAlign(output_size=(7, 7), spatial_scale=0.125, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (2): RoIAlign(output_size=(7, 7), spatial_scale=0.0625, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (3): RoIAlign(output_size=(7, 7), spatial_scale=0.03125, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+      )
+    )
+    (bbox_head): Shared2FCBBoxHead(
+      (loss_cls): CrossEntropyLoss(avg_non_ignore=False)
+      (loss_bbox): L1Loss()
+      (fc_cls): Linear(in_features=1024, out_features=81, bias=True)
+      (fc_reg): Linear(in_features=1024, out_features=320, bias=True)
+      (shared_convs): ModuleList()
+      (shared_fcs): ModuleList(
+        (0): Linear(in_features=12544, out_features=1024, bias=True)
+        (1): Linear(in_features=1024, out_features=1024, bias=True)
+      )
+      (cls_convs): ModuleList()
+      (cls_fcs): ModuleList()
+      (reg_convs): ModuleList()
+      (reg_fcs): ModuleList()
+      (relu): ReLU(inplace=True)
+    )
+    init_cfg=[{'type': 'Normal', 'std': 0.01, 'override': {'name': 'fc_cls'}}, {'type': 'Normal', 'std': 0.001, 'override': {'name': 'fc_reg'}}, {'type': 'Xavier', 'distribution': 'uniform', 'override': [{'name': 'shared_fcs'}, {'name': 'cls_fcs'}, {'name': 'reg_fcs'}]}]
+    (mask_roi_extractor): SingleRoIExtractor(
+      (roi_layers): ModuleList(
+        (0): RoIAlign(output_size=(14, 14), spatial_scale=0.25, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (1): RoIAlign(output_size=(14, 14), spatial_scale=0.125, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (2): RoIAlign(output_size=(14, 14), spatial_scale=0.0625, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+        (3): RoIAlign(output_size=(14, 14), spatial_scale=0.03125, sampling_ratio=0, pool_mode=avg, aligned=True, use_torchvision=False)
+      )
+    )
+    (mask_head): FCNMaskHead(
+      (loss_mask): CrossEntropyLoss(avg_non_ignore=False)
+      (convs): ModuleList(
+        (0): ConvModule(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (activate): ReLU(inplace=True)
+        )
+        (1): ConvModule(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (activate): ReLU(inplace=True)
+        )
+        (2): ConvModule(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (activate): ReLU(inplace=True)
+        )
+        (3): ConvModule(
+          (conv): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (activate): ReLU(inplace=True)
+        )
+      )
+      (upsample): ConvTranspose2d(256, 256, kernel_size=(2, 2), stride=(2, 2))
+      (conv_logits): Conv2d(256, 80, kernel_size=(1, 1), stride=(1, 1))
+      (relu): ReLU(inplace=True)
+    )
+  )
+)

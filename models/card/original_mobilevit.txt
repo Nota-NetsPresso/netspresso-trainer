@@ -1,0 +1,65 @@
+MobileViT(
+  (conv_1): Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+  (layer_1): Sequential(
+    (0): InvertedResidual(in_channels=16, out_channels=32, stride=1, exp=4, dilation=1, skip_conn=False)
+  )
+  (layer_2): Sequential(
+    (0): InvertedResidual(in_channels=32, out_channels=64, stride=2, exp=4, dilation=1, skip_conn=False)
+    (1): InvertedResidual(in_channels=64, out_channels=64, stride=1, exp=4, dilation=1, skip_conn=True)
+    (2): InvertedResidual(in_channels=64, out_channels=64, stride=1, exp=4, dilation=1, skip_conn=True)
+  )
+  (layer_3): Sequential(
+    (0): InvertedResidual(in_channels=64, out_channels=96, stride=2, exp=4, dilation=1, skip_conn=False)
+    (1): MobileViTBlock(
+         Local representations
+                 Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+                 Conv2d(96, 144, kernel_size=(1, 1), stride=(1, 1), bias=False, bias=False)
+         Global representations with patch size of 2x2
+                 TransformerEncoder(embed_dim=144, ffn_dim=288, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=144, ffn_dim=288, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+                 Conv2d(144, 96, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+         Feature fusion
+                 Conv2d(192, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+    )
+  )
+  (layer_4): Sequential(
+    (0): InvertedResidual(in_channels=96, out_channels=128, stride=2, exp=4, dilation=1, skip_conn=False)
+    (1): MobileViTBlock(
+         Local representations
+                 Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+                 Conv2d(128, 192, kernel_size=(1, 1), stride=(1, 1), bias=False, bias=False)
+         Global representations with patch size of 2x2
+                 TransformerEncoder(embed_dim=192, ffn_dim=384, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=192, ffn_dim=384, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=192, ffn_dim=384, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=192, ffn_dim=384, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                 Conv2d(192, 128, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+         Feature fusion
+                 Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+    )
+  )
+  (layer_5): Sequential(
+    (0): InvertedResidual(in_channels=128, out_channels=160, stride=2, exp=4, dilation=1, skip_conn=False)
+    (1): MobileViTBlock(
+         Local representations
+                 Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+                 Conv2d(160, 240, kernel_size=(1, 1), stride=(1, 1), bias=False, bias=False)
+         Global representations with patch size of 2x2
+                 TransformerEncoder(embed_dim=240, ffn_dim=480, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=240, ffn_dim=480, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 TransformerEncoder(embed_dim=240, ffn_dim=480, dropout=0.1, ffn_dropout=0.0, attn_fn=MultiHeadAttention, act_fn=Swish, norm_fn=layer_norm)
+                 LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                 Conv2d(240, 160, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+         Feature fusion
+                 Conv2d(320, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+    )
+  )
+  (conv_1x1_exp): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=Swish, bias=False)
+  (classifier): Sequential(
+    (global_pool): GlobalPool(type=mean)
+    (dropout): Dropout(p=0.1, inplace=True)
+    (fc): LinearLayer(in_features=640, out_features=1000, bias=True, channel_first=False)
+  )
+)

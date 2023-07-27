@@ -1,4 +1,8 @@
+from typing import Dict, Type
 from pathlib import Path
+
+import torch
+import torch.nn as nn
 
 PRETRAINED_ROOT = Path("/CHECKPOINT")  # TODO: as an option
 
@@ -11,6 +15,20 @@ MODEL_PRETRAINED_DICT = {
     "segformer": PRETRAINED_ROOT / "backbones" / "segformer" / "segformer.pth",
     "pidnet": PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
     "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
-    "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_tiny.pth",
+    "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_without_qkv.pth",
     "efficientformer": PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
+}
+
+NORM_REGISTRY: Dict[str, Type[nn.Module]] = {
+    'batch_norm': nn.BatchNorm2d,
+    'instance_norm': nn.InstanceNorm2d,
+}
+
+ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
+    'relu': nn.ReLU,
+    'prelu': nn.PReLU,
+    'leaky_relu': nn.LeakyReLU,
+    'gelu': nn.GELU,
+    'silu': nn.SiLU,
+    'swish': nn.SiLU,
 }

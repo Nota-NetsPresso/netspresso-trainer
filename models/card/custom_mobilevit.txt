@@ -1,0 +1,280 @@
+AssembleModel(
+  (backbone): MobileViT(
+    (patch_embed): MobileViTEmbeddings(
+      (conv): Conv2d(3, 16, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+    )
+    (encoder): MobileViTEncoder(
+      (blocks): Sequential(
+        (0): Sequential(
+          (0): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(16, 64, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=64, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+        )
+        (1): Sequential(
+          (0): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(32, 128, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=128, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(128, 64, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+          (1): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+          (2): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=256, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+        )
+        (2): Sequential(
+          (0): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=256, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(256, 96, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+          (1): MobileViTBlock(
+            (local_rep): Sequential(
+              (0): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (1): Conv2d(96, 144, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            )
+            (global_rep): Sequential(
+              (0): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=144, out_features=144, bias=True)
+                  (key): Linear(in_features=144, out_features=144, bias=True)
+                  (value): Linear(in_features=144, out_features=144, bias=True)
+                  (linear): Linear(in_features=144, out_features=144, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=144, out_features=288, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=288, out_features=144, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (1): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=144, out_features=144, bias=True)
+                  (key): Linear(in_features=144, out_features=144, bias=True)
+                  (value): Linear(in_features=144, out_features=144, bias=True)
+                  (linear): Linear(in_features=144, out_features=144, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=144, out_features=288, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=288, out_features=144, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (2): LayerNorm((144,), eps=1e-05, elementwise_affine=True)
+            )
+            (proj): Conv2d(144, 96, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+            (fusion): Conv2d(192, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+          )
+        )
+        (3): Sequential(
+          (0): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(384, 384, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=384, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(384, 128, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+          (1): MobileViTBlock(
+            (local_rep): Sequential(
+              (0): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (1): Conv2d(128, 192, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            )
+            (global_rep): Sequential(
+              (0): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=192, out_features=192, bias=True)
+                  (key): Linear(in_features=192, out_features=192, bias=True)
+                  (value): Linear(in_features=192, out_features=192, bias=True)
+                  (linear): Linear(in_features=192, out_features=192, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=192, out_features=384, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=384, out_features=192, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (1): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=192, out_features=192, bias=True)
+                  (key): Linear(in_features=192, out_features=192, bias=True)
+                  (value): Linear(in_features=192, out_features=192, bias=True)
+                  (linear): Linear(in_features=192, out_features=192, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=192, out_features=384, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=384, out_features=192, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (2): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=192, out_features=192, bias=True)
+                  (key): Linear(in_features=192, out_features=192, bias=True)
+                  (value): Linear(in_features=192, out_features=192, bias=True)
+                  (linear): Linear(in_features=192, out_features=192, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=192, out_features=384, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=384, out_features=192, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (3): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=192, out_features=192, bias=True)
+                  (key): Linear(in_features=192, out_features=192, bias=True)
+                  (value): Linear(in_features=192, out_features=192, bias=True)
+                  (linear): Linear(in_features=192, out_features=192, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=192, out_features=384, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=384, out_features=192, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (4): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+            )
+            (proj): Conv2d(192, 128, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+            (fusion): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+          )
+        )
+        (4): Sequential(
+          (0): InvertedResidual(
+            (block): Sequential(
+              (exp_1x1): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (conv_3x3): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), groups=512, bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (red_1x1): Conv2d(512, 160, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d)
+            )
+          )
+          (1): MobileViTBlock(
+            (local_rep): Sequential(
+              (0): Conv2d(160, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+              (1): Conv2d(160, 240, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            )
+            (global_rep): Sequential(
+              (0): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=240, out_features=240, bias=True)
+                  (key): Linear(in_features=240, out_features=240, bias=True)
+                  (value): Linear(in_features=240, out_features=240, bias=True)
+                  (linear): Linear(in_features=240, out_features=240, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=240, out_features=480, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=480, out_features=240, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (1): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=240, out_features=240, bias=True)
+                  (key): Linear(in_features=240, out_features=240, bias=True)
+                  (value): Linear(in_features=240, out_features=240, bias=True)
+                  (linear): Linear(in_features=240, out_features=240, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=240, out_features=480, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=480, out_features=240, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (2): MobileViTTransformerBlock(
+                (layernorm_before): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (layernorm_after): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+                (token_mixer): MultiHeadAttention(
+                  (query): Linear(in_features=240, out_features=240, bias=True)
+                  (key): Linear(in_features=240, out_features=240, bias=True)
+                  (value): Linear(in_features=240, out_features=240, bias=True)
+                  (linear): Linear(in_features=240, out_features=240, bias=True)
+                  (dropout): Dropout(p=0.1, inplace=False)
+                )
+                (channel_mlp): ChannelMLP(
+                  (ffn): Sequential(
+                    (0): Linear(in_features=240, out_features=480, bias=True)
+                    (1): SiLU()
+                    (2): Linear(in_features=480, out_features=240, bias=True)
+                  )
+                  (dropout): Dropout(p=0.0, inplace=False)
+                )
+              )
+              (3): LayerNorm((240,), eps=1e-05, elementwise_affine=True)
+            )
+            (proj): Conv2d(240, 160, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+            (fusion): Conv2d(320, 160, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+          )
+        )
+      )
+    )
+    (norm): Identity()
+    (conv_1x1_exp): Conv2d(160, 640, kernel_size=(1, 1), stride=(1, 1), bias=False, normalization=BatchNorm2d, activation=SiLU)
+    (pool): GlobalPool()
+  )
+  (head): FC(
+    (classifier): Linear(in_features=640, out_features=3, bias=True)
+  )
+)
