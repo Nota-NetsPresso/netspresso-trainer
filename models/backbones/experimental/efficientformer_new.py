@@ -220,7 +220,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
         super().__init__()
         self.use_intermediate_features = use_intermediate_features
          
-        network = []
+        blocks = []
         for module_idx in range(len(num_blocks)):
             stage = self.meta_blocks(
                 num_blocks, module_idx, hidden_sizes[module_idx],
@@ -231,12 +231,12 @@ class EfficientFormerEncoder(MetaFormerEncoder):
                 drop_path_rate, use_layer_scale, layer_scale_init_value,
                 vit_num
             )
-            network.append(stage)
+            blocks.append(stage)
             if module_idx >= len(num_blocks) - 1:
                 break
             if downsamples[module_idx] or hidden_sizes[module_idx] != hidden_sizes[module_idx + 1]:
                 # downsampling between two stages
-                network.append(
+                blocks.append(
                     EfficientFormerEmbedding(
                         hidden_sizes[module_idx],
                         hidden_sizes[module_idx + 1],
@@ -246,7 +246,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
                     )
                 )
 
-        self.network = nn.ModuleList(network)
+        self.blocks = nn.ModuleList(blocks)
         
         if self.use_intermediate_features:
             # add a norm layer for each output
@@ -303,7 +303,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
     
     def forward(self, x):
         all_hidden_states = () if self.use_intermediate_features else None
-        for idx, block in enumerate(self.network):
+        for idx, block in enumerate(self.blocks):
             if len(x.size()) == 4:
                 B, C, H, W = x.shape
             x = block(x)
