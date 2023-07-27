@@ -4,7 +4,7 @@ import math
 import torch
 import torch.nn as nn
 
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
 from models.op.custom import ConvLayer
 from models.registry import ACTIVATION_REGISTRY
 
@@ -25,13 +25,14 @@ class SegformerOverlapPatchEmbeddings(nn.Module):
             padding=patch_size // 2,
         )
 
+        self.flat = Image2Sequence()
         self.layer_norm = nn.LayerNorm(hidden_size)
 
     def forward(self, pixel_values):
         embeddings = self.proj(pixel_values)
         _, _, H_embed, W_embed = embeddings.size()
         # (batch_size, in_channels, H_embed, W_embed) -> (batch_size, in_channels, H_embed*W_embed) -> (batch_size, H_embed*W_embed, in_channels)
-        embeddings = embeddings.flatten(2).transpose(1, 2)
+        embeddings = self.flat(embeddings)
         embeddings = self.layer_norm(embeddings)
         return embeddings, H_embed, W_embed
 
@@ -39,12 +40,13 @@ class SegformerDWConv(nn.Module):
     def __init__(self, intermediate_size=768):
         super().__init__()
         self.dwconv = nn.Conv2d(intermediate_size, intermediate_size, 3, 1, 1, bias=True, groups=intermediate_size)
+        self.flat = Image2Sequence()
 
     def forward(self, hidden_states, height, width):
         B, N, C = hidden_states.size()  # N: height*width
         hidden_states = hidden_states.transpose(1, 2).view(B, C, height, width)
         hidden_states = self.dwconv(hidden_states)
-        hidden_states = hidden_states.flatten(2).transpose(1, 2)
+        hidden_states = self.flat(hidden_states)
 
         return hidden_states
 

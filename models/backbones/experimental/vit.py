@@ -11,7 +11,7 @@ from torch import Tensor
 
 from models.op.ml_cvnets import ConvLayer, LinearLayer
 from models.op.ml_cvnets import SinusoidalPositionalEncoding
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
+from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -36,6 +36,7 @@ class ViTEmbeddings(nn.Module):
             use_norm=False,
             use_act=False,
         )
+        self.flat = Image2Sequence(contiguous=True)
         
         self.cls_token = None
         if use_cls_token:
@@ -53,8 +54,7 @@ class ViTEmbeddings(nn.Module):
         B = x.shape[0]  # B x 3(={RGB}) x H x W
 
         patch_emb = self.patch_emb(x)  # B x C(=embed_dim) x H'(=patch_size) x W'(=patch_size)
-        patch_emb = patch_emb.flatten(2)  # B x C x H'*W'
-        patch_emb = patch_emb.transpose(1, 2).contiguous()  # B x H'*W' x C
+        patch_emb = self.flat(patch_emb)  # B x H'*W' x C
 
         # add classification token
         if self.cls_token is not None:
