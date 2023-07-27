@@ -196,11 +196,11 @@ class MultiHeadAttention(nn.Module):
         return context_layer  # B x S_s x C
     
 class ChannelMLP(nn.Module):
-    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, activation_type='silu'):
+    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type='silu'):
         super().__init__()
         self.ffn = nn.Sequential()
         self.ffn.add_module('dense1', nn.Linear(in_features=hidden_size, out_features=intermediate_size, bias=True))
-        self.ffn.add_module('act', ACTIVATION_REGISTRY[activation_type]())
+        self.ffn.add_module('act', ACTIVATION_REGISTRY[hidden_activation_type]())
         self.ffn.add_module('dropout', nn.Dropout(p=hidden_dropout_prob))
         self.ffn.add_module('dense2', nn.Linear(in_features=intermediate_size, out_features=hidden_size, bias=True))
 
