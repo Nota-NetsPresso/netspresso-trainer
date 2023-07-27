@@ -11,35 +11,52 @@ from torch.fx.proxy import Proxy
 class MultiHeadAttention(nn.Module):
     def __init__(
         self,
-        hidden_size,
+        in_channels,
         num_attention_heads,
+        hidden_size = None,
+        value_hidden_size = None,
         attention_scale = None,
         attention_dropout_prob = 0.0,
         use_qkv_bias = True,
         use_attention_bias = False,
         use_cross_attention = False,
         output_with_attentions = False,
-        sequence_reduction_ratio = 1
+        sequence_reduction_ratio = 1,
+        attention_bias_resolution = 16,
     ) -> None:
         super().__init__()
+        
+        hidden_size = hidden_size if hidden_size is not None else in_channels
+        value_hidden_size = value_hidden_size if value_hidden_size is not None else hidden_size
+
         if hidden_size % num_attention_heads != 0:
             raise ValueError(
                 f"The hidden size {hidden_size,} is not a multiple of the number of attention "
                 f"heads {num_attention_heads}."
             )
-
+            
+        if value_hidden_size % num_attention_heads != 0:
+            raise ValueError(
+                f"The hidden size {value_hidden_size,} is not a multiple of the number of attention "
+                f"heads {num_attention_heads}."
+            )
+        
         self.num_attention_heads = num_attention_heads
         self.attention_head_size = int(hidden_size / num_attention_heads)
-        self.all_head_size = self.num_attention_heads * self.attention_head_size
+        
+        self.value_attention_head_size = int(value_hidden_size / num_attention_heads)
+        
+        self.qk_head_size = self.num_attention_heads * self.attention_head_size
+        self.value_head_size = self.num_attention_heads * self.value_attention_head_size
         self.attention_scale = attention_scale if attention_scale is not None \
             else math.sqrt(self.attention_head_size)
 
 
-        self.query = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
-        self.key = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
-        self.value = nn.Linear(hidden_size, self.all_head_size, bias=use_qkv_bias)
+        self.query = nn.Linear(in_channels, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.key = nn.Linear(in_channels, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.value = nn.Linear(in_channels, self.value_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_v
         
-        self.linear = nn.Linear(hidden_size, hidden_size)
+        self.linear = nn.Linear(self.value_head_size, in_channels)  # ... x C_v -> ... x C
 
         self.dropout = nn.Dropout(attention_dropout_prob)
         self.output_with_attentions = output_with_attentions
@@ -48,30 +65,27 @@ class MultiHeadAttention(nn.Module):
         if sequence_reduction_ratio > 1:
             self.use_sequence_reduction = True
             self.sr = nn.Conv2d(
-                hidden_size, hidden_size, kernel_size=sequence_reduction_ratio, stride=sequence_reduction_ratio
+                in_channels, in_channels, kernel_size=sequence_reduction_ratio, stride=sequence_reduction_ratio
             )
-            self.sr_layer_norm = nn.LayerNorm(hidden_size)
+            self.sr_layer_norm = nn.LayerNorm(in_channels)
 
         self.use_attention_bias = use_attention_bias
-        # TODO: add attention bias
-        # if self.use_attention_bias:
-        #     # See https://github.com/snap-research/EfficientFormer/blob/main/models/efficientformer.py#L48-L61
-        #     resolution = 16
-        #     points = list(itertools.product(range(resolution), range(resolution)))
-        #     N = len(points)
-        #     attention_offsets = {}
-        #     idxs = []
-        #     for p1 in points:
-        #         for p2 in points:
-        #             offset = (abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
-        #             if offset not in attention_offsets:
-        #                 attention_offsets[offset] = len(attention_offsets)
-        #             idxs.append(attention_offsets[offset])
+        if self.use_attention_bias:
+            # See https://github.com/snap-research/EfficientFormer/blob/main/models/efficientformer.py#L48-L61
+            assert attention_bias_resolution is not None
+            points = list(itertools.product(range(attention_bias_resolution), range(attention_bias_resolution)))
+            N = len(points)
+            attention_offsets = {}
+            idxs = []
+            for p1 in points:
+                for p2 in points:
+                    offset = (abs(p1[0] - p2[0]), abs(p1[1] - p2[1]))
+                    if offset not in attention_offsets:
+                        attention_offsets[offset] = len(attention_offsets)
+                    idxs.append(attention_offsets[offset])
 
-        #     self.register_buffer('attention_biases',
-        #                          torch.zeros(self.num_attention_heads, 49))
-        #     self.register_buffer('attention_bias_idxs',
-        #                          torch.ones(49, 49).long())
+            self.attention_biases = torch.nn.Parameter(torch.zeros(self.num_attention_heads, 49))
+            self.register_buffer('attention_bias_idxs', torch.ones(49, 49).long())
 
         #     self.attention_biases_seg = torch.nn.Parameter(
         #         torch.zeros(self.num_attention_heads, len(attention_offsets)))
@@ -80,21 +94,21 @@ class MultiHeadAttention(nn.Module):
     
         self.use_cross_attention = use_cross_attention
 
-    def transpose_for_scores(self, x: Tensor) -> Tensor:
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+    def transpose_for_scores(self, x: Tensor, attention_head_size: int) -> Tensor:
+        new_x_shape = x.size()[:-1] + (self.num_attention_heads, attention_head_size)
         x = x.view(new_x_shape)
         return x.permute(0, 2, 1, 3)
     
     def sequence_reduce(self, x: Tensor, height: int, width: int) -> Tensor:
         """SegFormer
         """
-        batch_size, seq_len, num_channels = x.shape
+        B, N, C = x.shape
         # Reshape to (batch_size, num_channels, height, width)
-        x = x.permute(0, 2, 1).reshape(batch_size, num_channels, height, width)
+        x = x.permute(0, 2, 1).reshape(B, C, height, width)
         # Apply sequence reduction
         x = self.sr(x)
         # Reshape back to (batch_size, seq_len, num_channels)
-        x = x.reshape(batch_size, num_channels, -1).permute(0, 2, 1)
+        x = x.reshape(B, C, -1).permute(0, 2, 1)
         x = self.sr_layer_norm(x)
         return x
 
@@ -106,43 +120,58 @@ class MultiHeadAttention(nn.Module):
         height: Optional[int] = None,
         width: Optional[int] = None
     ) -> Union[Tuple[Tensor, Tensor], Tuple[Tensor]]:
-        # Let S_s(source): S_q(query) (= H'*W' + 1)
-        # Let S_t(target): S_k(key) = S_v(value)
-        # If self-attention, S_s = S_t
-        # Let C: C_split * {head}(=num_attention_heads) = (mostly) hidden_size
-        # query_states: B x S_s x C
-        mixed_query_layer = self.query(query_states)  # B x S_s x C
+        """Forward pass for multi-head attention (self- or cross-)
+
+        Let. S_s(source): S_q(query) (= H'*W' + 1)
+        Let. S_t(target): S_k(key) = S_v(value)
+        If self-attention, S_s = S_t
+        Let. C_qk: C_qksplit * {head}(=num_attention_heads) = (mostly) hidden_size
+        Let. C_v: C_vsplit * {head}(=num_attention_heads) * attn_ratio = (mostly) hidden_size * attn_ratio
+        Mostly, C = C_qk = C_v (in_channels = hidden_size = value_hidden_size)
+        Args:
+            query_states (Tensor): [B x S_s x C]
+            key_value_states (Optional[Tensor], optional): [B x S_t x C]. Defaults to None.
+            head_mask (Optional[Tensor], optional): [B x {head} x S_s x S_t]. Defaults to None.
+            height (Optional[int], optional): (Segformer only). Defaults to None.
+            width (Optional[int], optional): (Segformer only). Defaults to None.
+
+        Returns:
+            Union[Tuple[Tensor, Tensor], Tuple[Tensor]]: output tensor or list of attention matrices
+        """
+
+        mixed_query_layer = self.query(query_states)  # B x S_s x C_qk
         
         if not self.use_cross_attention:  # Self-attention
-            key_value_states = query_states  # B x S_t(=S_s) x C
+            key_value_states = query_states  # B x S_t(=S_s) x C_qk
         if self.use_sequence_reduction:
-            key_value_states = self.sequence_reduce(key_value_states, height, width)
+            key_value_states = self.sequence_reduce(key_value_states, height, width)  # B x S_t' x C_qk
 
-        key_layer = self.transpose_for_scores(self.key(key_value_states))  # B x {head} x S_t x C_split
-        value_layer = self.transpose_for_scores(self.value(key_value_states))  # B x {head} x S_t x C_split
-        query_layer = self.transpose_for_scores(mixed_query_layer)  # B x {head} x S_s x C_split
+        key_layer = self.transpose_for_scores(self.key(key_value_states), self.attention_head_size)  # B x {head} x S_t x C_qksplit
+        value_layer = self.transpose_for_scores(self.value(key_value_states), self.value_attention_head_size)  # B x {head} x S_t x C_vsplit
+        query_layer = self.transpose_for_scores(mixed_query_layer, self.attention_head_size)  # B x {head} x S_s x C_qksplit
 
-        # Take the dot product between "query" and "key" to get the raw attention scores.
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))  # B x {head} x S_s x S_t
 
         attention_scores = attention_scores / self.attention_scale  # B x {head} x S_s x S_t
+        
+        if self.use_attention_bias:
+            bias = self.attention_biases[:, self.attention_bias_idxs]
+            bias = nn.functional.interpolate(bias.unsqueeze(0), size=(attention_scores.size(-2), attention_scores.size(-1)), mode='bicubic')
+            attention_scores = attention_scores + bias
 
         # Normalize the attention scores to probabilities.
         attention_probs = nn.functional.softmax(attention_scores, dim=-1)  # B x {head} x S_s x S_t
 
-        # This is actually dropping out entire tokens to attend to, which might
-        # seem a bit unusual, but is taken from the original Transformer paper.
         attention_probs = self.dropout(attention_probs)  # B x {head} x S_s x S_t
 
-        # Mask heads if we want to
         if head_mask is not None:
             attention_probs = attention_probs * head_mask  # B x {head} x S_s x S_t
 
-        context_layer = torch.matmul(attention_probs, value_layer)  # B x {head} x S_s x C_split
+        context_layer = torch.matmul(attention_probs, value_layer)  # B x {head} x S_s x C_vsplit
 
-        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()  # B x S_s x {head} x C_split
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
-        context_layer = context_layer.view(new_context_layer_shape)  # B x S_s x C
+        context_layer = context_layer.permute(0, 2, 1, 3).contiguous()  # B x S_s x {head} x C_vsplit
+        new_context_layer_shape = context_layer.size()[:-2] + (self.value_head_size,)
+        context_layer = context_layer.view(new_context_layer_shape)  # B x S_s x C_v
         
         context_layer = self.linear(context_layer)  # B x S_s x C
         context_layer = self.dropout(context_layer)  # B x S_s x C
