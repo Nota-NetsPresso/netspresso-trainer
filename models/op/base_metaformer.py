@@ -12,11 +12,14 @@ from models.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 
 class Image2Sequence(nn.Module):
 
-    def __init__(self):
+    def __init__(self, contiguous=False):
         super().__init__()
+        self.contiguous = contiguous
 
-    def forward(self, x):
+    def forward(self, x: Union[Tensor, Proxy]):
         x = x.flatten(2).transpose(1, 2)
+        if self.contiguous:
+            x = x.contiguous()
         return x
 
 class MultiHeadAttention(nn.Module):
