@@ -226,8 +226,8 @@ class ChannelMLP(nn.Module):
 class MetaFormerBlock(nn.Module):
     def __init__(self, hidden_size, layer_norm_eps) -> None:
         super().__init__()
-        self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
-        self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
+        self.layernorm_before = nn.LayerNorm(hidden_size)
+        self.layernorm_after = nn.LayerNorm(hidden_size)
         self.token_mixer = nn.Identity()  # MultiHeadAttention()
         self.channel_mlp = nn.Identity()  # ChannelMLP()
     
