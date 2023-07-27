@@ -37,9 +37,9 @@ class Image2Sequence(nn.Module):
 class MultiHeadAttention(nn.Module):
     def __init__(
         self,
-        in_channels,
+        hidden_size,
         num_attention_heads,
-        hidden_size = None,
+        attention_hidden_size = None,
         value_hidden_size = None,
         attention_scale = None,
         attention_dropout_prob = 0.0,
@@ -52,12 +52,12 @@ class MultiHeadAttention(nn.Module):
     ) -> None:
         super().__init__()
         
-        hidden_size = hidden_size if hidden_size is not None else in_channels
-        value_hidden_size = value_hidden_size if value_hidden_size is not None else hidden_size
+        attention_hidden_size = attention_hidden_size if attention_hidden_size is not None else hidden_size
+        value_hidden_size = value_hidden_size if value_hidden_size is not None else attention_hidden_size
 
-        if hidden_size % num_attention_heads != 0:
+        if attention_hidden_size % num_attention_heads != 0:
             raise ValueError(
-                f"The hidden size {hidden_size,} is not a multiple of the number of attention "
+                f"The hidden size {attention_hidden_size,} is not a multiple of the number of attention "
                 f"heads {num_attention_heads}."
             )
             
@@ -78,11 +78,11 @@ class MultiHeadAttention(nn.Module):
             else math.sqrt(self.attention_head_size)
 
 
-        self.query = nn.Linear(in_channels, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
-        self.key = nn.Linear(in_channels, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
-        self.value = nn.Linear(in_channels, self.value_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_v
+        self.query = nn.Linear(hidden_size, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.key = nn.Linear(hidden_size, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.value = nn.Linear(hidden_size, self.value_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_v
         
-        self.linear = nn.Linear(self.value_head_size, in_channels)  # ... x C_v -> ... x C
+        self.linear = nn.Linear(self.value_head_size, hidden_size)  # ... x C_v -> ... x C
 
         self.dropout = nn.Dropout(attention_dropout_prob)
         self.output_with_attentions = output_with_attentions
@@ -91,9 +91,9 @@ class MultiHeadAttention(nn.Module):
         if sequence_reduction_ratio > 1:
             self.use_sequence_reduction = True
             self.sr = nn.Conv2d(
-                in_channels, in_channels, kernel_size=sequence_reduction_ratio, stride=sequence_reduction_ratio
+                hidden_size, hidden_size, kernel_size=sequence_reduction_ratio, stride=sequence_reduction_ratio
             )
-            self.sr_layer_norm = nn.LayerNorm(in_channels)
+            self.sr_layer_norm = nn.LayerNorm(hidden_size)
 
         self.use_attention_bias = use_attention_bias
         if self.use_attention_bias:
