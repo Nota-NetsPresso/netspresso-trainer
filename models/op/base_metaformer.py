@@ -10,6 +10,18 @@ from torch.fx.proxy import Proxy
 
 from models.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 
+class Pooling(nn.Module):
+    """
+    Implementation of pooling for PoolFormer
+    """
+    def __init__(self, pool_size=3):
+        super().__init__()
+        self.pool = nn.AvgPool2d(pool_size, stride=1, padding=pool_size // 2, count_include_pad=False)
+
+    def forward(self, x):
+        return self.pool(x) - x
+
+
 class Image2Sequence(nn.Module):
 
     def __init__(self, contiguous=False):
