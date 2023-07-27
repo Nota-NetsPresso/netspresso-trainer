@@ -1,0 +1,396 @@
+AssembleModel(
+  (backbone): EfficientFormer(
+    (patch_embed): EfficientFormerStem(
+      (stem): Sequential(
+        (0): Sequential(
+          (conv): Conv2d(3, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (norm): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+        (1): Sequential(
+          (conv): Conv2d(24, 48, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+          (norm): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (act): ReLU()
+        )
+      )
+    )
+    (encoder): EfficientFormerEncoder(
+      (blocks): ModuleList(
+        (0): Sequential(
+          (0): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (1): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (2): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(48, 192, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+        )
+        (1): EfficientFormerEmbedding(
+          (proj): Sequential(
+            (conv): Conv2d(48, 96, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (norm): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (2): Sequential(
+          (0): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (1): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(96, 384, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(384, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(96, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+        )
+        (3): EfficientFormerEmbedding(
+          (proj): Sequential(
+            (conv): Conv2d(96, 224, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (4): Sequential(
+          (0): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (1): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (2): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (3): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (4): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (5): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(224, 896, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(896, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(896, 224, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(224, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+        )
+        (5): EfficientFormerEmbedding(
+          (proj): Sequential(
+            (conv): Conv2d(224, 448, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1))
+            (norm): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (6): Sequential(
+          (0): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (1): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (2): Meta4D(
+            (layernorm_before): Identity()
+            (layernorm_after): Identity()
+            (token_mixer): Pooling(
+              (pool): AvgPool2d(kernel_size=3, stride=1, padding=1)
+            )
+            (channel_mlp): EfficientFormerMeta4DMLP(
+              (ffn): Sequential(
+                (conv_1x1_1): Sequential(
+                  (conv): Conv2d(448, 1792, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(1792, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                  (act): GELU(approximate=none)
+                )
+                (drop): Dropout(p=0.0, inplace=False)
+                (conv_1x1_2): Sequential(
+                  (conv): Conv2d(1792, 448, kernel_size=(1, 1), stride=(1, 1))
+                  (norm): BatchNorm2d(448, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+                )
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+          (3): Image2Sequence()
+          (4): Meta3D(
+            (layernorm_before): LayerNorm((448,), eps=1e-05, elementwise_affine=True)
+            (layernorm_after): LayerNorm((448,), eps=1e-05, elementwise_affine=True)
+            (token_mixer): MultiHeadAttention(
+              (query): Linear(in_features=448, out_features=448, bias=True)
+              (key): Linear(in_features=448, out_features=448, bias=True)
+              (value): Linear(in_features=448, out_features=1024, bias=True)
+              (linear): Linear(in_features=1024, out_features=448, bias=True)
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (channel_mlp): ChannelMLP(
+              (ffn): Sequential(
+                (dense1): Linear(in_features=448, out_features=1792, bias=True)
+                (act): GELU(approximate=none)
+                (dropout): Dropout(p=0.0, inplace=False)
+                (dense2): Linear(in_features=1792, out_features=448, bias=True)
+              )
+              (dropout): Dropout(p=0.0, inplace=False)
+            )
+            (drop_path): Identity()
+          )
+        )
+      )
+    )
+    (norm): LayerNorm((448,), eps=1e-05, elementwise_affine=True)
+  )
+  (head): FC(
+    (classifier): Linear(in_features=448, out_features=3, bias=True)
+  )
+)
