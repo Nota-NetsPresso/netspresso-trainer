@@ -8,6 +8,17 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
+from models.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+
+class Image2Sequence(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        x = x.flatten(2).transpose(1, 2)
+        return x
+
 class MultiHeadAttention(nn.Module):
     def __init__(
         self,
@@ -182,13 +193,14 @@ class MultiHeadAttention(nn.Module):
         return context_layer  # B x S_s x C
     
 class ChannelMLP(nn.Module):
-    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob):
+    def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, activation_type='silu'):
         super().__init__()
-        self.ffn = nn.Sequential(*[
-            nn.Linear(in_features=hidden_size, out_features=intermediate_size, bias=True),
-            nn.SiLU(inplace=False),
-            nn.Linear(in_features=intermediate_size, out_features=hidden_size, bias=True),
-        ])
+        self.ffn = nn.Sequential()
+        self.ffn.add_module('dense1', nn.Linear(in_features=hidden_size, out_features=intermediate_size, bias=True))
+        self.ffn.add_module('act', ACTIVATION_REGISTRY[activation_type]())
+        self.ffn.add_module('dropout', nn.Dropout(p=hidden_dropout_prob))
+        self.ffn.add_module('dense2', nn.Linear(in_features=intermediate_size, out_features=hidden_size, bias=True))
+
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
     
     def forward(self, x):
