@@ -1532,15 +1532,19 @@ class SinusoidalPositionalEncoding(nn.Module):
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
         # seq_length should be the second last dim
-        if indices is None:
-            x = x + self.pe[..., : x.shape[-2], :]
-        else:
-            ndim = x.ndim
-            repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
+        
+        # @deepkyu: [fx tracing] Always `indices` is None 
+        # if indices is None:
+        #     x = x + self.pe[..., : x.shape[-2], :]
+        # else:
+        #     ndim = x.ndim
+        #     repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
 
-            pe = self.pe.expand(repeat_size)
-            selected_pe = torch.gather(pe, index=indices, dim=-2)
-            x = x + selected_pe
+        #     pe = self.pe.expand(repeat_size)
+        #     selected_pe = torch.gather(pe, index=indices, dim=-2)
+        #     x = x + selected_pe
+        
+        x = x + self.pe[..., : x.shape[-2], :]
         return x
 
     def forward(self, x, indices: Optional[Tensor] = None, *args, **kwargs) -> Tensor:
