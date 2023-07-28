@@ -304,13 +304,13 @@ class EfficientFormerEncoder(MetaFormerEncoder):
     def forward(self, x):
         all_hidden_states = () if self.use_intermediate_features else None
         for idx, block in enumerate(self.blocks):
-            if len(x.size()) == 4:
-                B, C, H, W = x.shape
+            # if len(x.size()) == 4:
+            B, C, H, W = x.size()
             x = block(x)
             if self.use_intermediate_features and idx in self.intermediate_features_indices:
                 norm_layer = getattr(self, f'norm{idx}')
-                if len(x.size()) != 4:
-                    x = x.transpose(1, 2).reshape(B, C, H, W)
+                # if len(x.size()) != 4:
+                x = x.transpose(1, 2).reshape(B, C, H, W)
                 x = norm_layer(x)
                 all_hidden_states = all_hidden_states + (x,)
         
