@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from models.op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 class Pooling(nn.Module):
     """

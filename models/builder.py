@@ -1,14 +1,13 @@
-import importlib
 import os
+from typing import Type, Callable
 from pathlib import Path
 
 import torch
 import torch.nn as nn
-import models.full as full
-import models.backbones as backbones
-import models.heads as heads
 
-from models.registry import SUPPORTING_MODEL_LIST, MODEL_PRETRAINED_DICT
+from models.registry import (
+    SUPPORTING_MODEL_LIST, MODEL_PRETRAINED_DICT, MODEL_BACKBONE_DICT, MODEL_FULL_DICT, MODEL_HEAD_DICT
+)
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
@@ -32,8 +31,10 @@ class AssembleModel(nn.Module):
         self.task = args.model.task
         backbone_name = args.model.architecture.backbone
         head = args.model.architecture.head
-
-        self.backbone: nn.Module = eval(f"backbones.{backbone_name}")(task=self.task)
+        
+        backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
+        self.backbone = backbone_fn(task=self.task)
+        
         try:
             model_state_dict = load_pretrained_checkpoint(backbone_name)
             missing_keys, unexpected_keys = self.backbone.load_state_dict(model_state_dict, strict=False)
@@ -42,17 +43,10 @@ class AssembleModel(nn.Module):
         except AssertionError as e:
             logger.warning(str(e))
         # self._freeze_backbone()
-
-        if self.task == 'classification':
-            head_module: nn.Module = eval(f"heads.{self.task}.{head}")
-            self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
-        if self.task == 'segmentation':
-            head_module: nn.Module = eval(f"heads.{self.task}.{head}")
-            self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
-        if self.task == 'detection':
-            head_module: nn.Module = eval(f"heads.{self.task}.{head}")
-            self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
-
+        
+        head_module = MODEL_HEAD_DICT[self.task][head]
+        self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
+        
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
             m.requires_grad = False
@@ -76,7 +70,8 @@ class AssembleModel(nn.Module):
 def build_model(args, num_classes):
     if args.model.architecture.full is not None:
         model_name = args.model.architecture.full
-        model: nn.Module = eval(f"full.{model_name}")(args, num_classes)
+        model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
+        model: nn.Module = model_fn(args, num_classes)
 
         model_state_dict = load_pretrained_checkpoint(model_name)
         missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)

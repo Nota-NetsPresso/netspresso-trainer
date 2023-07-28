@@ -1,1 +1,1 @@
-from models.heads.segmentation.experimental.segformer_head import segformer_decode_head, efficientformer_segmentation_head
+from models.heads.segmentation.experimental.decode_head import segformer_decode_head, efficientformer_decode_head
