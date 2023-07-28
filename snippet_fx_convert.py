@@ -17,7 +17,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Parser for NetsPresso fx tracing checker")
 
     parser.add_argument(
-        '--config-path', type=str, default='config/model',
+        '-c', '--config-path', type=str, default="config/model",
         help="Model config path")
     parser.add_argument(
         '--debug', action='store_true', help="Debug mode to check with the error message")
