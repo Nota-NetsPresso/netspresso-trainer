@@ -4,9 +4,6 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
-import models.full as full
-import models.backbones as backbones
-import models.heads as heads
 
 from models.registry import (
     SUPPORTING_MODEL_LIST, MODEL_PRETRAINED_DICT, MODEL_BACKBONE_DICT, MODEL_FULL_DICT, MODEL_HEAD_DICT
