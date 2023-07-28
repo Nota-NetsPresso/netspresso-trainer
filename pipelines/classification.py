@@ -4,7 +4,6 @@ from collections import deque
 
 from omegaconf import OmegaConf
 import torch
-from torch.cuda.amp import autocast
 
 from optimizers import build_optimizer
 from schedulers import build_scheduler
@@ -50,10 +49,10 @@ class ClassificationPipeline(BasePipeline):
         target = target.to(self.devices)
 
         self.optimizer.zero_grad()
-        with autocast():
-            out = self.model(images)
-            self.loss(out, target, mode='train')
-            self.metric(out['pred'], target, mode='train')
+
+        out = self.model(images)
+        self.loss(out, target, mode='train')
+        self.metric(out['pred'], target, mode='train')
 
         self.loss.backward()
         self.optimizer.step()
