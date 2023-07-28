@@ -3,15 +3,15 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import torch
 
-from models.backbones.experimental.vit import vit
+from models.backbones.experimental.mobilevit import mobilevit
 from utils.pretrained_editor import convert_state_dict_to_model
 
-yaml_path = Path("models/card") / "vit.yaml"
+yaml_path = Path("models/card") / "mobilevit.yaml"
 
-model = vit(task='classification')
+model = mobilevit(task='classification')
 # print(list(model.state_dict().keys()))
 
-checkpoint_path = Path("/CHECKPOINT") / "backbones_backup" / "vit" / "vit-tiny.pt"
+checkpoint_path = Path("/CHECKPOINT") / "backbones_backup" / "mobilevit" / "mobilevit_s.pt"
 state_dict = torch.load(str(checkpoint_path))
 # print(list(state_dict.keys()))
 
