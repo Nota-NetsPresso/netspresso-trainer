@@ -68,18 +68,17 @@ class MultiHeadAttention(nn.Module):
             )
         
         self.num_attention_heads = num_attention_heads
-        self.attention_head_size = int(hidden_size / num_attention_heads)
-        
+        self.attention_head_size = int(attention_hidden_size / num_attention_heads)
         self.value_attention_head_size = int(value_hidden_size / num_attention_heads)
         
-        self.qk_head_size = self.num_attention_heads * self.attention_head_size
+        self.head_size = self.num_attention_heads * self.attention_head_size
         self.value_head_size = self.num_attention_heads * self.value_attention_head_size
         self.attention_scale = attention_scale if attention_scale is not None \
             else math.sqrt(self.attention_head_size)
 
 
-        self.query = nn.Linear(hidden_size, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
-        self.key = nn.Linear(hidden_size, self.qk_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.query = nn.Linear(hidden_size, self.head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
+        self.key = nn.Linear(hidden_size, self.head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
         self.value = nn.Linear(hidden_size, self.value_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_v
         
         self.linear = nn.Linear(self.value_head_size, hidden_size)  # ... x C_v -> ... x C
