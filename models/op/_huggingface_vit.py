@@ -9,7 +9,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 from models.op.base_metaformer import MultiHeadAttention
-from models.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from models.op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 
 class ViTPatchEmbeddings(nn.Module):
