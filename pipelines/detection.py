@@ -32,9 +32,9 @@ class DetectionPipeline(BasePipeline):
             'lr_noise': None,
             'sched': 'poly',
             'decay_rate': self.args.training.schd_power,
-            'min_lr': 0,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
-            'warmup_lr': 0.00001,  # self.args.training.lr0
-            'warmup_epochs': 5,  # self.args.training.warmup_epochs
+            'min_lr': self.args.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
+            'warmup_lr': self.args.training.lr0,  # self.args.training.lr0
+            'warmup_epochs': self.args.training.warmup_epochs,  # self.args.training.warmup_epochs
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
