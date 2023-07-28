@@ -1,4 +1,4 @@
-from typing import Dict, Type, Callable
+from typing import List, Dict, Type, Callable
 from pathlib import Path
 
 import torch.nn as nn
@@ -15,7 +15,6 @@ from models.heads.segmentation.experimental.decode_head import segformer_decode_
 from models.heads.detection.experimental.basic import efficientformer_detection_head
 
 PRETRAINED_ROOT = Path("/CHECKPOINT")  # TODO: as an option
-
 MODEL_PRETRAINED_DICT = {
     'resnet50': PRETRAINED_ROOT / "backbones" / "resnet" / "resnet50.pth",
     'segformer': PRETRAINED_ROOT / "backbones" / "segformer" / "segformer.pth",
@@ -24,7 +23,9 @@ MODEL_PRETRAINED_DICT = {
     'efficientformer': PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
     'pidnet': PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
 }
+
 SUPPORTING_MODEL_LIST = list(MODEL_PRETRAINED_DICT.keys())
+SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection']
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet50': resnet50,
