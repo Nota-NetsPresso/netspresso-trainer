@@ -98,13 +98,15 @@ class GlobalPool(nn.Module):
         return x
 
     def forward(self, x: Tensor) -> Tensor:
-        if x.dim() == 4:
-            dims = [-2, -1]
-        elif x.dim() == 5:
-            dims = [-3, -2, -1]
-        else:
-            raise NotImplementedError("Currently 2D and 3D global pooling supported")
-        return self._global_pool(x, dims=dims)
+        # @deepkyu: [fx tracing] Always x.dim() == 4
+        # if x.dim() == 4:
+        #     dims = [-2, -1]
+        # elif x.dim() == 5:
+        #     dims = [-3, -2, -1]
+        # else:
+        #     raise NotImplementedError("Currently 2D and 3D global pooling supported")
+        
+        return self._global_pool(x, dims=(-2, -1))
 
     # def profile_module(self, input: Tensor) -> Tuple[Tensor, float, float]:
     #     input = self.forward(input)
