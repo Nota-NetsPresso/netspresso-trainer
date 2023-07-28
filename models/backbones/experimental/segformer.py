@@ -6,7 +6,7 @@ import torch.nn as nn
 
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
 from models.op.custom import ConvLayer
-from models.registry import ACTIVATION_REGISTRY
+from models.op.registry import ACTIVATION_REGISTRY
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 

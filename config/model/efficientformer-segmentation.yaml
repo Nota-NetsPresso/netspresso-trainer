@@ -3,7 +3,7 @@ model:
   architecture:
     full: ~ # auto
     backbone: efficientformer
-    head: efficientformer_segmentation_head
+    head: efficientformer_decode_head
   losses:
     - criterion: cross_entropy
       weight: ~
