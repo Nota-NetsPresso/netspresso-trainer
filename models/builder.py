@@ -13,7 +13,7 @@ from models.registry import (
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-def load_full_model(args, model_name, num_classes, load_pretrained=True):
+def load_full_model(args, model_name, num_classes, load_pretrained):
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
     model: nn.Module = model_fn(args, num_classes)
 
@@ -41,7 +41,7 @@ def load_backbone_and_head_model(args, task, backbone_name, head_name, num_class
     return TASK_MODEL_DICT[task](args, task, backbone_name, head_name, num_classes, load_pretrained=load_pretrained)
 
 
-def build_model(args, num_classes, load_pretrained) -> nn.Module:
+def build_model(args, num_classes, load_pretrained=True) -> nn.Module:
     
     if args.model.architecture.full is not None:
         model_name = args.model.architecture.full

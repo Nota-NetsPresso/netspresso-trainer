@@ -27,7 +27,7 @@ def load_pretrained_checkpoint(model_name: str):
 
 
 class TaskModel(nn.Module):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained=True) -> None:
+    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
         super(TaskModel, self).__init__()
         self.task = task
         self.backbone_name = backbone_name
@@ -65,7 +65,7 @@ class TaskModel(nn.Module):
 
 
 class ClassificationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained=True) -> None:
+    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
         super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
     
     def forward(self, x, label_size=None, targets=None):
@@ -75,7 +75,7 @@ class ClassificationModel(TaskModel):
 
 
 class SegmentationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained=True) -> None:
+    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
         super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
     
     def forward(self, x, label_size=None, targets=None):
@@ -85,7 +85,7 @@ class SegmentationModel(TaskModel):
 
 
 class DetectionModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained=True) -> None:
+    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
         super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
     
     def forward(self, x, label_size=None, targets=None):
