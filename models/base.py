@@ -30,6 +30,8 @@ class TaskModel(nn.Module):
     def __init__(self, args, task, backbone_name, head_name, num_classes) -> None:
         super(TaskModel, self).__init__()
         self.task = task
+        self.backbone_name = backbone_name
+        self.head_name = head_name
         
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
         self.backbone = backbone_fn(task=self.task)
@@ -53,7 +55,10 @@ class TaskModel(nn.Module):
     @property
     def device(self):
         return next(self.parameters()).device
-
+    
+    def _get_name(self):
+        return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
+    
     @abstractmethod
     def forward(self, x, label_size=None, targets=None):
         raise NotImplementedError
