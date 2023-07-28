@@ -8,13 +8,16 @@ UPDATE_PREFIX = "updated_"
 def split_qkv(dest_layer_list: List[str], model_state_dict: Dict[str, torch.Tensor], layer_value: torch.Tensor, layer_name: str):
     assert "qkv" in layer_name, f"[{layer_name}] may be not qkv projection layer..."
     out_original = layer_value.size(0)  # (C_qk + C_qk + C_v), ... (if bias, dim=1)
+    print(layer_name, layer_value.size())
     
     out_dict: Dict[str, torch.Tensor] = {}
     channel_start_idx = 0
     for dest_layer in dest_layer_list:
         assert dest_layer in model_state_dict, f"{dest_layer} not in model's state dict."
         dest_weight_tensor = model_state_dict[dest_layer]
+
         out_dest = dest_weight_tensor.size(0)  # (C_qk or C_v), ... (if bias, dim=1)
+        print(f"{channel_start_idx}:{channel_start_idx+out_dest}, ...", layer_value.size(), dest_layer, dest_weight_tensor.size())
         
         if layer_value.dim() != 1 and dest_weight_tensor.dim() != 1:  # if not bias, assertion check with sequence length(s)
             in_dest, in_original = layer_value.size(1), dest_weight_tensor.size(1)
