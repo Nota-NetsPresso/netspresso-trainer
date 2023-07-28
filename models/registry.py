@@ -15,7 +15,7 @@ MODEL_PRETRAINED_DICT = {
     "segformer": PRETRAINED_ROOT / "backbones" / "segformer" / "segformer.pth",
     "pidnet": PRETRAINED_ROOT / "full" / "pidnet" / "pidnet_s.pth",
     "mobilevit": PRETRAINED_ROOT / "backbones" / "mobilevit" / "mobilevit_s.pth",
-    "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit_without_qkv.pth",
+    "vit": PRETRAINED_ROOT / "backbones" / "vit" / "vit-tiny.pth",
     "efficientformer": PRETRAINED_ROOT / "backbones" / "efficientformer" / "efficientformer_l1_1000d.pth",
 }
 

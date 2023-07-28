@@ -1,10 +1,34 @@
-from pathlib import Path
+from typing import List, Dict
 
 from omegaconf import OmegaConf, ListConfig
 import torch
 
 UPDATE_PREFIX = "updated_"
 
+def split_qkv(dest_layer_list: List[str], model_state_dict: Dict[str, torch.Tensor], layer_value: torch.Tensor, layer_name: str):
+    assert "qkv" in layer_name, f"[{layer_name}] may be not qkv projection layer..."
+    out_original = layer_value.size(0)  # (C_qk + C_qk + C_v), ... (if bias, dim=1)
+    print(layer_name, layer_value.size())
+    
+    out_dict: Dict[str, torch.Tensor] = {}
+    channel_start_idx = 0
+    for dest_layer in dest_layer_list:
+        assert dest_layer in model_state_dict, f"{dest_layer} not in model's state dict."
+        dest_weight_tensor = model_state_dict[dest_layer]
+
+        out_dest = dest_weight_tensor.size(0)  # (C_qk or C_v), ... (if bias, dim=1)
+        print(f"{channel_start_idx}:{channel_start_idx+out_dest}, ...", layer_value.size(), dest_layer, dest_weight_tensor.size())
+        
+        if layer_value.dim() != 1 and dest_weight_tensor.dim() != 1:  # if not bias, assertion check with sequence length(s)
+            in_dest, in_original = layer_value.size(1), dest_weight_tensor.size(1)
+            assert in_dest == in_original
+        
+        out_dict[dest_layer] = layer_value[channel_start_idx:channel_start_idx+out_dest, ...]
+        channel_start_idx += out_dest  # cumulation of channel start idx
+    
+    assert channel_start_idx == out_original
+    return out_dict
+    
 
 def convert_state_dict_to_model(yaml_path, model, state_dict):
 
@@ -23,12 +47,15 @@ def convert_state_dict_to_model(yaml_path, model, state_dict):
     for layer_name, value in state_dict.items():
         assert layer_name in mapping, f"{layer_name} not in {yaml_path}"
         dest_layer_name = mapping[layer_name]
-
-        if isinstance(dest_layer_name, ListConfig):
-            dest_layer_name = None  # TODO: split qkv linear weights (and biases)
-
+        
         if dest_layer_name is None:
             print(f"{layer_name} -> None. Skipped.")
+            continue
+
+        if isinstance(dest_layer_name, ListConfig):
+            dest_layer_list = list(dest_layer_name)
+            dest_layer_dict = split_qkv(dest_layer_list, model_state_dict, value, layer_name)
+            extracted_state_dict.update(dest_layer_dict)
             continue
 
         assert dest_layer_name in model_state_dict, f"{dest_layer_name} ({type(dest_layer_name)}) not in model_state_dict"

@@ -114,10 +114,10 @@ mapping:
   layer_3.1.global_rep.0.pre_norm_mha.1.out_proj.bias: encoder.blocks.2.1.global_rep.0.token_mixer.linear.bias
   layer_3.1.global_rep.0.pre_norm_ffn.0.weight: encoder.blocks.2.1.global_rep.0.layernorm_after.weight 
   layer_3.1.global_rep.0.pre_norm_ffn.0.bias: encoder.blocks.2.1.global_rep.0.layernorm_after.bias 
-  layer_3.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.0.weight 
-  layer_3.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.0.bias 
-  layer_3.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.2.weight 
-  layer_3.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.2.bias 
+  layer_3.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.dense1.weight 
+  layer_3.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.dense1.bias 
+  layer_3.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.dense2.weight 
+  layer_3.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.2.1.global_rep.0.channel_mlp.ffn.dense2.bias 
   layer_3.1.global_rep.1.pre_norm_mha.0.weight: encoder.blocks.2.1.global_rep.1.layernorm_before.weight 
   layer_3.1.global_rep.1.pre_norm_mha.0.bias: encoder.blocks.2.1.global_rep.1.layernorm_before.bias 
   layer_3.1.global_rep.1.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.2.1.global_rep.1.token_mixer.query.weight, encoder.blocks.2.1.global_rep.1.token_mixer.key.weight, encoder.blocks.2.1.global_rep.1.token_mixer.value.weight]
@@ -126,10 +126,10 @@ mapping:
   layer_3.1.global_rep.1.pre_norm_mha.1.out_proj.bias: encoder.blocks.2.1.global_rep.1.token_mixer.linear.bias
   layer_3.1.global_rep.1.pre_norm_ffn.0.weight: encoder.blocks.2.1.global_rep.1.layernorm_after.weight 
   layer_3.1.global_rep.1.pre_norm_ffn.0.bias: encoder.blocks.2.1.global_rep.1.layernorm_after.bias 
-  layer_3.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.0.weight 
-  layer_3.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.0.bias 
-  layer_3.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.2.weight 
-  layer_3.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.2.bias 
+  layer_3.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.dense1.weight 
+  layer_3.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.dense1.bias 
+  layer_3.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.dense2.weight 
+  layer_3.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.2.1.global_rep.1.channel_mlp.ffn.dense2.bias 
   layer_3.1.global_rep.2.weight: encoder.blocks.2.1.global_rep.2.weight
   layer_3.1.global_rep.2.bias: encoder.blocks.2.1.global_rep.2.bias
   layer_3.1.conv_proj.block.conv.weight: encoder.blocks.2.1.proj.block.conv.weight 
@@ -177,10 +177,10 @@ mapping:
   layer_4.1.global_rep.0.pre_norm_mha.1.out_proj.bias: encoder.blocks.3.1.global_rep.0.token_mixer.linear.bias
   layer_4.1.global_rep.0.pre_norm_ffn.0.weight: encoder.blocks.3.1.global_rep.0.layernorm_after.weight 
   layer_4.1.global_rep.0.pre_norm_ffn.0.bias: encoder.blocks.3.1.global_rep.0.layernorm_after.bias 
-  layer_4.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.0.weight 
-  layer_4.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.0.bias 
-  layer_4.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.2.weight 
-  layer_4.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.2.bias 
+  layer_4.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.dense1.weight 
+  layer_4.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.dense1.bias 
+  layer_4.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.dense2.weight 
+  layer_4.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.0.channel_mlp.ffn.dense2.bias 
   layer_4.1.global_rep.1.pre_norm_mha.0.weight: encoder.blocks.3.1.global_rep.1.layernorm_before.weight 
   layer_4.1.global_rep.1.pre_norm_mha.0.bias: encoder.blocks.3.1.global_rep.1.layernorm_before.bias 
   layer_4.1.global_rep.1.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.3.1.global_rep.1.token_mixer.query.weight, encoder.blocks.3.1.global_rep.1.token_mixer.key.weight, encoder.blocks.3.1.global_rep.1.token_mixer.value.weight]
@@ -189,10 +189,10 @@ mapping:
   layer_4.1.global_rep.1.pre_norm_mha.1.out_proj.bias: encoder.blocks.3.1.global_rep.1.token_mixer.linear.bias
   layer_4.1.global_rep.1.pre_norm_ffn.0.weight: encoder.blocks.3.1.global_rep.1.layernorm_after.weight 
   layer_4.1.global_rep.1.pre_norm_ffn.0.bias: encoder.blocks.3.1.global_rep.1.layernorm_after.bias 
-  layer_4.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.0.weight 
-  layer_4.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.0.bias 
-  layer_4.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.2.weight 
-  layer_4.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.2.bias 
+  layer_4.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.dense1.weight 
+  layer_4.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.dense1.bias 
+  layer_4.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.dense2.weight 
+  layer_4.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.1.channel_mlp.ffn.dense2.bias 
   layer_4.1.global_rep.2.pre_norm_mha.0.weight: encoder.blocks.3.1.global_rep.2.layernorm_before.weight 
   layer_4.1.global_rep.2.pre_norm_mha.0.bias: encoder.blocks.3.1.global_rep.2.layernorm_before.bias 
   layer_4.1.global_rep.2.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.3.1.global_rep.2.token_mixer.query.weight, encoder.blocks.3.1.global_rep.2.token_mixer.key.weight, encoder.blocks.3.1.global_rep.2.token_mixer.value.weight]
@@ -201,10 +201,10 @@ mapping:
   layer_4.1.global_rep.2.pre_norm_mha.1.out_proj.bias: encoder.blocks.3.1.global_rep.2.token_mixer.linear.bias
   layer_4.1.global_rep.2.pre_norm_ffn.0.weight: encoder.blocks.3.1.global_rep.2.layernorm_after.weight 
   layer_4.1.global_rep.2.pre_norm_ffn.0.bias: encoder.blocks.3.1.global_rep.2.layernorm_after.bias 
-  layer_4.1.global_rep.2.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.0.weight 
-  layer_4.1.global_rep.2.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.0.bias 
-  layer_4.1.global_rep.2.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.2.weight 
-  layer_4.1.global_rep.2.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.2.bias 
+  layer_4.1.global_rep.2.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.dense1.weight 
+  layer_4.1.global_rep.2.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.dense1.bias 
+  layer_4.1.global_rep.2.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.dense2.weight 
+  layer_4.1.global_rep.2.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.2.channel_mlp.ffn.dense2.bias 
   layer_4.1.global_rep.3.pre_norm_mha.0.weight: encoder.blocks.3.1.global_rep.3.layernorm_before.weight 
   layer_4.1.global_rep.3.pre_norm_mha.0.bias: encoder.blocks.3.1.global_rep.3.layernorm_before.bias 
   layer_4.1.global_rep.3.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.3.1.global_rep.3.token_mixer.query.weight, encoder.blocks.3.1.global_rep.3.token_mixer.key.weight, encoder.blocks.3.1.global_rep.3.token_mixer.value.weight]
@@ -213,10 +213,10 @@ mapping:
   layer_4.1.global_rep.3.pre_norm_mha.1.out_proj.bias: encoder.blocks.3.1.global_rep.3.token_mixer.linear.bias
   layer_4.1.global_rep.3.pre_norm_ffn.0.weight: encoder.blocks.3.1.global_rep.3.layernorm_after.weight 
   layer_4.1.global_rep.3.pre_norm_ffn.0.bias: encoder.blocks.3.1.global_rep.3.layernorm_after.bias 
-  layer_4.1.global_rep.3.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.0.weight 
-  layer_4.1.global_rep.3.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.0.bias 
-  layer_4.1.global_rep.3.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.2.weight 
-  layer_4.1.global_rep.3.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.2.bias 
+  layer_4.1.global_rep.3.pre_norm_ffn.1.weight: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.dense1.weight 
+  layer_4.1.global_rep.3.pre_norm_ffn.1.bias: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.dense1.bias 
+  layer_4.1.global_rep.3.pre_norm_ffn.4.weight: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.dense2.weight 
+  layer_4.1.global_rep.3.pre_norm_ffn.4.bias: encoder.blocks.3.1.global_rep.3.channel_mlp.ffn.dense2.bias 
   layer_4.1.global_rep.4.weight: encoder.blocks.3.1.global_rep.4.weight 
   layer_4.1.global_rep.4.bias: encoder.blocks.3.1.global_rep.4.bias 
   layer_4.1.conv_proj.block.conv.weight:  encoder.blocks.3.1.proj.block.conv.weight
@@ -264,10 +264,10 @@ mapping:
   layer_5.1.global_rep.0.pre_norm_mha.1.out_proj.bias: encoder.blocks.4.1.global_rep.0.token_mixer.linear.bias
   layer_5.1.global_rep.0.pre_norm_ffn.0.weight: encoder.blocks.4.1.global_rep.0.layernorm_after.weight
   layer_5.1.global_rep.0.pre_norm_ffn.0.bias: encoder.blocks.4.1.global_rep.0.layernorm_after.bias
-  layer_5.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.0.weight
-  layer_5.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.0.bias
-  layer_5.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.2.weight
-  layer_5.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.2.bias
+  layer_5.1.global_rep.0.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.dense1.weight
+  layer_5.1.global_rep.0.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.dense1.bias
+  layer_5.1.global_rep.0.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.dense2.weight
+  layer_5.1.global_rep.0.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.0.channel_mlp.ffn.dense2.bias
   layer_5.1.global_rep.1.pre_norm_mha.0.weight: encoder.blocks.4.1.global_rep.1.layernorm_before.weight
   layer_5.1.global_rep.1.pre_norm_mha.0.bias: encoder.blocks.4.1.global_rep.1.layernorm_before.bias
   layer_5.1.global_rep.1.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.4.1.global_rep.1.token_mixer.query.weight, encoder.blocks.4.1.global_rep.1.token_mixer.key.weight, encoder.blocks.4.1.global_rep.1.token_mixer.value.weight]
@@ -276,10 +276,10 @@ mapping:
   layer_5.1.global_rep.1.pre_norm_mha.1.out_proj.bias: encoder.blocks.4.1.global_rep.1.token_mixer.linear.bias
   layer_5.1.global_rep.1.pre_norm_ffn.0.weight: encoder.blocks.4.1.global_rep.1.layernorm_after.weight
   layer_5.1.global_rep.1.pre_norm_ffn.0.bias: encoder.blocks.4.1.global_rep.1.layernorm_after.bias
-  layer_5.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.0.weight
-  layer_5.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.0.bias
-  layer_5.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.2.weight
-  layer_5.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.2.bias
+  layer_5.1.global_rep.1.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.dense1.weight
+  layer_5.1.global_rep.1.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.dense1.bias
+  layer_5.1.global_rep.1.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.dense2.weight
+  layer_5.1.global_rep.1.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.1.channel_mlp.ffn.dense2.bias
   layer_5.1.global_rep.2.pre_norm_mha.0.weight: encoder.blocks.4.1.global_rep.2.layernorm_before.weight
   layer_5.1.global_rep.2.pre_norm_mha.0.bias: encoder.blocks.4.1.global_rep.2.layernorm_before.bias
   layer_5.1.global_rep.2.pre_norm_mha.1.qkv_proj.weight: [encoder.blocks.4.1.global_rep.2.token_mixer.query.weight, encoder.blocks.4.1.global_rep.2.token_mixer.key.weight, encoder.blocks.4.1.global_rep.2.token_mixer.value.weight]
@@ -288,10 +288,10 @@ mapping:
   layer_5.1.global_rep.2.pre_norm_mha.1.out_proj.bias: encoder.blocks.4.1.global_rep.2.token_mixer.linear.bias
   layer_5.1.global_rep.2.pre_norm_ffn.0.weight: encoder.blocks.4.1.global_rep.2.layernorm_after.weight
   layer_5.1.global_rep.2.pre_norm_ffn.0.bias: encoder.blocks.4.1.global_rep.2.layernorm_after.bias
-  layer_5.1.global_rep.2.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.0.weight
-  layer_5.1.global_rep.2.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.0.bias
-  layer_5.1.global_rep.2.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.2.weight
-  layer_5.1.global_rep.2.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.2.bias
+  layer_5.1.global_rep.2.pre_norm_ffn.1.weight: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.dense1.weight
+  layer_5.1.global_rep.2.pre_norm_ffn.1.bias: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.dense1.bias
+  layer_5.1.global_rep.2.pre_norm_ffn.4.weight: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.dense2.weight
+  layer_5.1.global_rep.2.pre_norm_ffn.4.bias: encoder.blocks.4.1.global_rep.2.channel_mlp.ffn.dense2.bias
   layer_5.1.global_rep.3.weight: encoder.blocks.4.1.global_rep.3.weight 
   layer_5.1.global_rep.3.bias: encoder.blocks.4.1.global_rep.3.bias 
   layer_5.1.conv_proj.block.conv.weight: encoder.blocks.4.1.proj.block.conv.weight 

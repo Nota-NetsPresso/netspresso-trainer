@@ -63,9 +63,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=144, out_features=288, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=288, out_features=144, bias=True)
+                    (dense1): Linear(in_features=144, out_features=288, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=288, out_features=144, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -82,9 +83,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=144, out_features=288, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=288, out_features=144, bias=True)
+                    (dense1): Linear(in_features=144, out_features=288, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=288, out_features=144, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -121,9 +123,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=192, out_features=384, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=384, out_features=192, bias=True)
+                    (dense1): Linear(in_features=192, out_features=384, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=384, out_features=192, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -140,9 +143,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=192, out_features=384, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=384, out_features=192, bias=True)
+                    (dense1): Linear(in_features=192, out_features=384, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=384, out_features=192, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -159,9 +163,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=192, out_features=384, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=384, out_features=192, bias=True)
+                    (dense1): Linear(in_features=192, out_features=384, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=384, out_features=192, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -178,9 +183,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=192, out_features=384, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=384, out_features=192, bias=True)
+                    (dense1): Linear(in_features=192, out_features=384, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=384, out_features=192, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -217,9 +223,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=240, out_features=480, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=480, out_features=240, bias=True)
+                    (dense1): Linear(in_features=240, out_features=480, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=480, out_features=240, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -236,9 +243,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=240, out_features=480, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=480, out_features=240, bias=True)
+                    (dense1): Linear(in_features=240, out_features=480, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=480, out_features=240, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
@@ -255,9 +263,10 @@ AssembleModel(
                 )
                 (channel_mlp): ChannelMLP(
                   (ffn): Sequential(
-                    (0): Linear(in_features=240, out_features=480, bias=True)
-                    (1): SiLU()
-                    (2): Linear(in_features=480, out_features=240, bias=True)
+                    (dense1): Linear(in_features=240, out_features=480, bias=True)
+                    (act): SiLU()
+                    (dropout): Dropout(p=0.0, inplace=False)
+                    (dense2): Linear(in_features=480, out_features=240, bias=True)
                   )
                   (dropout): Dropout(p=0.0, inplace=False)
                 )
