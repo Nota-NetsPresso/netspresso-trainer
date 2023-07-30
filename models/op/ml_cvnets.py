@@ -38,6 +38,10 @@ def make_divisible(
         new_v += divisor
     return new_v
 
+@torch.fx.wrap
+def tensor_slice(tensor: Tensor, dim, index):
+    return tensor.select(dim, index)
+
 
 # class GlobalPool(BaseLayer):
 class GlobalPool(nn.Module):
@@ -1512,7 +1516,7 @@ class SinusoidalPositionalEncoding(nn.Module):
 
         self.patch_dim = patch_dim
         self.register_buffer("pe", pos_encoding)
-
+        
     def forward_patch_last(
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
@@ -1544,7 +1548,9 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     selected_pe = torch.gather(pe, index=indices, dim=-2)
         #     x = x + selected_pe
         
-        x = x + self.pe[..., : x.shape[-2], :]
+        # x = x + self.pe[..., :seq_index, :]
+        x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
+        
         return x
 
     def forward(self, x, indices: Optional[Tensor] = None, *args, **kwargs) -> Tensor:
