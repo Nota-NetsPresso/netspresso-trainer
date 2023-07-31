@@ -100,8 +100,12 @@ class MobileViTBlock(nn.Module):
     def unfolding(self, feature_map: Tensor) -> Tuple[Tensor, Dict]:
         batch_size, in_channels, orig_h, orig_w = feature_map.size()
 
-        new_h = math.ceil(orig_h / self.patch_h) * self.patch_h
-        new_w = math.ceil(orig_w / self.patch_w) * self.patch_w
+        # @deepkyu: [fx tracing] remove ceil becuase mod == 0, while ceil is not supported mostly in fx
+        # new_h = math.ceil(orig_h / self.patch_h) * self.patch_h
+        # new_w = math.ceil(orig_w / self.patch_w) * self.patch_w
+        
+        new_h = orig_h // self.patch_h * self.patch_h
+        new_w = orig_w // self.patch_w * self.patch_w
 
         interpolate = False
         # @deepkyu: [fx tracing] Found always satisfied: (new_w == orig_w) and (new_h == orig_h)
