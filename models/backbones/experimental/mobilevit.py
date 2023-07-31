@@ -100,16 +100,17 @@ class MobileViTBlock(nn.Module):
     def unfolding(self, feature_map: Tensor) -> Tuple[Tensor, Dict]:
         batch_size, in_channels, orig_h, orig_w = feature_map.size()
 
-        new_h = int(math.ceil(orig_h / self.patch_h) * self.patch_h)
-        new_w = int(math.ceil(orig_w / self.patch_w) * self.patch_w)
+        new_h = math.ceil(orig_h / self.patch_h) * self.patch_h
+        new_w = math.ceil(orig_w / self.patch_w) * self.patch_w
 
         interpolate = False
-        if new_w != orig_w or new_h != orig_h:
-            # Note: Padding can be done, but then it needs to be handled in attention function.
-            feature_map = F.interpolate(
-                feature_map, size=(new_h, new_w), mode="bilinear", align_corners=False
-            )
-            interpolate = True
+        # @deepkyu: [fx tracing] Found always satisfied: (new_w == orig_w) and (new_h == orig_h)
+        # if new_w != orig_w or new_h != orig_h:
+        #     # Note: Padding can be done, but then it needs to be handled in attention function.
+        #     feature_map = F.interpolate(
+        #         feature_map, size=(new_h, new_w), mode="bilinear", align_corners=False
+        #     )
+        #     interpolate = True
 
         # number of patches along width and height
         num_patch_w = new_w // self.patch_w  # n_w
@@ -144,9 +145,12 @@ class MobileViTBlock(nn.Module):
 
     def folding(self, patches: Tensor, info_dict: Dict) -> Tensor:
         n_dim = patches.dim()
-        assert n_dim == 3, "Tensor should be of shape BPxNxC. Got: {}".format(
-            patches.shape
-        )
+        
+        # @deepkyu: [fx tracing] Found always satisfied: assert n_dim == 3
+        # assert n_dim == 3, "Tensor should be of shape BPxNxC. Got: {}".format(
+        #     patches.shape
+        # )
+        
         # [BP, N, C] --> [B, P, N, C]
         patches = patches.contiguous().view(
             info_dict["batch_size"], self.patch_area, info_dict["total_patches"], -1

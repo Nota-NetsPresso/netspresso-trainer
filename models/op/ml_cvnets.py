@@ -38,6 +38,10 @@ def make_divisible(
         new_v += divisor
     return new_v
 
+@torch.fx.wrap
+def tensor_slice(tensor: Tensor, dim, index):
+    return tensor.select(dim, index)
+
 
 # class GlobalPool(BaseLayer):
 class GlobalPool(nn.Module):
@@ -98,13 +102,15 @@ class GlobalPool(nn.Module):
         return x
 
     def forward(self, x: Tensor) -> Tensor:
-        if x.dim() == 4:
-            dims = [-2, -1]
-        elif x.dim() == 5:
-            dims = [-3, -2, -1]
-        else:
-            raise NotImplementedError("Currently 2D and 3D global pooling supported")
-        return self._global_pool(x, dims=dims)
+        # @deepkyu: [fx tracing] Always x.dim() == 4
+        # if x.dim() == 4:
+        #     dims = [-2, -1]
+        # elif x.dim() == 5:
+        #     dims = [-3, -2, -1]
+        # else:
+        #     raise NotImplementedError("Currently 2D and 3D global pooling supported")
+        
+        return self._global_pool(x, dims=(-2, -1))
 
     # def profile_module(self, input: Tensor) -> Tuple[Tensor, float, float]:
     #     input = self.forward(input)
@@ -1510,7 +1516,7 @@ class SinusoidalPositionalEncoding(nn.Module):
 
         self.patch_dim = patch_dim
         self.register_buffer("pe", pos_encoding)
-
+        
     def forward_patch_last(
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
@@ -1530,15 +1536,21 @@ class SinusoidalPositionalEncoding(nn.Module):
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
         # seq_length should be the second last dim
-        if indices is None:
-            x = x + self.pe[..., : x.shape[-2], :]
-        else:
-            ndim = x.ndim
-            repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
+        
+        # @deepkyu: [fx tracing] Always `indices` is None 
+        # if indices is None:
+        #     x = x + self.pe[..., : x.shape[-2], :]
+        # else:
+        #     ndim = x.ndim
+        #     repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
 
-            pe = self.pe.expand(repeat_size)
-            selected_pe = torch.gather(pe, index=indices, dim=-2)
-            x = x + selected_pe
+        #     pe = self.pe.expand(repeat_size)
+        #     selected_pe = torch.gather(pe, index=indices, dim=-2)
+        #     x = x + selected_pe
+        
+        # x = x + self.pe[..., :seq_index, :]
+        x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
+        
         return x
 
     def forward(self, x, indices: Optional[Tensor] = None, *args, **kwargs) -> Tensor:
