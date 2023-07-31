@@ -1,5 +1,11 @@
 import torch
 
+def get_device(x):
+    if isinstance(x, torch.Tensor):
+        return x.device
+    if isinstance(x, torch.nn.Module):
+        return next(x.parameters()).device
+    raise RuntimeError(f'{type(x)} do not have `device`')
 
 def _save_onnx(model, f, sample_input):
     torch.onnx.export(model,  # model being run
@@ -13,7 +19,6 @@ def _save_onnx(model, f, sample_input):
                       dynamic_axes={'images': {0: 'batch_size'},  # variable length axes
                                     'output': {0: 'batch_size'}})
 
-
 def save_onnx(model, f, sample_input):
-    sample_input = sample_input.to(model.device)
+    sample_input = sample_input.to(get_device(model))
     return _save_onnx(model, f, sample_input)
