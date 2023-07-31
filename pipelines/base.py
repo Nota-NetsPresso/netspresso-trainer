@@ -6,8 +6,8 @@ from pathlib import Path
 
 
 import torch
+import torch.nn as nn
 from tqdm import tqdm
-from omegaconf import OmegaConf
 
 from losses import build_losses
 from metrics import build_metrics
@@ -33,7 +33,7 @@ NUM_SAMPLES = 16
 class BasePipeline(ABC):
     def __init__(self, args, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map,
-                 profile=False):
+                 profile=False, is_graphmodule_training=False):
         super(BasePipeline, self).__init__()
         self.args = args
         self.task = task
@@ -54,6 +54,7 @@ class BasePipeline(ABC):
         self.num_classes = None
 
         self.profile = profile
+        self.is_graphmodule_training = is_graphmodule_training
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
@@ -68,7 +69,20 @@ class BasePipeline(ABC):
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         """Append here if you need more assertion checks!"""
         return True
-
+    
+    def _save_checkpoint(self, model: nn.Module):
+        result_dir = self.train_logger.result_dir
+        model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
+        
+        save_onnx(model, model_path.with_suffix(".onnx"),
+                    sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
+        
+        if self.is_graphmodule_training:
+            torch.save(model, model_path.with_suffix(".pt"))
+        else:
+            torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+        
     @abstractmethod
     def set_train(self):
         raise NotImplementedError
@@ -128,13 +142,7 @@ class BasePipeline(ABC):
 
             model = self.model.module if hasattr(self.model, 'module') else self.model
             
-            result_dir = self.train_logger.result_dir
-            model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
-            
-            torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
-            save_onnx(model, model_path.with_suffix(".onnx"),
-                      sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
+            self._save_checkpoint(model)
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):

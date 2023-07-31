@@ -204,7 +204,7 @@ class TrainingLogger():
 
 def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict, num_sample_images: int, epoch: Optional[int] = None):
     training_logger = TrainingLogger(args,
-                                     task=task.lower(), model=model_name.lower(),
+                                     task=task, model=model_name,
                                      step_per_epoch=step_per_epoch,
                                      class_map=class_map, num_sample_images=num_sample_images,
                                      epoch=epoch)
