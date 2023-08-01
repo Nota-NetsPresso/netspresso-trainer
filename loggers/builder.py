@@ -11,7 +11,6 @@ from loggers.registry import CSV_LOGGER_TASK_SPECIFIC, LABEL_CONVERTER_PER_TASK
 from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
-from loggers.netspresso import ModelSearchServerHandler
 from loggers.visualizer import magic_image_handler
 from utils.common import AverageMeter
 
@@ -44,7 +43,7 @@ class TrainingLogger():
         self.use_csvlogger: bool = self.args.logging.csv
         self.use_imagesaver: bool = self.args.logging.image
         self.use_stdout: bool = self.args.logging.stdout
-        self.use_netspresso: bool = self.args.logging.netspresso
+        self.use_netspresso: bool = False  # TODO: NetsPresso training board
 
         self.csv_logger: Optional[BaseCSVLogger] = \
             CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
@@ -55,8 +54,12 @@ class TrainingLogger():
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=args.training.epochs) if self.use_stdout else None
-        self.netspresso_api_client: Optional[ModelSearchServerHandler] = \
-            ModelSearchServerHandler(task=task, model=model) if self.use_netspresso else None
+            
+        self.netspresso_api_client = None
+        if self.use_netspresso:
+            from loggers.netspresso import ModelSearchServerHandler
+            self.netspresso_api_client: Optional[ModelSearchServerHandler] = ModelSearchServerHandler(task=task, model=model)
+        
         if task in LABEL_CONVERTER_PER_TASK:
             pallete = args.data.pallete if 'pallete' in args.data else None
             self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=pallete)

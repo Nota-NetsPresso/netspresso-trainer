@@ -8,7 +8,7 @@ from utils.logger import set_logger
 
 logger = set_logger('loggers', level=os.getenv('LOG_LEVEL', default='INFO'))
 
-MONGODB_TEMP_URI = "mongodb+srv://test-user:ptBcsFnAMs9nUAyC@traininglog0.tqiweaa.mongodb.net/?retryWrites=true&w=majority" 
+MONGODB_TEMP_URI = "" 
 
 
 class ModelSearchServerHandler:
