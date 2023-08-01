@@ -6,13 +6,12 @@ from abc import abstractmethod
 import torch
 import torch.nn as nn
 
-from models.registry import (
-    SUPPORTING_MODEL_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-)
+from models.registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
+from models.utils import BackboneOutput, ModelOutput, DetectionModelOutput
+
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-UPDATE_PREFIX = "updated_"
 
 class TaskModel(nn.Module):
     def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
@@ -34,7 +33,8 @@ class TaskModel(nn.Module):
                 logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
         
         head_module = MODEL_HEAD_DICT[self.task][head_name]
-        self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes)
+        label_size = args.training.img_size if task in ['segmentation', 'detection'] else None
+        self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes, label_size=label_size)
         
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
@@ -57,8 +57,8 @@ class ClassificationModel(TaskModel):
         super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
-        features = self.backbone(x)
-        out = self.head(features['last_feature'])
+        features: BackboneOutput = self.backbone(x)
+        out: ModelOutput = self.head(features['last_feature'])
         return out
 
 
@@ -67,8 +67,8 @@ class SegmentationModel(TaskModel):
         super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
-        features = self.backbone(x)
-        out = self.head(features['intermediate_features'], label_size=label_size)
+        features: BackboneOutput = self.backbone(x)
+        out: ModelOutput = self.head(features['intermediate_features'])
         return out
 
 
@@ -77,7 +77,7 @@ class DetectionModel(TaskModel):
         super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
-        features = self.backbone(x)
-        out = self.head(features['intermediate_features'], targets=targets)
+        features: BackboneOutput = self.backbone(x)
+        out: DetectionModelOutput = self.head(features['intermediate_features'], targets=targets)
         return out
     

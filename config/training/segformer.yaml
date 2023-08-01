@@ -3,14 +3,14 @@ training:
   opt: adamw
   lr0: 6e-5
   lrf: 0.0
-  momentum: ~
-  weight_decay: 0.01
+  momentum: 0.937
+  weight_decay: 0.0005
   warmup_steps: 100 
-  warmup_epochs: ~
-  warmup_momentum: ~
+  warmup_epochs: 5
+  warmup_momentum: 0.8
   warmup_bias_lr: ~
   schd_power: 1.0
-  epochs: 3
+  epochs: 1
   batch_size: 8 
-  img_size: &img_size 512
+  img_size: &img_size 768
   freeze: ~ 

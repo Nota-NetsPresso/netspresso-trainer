@@ -2,7 +2,7 @@ logging:
   project_id: ~
   output_dir: ./outputs
   tensorboard: true
-  csv: true
+  csv: false
   image: true
   stdout: true
   netspresso: false

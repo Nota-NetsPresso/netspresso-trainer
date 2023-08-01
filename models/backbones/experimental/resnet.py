@@ -9,7 +9,7 @@ from torch import Tensor
 import torch.nn as nn
 
 from models.op.custom import ConvLayer, BasicBlock, Bottleneck
-
+from models.utils import BackboneOutput
 
 __all__ = ['resnet50', 'resnet101']
 
@@ -130,7 +130,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> BackboneOutput:
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.maxpool(x)
@@ -144,7 +144,7 @@ class ResNet(nn.Module):
         x = torch.flatten(x, 1)
         # x = self.fc(x)
 
-        return {'last_feature': x}
+        return BackboneOutput(last_feature=x)
 
     @property
     def last_channels(self):

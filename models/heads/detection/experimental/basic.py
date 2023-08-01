@@ -12,7 +12,7 @@ import numpy as np
 from torchvision.ops import MultiScaleRoIAlign
 
 from models.heads.detection.experimental.detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
-
+from models.utils import FXTensorListType, DetectionModelOutput
 class FPN(nn.Module):
 
     def __init__(self,
@@ -269,18 +269,18 @@ class DetectionHead(FasterRCNN):
         
         self.neck = FPN(in_channels=[48, 96, 224, 448], out_channels=feature_dim, num_outs=4)
         
-    def forward(self, features, targets):
+    def forward(self, features: FXTensorListType, targets) -> DetectionModelOutput:
         assert targets is not None
         features = self.neck(features)
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = self.rpn(features)
         roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0), targets=targets)
         
-        out_features = dict()
+        out_features = DetectionModelOutput()
         out_features.update(rpn_features)
         out_features.update(roi_features)
         
         return out_features        
 
-def efficientformer_detection_head(feature_dim, num_classes):
+def efficientformer_detection_head(feature_dim, num_classes, **kwargs):
     return DetectionHead(feature_dim=feature_dim, num_classes=num_classes)

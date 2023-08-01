@@ -12,6 +12,7 @@ from torch import Tensor
 from models.op.ml_cvnets import ConvLayer, LinearLayer
 from models.op.ml_cvnets import SinusoidalPositionalEncoding
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
+from models.utils import FXTensorType, BackboneOutput
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
