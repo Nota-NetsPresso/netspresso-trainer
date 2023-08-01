@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from models.registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-from models.utils import BackboneOutput, ModelOutput, PIDNetModelOutput
+from models.utils import BackboneOutput, ModelOutput, DetectionModelOutput
 
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
@@ -77,7 +77,7 @@ class DetectionModel(TaskModel):
         super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
-        features = self.backbone(x)
-        out = self.head(features['intermediate_features'], targets=targets)
+        features: BackboneOutput = self.backbone(x)
+        out: DetectionModelOutput = self.head(features['intermediate_features'], targets=targets)
         return out
     
