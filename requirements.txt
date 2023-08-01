@@ -1,10 +1,7 @@
-torch
-numpy
-omegaconf
+torch==1.13.0
+torchvision==0.14.0
 tqdm
+omegaconf
+numpy
 pillow
 opencv-python
-requests
-torch_tb_profiler
-albumentations
-pymongo[srv]==3.8.0

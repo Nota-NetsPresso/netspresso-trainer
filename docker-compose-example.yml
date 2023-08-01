@@ -1,0 +1,31 @@
+version: "3.9"
+
+# docker compose run --service-ports --name netspresso-trainer-dev netspresso-trainer bash
+
+services:
+  netspresso-trainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: netspresso-trainer:${TAG}
+    container_name: netspresso-trainer
+    ipc: host
+    ports:
+      # HOST_PORT for tensorboard
+      - "50001:50001" # tensorboard
+      - "50002:50002" # (optional, gradio) configuration helper
+      - "50003:50003" # (optional, gradio) inference demo
+    volumes:
+      # from path: your working directory
+      # - /PATH/TO/netspresso-trainer:/home/appuser/netspresso-trainer
+      # from path: your dataset directory
+      - /PATH/TO/DATA:/DATA/PATH/IN/CONTAINER
+      # from path: your checkpoint directory
+      - /PATH/TO/CHECKPOINT:/CHECKPOINT/PATH/IN/CONTAINER
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: ["0", "1", "2", "3"] # your GPU id(s)
+              capabilities: [gpu]
