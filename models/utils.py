@@ -6,16 +6,19 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
+FXTensorType = Union[Tensor, Proxy]
+FXTensorListType = Union[List[Tensor], List[Proxy]]
+
 class BackboneOutput(TypedDict):
-    intermediate_features: Optional[Union[List[Tensor], List[Proxy]]]
-    last_feature: Optional[Union[Tensor, Proxy]]
+    intermediate_features: Optional[FXTensorListType]
+    last_feature: Optional[FXTensorType]
     
 class ModelOutput(TypedDict):
-    pred: Union[Tensor, Proxy]
+    pred: FXTensorType
     
 class PIDNetModelOutput(ModelOutput):
-    extra_p: Optional[Union[Tensor, Proxy]]
-    extra_d: Optional[Union[Tensor, Proxy]]
+    extra_p: Optional[FXTensorType]
+    extra_d: Optional[FXTensorType]
 
 class SeparateForwardModule(nn.Module):
     def __init__(self) -> None:
