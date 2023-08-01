@@ -9,6 +9,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 from models.op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from models.utils import FXTensorType, BackboneOutput
 
 class Pooling(nn.Module):
     """
@@ -267,18 +268,10 @@ class MetaFormer(nn.Module):
     @property
     def last_channels(self):
         return self._last_channels
-        
-    def forward_embeddings(self, x):
-        x = self.patch_embed(x)
-        return x
     
-    def forward_tokens(self, x):
-        x = self.encoder(x)
-        return x
-    
-    def forward(self, x):
+    def forward(self, x: FXTensorType) -> BackboneOutput:
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.norm(x)
         feat = torch.mean(x, dim=1)
-        return {'last_feature': feat}
+        return BackboneOutput(last_feature=feat)

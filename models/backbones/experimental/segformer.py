@@ -7,6 +7,7 @@ import torch.nn as nn
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
 from models.op.custom import ConvLayer
 from models.op.registry import ACTIVATION_REGISTRY
+from models.utils import FXTensorType, BackboneOutput
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 
@@ -163,7 +164,7 @@ class SegFormer(MetaFormer):
             )
             self.encoder_modules.append(module)
 
-    def forward(self, x):
+    def forward(self, x: FXTensorType) -> BackboneOutput:
         B = x.size(0)
         all_hidden_states = () if self.use_intermediate_features else None
         
@@ -178,11 +179,11 @@ class SegFormer(MetaFormer):
                 all_hidden_states = all_hidden_states + (x,)
         
         if self.use_intermediate_features:
-            return {'intermediate_features': all_hidden_states}
+            return BackboneOutput(intermediate_features=all_hidden_states)
 
         B, C, _, _ = x.size()
         feat = torch.mean(x.reshape(B, C, -1), dim=2)
-        return {'last_feature': feat}
+        return BackboneOutput(last_feature=feat)
 
         
 def segformer(task, num_class=1000, *args, **kwargs) -> SegformerEncoder:

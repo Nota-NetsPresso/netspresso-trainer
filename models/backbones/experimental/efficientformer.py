@@ -11,7 +11,6 @@ import itertools
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 
 from models.op.depth import DropPath
 from models.op.base_metaformer import (
@@ -20,6 +19,7 @@ from models.op.base_metaformer import (
     Pooling
 )
 from models.op.custom import ConvLayer
+from models.utils import BackboneOutput, FXTensorType
 
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
 
@@ -356,15 +356,15 @@ class EfficientFormer(MetaFormer):
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
-    def forward(self, x: Tensor):
+    def forward(self, x: FXTensorType) -> BackboneOutput:
         x = self.patch_embed(x)
         x = self.encoder(x)
         if self.use_intermediate_features:
             all_hidden_states = x  # (features)
-            return {'intermediate_features': all_hidden_states}
+            return BackboneOutput(intermediate_features=all_hidden_states)
         x = self.norm(x)  # B x N x C
         feat = torch.mean(x, dim=-2)
-        return {'last_feature': feat}
+        return BackboneOutput(last_feature=feat)
 
 def efficientformer(task, num_class=1000, *args, **kwargs) -> EfficientFormer:
     

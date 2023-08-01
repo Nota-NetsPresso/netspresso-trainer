@@ -18,6 +18,7 @@ from models.op.ml_cvnets import ConvLayer, LinearLayer, GlobalPool
 from models.op.ml_cvnets import InvertedResidual
 from models.op.ml_cvnets import SinusoidalPositionalEncoding
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
+from models.utils import FXTensorType, BackboneOutput
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
@@ -382,12 +383,12 @@ class MobileViT(MetaFormer):
         
         self._last_channels = exp_channels
         
-    def forward(self, x):
+    def forward(self, x: FXTensorType) -> BackboneOutput:
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.conv_1x1_exp(x)
         feat = self.pool(x)
-        return {'last_feature': feat}
+        return BackboneOutput(last_feature=feat)
 
 def mobilevit(task, *args, **kwargs):
     mv2_exp_mult = 4
