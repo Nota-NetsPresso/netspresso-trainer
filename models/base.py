@@ -1,5 +1,5 @@
 import os
-from typing import Type, Callable
+from typing import Callable, Union
 from pathlib import Path
 from abc import abstractmethod
 
@@ -7,27 +7,15 @@ import torch
 import torch.nn as nn
 
 from models.registry import (
-    SUPPORTING_MODEL_LIST, MODEL_PRETRAINED_DICT, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
+    SUPPORTING_MODEL_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
 )
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 UPDATE_PREFIX = "updated_"
 
-
-def load_pretrained_checkpoint(model_name: str):
-    assert model_name in SUPPORTING_MODEL_LIST, f"The model_name ({model_name}) should be one of the followings: {SUPPORTING_MODEL_LIST}"
-
-    if not model_name in MODEL_PRETRAINED_DICT:
-        raise AssertionError(f"No pretrained checkpoint found! Model name: ({model_name})")
-
-    state_dict_path: Path = MODEL_PRETRAINED_DICT[model_name]
-    state_dict = torch.load(state_dict_path)
-    return state_dict
-
-
 class TaskModel(nn.Module):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
+    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
         super(TaskModel, self).__init__()
         self.task = task
         self.backbone_name = backbone_name
@@ -36,8 +24,8 @@ class TaskModel(nn.Module):
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
         self.backbone = backbone_fn(task=self.task)
         
-        if load_pretrained:
-            model_state_dict = load_pretrained_checkpoint(backbone_name)
+        if model_checkpoint is not None:
+            model_state_dict = torch.load(model_checkpoint)
             missing_keys, unexpected_keys = self.backbone.load_state_dict(model_state_dict, strict=False)
             
             if len(missing_keys) != 0:
@@ -65,8 +53,8 @@ class TaskModel(nn.Module):
 
 
 class ClassificationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
+    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
+        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
         features = self.backbone(x)
@@ -75,8 +63,8 @@ class ClassificationModel(TaskModel):
 
 
 class SegmentationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
+    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
+        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
         features = self.backbone(x)
@@ -85,8 +73,8 @@ class SegmentationModel(TaskModel):
 
 
 class DetectionModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, load_pretrained) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, load_pretrained)
+    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
+        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
         features = self.backbone(x)
