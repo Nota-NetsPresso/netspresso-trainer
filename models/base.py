@@ -6,13 +6,12 @@ from abc import abstractmethod
 import torch
 import torch.nn as nn
 
-from models.registry import (
-    SUPPORTING_MODEL_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-)
+from models.registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
+from models.utils import BackboneOutput
+
 from utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
-UPDATE_PREFIX = "updated_"
 
 class TaskModel(nn.Module):
     def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
@@ -57,7 +56,7 @@ class ClassificationModel(TaskModel):
         super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
     
     def forward(self, x, label_size=None, targets=None):
-        features = self.backbone(x)
+        features: BackboneOutput = self.backbone(x)
         out = self.head(features['last_feature'])
         return out
 

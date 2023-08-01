@@ -1,8 +1,21 @@
 from abc import abstractmethod
-from typing import Any, Callable  # TODO: final in Python 3.8
+from typing import List, TypedDict, Optional, Union
+
 import torch
 import torch.nn as nn
+from torch import Tensor
+from torch.fx.proxy import Proxy
 
+class BackboneOutput(TypedDict):
+    intermediate_features: Optional[Union[List[Tensor], List[Proxy]]]
+    last_feature: Optional[Union[Tensor, Proxy]]
+    
+class ModelOutput(TypedDict):
+    pred: Union[Tensor, Proxy]
+    
+class PIDNetModelOutput(ModelOutput):
+    extra_p: Optional[Union[Tensor, Proxy]]
+    extra_d: Optional[Union[Tensor, Proxy]]
 
 class SeparateForwardModule(nn.Module):
     def __init__(self) -> None:
