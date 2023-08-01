@@ -116,7 +116,7 @@ def train(args_parsed, args, is_graphmodule_training=False):
     if is_graphmodule_training:
         model = torch.load(args_parsed.model_checkpoint)
     else:
-        model = build_model(args, train_dataset.num_classes)
+        model = build_model(args, train_dataset.num_classes, args.model.checkpoint)
 
     train_dataloader, eval_dataloader = \
         build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset, profile=args_parsed.profile)

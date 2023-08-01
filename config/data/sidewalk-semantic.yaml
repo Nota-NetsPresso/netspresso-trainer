@@ -3,7 +3,7 @@ data:
   task: segmentation
   format: huggingface # local, huggingface
   metadata:
-    custom_cache_dir: /DATA/huggingface # If None, it follows HF datasets default (.cache/huggingface/datasets)
+    custom_cache_dir: ./data/huggingface # If None, it follows HF datasets default (.cache/huggingface/datasets)
     repo: segments/sidewalk-semantic
     subset: ~
     features:
