@@ -54,10 +54,6 @@ def _parse_args_netspresso(is_graphmodule_training):
         help="Config for training environment (# workers, etc.)")
 
     parser.add_argument(
-        '--profile', action='store_true',
-        help="Whether to use profile mode")
-
-    parser.add_argument(
         '--model-checkpoint', type=str, required=is_graphmodule_training,
         dest='model_checkpoint',
         help="Checkpoint path for graphmodule model")
@@ -119,7 +115,7 @@ def train(args_parsed, args, is_graphmodule_training=False):
         model = build_model(args, train_dataset.num_classes, args.model.checkpoint)
 
     train_dataloader, eval_dataloader = \
-        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset, profile=args_parsed.profile)
+        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
     model = model.to(device=devices)
     if args.distributed:
@@ -127,7 +123,7 @@ def train(args_parsed, args, is_graphmodule_training=False):
 
     trainer = build_pipeline(args, task, model_name, model,
                              devices, train_dataloader, eval_dataloader,
-                             class_map=train_dataset.class_map, profile=args_parsed.profile,
+                             class_map=train_dataset.class_map,
                              is_graphmodule_training=is_graphmodule_training)
 
     trainer.set_train()

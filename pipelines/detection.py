@@ -57,10 +57,6 @@ class DetectionPipeline(BasePipeline):
         # out = {k: v.detach() for k, v in out.items()}
         # self.metric(out['pred'], target=targets, mode='train')
 
-        # # TODO: fn(out)
-        # fn = lambda x: x
-        # self.one_epoch_result.append(self.loss.result('train'))
-
         if self.args.distributed:
             torch.distributed.barrier()
 

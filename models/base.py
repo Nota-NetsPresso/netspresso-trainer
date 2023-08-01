@@ -21,7 +21,7 @@ class TaskModel(nn.Module):
         self.head_name = head_name
         
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        self.backbone = backbone_fn(task=self.task)
+        self.backbone: nn.Module = backbone_fn(task=self.task)
         
         if model_checkpoint is not None:
             model_state_dict = torch.load(model_checkpoint)

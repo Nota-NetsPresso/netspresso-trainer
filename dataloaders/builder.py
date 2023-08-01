@@ -97,7 +97,7 @@ def build_dataset(args):
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
+def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
         collate_fn = None
