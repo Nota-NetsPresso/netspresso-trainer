@@ -1,6 +1,6 @@
 model:
   task: classification
-  checkpoint: /CHECKPOINT/backbones/resnet/resnet50.pth
+  checkpoint: ../../weights/modelsearch-trainer-allinone/backbones/resnet/resnet50.pth
   architecture:
     full: ~ # auto
     backbone: resnet50

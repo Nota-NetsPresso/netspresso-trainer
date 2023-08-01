@@ -10,7 +10,7 @@ training:
   warmup_momentum: 0.8
   warmup_bias_lr: ~
   schd_power: 1.0
-  epochs: 100
+  epochs: 3
   batch_size: 16 
   img_size: &img_size 512
   freeze: ~ 

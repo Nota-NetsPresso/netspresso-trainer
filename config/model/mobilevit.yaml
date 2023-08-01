@@ -1,6 +1,6 @@
 model:
   task: classification
-  checkpoint: /CHECKPOINT/backbones/mobilevit/mobilevit_s.pth
+  checkpoint: ../../weights/modelsearch-trainer-allinone/backbones/mobilevit/mobilevit_s.pth
   architecture:
     full: ~ # auto
     backbone: mobilevit
