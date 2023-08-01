@@ -53,7 +53,7 @@ class SegmentationPipeline(BasePipeline):
             bd_gt = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
-        out = self.model(images, label_size=target.size())
+        out = self.model(images)
         if 'edges' in batch:
             self.loss(out, target, bd_gt=bd_gt, mode='train')
         else:
@@ -82,7 +82,7 @@ class SegmentationPipeline(BasePipeline):
             bd_gt = batch['edges']
             bd_gt = bd_gt.to(self.devices)
 
-        out = self.model(images, label_size=target.size())
+        out = self.model(images)
         if 'edges' in batch:
             self.loss(out, target, bd_gt=bd_gt, mode='valid')
         else:

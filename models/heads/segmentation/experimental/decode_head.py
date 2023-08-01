@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 
 from models.configuration.segformer import SegformerConfig
-from models.utils import SeparateForwardModule
+from models.utils import FXTensorListType, ModelOutput
 
 EfficientFormer_width = {
     'l1': [48, 96, 224, 448],
@@ -26,8 +26,8 @@ class SegformerMLP(nn.Module):
         return hidden_states
 
 
-class SegformerDecodeHead(SeparateForwardModule):
-    def __init__(self, config, num_classes):
+class SegformerDecodeHead(nn.Module):
+    def __init__(self, config, num_classes, label_size=None):
         super().__init__()
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
@@ -50,9 +50,9 @@ class SegformerDecodeHead(SeparateForwardModule):
         self.classifier = nn.Conv2d(config.decoder_hidden_size, num_classes, kernel_size=1)
 
         self.config = config
+        self.label_size = (label_size, label_size) if isinstance(label_size, int) else label_size
 
-    def forward_training(self, encoder_hidden_states, **kwargs):
-        label_size = kwargs['label_size'] if 'label_size' in kwargs else None
+    def forward(self, encoder_hidden_states: FXTensorListType):
 
         batch_size = encoder_hidden_states[-1].shape[0]
 
@@ -83,24 +83,20 @@ class SegformerDecodeHead(SeparateForwardModule):
         # logits are of shape (batch_size, num_labels, height/4, width/4)
         logits = self.classifier(hidden_states)
 
-        if label_size is not None:
-            H, W = label_size[-2:]
+        if self.label_size is not None:
+            H, W = self.label_size[-2:]
             # upsample logits to the images' original size
             upsampled_logits = nn.functional.interpolate(
                 logits, size=(H, W), mode="bilinear", align_corners=False
             )
-            return {'pred': upsampled_logits}
+            return ModelOutput(pred=upsampled_logits)
 
-        return {'pred': logits}
-    
-    def forward_inference(self, encoder_hidden_states, **kwargs):
-        return self.forward_training(encoder_hidden_states, **kwargs)['pred']
+        return ModelOutput(pred=logits)
 
-
-def segformer_decode_head(feature_dim, num_classes):
+def segformer_decode_head(feature_dim, num_classes, label_size, **kwargs):
     config = SegformerConfig()
-    return SegformerDecodeHead(config, num_classes=num_classes)
+    return SegformerDecodeHead(config, num_classes, label_size=label_size)
 
-def efficientformer_decode_head(feature_dim, num_classes):
+def efficientformer_decode_head(feature_dim, num_classes, label_size, **kwargs):
     config = SegformerConfig(hidden_sizes=EfficientFormer_width['l1'])
-    return SegformerDecodeHead(config, num_classes=num_classes)
+    return SegformerDecodeHead(config, num_classes, label_size=label_size)

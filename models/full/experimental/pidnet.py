@@ -10,6 +10,7 @@ import torch.nn.functional as F
 
 from models.op.custom import ConvLayer, BasicBlock, Bottleneck
 from models.op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from models.utils import FXTensorType, PIDNetModelOutput
 
 use_align_corners = False
 
@@ -134,7 +135,7 @@ class PIDNet(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, x):
+    def forward(self, x: FXTensorType, label_size=None) -> PIDNetModelOutput:
 
         # assert H == x.size(2)
         # assert W == x.size(3)
@@ -184,25 +185,14 @@ class PIDNet(nn.Module):
 
         x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
 
-        if self.is_training:
-            # if self.augment:
-            x_extra_p = self.seghead_p(temp_p)
-            x_extra_d = self.seghead_d(temp_d)
+        # if self.augment:
+        x_extra_p = self.seghead_p(temp_p)
+        x_extra_d = self.seghead_d(temp_d)
 
-            x_extra_p = F.interpolate(x_extra_p, size=self.original_to, mode='bilinear', align_corners=True)
-            x_extra_d = F.interpolate(x_extra_d, size=self.original_to, mode='bilinear', align_corners=True)
+        x_extra_p = F.interpolate(x_extra_p, size=self.original_to, mode='bilinear', align_corners=True)
+        x_extra_d = F.interpolate(x_extra_d, size=self.original_to, mode='bilinear', align_corners=True)
 
-            return {
-                "extra_p": x_extra_p,
-                "extra_d": x_extra_d,
-                "pred": x_
-            }
-
-        else:
-            return x_
-
-        # return {"pred": x_}
-
+        return PIDNetModelOutput(extra_p=x_extra_p, extra_d=x_extra_d, pred=x_)
 
 def pidnet(args, num_classes: int) -> PIDNet:
     model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, is_training=True)

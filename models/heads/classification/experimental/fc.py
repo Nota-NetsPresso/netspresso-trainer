@@ -16,5 +16,5 @@ class FC(nn.Module):
         x = self.classifier(x)
         return ModelOutput(pred=x)
     
-def fc(feature_dim, num_classes):
+def fc(feature_dim, num_classes, **kwargs):
     return FC(feature_dim=feature_dim, num_classes=num_classes)
