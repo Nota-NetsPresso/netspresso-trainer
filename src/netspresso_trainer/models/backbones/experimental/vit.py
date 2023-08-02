@@ -9,9 +9,9 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from models.op.ml_cvnets import ConvLayer
-from models.op.ml_cvnets import SinusoidalPositionalEncoding
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
+from ...op.ml_cvnets import ConvLayer
+from ...op.ml_cvnets import SinusoidalPositionalEncoding
+from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']

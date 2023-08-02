@@ -8,8 +8,8 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
-from models.utils import FXTensorType, BackboneOutput
+from ..op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from ..utils import FXTensorType, BackboneOutput
 
 class Pooling(nn.Module):
     """

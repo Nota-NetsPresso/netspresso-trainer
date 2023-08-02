@@ -11,8 +11,8 @@ from torch import Tensor
 import numpy as np
 from torchvision.ops import MultiScaleRoIAlign
 
-from models.heads.detection.experimental.detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
-from models.utils import FXTensorListType, DetectionModelOutput
+from .detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
+from ....utils import FXTensorListType, DetectionModelOutput
 class FPN(nn.Module):
 
     def __init__(self,

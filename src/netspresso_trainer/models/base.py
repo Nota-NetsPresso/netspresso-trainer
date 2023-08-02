@@ -6,10 +6,10 @@ from abc import abstractmethod
 import torch
 import torch.nn as nn
 
-from models.registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-from models.utils import BackboneOutput, ModelOutput, DetectionModelOutput
+from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
+from .utils import BackboneOutput, ModelOutput, DetectionModelOutput
 
-from utils.logger import set_logger
+from ..utils.logger import set_logger
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 

@@ -3,16 +3,12 @@ from pathlib import Path
 
 import torch.nn as nn
 
-from models.backbones.experimental.resnet import resnet50
-from models.backbones.experimental.segformer import segformer
-from models.backbones.experimental.mobilevit import mobilevit
-from models.backbones.experimental.vit import vit
-from models.backbones.experimental.efficientformer import efficientformer
-from models.full.experimental.pidnet import pidnet
+from .backbones import resnet50, segformer, mobilevit, vit, efficientformer
+from .full import pidnet
 
-from models.heads.classification.experimental.fc import fc
-from models.heads.segmentation.experimental.decode_head import segformer_decode_head, efficientformer_decode_head
-from models.heads.detection.experimental.basic import efficientformer_detection_head
+from .heads.classification import fc
+from .heads.segmentation import segformer_decode_head, efficientformer_decode_head
+from .heads.detection import efficientformer_detection_head
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet50': resnet50,

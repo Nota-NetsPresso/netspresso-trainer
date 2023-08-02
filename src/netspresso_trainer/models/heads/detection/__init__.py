@@ -1,1 +1,1 @@
-from models.heads.detection.experimental.basic import efficientformer_detection_head
+from .experimental.basic import efficientformer_detection_head

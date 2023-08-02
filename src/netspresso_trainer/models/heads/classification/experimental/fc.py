@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.utils import ModelOutput
+from ....utils import ModelOutput
 
 class FC(nn.Module):
     def __init__(self, feature_dim: int, num_classes: int) -> None:

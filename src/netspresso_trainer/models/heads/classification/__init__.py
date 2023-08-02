@@ -1,1 +1,1 @@
-from models.heads.classification.experimental.fc import fc
+from .experimental.fc import fc

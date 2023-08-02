@@ -11,12 +11,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-# from . import register_cls_models
-# from .base_cls import BaseEncoder
-from models.op.ml_cvnets import ConvLayer, GlobalPool
-from models.op.ml_cvnets import InvertedResidual
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
-from models.utils import FXTensorType, BackboneOutput
+
+from ...op.ml_cvnets import ConvLayer, GlobalPool
+from ...op.ml_cvnets import InvertedResidual
+from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
+from ...utils import FXTensorType, BackboneOutput
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']

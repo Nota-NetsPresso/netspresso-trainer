@@ -8,8 +8,8 @@ import torch
 from torch import Tensor
 import torch.nn as nn
 
-from models.op.custom import ConvLayer, BasicBlock, Bottleneck
-from models.utils import BackboneOutput
+from ...op.custom import ConvLayer, BasicBlock, Bottleneck
+from ...utils import BackboneOutput
 
 __all__ = ['resnet50', 'resnet101']
 

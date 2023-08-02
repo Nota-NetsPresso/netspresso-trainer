@@ -12,14 +12,14 @@ import itertools
 import torch
 import torch.nn as nn
 
-from models.op.depth import DropPath
-from models.op.base_metaformer import (
+from ...op.depth import DropPath
+from ...op.base_metaformer import (
     MetaFormer, MetaFormerBlock, MetaFormerEncoder,
     MultiHeadAttention, ChannelMLP, Image2Sequence,
     Pooling
 )
-from models.op.custom import ConvLayer
-from models.utils import BackboneOutput, FXTensorType
+from ...op.custom import ConvLayer
+from ...utils import BackboneOutput, FXTensorType
 
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
 

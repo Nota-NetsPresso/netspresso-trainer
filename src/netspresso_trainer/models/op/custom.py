@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from models.op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from ..op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
 
 
 class ConvLayer(nn.Module):

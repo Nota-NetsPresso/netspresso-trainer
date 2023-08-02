@@ -8,9 +8,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from models.op.custom import ConvLayer, BasicBlock, Bottleneck
-from models.op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
-from models.utils import FXTensorType, PIDNetModelOutput
+from ...op.custom import ConvLayer, BasicBlock, Bottleneck
+from ...op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from ...utils import FXTensorType, PIDNetModelOutput
 
 use_align_corners = False
 

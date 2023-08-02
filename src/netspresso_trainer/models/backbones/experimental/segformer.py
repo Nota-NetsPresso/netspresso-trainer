@@ -4,10 +4,10 @@ import math
 import torch
 import torch.nn as nn
 
-from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
-from models.op.custom import ConvLayer
-from models.op.registry import ACTIVATION_REGISTRY
-from models.utils import FXTensorType, BackboneOutput
+from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
+from ...op.custom import ConvLayer
+from ...op.registry import ACTIVATION_REGISTRY
+from ...utils import FXTensorType, BackboneOutput
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 

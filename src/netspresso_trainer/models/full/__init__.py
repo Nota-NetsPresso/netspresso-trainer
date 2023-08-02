@@ -1,1 +1,1 @@
-from models.full.experimental.pidnet import pidnet
+from .experimental.pidnet import pidnet

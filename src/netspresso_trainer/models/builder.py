@@ -5,9 +5,9 @@ from pathlib import Path
 import torch
 import torch.nn as nn
 
-from models.base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
-from models.registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
-from utils.logger import set_logger
+from .base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
+from .registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
+from ..utils.logger import set_logger
 
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
