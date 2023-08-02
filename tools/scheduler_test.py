@@ -8,11 +8,9 @@ import torch.nn as nn
 import numpy as np
 from omegaconf import OmegaConf
 
-from optimizers import build_optimizer
-from schedulers import build_scheduler
-from utils.logger import set_logger
+from netspresso_trainer.optimizers import build_optimizer
+from netspresso_trainer.schedulers import build_scheduler
 
-logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 IN_FEATURES = 10
 OUT_FEATURES = 4

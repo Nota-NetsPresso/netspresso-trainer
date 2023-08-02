@@ -1,68 +1,95 @@
-# NetsPresso trainer all-in-one
+<div align="center">
+    <img src="./assets/netspresso_trainer_header_tmp.png" width="800"/>
+</div>
+</br>
 
-This repository aims to support training PyTorch models which are compatible with [NetsPresso](https://netspresso.ai/),
-model compressor platform from [Nota AI](https://www.nota.ai/).
+<center>
+Start training models (including ViTs) with <b>NetsPresso Trainer</b>, compress and deploy your model with <b>NetsPresso</b>!
+</center>
+</br>
 
-## Installation with docker
+<div align="center">
+<p align="center">
+  <a href="https://py.netspresso.ai/">Website</a> •
+  <a href="#getting-started">Getting Started</a>
+</p>
+</div>
 
-### Docker with docker-compose
+_____
 
-For the latest information, please check [`docker-compose.yml`](./docker-compose.yml)
 
-```bash
-# run command
-docker compose run --service-ports --name netspresso-trainer-dev netspresso-trainer bash
+## Table of contents
+
+<!-- toc -->
+
+- [Getting started](#getting-started)
+- [Installation](#installation)
+
+<!-- tocstop -->
+
+## Getting started
+
+Write your training script in `train.py` like:
+
+```python
+from netspresso_trainer import set_arguments, train
+
+args_parsed, args = set_arguments(is_graphmodule_training=False)
+train(args_parsed, args, is_graphmodule_training=False)
 ```
 
-### Docker image build
-
-If you run with `docker run` command, follow the image build and run command in the below:
+Then, train your model with your own configuraiton:
 
 ```bash
-# build an image
-export $(cat .env | xargs) && \
-docker build -t netspresso-trainer:$TAG .
+python train.py\
+  --data config/data/beans.yaml\
+  --augmentation config/augmentation/resnet.yaml\
+  --model config/model/resnet.yaml\
+  --training config/training/resnet.yaml\
+  --logging config/logging.yaml\
+  --environment config/environment.yaml
 ```
+
+Please refer to [`example_train.sh`](./example_train.sh) and [`example_train_fx.sh`](./example_train_fx.sh).
+
+## Installation
+
+### Prerequisites
+
+- Python `3.8` | `3.9` | `3.10`
+- PyTorch `1.13.0` (recommended) (compatible with: `1.11.x` - `1.13.x`)
+
+### Install with pypi (stable)
 
 ```bash
-# docker run command
-export $(cat .env | xargs) && \
-docker run -it --ipc=host\
-  --gpus='"device=0,1,2,3"'\
-  -v /PATH/TO/DATA:/DATA/PATH/IN/CONTAINER\
-  -v /PATH/TO/CHECKPOINT:/CHECKPOINT/PATH/IN/CONTAINER\
-  -p 50001:50001\
-  -p 50002:50002\
-  -p 50003:50003\
-  --name netspresso-trainer-dev netspresso-trainer:$TAG
+pip install netspresso_trainer
 ```
 
-## Example training
-
-This code provides some example scripts and snippets to help you understand about the functionalities.
-
-### Training example model
-
-For classification and segmentation, see [`train_classification.sh`](./train_classification.sh) and [`train_segmentation.sh`](./train_segmentation.sh) for each.  
-Each shell sciprt contains two commands: (1) single-gpu training and (2) multi-gpu training.
-A default option is using **single-gpu**, but you can edit the script if you needed.
-
-> :warning: `2023.06.21` Work in progress for detection (It won't work for now)
-
-### Tensorboard
-
-Please refer to [`run_tensorboard.sh`](./run_tensorboard.sh).
-To execute on background, you may run this script with `tmux`, `screen`, or `bg`.
-
-### Training with HuggingFace datasets
-
-We do our best to give you a good experience in training process. We integrate [HuggingFace(HF) datasets](https://huggingface.co/datasets) into our training pipeline. Note that we apply our custom augmentation methods in training datasets, instead of albumentations which is mostly used in HF datasets.
-
-To do so, firstly you need to install additional libraries with the following command:
+### Install with GitHub
 
 ```bash
-pip install -r requirements-data.txt
+pip install git+https://github.com:Nota-NetsPresso/netspresso-trainer.git@stable
 ```
 
-Then, you can write your own data configuration for HF datasets. Please refer to [data configuration template](./config/data/template).  
-Some datasets in HF datasets needs `login`. You can login with `huggingface-cli login` with their [official guide](https://huggingface.co/docs/huggingface_hub/quick-start#login).
+To install with editable mode,
+
+```bash
+git clone https://github.com:Nota-NetsPresso/netspresso-trainer.git .
+pip install -e netspresso-trainer
+```
+
+### Set-up with docker
+
+Please clone this repository and refer to [`Dockerfile`](./Dockerfile) and [`docker-compose-example.yml`](./docker-compose-example.yml).  
+For docker users, we provide more detailed guide with [`DOCKER-INSTALLATION.md`](./DOCKER-INSTALLATION.md).
+
+## Tensorboard
+
+We provide basic tensorboard to track your training status. Run the tensorboard with the following command: 
+
+```bash
+tensorboard --logdir ./outputs --port 50001 --bind_all
+```
+
+where `PORT` for tensorboard is 50001.  
+Note that the default directory of saving result will be `./outputs` directory.

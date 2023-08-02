@@ -1,1 +1,0 @@
-tensorboard --logdir ./outputs --port 50001 --bind_all

@@ -7,8 +7,8 @@ from omegaconf import OmegaConf
 import torch.nn as nn
 import torch.fx as fx
 
-from utils.fx import convert_graphmodule
-from models import build_model
+from netspresso_trainer.utils.fx import convert_graphmodule
+from netspresso_trainer.models import build_model
 
 TEMP_NUM_CLASSES = 80
 

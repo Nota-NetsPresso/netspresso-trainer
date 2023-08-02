@@ -6,6 +6,8 @@ version = (Path("src/netspresso_trainer") / "VERSION").read_text().strip()
 readme_contents = Path("README.md").read_text()
 
 requirements = Path("requirements.txt").read_text().split('\n')
+requirements_optional = Path("requirements-optional.txt").read_text().split('\n')
+requirements_all = requirements + requirements_optional
 
 setup(
     name="netspresso_trainer",
@@ -25,6 +27,5 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
     ],
 )
