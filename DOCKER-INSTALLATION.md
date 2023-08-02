@@ -1,8 +1,3 @@
-# NetsPresso trainer all-in-one
-
-This repository aims to support training PyTorch models which are compatible with [NetsPresso](https://netspresso.ai/),
-model compressor platform from [Nota AI](https://www.nota.ai/).
-
 ## Installation with docker
 
 ### Docker with docker-compose
