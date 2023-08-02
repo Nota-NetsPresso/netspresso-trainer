@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List, Dict, Tuple, Optional, Union, Literal
 
 import numpy as np
 import torch
@@ -7,7 +7,7 @@ import PIL.Image as Image
 from omegaconf import OmegaConf
 
 from loggers.base import BaseCSVLogger
-from loggers.registry import CSV_LOGGER_TASK_SPECIFIC, LABEL_CONVERTER_PER_TASK
+from loggers.registry import CSV_LOGGER, VISUALIZER
 from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
@@ -18,8 +18,16 @@ OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1
 
 class TrainingLogger():
-    def __init__(self, args, task: str, model: str, class_map: Dict,
-                 step_per_epoch: int, num_sample_images: int, epoch: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        args,
+        task: Literal['classification', 'segmentation', 'detection'],
+        model: str,
+        class_map: Dict[int, str],
+        step_per_epoch: int,
+        num_sample_images: int,
+        epoch: Optional[int] = None
+    ) -> None:
         super(TrainingLogger, self).__init__()
         self.args = args
         self.task: str = task
@@ -46,7 +54,7 @@ class TrainingLogger():
         self.use_netspresso: bool = False  # TODO: NetsPresso training board
 
         self.csv_logger: Optional[BaseCSVLogger] = \
-            CSV_LOGGER_TASK_SPECIFIC[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
+            CSV_LOGGER[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
         self.image_saver: Optional[ImageSaver] = \
             ImageSaver(model=model, result_dir=self._result_dir) if self.use_imagesaver else None
         self.tensorboard_logger: Optional[TensorboardLogger] = \
@@ -60,9 +68,9 @@ class TrainingLogger():
             from loggers.netspresso import ModelSearchServerHandler
             self.netspresso_api_client: Optional[ModelSearchServerHandler] = ModelSearchServerHandler(task=task, model=model)
         
-        if task in LABEL_CONVERTER_PER_TASK:
+        if task in VISUALIZER:
             pallete = args.data.pallete if 'pallete' in args.data else None
-            self.label_converter = LABEL_CONVERTER_PER_TASK[task](class_map=class_map, pallete=pallete)
+            self.label_converter = VISUALIZER[task](class_map=class_map, pallete=pallete)
             
     @property
     def result_dir(self):
@@ -205,7 +213,7 @@ class TrainingLogger():
             self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
 
 
-def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict, num_sample_images: int, epoch: Optional[int] = None):
+def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, epoch: Optional[int] = None):
     training_logger = TrainingLogger(args,
                                      task=task, model=model_name,
                                      step_per_epoch=step_per_epoch,

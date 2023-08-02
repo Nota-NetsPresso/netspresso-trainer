@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union, Literal
 
 import numpy as np
 import PIL.Image as Image
@@ -24,7 +24,7 @@ class ImageSaver:
     def epoch(self, value: int) -> None:
         self._epoch = int(value)
         
-    def save_ndarray_as_image(self, image_array: np.ndarray, filename: Union[str, Path], dataformats='HWC'):
+    def save_ndarray_as_image(self, image_array: np.ndarray, filename: Union[str, Path], dataformats: Literal['HWC', 'CHW'] = 'HWC'):
         assert image_array.ndim == 3
         if dataformats != 'HWC':
             if dataformats == 'CHW':
