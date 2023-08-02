@@ -6,6 +6,7 @@ __pycache__/
 *.onnx
 *.pt
 *.pth
+*.egg-info
 
 **/*/exp/
 **/*/events*
