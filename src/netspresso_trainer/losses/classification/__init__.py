@@ -1,0 +1,2 @@
+from .label_smooth import LabelSmoothingCrossEntropy
+from .soft_target import SoftTargetCrossEntropy

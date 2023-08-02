@@ -1,1 +1,0 @@
-from models.heads.detection.experimental.basic import efficientformer_detection_head
