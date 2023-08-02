@@ -1,5 +1,6 @@
 import logging
 import time
+from typing import Literal
 
 import torch.distributed as dist
 from omegaconf import OmegaConf, DictConfig, ListConfig
@@ -39,7 +40,7 @@ def set_logger(logger_name, level):
         print("Skipping timezone setting.")
     _custom_logger(name=logger_name)
     logger = logging.getLogger(logger_name)
-    _level = level.upper()
+    _level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = level.upper()
     if _level == 'DEBUG':
         logger.setLevel(logging.DEBUG)
     elif _level == 'INFO':

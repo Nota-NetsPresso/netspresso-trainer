@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 
-from models.configuration.segformer import SegformerConfig
+from models.heads.segmentation.experimental.config import SegformerConfig
 from models.utils import FXTensorListType, ModelOutput
 
 EfficientFormer_width = {

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union, Literal
 
 CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
@@ -73,7 +73,7 @@ class BaseCSVLogger(ABC):
         
         raise AssertionError(f"Type of data should be either List or Dict! Current: {type(data)}")
     
-    def _convert_as_csv_record(self, scalar_dict: Dict, prefix='train'):
+    def _convert_as_csv_record(self, scalar_dict: Dict, prefix: Literal['train', 'valid'] = 'train'):
         converted_dict = {}
         for k, v in scalar_dict.items():
             if f"{prefix}/{k}" not in self.key_map:

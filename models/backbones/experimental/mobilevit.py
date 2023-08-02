@@ -13,10 +13,8 @@ import torch.nn.functional as F
 from torch import Tensor
 # from . import register_cls_models
 # from .base_cls import BaseEncoder
-from models.configuration.mobilevit import get_configuration
-from models.op.ml_cvnets import ConvLayer, LinearLayer, GlobalPool
+from models.op.ml_cvnets import ConvLayer, GlobalPool
 from models.op.ml_cvnets import InvertedResidual
-from models.op.ml_cvnets import SinusoidalPositionalEncoding
 from models.op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
 from models.utils import FXTensorType, BackboneOutput
 

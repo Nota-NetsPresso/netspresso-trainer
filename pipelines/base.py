@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 import os
-from itertools import chain
 from statistics import mean
 from pathlib import Path
-
+from typing import final
 
 import torch
 import torch.nn as nn
@@ -12,20 +11,14 @@ from tqdm import tqdm
 from losses import build_losses
 from metrics import build_metrics
 from loggers import build_logger, START_EPOCH_ZERO_OR_ONE
-from utils.timer import Timer
+from utils.record import Timer
 from utils.logger import set_logger, yaml_for_logging
 from utils.fx import save_graphmodule
 from utils.onnx import save_onnx
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
-MAX_SAMPLE_RESULT = 10
 VALID_FREQ = 1
-
-PROFILE_WAIT = 1
-PROFILE_WARMUP = 1
-PROFILE_ACTIVE = 10
-PROFILE_REPEAT = 1
 
 NUM_SAMPLES = 16
 
@@ -33,7 +26,7 @@ NUM_SAMPLES = 16
 class BasePipeline(ABC):
     def __init__(self, args, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map,
-                 profile=False, is_graphmodule_training=False):
+                 is_graphmodule_training=False, profile=False):
         super(BasePipeline, self).__init__()
         self.args = args
         self.task = task
@@ -53,7 +46,7 @@ class BasePipeline(ABC):
         self.ignore_index = None
         self.num_classes = None
 
-        self.profile = profile
+        self.profile = profile  # TODO: provide torch_tb_profiler for training
         self.is_graphmodule_training = is_graphmodule_training
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
@@ -63,7 +56,7 @@ class BasePipeline(ABC):
                                          step_per_epoch=self.train_step_per_epoch, class_map=class_map,
                                          num_sample_images=NUM_SAMPLES)
 
-    # final
+    @final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
@@ -111,11 +104,7 @@ class BasePipeline(ABC):
             self.loss = build_losses(self.args, ignore_index=self.ignore_index)
             self.metric = build_metrics(self.args, ignore_index=self.ignore_index, num_classes=self.num_classes)
 
-            if self.profile:
-                self.profile_one_epoch()
-                break
-            else:
-                self.train_one_epoch()  # append result in `self._one_epoch_result`
+            self.train_one_epoch()
 
             with_valid_logging = self.epoch_with_valid_logging(num_epoch)
             # FIXME: multi-gpu sample counting & validation
@@ -199,6 +188,10 @@ class BasePipeline(ABC):
         return self.loss.result('valid').get('total').avg
 
     def profile_one_epoch(self):
+        PROFILE_WAIT = 1
+        PROFILE_WARMUP = 1
+        PROFILE_ACTIVE = 10
+        PROFILE_REPEAT = 1
         _ = torch.ones(1).to(self.devices)
         with torch.profiler.profile(
             schedule=torch.profiler.schedule(wait=PROFILE_WAIT,

@@ -3,21 +3,19 @@ from pathlib import Path
 import logging
 from typing import List, Dict, Union, Optional, Type
 
-from torch.utils.data import DataLoader
-
 from dataloaders.registry import CREATE_TRANSFORM, CUSTOM_DATASET, HUGGINGFACE_DATASET, DATA_SAMPLER
 from dataloaders.detection import detection_collate_fn
 from dataloaders.utils.loader import create_loader
 from utils.logger import set_logger
 
-_logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
+logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
 def build_dataset(args):
 
-    _logger.info('-'*40)
-    _logger.info('==> Loading data...')
+    logger.info('-'*40)
+    logger.info('==> Loading data...')
 
     task = args.data.task
 
@@ -88,16 +86,16 @@ def build_dataset(args):
                 huggingface_dataset=test_samples, transform=target_transform
             )
 
-    _logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
+    logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
     if valid_dataset is not None:
-        _logger.info(f'Summary | Validation dataset: {len(valid_dataset)} sample(s)')
+        logger.info(f'Summary | Validation dataset: {len(valid_dataset)} sample(s)')
     if test_dataset is not None:
-        _logger.info(f'Summary | Test dataset: {len(test_dataset)} sample(s)')
+        logger.info(f'Summary | Test dataset: {len(test_dataset)} sample(s)')
 
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
+def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
         collate_fn = None
@@ -105,7 +103,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         train_loader = create_loader(
             train_dataset,
             args.data.name,
-            _logger,
+            logger,
             input_size=args.training.img_size,
             batch_size=args.training.batch_size,
             is_training=True,
@@ -121,7 +119,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         eval_loader = create_loader(
             eval_dataset,
             args.data.name,
-            _logger,
+            logger,
             input_size=args.training.img_size,
             batch_size=args.training.batch_size,
             is_training=False,
@@ -139,7 +137,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         train_loader = create_loader(
             train_dataset,
             args.data.name,
-            _logger,
+            logger,
             batch_size=args.training.batch_size,
             is_training=True,
             num_workers=args.environment.num_workers if not profile else 1,
@@ -154,7 +152,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         eval_loader = create_loader(
             eval_dataset,
             args.data.name,
-            _logger,
+            logger,
             batch_size=args.training.batch_size if model == 'pidnet' and not args.distributed else 1,
             is_training=False,
             num_workers=args.environment.num_workers if not profile else 1,
@@ -171,7 +169,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         train_loader = create_loader(
             train_dataset,
             args.data.name,
-            _logger,
+            logger,
             batch_size=args.training.batch_size,
             is_training=True,
             num_workers=args.environment.num_workers if not profile else 1,
@@ -186,7 +184,7 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
         eval_loader = create_loader(
             eval_dataset,
             args.data.name,
-            _logger,
+            logger,
             # TODO: support batch size 1 inference
             batch_size=args.training.batch_size if not args.distributed else 2,
             is_training=False,
@@ -199,16 +197,6 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile):
             kwargs=None
         )
 
-        # train_loader = DataLoader(train_dataset, batch_size=args.training.batch_size,
-        #                           num_workers=args.environment.num_workers if not profile else 1,
-        #                           shuffle=True,
-        #                           collate_fn=None,
-        #                           pin_memory=False)
-        # eval_loader = DataLoader(eval_dataset, batch_size=1,
-        #                          num_workers=args.environment.num_workers if not profile else 1,
-        #                          shuffle=False,
-        #                          collate_fn=None,
-        #                          pin_memory=False)
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
 

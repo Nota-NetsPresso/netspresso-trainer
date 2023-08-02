@@ -8,6 +8,7 @@ import torch.nn as nn
 from models.base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
 from models.registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
 from utils.logger import set_logger
+
 logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 def load_full_model(args, model_name, num_classes, model_checkpoint):

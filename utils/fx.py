@@ -1,8 +1,10 @@
 import torch
+import torch.nn as nn
 import torch.fx as fx
 
+__all__ = ['convert_graphmodule', 'save_graphmodule']
 
-def _convert_graphmodule(model):
+def _convert_graphmodule(model: nn.Module) -> fx.GraphModule:
     try:
         _graph = fx.Tracer().trace(model)
         model = fx.GraphModule(model, _graph)
@@ -11,10 +13,10 @@ def _convert_graphmodule(model):
         raise e
 
 
-def convert_graphmodule(model):
+def convert_graphmodule(model: nn.Module) -> fx.GraphModule:
     return _convert_graphmodule(model)
 
 
-def save_graphmodule(model, f):
-    model = _convert_graphmodule(model)
+def save_graphmodule(model: nn.Module, f):
+    model: fx.GraphModule = _convert_graphmodule(model)
     torch.save(model, f)

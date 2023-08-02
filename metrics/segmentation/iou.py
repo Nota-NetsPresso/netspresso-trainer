@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from utils.common import AverageMeter
+from utils.record import AverageMeter
 
 
 IGNORE_INDEX_NONE_VALUE = -100

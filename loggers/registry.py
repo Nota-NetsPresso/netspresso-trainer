@@ -1,14 +1,13 @@
-from loggers.classification import ClassificationCSVLogger
-from loggers.segmentation import SegmentationCSVLogger
-from loggers.visualizer import VOCColorize, DetectionVisualizer
+from loggers.csv import ClassificationCSVLogger, SegmentationCSVLogger
+from loggers.visualizer import SegmentationVisualizer, DetectionVisualizer
 
 
-CSV_LOGGER_TASK_SPECIFIC = {
+CSV_LOGGER = {
     'classification': ClassificationCSVLogger,
     'segmentation': SegmentationCSVLogger
 }
 
-LABEL_CONVERTER_PER_TASK = {
-    'segmentation': VOCColorize,
+VISUALIZER = {
+    'segmentation': SegmentationVisualizer,
     'detection': DetectionVisualizer,
 }

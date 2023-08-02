@@ -1,14 +1,15 @@
 from typing import Optional
 
+from torchvision.transforms.functional import InterpolationMode
+
 import dataloaders.augmentation.custom as TC
-from dataloaders.utils.augmentation.transforms import str_to_interp_mode
 from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def transforms_custom_train(args_augment, img_size=64):
     args = args_augment
     assert img_size > 32
-    primary_tfl = [TC.RandomResizedCrop(img_size, interpolation=str_to_interp_mode('bilinear')),
+    primary_tfl = [TC.RandomResizedCrop(img_size, interpolation=InterpolationMode.BILINEAR),
                    TC.RandomHorizontalFlip(p=args.fliplr)
     ]
     preprocess = [
@@ -22,7 +23,7 @@ def transforms_custom_eval(args_augment, img_size=64):
     args = args_augment
     assert img_size > 32
     preprocess = [
-        TC.Resize((img_size, img_size), str_to_interp_mode('bilinear')),
+        TC.Resize((img_size, img_size), interpolation=InterpolationMode.BILINEAR),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ]

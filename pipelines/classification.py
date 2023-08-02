@@ -1,13 +1,12 @@
 import os
 from pathlib import Path
-from collections import deque
 
 from omegaconf import OmegaConf
 import torch
 
+from pipelines.base import BasePipeline
 from optimizers import build_optimizer
 from schedulers import build_scheduler
-from pipelines.base import BasePipeline
 from utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -20,7 +19,6 @@ class ClassificationPipeline(BasePipeline):
                  train_dataloader, eval_dataloader, class_map, **kwargs):
         super(ClassificationPipeline, self).__init__(args, task, model_name, model, devices,
                                                      train_dataloader, eval_dataloader, class_map, **kwargs)
-        self.one_epoch_result = deque(maxlen=MAX_SAMPLE_RESULT)
 
     def set_train(self):
 
@@ -57,10 +55,6 @@ class ClassificationPipeline(BasePipeline):
         self.loss.backward()
         self.optimizer.step()
 
-        # # TODO: fn(out)
-        # fn = lambda x: x
-        # self.one_epoch_result.append(self.loss.result('train'))
-
         if self.args.distributed:
             torch.distributed.barrier()
 
@@ -73,8 +67,6 @@ class ClassificationPipeline(BasePipeline):
         out = self.model(images)
         self.loss(out, target, mode='valid')
         self.metric(out['pred'], target, mode='valid')
-
-        # self.one_epoch_result.append(self.loss.result('valid'))
 
         if self.args.distributed:
             torch.distributed.barrier()

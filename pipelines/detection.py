@@ -2,12 +2,11 @@ import os
 from pathlib import Path
 
 import torch
-import numpy as np
 from omegaconf import OmegaConf
 
+from pipelines.base import BasePipeline
 from optimizers import build_optimizer
 from schedulers import build_scheduler
-from pipelines.base import BasePipeline
 from utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
@@ -56,10 +55,6 @@ class DetectionPipeline(BasePipeline):
         # TODO: metric update
         # out = {k: v.detach() for k, v in out.items()}
         # self.metric(out['pred'], target=targets, mode='train')
-
-        # # TODO: fn(out)
-        # fn = lambda x: x
-        # self.one_epoch_result.append(self.loss.result('train'))
 
         if self.args.distributed:
             torch.distributed.barrier()

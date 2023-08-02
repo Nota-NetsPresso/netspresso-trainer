@@ -3,7 +3,6 @@ from typing import List, Dict
 from omegaconf import OmegaConf, ListConfig
 import torch
 
-UPDATE_PREFIX = "updated_"
 
 def split_qkv(dest_layer_list: List[str], model_state_dict: Dict[str, torch.Tensor], layer_value: torch.Tensor, layer_name: str):
     assert "qkv" in layer_name, f"[{layer_name}] may be not qkv projection layer..."
