@@ -9,10 +9,10 @@ import torch
 from torch.utils.data import random_split
 from omegaconf import DictConfig
 
-from dataloaders.base import BaseDataSampler
-from dataloaders.utils.constants import IMG_EXTENSIONS
-from dataloaders.utils.misc import natural_key
-from utils.logger import set_logger
+from ..base import BaseDataSampler
+from ..utils.constants import IMG_EXTENSIONS
+from ..utils.misc import natural_key
+from ...utils.logger import set_logger
 
 logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
     

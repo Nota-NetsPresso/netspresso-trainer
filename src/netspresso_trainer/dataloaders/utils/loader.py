@@ -7,8 +7,8 @@ from functools import partial
 import torch
 from torch.utils.data import DataLoader
 
-from dataloaders.utils.misc import expand_to_chs
-from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from .misc import expand_to_chs
+from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 NUM_RGB_CHANNEL = 3
 

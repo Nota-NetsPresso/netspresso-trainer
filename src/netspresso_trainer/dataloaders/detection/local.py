@@ -8,8 +8,8 @@ import numpy as np
 from omegaconf import OmegaConf
 import torch
 
-from dataloaders.base import BaseCustomDataset
-from utils.logger import set_logger
+from ..base import BaseCustomDataset
+from ...utils.logger import set_logger
 
 logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 

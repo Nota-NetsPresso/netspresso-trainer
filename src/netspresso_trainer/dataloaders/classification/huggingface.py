@@ -3,8 +3,8 @@ from typing import Union
 
 import PIL.Image as Image
 
-from dataloaders.base import BaseHFDataset
-from utils.logger import set_logger
+from ..base import BaseHFDataset
+from ...utils.logger import set_logger
 
 logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 

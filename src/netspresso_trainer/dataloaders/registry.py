@@ -1,13 +1,13 @@
 from typing import Dict, Type
 
-from dataloaders.base import BaseCustomDataset, BaseHFDataset, BaseDataSampler
-from dataloaders.classification import (
+from .base import BaseCustomDataset, BaseHFDataset, BaseDataSampler
+from .classification import (
     ClassificationCustomDataset, ClassificationHFDataset, ClassficationDataSampler, create_classification_transform
 )
-from dataloaders.segmentation import (
+from .segmentation import (
     SegmentationCustomDataset, SegmentationHFDataset, SegmentationDataSampler, create_segmentation_transform
 )
-from dataloaders.detection import (
+from .detection import (
     DetectionCustomDataset, DetectionDataSampler, create_detection_transform
 )
 

@@ -4,8 +4,8 @@ import numpy as np
 import cv2
 import PIL.Image as Image
 
-import dataloaders.augmentation.custom as TC
-from dataloaders.utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from ..augmentation import custom as TC
+from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 def train_transforms_efficientformer(args_augment):
 

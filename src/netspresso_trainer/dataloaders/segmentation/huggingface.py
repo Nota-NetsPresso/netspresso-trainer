@@ -2,9 +2,9 @@ import os
 
 import numpy as np
 
-from dataloaders.base import BaseHFDataset
-from dataloaders.segmentation.transforms import generate_edge, reduce_label
-from utils.logger import set_logger
+from ..base import BaseHFDataset
+from ..segmentation.transforms import generate_edge, reduce_label
+from ...utils.logger import set_logger
 
 logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 

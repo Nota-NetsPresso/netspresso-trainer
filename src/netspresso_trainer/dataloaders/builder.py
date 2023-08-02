@@ -3,10 +3,10 @@ from pathlib import Path
 import logging
 from typing import List, Dict, Union, Optional, Type
 
-from dataloaders.registry import CREATE_TRANSFORM, CUSTOM_DATASET, HUGGINGFACE_DATASET, DATA_SAMPLER
-from dataloaders.detection import detection_collate_fn
-from dataloaders.utils.loader import create_loader
-from utils.logger import set_logger
+from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, HUGGINGFACE_DATASET, DATA_SAMPLER
+from .detection import detection_collate_fn
+from .utils.loader import create_loader
+from ..utils.logger import set_logger
 
 logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
