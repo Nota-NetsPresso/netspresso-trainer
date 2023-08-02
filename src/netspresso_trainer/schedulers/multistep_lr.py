@@ -2,10 +2,12 @@
 
 Basic multi step LR schedule with warmup, noise.
 """
+from typing import List
+
 import torch
 import bisect
+
 from .base import Scheduler
-from typing import List
 
 class MultiStepLRScheduler(Scheduler):
     """
