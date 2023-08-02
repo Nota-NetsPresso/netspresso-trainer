@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import torch
 
-from dataloaders import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from ..dataloaders import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 def _voc_color_map(N=256, normalized=False):
     def bitget(byteval, idx):

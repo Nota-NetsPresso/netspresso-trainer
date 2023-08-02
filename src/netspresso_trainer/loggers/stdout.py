@@ -1,7 +1,7 @@
 import os
 from typing import Any, List, Dict, Tuple, Optional, Union
 
-from utils.logger import set_logger
+from ..utils.logger import set_logger
 
 
 logger = set_logger('loggers', level=os.getenv('LOG_LEVEL', default='INFO'))

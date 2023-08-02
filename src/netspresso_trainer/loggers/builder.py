@@ -6,13 +6,13 @@ import torch
 import PIL.Image as Image
 from omegaconf import OmegaConf
 
-from loggers.base import BaseCSVLogger
-from loggers.registry import CSV_LOGGER, VISUALIZER
-from loggers.image import ImageSaver
-from loggers.tensorboard import TensorboardLogger
-from loggers.stdout import StdOutLogger
-from loggers.visualizer import magic_image_handler
-from utils.record import AverageMeter
+from .base import BaseCSVLogger
+from .registry import CSV_LOGGER, VISUALIZER
+from .image import ImageSaver
+from .tensorboard import TensorboardLogger
+from .stdout import StdOutLogger
+from .visualizer import magic_image_handler
+from ..utils.record import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1

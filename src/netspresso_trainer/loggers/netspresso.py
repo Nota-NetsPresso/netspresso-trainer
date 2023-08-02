@@ -4,7 +4,7 @@ import requests
 from bson.objectid import ObjectId
 from pymongo.mongo_client import MongoClient
 
-from utils.logger import set_logger
+from ..utils.logger import set_logger
 
 logger = set_logger('loggers', level=os.getenv('LOG_LEVEL', default='INFO'))
 
