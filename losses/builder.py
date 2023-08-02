@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 
 from losses.registry import LOSS_DICT
-from utils.common import AverageMeter
+from utils.record import AverageMeter
 
 MODE = ['train', 'valid', 'test']
 IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference

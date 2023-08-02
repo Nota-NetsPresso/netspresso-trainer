@@ -4,7 +4,7 @@ import torch
 
 from metrics.classification import accuracy_topk
 from metrics.segmentation import segmentation_stats
-from utils.common import AverageMeter
+from utils.record import AverageMeter
 
 MODE = ['train', 'valid', 'test']
 IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference

@@ -5,6 +5,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import numpy as np
 
+__all__ = ['set_device']
+
 
 def set_device(seed):
     # Torch settings

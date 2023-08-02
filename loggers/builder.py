@@ -12,7 +12,7 @@ from loggers.image import ImageSaver
 from loggers.tensorboard import TensorboardLogger
 from loggers.stdout import StdOutLogger
 from loggers.visualizer import magic_image_handler
-from utils.common import AverageMeter
+from utils.record import AverageMeter
 
 OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1

@@ -11,7 +11,7 @@ from tqdm import tqdm
 from losses import build_losses
 from metrics import build_metrics
 from loggers import build_logger, START_EPOCH_ZERO_OR_ONE
-from utils.timer import Timer
+from utils.record import Timer
 from utils.logger import set_logger, yaml_for_logging
 from utils.fx import save_graphmodule
 from utils.onnx import save_onnx
