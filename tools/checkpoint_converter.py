@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from typing import List, Dict
 
 from omegaconf import OmegaConf, ListConfig
@@ -74,3 +76,18 @@ def convert_state_dict_to_model(yaml_path, model, state_dict):
 
 def _save_extracted_state_dict(extracted_state_dict, f):
     torch.save(extracted_state_dict, f)
+
+
+if __name__ == '__main__':
+    from netspresso_trainer.models.backbones.experimental.efficientformer import efficientformer
+
+    yaml_path = Path("models/card") / "efficientformer.yaml"
+
+    model = efficientformer(task='classification')
+    # print(list(model.state_dict().keys()))
+
+    checkpoint_path = Path("/CHECKPOINT") / "backbones_backup" / "efficientformer" / "efficientformer_l1_1000d.pth"
+    state_dict = torch.load(str(checkpoint_path))
+    # print(list(state_dict.keys()))
+
+    convert_state_dict_to_model(yaml_path, model=model, state_dict=state_dict)
