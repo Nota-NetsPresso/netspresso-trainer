@@ -1,5 +1,11 @@
 from itertools import repeat
 import re
+import json
+
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 def expand_to_chs(x, n):
     if not isinstance(x, (tuple, list)):

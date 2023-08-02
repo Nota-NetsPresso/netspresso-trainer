@@ -1,6 +1,4 @@
 import os
-import logging
-import json
 from abc import ABC, abstractmethod, abstractproperty
 from itertools import repeat
 from pathlib import Path
@@ -11,12 +9,7 @@ import torch.utils.data as data
 
 from utils.logger import set_logger
 
-_logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
-
-def read_json(json_path):
-    with open(json_path, 'r') as f:
-        data = json.load(f)
-    return data
+logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 class BaseCustomDataset(data.Dataset):
 
