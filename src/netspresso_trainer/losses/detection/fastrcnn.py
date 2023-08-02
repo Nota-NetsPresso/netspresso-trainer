@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision.ops import boxes as box_ops
 
-from models.heads.detection.experimental.detection import _utils as det_utils 
+from ...models.heads.detection.experimental.detection import _utils as det_utils 
 
 
 class RPNLoss(nn.Module):

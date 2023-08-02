@@ -1,8 +1,8 @@
-from losses.common import CrossEntropyLoss
-from losses.classification.label_smooth import LabelSmoothingCrossEntropy
-from losses.classification.soft_target import SoftTargetCrossEntropy
-from losses.segmentation.pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
-from losses.detection.fastrcnn import RoiHeadLoss, RPNLoss
+from .common import CrossEntropyLoss
+from .classification import LabelSmoothingCrossEntropy
+from .classification import SoftTargetCrossEntropy
+from .segmentation import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
+from .detection import RoiHeadLoss, RPNLoss
 
 LOSS_DICT = {
     'cross_entropy': CrossEntropyLoss,
