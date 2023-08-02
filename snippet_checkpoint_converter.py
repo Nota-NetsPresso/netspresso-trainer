@@ -4,7 +4,7 @@ from omegaconf import OmegaConf
 import torch
 
 from models.backbones.experimental.efficientformer import efficientformer
-from utils.pretrained_editor import convert_state_dict_to_model
+from pretrained_editor import convert_state_dict_to_model
 
 yaml_path = Path("models/card") / "efficientformer.yaml"
 
