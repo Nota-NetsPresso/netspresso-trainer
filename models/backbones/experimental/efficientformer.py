@@ -309,8 +309,10 @@ class EfficientFormerEncoder(MetaFormerEncoder):
             x = block(x)
             if self.use_intermediate_features and idx in self.intermediate_features_indices:
                 norm_layer = getattr(self, f'norm{idx}')
+                # @deepkyu: [fx tracing] len(x.size()) == 3 when idx == 6 (with Meta3D, in efficientformer_l1)
                 # if len(x.size()) != 4:
-                x = x.transpose(1, 2).reshape(B, C, H, W)
+                if idx == self.intermediate_features_indices[-1]:
+                    x = x.transpose(1, 2).reshape(B, C, H, W)
                 x = norm_layer(x)
                 all_hidden_states = all_hidden_states + (x,)
         
