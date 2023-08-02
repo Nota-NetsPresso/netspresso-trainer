@@ -20,4 +20,4 @@ weights/
 docker-compose.yml
 
 !config/data/
-
+!assets/*
