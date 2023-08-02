@@ -4,10 +4,10 @@ from pathlib import Path
 from omegaconf import OmegaConf
 import torch
 
-from pipelines.base import BasePipeline
-from optimizers import build_optimizer
-from schedulers import build_scheduler
-from utils.logger import set_logger
+from .base import BasePipeline
+from ..optimizers import build_optimizer
+from ..schedulers import build_scheduler
+from ..utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 

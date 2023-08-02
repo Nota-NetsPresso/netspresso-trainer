@@ -1,2 +1,2 @@
-from pipelines.registry import TASK_PIPELINE
-from pipelines.builder import build_pipeline
+from .registry import TASK_PIPELINE
+from .builder import build_pipeline

@@ -5,10 +5,10 @@ import torch
 import numpy as np
 from omegaconf import OmegaConf
 
-from optimizers import build_optimizer
-from schedulers import build_scheduler
-from pipelines.base import BasePipeline
-from utils.logger import set_logger
+from ..optimizers import build_optimizer
+from ..schedulers import build_scheduler
+from .base import BasePipeline
+from ..utils.logger import set_logger
 
 logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
