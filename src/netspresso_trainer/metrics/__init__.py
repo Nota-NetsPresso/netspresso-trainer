@@ -1,1 +1,1 @@
-from metrics.builder import build_metrics
+from .builder import build_metrics

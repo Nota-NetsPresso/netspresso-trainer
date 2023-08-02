@@ -2,9 +2,9 @@ from typing import Any
 
 import torch
 
-from metrics.classification import accuracy_topk
-from metrics.segmentation import segmentation_stats
-from utils.record import AverageMeter
+from .classification import accuracy_topk
+from .segmentation import segmentation_stats
+from ..utils.record import AverageMeter
 
 MODE = ['train', 'valid', 'test']
 IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference

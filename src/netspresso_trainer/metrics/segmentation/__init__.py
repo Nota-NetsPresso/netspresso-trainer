@@ -1,1 +1,1 @@
-from metrics.segmentation.iou import segmentation_stats
+from .iou import segmentation_stats

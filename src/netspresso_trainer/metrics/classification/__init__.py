@@ -1,1 +1,1 @@
-from metrics.classification.accuracy import accuracy_topk
+from .accuracy import accuracy_topk
