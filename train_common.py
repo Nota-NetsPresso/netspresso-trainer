@@ -6,11 +6,11 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
 
-from dataloaders import build_dataset, build_dataloader
-from models import build_model, SUPPORTING_TASK_LIST
-from pipelines import build_pipeline
-from utils.environment import set_device
-from utils.logger import set_logger
+from netspresso_trainer.dataloaders import build_dataset, build_dataloader
+from netspresso_trainer.models import build_model, SUPPORTING_TASK_LIST
+from netspresso_trainer.pipelines import build_pipeline
+from netspresso_trainer.utils.environment import set_device
+from netspresso_trainer.utils.logger import set_logger
 
 
 SUPPORT_TASK = ['classification', 'segmentation', 'detection']
