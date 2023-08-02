@@ -8,7 +8,7 @@ from dataloaders.segmentation import (
     SegmentationCustomDataset, SegmentationHFDataset, SegmentationDataSampler, create_segmentation_transform
 )
 from dataloaders.detection import (
-    DetectionCustomDataset, DetectionDataSampler, create_detection_transform, detection_collate_fn
+    DetectionCustomDataset, DetectionDataSampler, create_detection_transform
 )
 
 
