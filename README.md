@@ -43,7 +43,7 @@ train(args_parsed, args, is_graphmodule_training=False)
 Then, train your model with your own configuraiton:
 
 ```bash
-python train.py\
+netspresso-train\
   --data config/data/beans.yaml\
   --augmentation config/augmentation/resnet.yaml\
   --model config/model/resnet.yaml\
