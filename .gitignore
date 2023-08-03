@@ -21,3 +21,5 @@ docker-compose.yml
 
 !config/data/
 !assets/*
+!docs/**/*
+!site/**/*
