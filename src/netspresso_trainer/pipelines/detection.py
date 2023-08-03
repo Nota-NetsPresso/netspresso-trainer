@@ -13,8 +13,8 @@ logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 
 class DetectionPipeline(BasePipeline):
-    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
-        super(DetectionPipeline, self).__init__(args, task, model_name, model, devices,
+    def __init__(self, conf, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
+        super(DetectionPipeline, self).__init__(conf, task, model_name, model, devices,
                                                 train_dataloader, eval_dataloader, class_map, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
@@ -22,18 +22,18 @@ class DetectionPipeline(BasePipeline):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.args.training.opt,
-                                         lr=self.args.training.lr0,
-                                         wd=self.args.training.weight_decay,
-                                         momentum=self.args.training.momentum)
+                                         opt=self.conf.training.opt,
+                                         lr=self.conf.training.lr0,
+                                         wd=self.conf.training.weight_decay,
+                                         momentum=self.conf.training.momentum)
         sched_args = OmegaConf.create({
-            'epochs': self.args.training.epochs,
+            'epochs': self.conf.training.epochs,
             'lr_noise': None,
             'sched': 'poly',
-            'decay_rate': self.args.training.schd_power,
-            'min_lr': self.args.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
-            'warmup_lr': self.args.training.lr0,  # self.args.training.lr0
-            'warmup_epochs': self.args.training.warmup_epochs,  # self.args.training.warmup_epochs
+            'decay_rate': self.conf.training.schd_power,
+            'min_lr': self.conf.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.conf.training.lrf`
+            'warmup_lr': self.conf.training.lr0,  # self.conf.training.lr0
+            'warmup_epochs': self.conf.training.warmup_epochs,  # self.conf.training.warmup_epochs
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
@@ -56,7 +56,7 @@ class DetectionPipeline(BasePipeline):
         # out = {k: v.detach() for k, v in out.items()}
         # self.metric(out['pred'], target=targets, mode='train')
 
-        if self.args.distributed:
+        if self.conf.distributed:
             torch.distributed.barrier()
 
     def valid_step(self, batch):
@@ -72,7 +72,7 @@ class DetectionPipeline(BasePipeline):
         # TODO: metric update
         # self.metric(out['pred'], (labels, bboxes), mode='valid')
 
-        if self.args.distributed:
+        if self.conf.distributed:
             torch.distributed.barrier()
         logs = {
             'images': images.detach().cpu().numpy(),

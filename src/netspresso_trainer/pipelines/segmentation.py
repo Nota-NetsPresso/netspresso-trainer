@@ -16,8 +16,8 @@ CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
 
 class SegmentationPipeline(BasePipeline):
-    def __init__(self, args, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
-        super(SegmentationPipeline, self).__init__(args, task, model_name, model, devices,
+    def __init__(self, conf, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
+        super(SegmentationPipeline, self).__init__(conf, task, model_name, model, devices,
                                                    train_dataloader, eval_dataloader, class_map, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
@@ -26,18 +26,18 @@ class SegmentationPipeline(BasePipeline):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.args.training.opt,
-                                         lr=self.args.training.lr0,
-                                         wd=self.args.training.weight_decay,
-                                         momentum=self.args.training.momentum)
+                                         opt=self.conf.training.opt,
+                                         lr=self.conf.training.lr0,
+                                         wd=self.conf.training.weight_decay,
+                                         momentum=self.conf.training.momentum)
         sched_args = OmegaConf.create({
-            'epochs': self.args.training.epochs,
+            'epochs': self.conf.training.epochs,
             'lr_noise': None,
             'sched': 'poly',
-            'decay_rate': self.args.training.schd_power,
-            'min_lr': self.args.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.args.training.lrf`
-            'warmup_lr': self.args.training.lr0,  # self.args.training.lr0
-            'warmup_epochs': self.args.training.warmup_epochs,  # self.args.training.warmup_epochs
+            'decay_rate': self.conf.training.schd_power,
+            'min_lr': self.conf.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.conf.training.lrf`
+            'warmup_lr': self.conf.training.lr0,  # self.conf.training.lr0
+            'warmup_epochs': self.conf.training.warmup_epochs,  # self.conf.training.warmup_epochs
             'cooldown_epochs': 0,
         })
         self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
@@ -65,7 +65,7 @@ class SegmentationPipeline(BasePipeline):
         out = {k: v.detach() for k, v in out.items()}
         self.metric(out['pred'], target, mode='train')
 
-        if self.args.distributed:
+        if self.conf.distributed:
             torch.distributed.barrier()
 
     def valid_step(self, batch):
@@ -86,7 +86,7 @@ class SegmentationPipeline(BasePipeline):
 
         self.metric(out['pred'], target, mode='valid')
 
-        if self.args.distributed:
+        if self.conf.distributed:
             torch.distributed.barrier()
 
         output_seg = torch.max(out['pred'], dim=1)[1]  # argmax

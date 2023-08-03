@@ -56,9 +56,9 @@ def _parse_args_netspresso(is_graphmodule_training):
         dest='model_checkpoint',
         help="Checkpoint path for graphmodule model")
 
-    args, _ = parser.parse_known_args()
+    args_parsed, _ = parser.parse_known_args()
 
-    return args
+    return args_parsed
 
 def set_arguments(is_graphmodule_training=False):
     args_parsed = _parse_args_netspresso(is_graphmodule_training)
@@ -113,15 +113,15 @@ def trainer(is_graphmodule_training=False):
     if is_graphmodule_training:
         model = torch.load(args_parsed.model_checkpoint)
     else:
-        model = build_model(conf, train_dataset.num_classes, conf.model.checkpoint)
+        model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
 
 
 
     model = model.to(device=devices)
-    if args.distributed:
+    if conf.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
-    trainer = build_pipeline(args, task, model_name, model,
+    trainer = build_pipeline(conf, task, model_name, model,
                              devices, train_dataloader, eval_dataloader,
                              class_map=train_dataset.class_map,
                              is_graphmodule_training=is_graphmodule_training)

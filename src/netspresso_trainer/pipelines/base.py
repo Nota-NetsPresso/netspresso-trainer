@@ -24,11 +24,11 @@ NUM_SAMPLES = 16
 
 
 class BasePipeline(ABC):
-    def __init__(self, args, task, model_name, model, devices,
+    def __init__(self, conf, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map,
                  is_graphmodule_training=False, profile=False):
         super(BasePipeline, self).__init__()
-        self.args = args
+        self.conf = conf
         self.task = task
         self.model_name = model_name
         self.model = model
@@ -50,9 +50,9 @@ class BasePipeline(ABC):
         self.is_graphmodule_training = is_graphmodule_training
 
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
-        self.single_gpu_or_rank_zero = (not self.args.distributed) or (self.args.distributed and torch.distributed.get_rank() == 0)
+        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
 
-        self.train_logger = build_logger(self.args, self.task, self.model_name,
+        self.train_logger = build_logger(self.conf, self.task, self.model_name,
                                          step_per_epoch=self.train_step_per_epoch, class_map=class_map,
                                          num_sample_images=NUM_SAMPLES)
 
@@ -68,7 +68,7 @@ class BasePipeline(ABC):
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
         
         save_onnx(model, model_path.with_suffix(".onnx"),
-                    sample_input=torch.randn((1, 3, self.args.training.img_size, self.args.training.img_size)))
+                    sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
         
         if self.is_graphmodule_training:
             torch.save(model, model_path.with_suffix(".pt"))
@@ -93,16 +93,16 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     def train(self):
-        logger.info(f"Training configuration:\n{yaml_for_logging(self.args)}")
+        logger.info(f"Training configuration:\n{yaml_for_logging(self.conf)}")
         logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')
         self._is_ready()
 
-        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.args.training.epochs + START_EPOCH_ZERO_OR_ONE):
+        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.conf.training.epochs + START_EPOCH_ZERO_OR_ONE):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
-            self.loss = build_losses(self.args, ignore_index=self.ignore_index)
-            self.metric = build_metrics(self.args, ignore_index=self.ignore_index, num_classes=self.num_classes)
+            self.loss = build_losses(self.conf, ignore_index=self.ignore_index)
+            self.metric = build_metrics(self.conf, ignore_index=self.ignore_index, num_classes=self.num_classes)
 
             self.train_one_epoch()
 
