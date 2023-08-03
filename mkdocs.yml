@@ -1,0 +1,175 @@
+# Copyright (c) 2016-2023 Martin Donath <martin.donath@squidfunk.com>
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
+
+# Project information
+site_name: Docs for NetsPresso Trainer
+site_url: https://nota-netspresso.github.io/netspresso-trainer/
+site_author: Nota
+site_description: >-
+  Start training models (including ViTs) with NetsPresso Trainer,
+  compress and deploy your model with NetsPresso!
+
+# Repository
+repo_name: Nota-NetsPresso/netspresso-trainer
+repo_url: https://github.com/Nota-NetsPresso/netspresso-trainer
+
+# Copyright
+copyright: © 2023 Nota Inc.
+
+# Configuration
+theme:
+  name: material
+  custom_dir: docs/.material/.overrides
+  features:
+    - announce.dismiss
+    - content.action.edit
+    - content.action.view
+    - content.code.annotate
+    - content.code.copy
+    # - content.code.select
+    # - content.tabs.link
+    - content.tooltips
+    # - header.autohide
+    # - navigation.expand
+    - navigation.footer
+    - navigation.indexes
+    # - navigation.instant
+    # - navigation.prune
+    - navigation.sections
+    - navigation.tabs
+    # - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+    # - toc.integrate
+  palette:
+    - scheme: default
+      primary: black
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: black
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: Roboto
+    code: Roboto Mono
+  favicon: assets/images/favicon.png
+  # logo: assets/images/NetsPresso.svg
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+
+# Customization
+extra:
+  annotate:
+    json: [.s2]
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/Nota-NetsPresso
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/netspresso-trainer/
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/company/notaai
+
+# Extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Page tree
+nav:
+  - Home: index.md
+  - Getting started:
+    - Simple use: getting-started.md
+    - Installation: installation.md
+    - Docker: docker-installation.md
+    - Asking a question: https://github.com/orgs/Nota-NetsPresso/discussions
+  #   - Customization: customization.md
+  #   - Browser support: browser-support.md
+  #   - Philosophy: philosophy.md
+  #   - Alternatives: alternatives.md
+  #   - License: license.md
+  #   - Changelog:
+  #     - changelog/index.md
+  #     - How to upgrade: upgrade.md
+  #   - Contributing:
+  #     - contributing/index.md
+  #     - Reporting a bug: contributing/reporting-a-bug.md
+  #     - Reporting a docs issue: contributing/reporting-a-docs-issue.md
+  #     - Requesting a change: contributing/requesting-a-change.md
+  #     - Asking a question: https://github.com/squidfunk/mkdocs-material/discussions
+  #   - Guides:
+  #     - Creating a reproduction: guides/creating-a-reproduction.md
+  #   - FAQ:
+  #     - Sponsoring: faq/sponsoring.md
+  - Training:
+    - training/index.md
+    - Tensorboard: training/tensorboard.md
+    - Hugging Face datasets: training/huggingface-datasets.md
