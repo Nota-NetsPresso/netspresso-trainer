@@ -79,8 +79,8 @@ def set_arguments(is_graphmodule_training=False):
     
     return args_parsed, args
 
-def train(args_parsed, args, is_graphmodule_training=False):
-          
+def trainer(is_graphmodule_training=False):
+    args_parsed, args = set_arguments(is_graphmodule_training=is_graphmodule_training)
     distributed, world_size, rank, devices = set_device(args.training.seed)
 
     args.distributed = distributed

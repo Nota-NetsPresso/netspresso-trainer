@@ -23,6 +23,12 @@ setup(
     packages=find_packages("src", exclude=("tests",)),
     package_data={},
     python_requires=">=3.8",
+    entry_points={
+        "console_scripts": [
+            "netspresso-train = netspresso_trainer.train:netspresso_train",
+            "netspresso-train-fx = netspresso_trainer.train:netspresso_train_fx",
+        ],
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
