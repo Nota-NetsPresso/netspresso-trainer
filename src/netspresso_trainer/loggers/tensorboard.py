@@ -10,7 +10,7 @@ from omegaconf import OmegaConf
 
 
 class TensorboardLogger:
-    def __init__(self, task, model, result_dir, step_per_epoch: int, num_sample_images: int, args=None) -> None:
+    def __init__(self, task, model, result_dir, step_per_epoch: int, num_sample_images: int) -> None:
         super(TensorboardLogger, self).__init__()
         self.task = task
         self.model_name = model
