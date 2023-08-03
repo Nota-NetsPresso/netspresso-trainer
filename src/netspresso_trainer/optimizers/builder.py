@@ -12,7 +12,7 @@ import torch.optim as optim
 
 def build_optimizer(
         model_or_params,
-        opt: str = 'sgd',
+        opt: str = 'adamw',
         lr: Optional[float] = None,
         wd: float = 0.,
         momentum: float = 0.9,
