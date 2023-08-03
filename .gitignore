@@ -12,14 +12,16 @@ __pycache__/
 **/*/events*
 outputs/*
 
-data/
+data/*
 log/
 pretrained/
-weights/
+weights/*
 
 docker-compose.yml
 
-!config/data/
 !assets/*
 !docs/**/*
 !site/**/*
+
+!data/.gitkeep
+!weights/.gitkeep
