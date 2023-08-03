@@ -94,7 +94,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     def train(self):
-        logger.info(f"Training configuration:\n{yaml_for_logging(self.conf)}")
+        logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
         logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')

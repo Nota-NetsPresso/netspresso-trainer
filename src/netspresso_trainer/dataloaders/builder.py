@@ -85,11 +85,12 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
                 huggingface_dataset=test_samples, transform=target_transform
             )
 
-    logger.info(f'Summary | Training dataset: {len(train_dataset)} sample(s)')
+    logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")
+    logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
     if valid_dataset is not None:
-        logger.info(f'Summary | Validation dataset: {len(valid_dataset)} sample(s)')
+        logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
     if test_dataset is not None:
-        logger.info(f'Summary | Test dataset: {len(test_dataset)} sample(s)')
+        logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
 
     return train_dataset, valid_dataset, test_dataset
 
