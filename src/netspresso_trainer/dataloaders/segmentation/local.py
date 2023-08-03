@@ -36,7 +36,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
         outputs = {}
 
         label = Image.open(ann_path).convert('L')
-        # if self.args.augment.reduce_zero_label:
+        # if self.conf_augmentation.reduce_zero_label:
         #     label = reduce_label(np.array(label))
 
         if self.model_name == 'pidnet':

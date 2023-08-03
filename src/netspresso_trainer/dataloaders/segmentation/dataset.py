@@ -34,7 +34,7 @@ class SegmentationDataSampler(BaseDataSampler):
         if split in ['train', 'valid']:
             for ext in IMG_EXTENSIONS:
                 images.extend([str(file) for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
-                # TODO: get paired data from regex pattern matching (args.data.path.pattern)
+                # TODO: get paired data from regex pattern matching (conf_data.path.pattern)
                 labels.extend([str(file) for file in chain(annotation_dir.glob(f'*{ext}'), annotation_dir.glob(f'*{ext.upper()}'))])
             
             images = sorted(images, key=lambda k: natural_key(k))

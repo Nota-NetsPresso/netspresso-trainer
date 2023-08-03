@@ -7,12 +7,10 @@ import PIL.Image as Image
 from ..augmentation import custom as TC
 from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-def train_transforms_efficientformer(args_augment):
-
-    args = args_augment
+def train_transforms_efficientformer(conf_augmentation):
     
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
     
     train_transforms_composed = TC.Compose([
         TC.Resize(size=(crop_size_h, crop_size_w)),
@@ -22,12 +20,10 @@ def train_transforms_efficientformer(args_augment):
 
     return train_transforms_composed
 
-def val_transforms_efficientformer(args_augment):
-
-    args = args_augment
+def val_transforms_efficientformer(conf_augmentation):
     
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
     
     val_transforms_composed = TC.Compose([
         TC.Resize(size=(crop_size_h, crop_size_w)),

@@ -68,7 +68,7 @@ class DetectionDataSampler(BaseDataSampler):
                         continue
                     images.append(str(file))
                     labels.append(str(ann_path_maybe))
-                # TODO: get paired data from regex pattern matching (args.data.path.pattern)
+                # TODO: get paired data from regex pattern matching (self.conf_data.path.pattern)
 
             images = sorted(images, key=lambda k: natural_key(k))
             labels = sorted(labels, key=lambda k: natural_key(k))
