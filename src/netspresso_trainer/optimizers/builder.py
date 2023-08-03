@@ -9,20 +9,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .adabelief import AdaBelief
-from .adafactor import Adafactor
-from .adamp import AdamP
-from .lamb import Lamb
-from .lars import Lars
-from .lookahead import Lookahead
-from .madgrad import MADGRAD
-from .nadam import Nadam
-from .nvnovograd import NvNovoGrad
-from .radam import RAdam
-from .ranger import Ranger
-from .rmsprop_tf import RMSpropTF
-from .sgdp import SGDP
-
 def group_parameters(
         module: nn.Module,
         group_matcher,
@@ -180,11 +166,6 @@ def build_optimizer(
         **kwargs):
     """ Create an optimizer.
 
-    TODO currently the model is passed in and all parameters are selected for optimization.
-    For more general use an interface that allows selection of parameters to optimize and lr groups, one of:
-      * a filter fn interface that further breaks params into groups in a weight_decay compatible fashion
-      * expose the parameters interface and leave it up to caller
-
     Args:
         model_or_params (nn.Module): model containing parameters to optimize
         opt: name of optimizer to create
@@ -237,67 +218,23 @@ def build_optimizer(
     elif opt_lower == 'momentum':
         opt_args.pop('eps', None)
         optimizer = optim.SGD(parameters, momentum=momentum, nesterov=False, **opt_args)
-    elif opt_lower == 'sgdp':
-        optimizer = SGDP(parameters, momentum=momentum, nesterov=True, **opt_args)
 
     # adaptive
     elif opt_lower == 'adam':
         optimizer = optim.Adam(parameters, **opt_args) 
     elif opt_lower == 'adamw':
         optimizer = optim.AdamW(parameters, **opt_args)
-    elif opt_lower == 'adamp':
-        optimizer = AdamP(parameters, wd_ratio=0.01, nesterov=True, **opt_args)
-    elif opt_lower == 'nadam':
-        try:
-            # NOTE PyTorch >= 1.10 should have native NAdam
-            optimizer = optim.Nadam(parameters, **opt_args)
-        except AttributeError:
-            optimizer = Nadam(parameters, **opt_args)
-    elif opt_lower == 'radam':
-        optimizer = RAdam(parameters, **opt_args)
-    elif opt_lower == 'ranger':
-        optimizer = Ranger(parameters, **opt_args)
     elif opt_lower == 'adamax':
         optimizer = optim.Adamax(parameters, **opt_args)
-    elif opt_lower == 'adabelief':
-        optimizer = AdaBelief(parameters, rectify=False, **opt_args)
-    elif opt_lower == 'radabelief':
-        optimizer = AdaBelief(parameters, rectify=True, **opt_args)
     elif opt_lower == 'adadelta':
         optimizer = optim.Adadelta(parameters, **opt_args)
     elif opt_lower == 'adagrad':
         opt_args.setdefault('eps', 1e-8)
         optimizer = optim.Adagrad(parameters, **opt_args)
-    elif opt_lower == 'adafactor':
-        optimizer = Adafactor(parameters, **opt_args)
-    elif opt_lower == 'lamb':
-        optimizer = Lamb(parameters, **opt_args)
-    elif opt_lower == 'lambc':
-        optimizer = Lamb(parameters, trust_clip=True, **opt_args)
-    elif opt_lower == 'larc':
-        optimizer = Lars(parameters, momentum=momentum, trust_clip=True, **opt_args)
-    elif opt_lower == 'lars':
-        optimizer = Lars(parameters, momentum=momentum, **opt_args)
-    elif opt_lower == 'nlarc':
-        optimizer = Lars(parameters, momentum=momentum, trust_clip=True, nesterov=True, **opt_args)
-    elif opt_lower == 'nlars':
-        optimizer = Lars(parameters, momentum=momentum, nesterov=True, **opt_args)
-    elif opt_lower == 'madgrad':
-        optimizer = MADGRAD(parameters, momentum=momentum, **opt_args)
-    elif opt_lower == 'madgradw':
-        optimizer = MADGRAD(parameters, momentum=momentum, decoupled_decay=True, **opt_args)
-    elif opt_lower == 'novograd' or opt_lower == 'nvnovograd':
-        optimizer = NvNovoGrad(parameters, **opt_args)
     elif opt_lower == 'rmsprop':
         optimizer = optim.RMSprop(parameters, alpha=0.9, momentum=momentum, **opt_args)
-    elif opt_lower == 'rmsproptf':
-        optimizer = RMSpropTF(parameters, alpha=0.9, momentum=momentum, **opt_args)
     else:
         assert False and "Invalid optimizer"
         raise ValueError
-
-    if len(opt_split) > 1:
-        if opt_split[0] == 'lookahead':
-            optimizer = Lookahead(optimizer)
 
     return optimizer
