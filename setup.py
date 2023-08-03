@@ -12,7 +12,7 @@ requirements_all = requirements + requirements_optional
 setup(
     name="netspresso_trainer",
     version=version,
-    author="NetsPresso @Nota AI",
+    author="NetsPresso",
     author_email="netspresso@nota.ai",
     description="NetsPresso Python Package",
     long_description=readme_contents,
@@ -24,8 +24,13 @@ setup(
     package_data={},
     python_requires=">=3.8",
     classifiers=[
+        "Development Status :: 3 - Alpha",
+        "Intended Audience :: Developers",
+        "Intended Audience :: Science/Research",
+        "Operating System :: OS Independent",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
 )
