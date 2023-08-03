@@ -3,15 +3,17 @@
 </div>
 </br>
 
-<center>
-Start training models (including ViTs) with <b>NetsPresso Trainer</b>, compress and deploy your model with <b>NetsPresso</b>!
+<center style="white-space: pre-line">
+Start training models (including ViTs) with <b>NetsPresso Trainer</b>,
+compress and deploy your model with <b>NetsPresso</b>!
 </center>
 </br>
 
 <div align="center">
 <p align="center">
   <a href="https://py.netspresso.ai/">Website</a> •
-  <a href="#getting-started">Getting Started</a>
+  <a href="#getting-started">Getting Started</a> •
+  <a href="https://github.com/Nota-NetsPresso/netspresso-trainer/issues">Issues</a>
 </p>
 </div>
 
