@@ -12,5 +12,4 @@ training:
   schd_power: 1.0
   epochs: 1
   batch_size: 8 
-  img_size: &img_size 768
   freeze: ~ 

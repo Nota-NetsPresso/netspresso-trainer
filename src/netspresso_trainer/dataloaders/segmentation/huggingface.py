@@ -13,16 +13,20 @@ class SegmentationHFDataset(BaseHFDataset):
 
     def __init__(
             self,
-            args,
+            conf_data,
+            conf_augmentation,
+            model_name,
             idx_to_class,
             split,
             huggingface_dataset,
             transform=None,
             with_label=True
     ):
-        root = args.data.metadata.repo
+        root = conf_data.metadata.repo
         super(SegmentationHFDataset, self).__init__(
-            args,
+            conf_data,
+            conf_augmentation,
+            model_name,
             root,
             split,
             with_label
@@ -32,8 +36,8 @@ class SegmentationHFDataset(BaseHFDataset):
         self.idx_to_class = idx_to_class
         self.samples = huggingface_dataset
         
-        self.image_feature_name = args.data.metadata.features.image
-        self.label_feature_name = args.data.metadata.features.label
+        self.image_feature_name = conf_data.metadata.features.image
+        self.label_feature_name = conf_data.metadata.features.label
 
     @property
     def num_classes(self):
@@ -57,17 +61,17 @@ class SegmentationHFDataset(BaseHFDataset):
         w, h = img.size
 
         if label is None:
-            out = self.transform(self.args.augment)(image=img)
+            out = self.transform(self.conf_augmentation)(image=img)
             return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
 
-        if self.args.model.architecture.full == 'pidnet':
+        if self.model_name == 'pidnet':
             edge = generate_edge(np.array(label))
-            out = self.transform(self.args.augment)(image=img, mask=label, edge=edge)
+            out = self.transform(self.conf_augmentation)(image=img, mask=label, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
         else:
-            out = self.transform(self.args.augment)(image=img, mask=label)
+            out = self.transform(self.conf_augmentation)(image=img, mask=label)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
         if self._split in ['train', 'training']:

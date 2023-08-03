@@ -11,13 +11,15 @@ IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
 
 
 class MetricFactory:
-    def __init__(self, args, **kwargs) -> None:
+    def __init__(self, conf_model, **kwargs) -> None:
         self.metric_func_dict = dict()
 
         ignore_index = kwargs['ignore_index'] if 'ignore_index' in kwargs else None
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_AS
         self.num_classes = kwargs['num_classes'] if 'num_classes' in kwargs else None
-        self._build_metric(args)
+        
+        self.conf_model = conf_model
+        self._build_metric()
         self.metric_val_dict = {
             _mode: {
                 metric_key: AverageMeter(metric_key, ':6.2f')
@@ -26,9 +28,9 @@ class MetricFactory:
             for _mode in MODE
         }
 
-    def _build_metric(self, args):
+    def _build_metric(self):
         # TODO: decide metrics by arguments
-        task = args.model.task
+        task = self.conf_model.task
 
         if task == 'classification':
             self.metric_func_dict['Acc@1'] = lambda pred, target: accuracy_topk(pred, target, topk=(1, ))[0]
@@ -75,6 +77,6 @@ class MetricFactory:
         return self.metric_val_dict[_mode]
 
 
-def build_metrics(args, **kwargs):
-    metric_handler = MetricFactory(args, **kwargs)
+def build_metrics(conf_model, **kwargs):
+    metric_handler = MetricFactory(conf_model, **kwargs)
     return metric_handler

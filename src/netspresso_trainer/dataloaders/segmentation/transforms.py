@@ -28,34 +28,31 @@ def generate_edge(label: np.ndarray) -> Image.Image:
     return Image.fromarray((edge.copy() * 255).astype(np.uint8))
 
 
-def train_transforms_segformer(args_augment):
+def train_transforms_segformer(conf_augmentation):
 
-    args = args_augment
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
-
-    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
+    scale_ratio = (conf_augmentation.resize_ratio0, conf_augmentation.resize_ratiof)
     
     train_transforms_composed = TC.Compose([
         TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
-        TC.RandomHorizontalFlip(p=args.fliplr),
-        TC.ColorJitter(brightness=args.color_jitter.brightness,
-                       contrast=args.color_jitter.contrast,
-                       saturation=args.color_jitter.saturation,
-                       hue=args.color_jitter.hue,
-                       p=args.color_jitter.colorjitter_p),
+        TC.RandomHorizontalFlip(p=conf_augmentation.fliplr),
+        TC.ColorJitter(brightness=conf_augmentation.color_jitter.brightness,
+                       contrast=conf_augmentation.color_jitter.contrast,
+                       saturation=conf_augmentation.color_jitter.saturation,
+                       hue=conf_augmentation.color_jitter.hue,
+                       p=conf_augmentation.color_jitter.colorjitter_p),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ])
 
     return train_transforms_composed
 
-def val_transforms_segformer(args_augment):
+def val_transforms_segformer(conf_augmentation):
 
-    args = args_augment
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
     val_transforms_composed = TC.Compose([
         TC.Resize((crop_size_h, crop_size_w)),
@@ -66,22 +63,21 @@ def val_transforms_segformer(args_augment):
     return val_transforms_composed
 
 
-def infer_transforms_segformer(args_augment):
+def infer_transforms_segformer(conf_augmentation):
     return
 
 
-def train_transforms_pidnet(args_augment):
-    args = args_augment
+def train_transforms_pidnet(conf_augmentation):
 
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
-    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
+    scale_ratio = (conf_augmentation.resize_ratio0, conf_augmentation.resize_ratiof)
 
     train_transforms_composed = TC.Compose(
         [
             TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
-            TC.RandomHorizontalFlip(p=args.fliplr),
+            TC.RandomHorizontalFlip(p=conf_augmentation.fliplr),
             TC.ToTensor(),
             TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
         ],
@@ -91,10 +87,10 @@ def train_transforms_pidnet(args_augment):
     return train_transforms_composed
 
 
-def val_transforms_pidnet(args_augment):
-    args = args_augment
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+def val_transforms_pidnet(conf_augmentation):
+
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
     val_transforms_composed = TC.Compose(
         [
@@ -108,38 +104,35 @@ def val_transforms_pidnet(args_augment):
     return val_transforms_composed
 
 
-def infer_transforms_pidnet(args_augment):
+def infer_transforms_pidnet(conf_augmentation):
     return
 
 
-def train_transforms_efficientformer(args_augment):
+def train_transforms_efficientformer(conf_augmentation):
 
-    args = args_augment
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
-
-    scale_ratio = (args.resize_ratio0, args.resize_ratiof)
+    scale_ratio = (conf_augmentation.resize_ratio0, conf_augmentation.resize_ratiof)
     
     train_transforms_composed = TC.Compose([
         TC.RandomResizedCrop((crop_size_h, crop_size_w), scale=scale_ratio, ratio=(1.0, 1.0)),
-        TC.RandomHorizontalFlip(p=args.fliplr),
-        TC.ColorJitter(brightness=args.color_jitter.brightness,
-                       contrast=args.color_jitter.contrast,
-                       saturation=args.color_jitter.saturation,
-                       hue=args.color_jitter.hue,
-                       p=args.color_jitter.colorjitter_p),
+        TC.RandomHorizontalFlip(p=conf_augmentation.fliplr),
+        TC.ColorJitter(brightness=conf_augmentation.color_jitter.brightness,
+                       contrast=conf_augmentation.color_jitter.contrast,
+                       saturation=conf_augmentation.color_jitter.saturation,
+                       hue=conf_augmentation.color_jitter.hue,
+                       p=conf_augmentation.color_jitter.colorjitter_p),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ])
 
     return train_transforms_composed
 
-def val_transforms_efficientformer(args_augment):
+def val_transforms_efficientformer(conf_augmentation):
 
-    args = args_augment
-    crop_size_h = args.crop_size_h
-    crop_size_w = args.crop_size_w
+    crop_size_h = conf_augmentation.crop_size_h
+    crop_size_w = conf_augmentation.crop_size_w
 
     val_transforms_composed = TC.Compose([
         TC.Resize((crop_size_h, crop_size_w)),
@@ -149,18 +142,18 @@ def val_transforms_efficientformer(args_augment):
 
     return val_transforms_composed
 
-def create_segmentation_transform(args, is_training=False):
+def create_transform_segmentation(model_name: str, is_training=False):
 
-    if 'segformer' in args.model.architecture.values():
+    if model_name == 'segformer':
         if is_training:
             return train_transforms_segformer
         return val_transforms_segformer
-    elif 'pidnet' in args.model.architecture.values():
+    elif model_name == 'pidnet':
         if is_training:
             return train_transforms_pidnet
         return val_transforms_pidnet
-    elif 'efficientformer' in args.model.architecture.values():
+    elif model_name == 'efficientformer':
         if is_training:
             return train_transforms_efficientformer
         return val_transforms_efficientformer
-    raise ValueError(f"No such model named: {args.model.architecture.values()} !!!")
+    raise ValueError(f"No such model named: {model_name} !!!")

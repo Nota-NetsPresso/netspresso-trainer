@@ -20,7 +20,7 @@ START_EPOCH_ZERO_OR_ONE = 1
 class TrainingLogger():
     def __init__(
         self,
-        args,
+        conf,
         task: Literal['classification', 'segmentation', 'detection'],
         model: str,
         class_map: Dict[int, str],
@@ -29,14 +29,14 @@ class TrainingLogger():
         epoch: Optional[int] = None
     ) -> None:
         super(TrainingLogger, self).__init__()
-        self.args = args
+        self.conf = conf
         self.task: str = task
         self.model: str = model
         self.class_map: Dict = class_map
         self.epoch = epoch
         self.num_sample_images = num_sample_images
 
-        self.project_id = args.logging.project_id if args.logging.project_id is not None else f"{self.task}_{self.model}"
+        self.project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{self.task}_{self.model}"
 
         version_idx = 0
         result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
@@ -45,12 +45,12 @@ class TrainingLogger():
             result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
         result_dir.mkdir(exist_ok=True, parents=True)
         self._result_dir = result_dir
-        OmegaConf.save(config=self.args, f=(result_dir / "hparams.yaml"))
+        OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
-        self.use_tensorboard: bool = self.args.logging.tensorboard
-        self.use_csvlogger: bool = self.args.logging.csv
-        self.use_imagesaver: bool = self.args.logging.image
-        self.use_stdout: bool = self.args.logging.stdout
+        self.use_tensorboard: bool = self.conf.logging.tensorboard
+        self.use_csvlogger: bool = self.conf.logging.csv
+        self.use_imagesaver: bool = self.conf.logging.image
+        self.use_stdout: bool = self.conf.logging.stdout
         self.use_netspresso: bool = False  # TODO: NetsPresso training board
 
         self.csv_logger: Optional[BaseCSVLogger] = \
@@ -61,7 +61,7 @@ class TrainingLogger():
             TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
-            StdOutLogger(task=task, model=model, total_epochs=args.training.epochs) if self.use_stdout else None
+            StdOutLogger(task=task, model=model, total_epochs=conf.training.epochs) if self.use_stdout else None
             
         self.netspresso_api_client = None
         if self.use_netspresso:
@@ -69,7 +69,7 @@ class TrainingLogger():
             self.netspresso_api_client: Optional[ModelSearchServerHandler] = ModelSearchServerHandler(task=task, model=model)
         
         if task in VISUALIZER:
-            pallete = args.data.pallete if 'pallete' in args.data else None
+            pallete = conf.data.pallete if 'pallete' in conf.data else None
             self.label_converter = VISUALIZER[task](class_map=class_map, pallete=pallete)
             
     @property
@@ -210,11 +210,11 @@ class TrainingLogger():
 
     def log_end_of_traning(self, final_metrics={}):
         if self.use_tensorboard:
-            self.tensorboard_logger.log_hparams(self.args, final_metrics=final_metrics)
+            self.tensorboard_logger.log_hparams(self.conf, final_metrics=final_metrics)
 
 
-def build_logger(args, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, epoch: Optional[int] = None):
-    training_logger = TrainingLogger(args,
+def build_logger(conf, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, epoch: Optional[int] = None):
+    training_logger = TrainingLogger(conf,
                                      task=task, model=model_name,
                                      step_per_epoch=step_per_epoch,
                                      class_map=class_map, num_sample_images=num_sample_images,

@@ -13,16 +13,18 @@ logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 class BaseCustomDataset(data.Dataset):
 
-    def __init__(
-            self,
-            args,
-            root,
-            split,
-            with_label
-    ):
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label):
         super(BaseCustomDataset, self).__init__()
-        self.args = args
-        self._root = root
+        self.conf_data = conf_data
+        self.conf_augmentation = conf_augmentation
+        self.model_name = model_name
+        
+        self.transform = transform
+        self.samples = samples
+        
+        self._root = conf_data.path.root
+        self._idx_to_class = idx_to_class
+        self._num_classes = len(self._idx_to_class)
         self._split = split
         self._with_label = with_label
 
@@ -30,17 +32,16 @@ class BaseCustomDataset(data.Dataset):
     def __getitem__(self, index):
         pass
 
-    @abstractmethod
     def __len__(self):
-        pass
+        return len(self.samples)
 
-    @abstractproperty
+    @property
     def num_classes(self):
-        pass
+        return self._num_classes
 
-    @abstractproperty
+    @property
     def class_map(self):
-        pass
+        return self._idx_to_class
 
     @property
     def root(self):
@@ -57,15 +58,11 @@ class BaseCustomDataset(data.Dataset):
     
 class BaseHFDataset(data.Dataset):
 
-    def __init__(
-            self,
-            args,
-            root,
-            split,
-            with_label
-    ):
+    def __init__(self, conf_data, conf_augmentation, model_name, root, split, with_label):
         super(BaseHFDataset, self).__init__()
-        self.args = args
+        self.conf_data = conf_data
+        self.conf_augmentation = conf_augmentation
+        self.model_name = model_name
         self._root = root
         self._split = split
         self._with_label = with_label
@@ -107,8 +104,8 @@ class BaseHFDataset(data.Dataset):
 
 
 class BaseDataSampler(ABC):
-    def __init__(self, args_data, train_valid_split_ratio):
-        self.args_data = args_data
+    def __init__(self, conf_data, train_valid_split_ratio):
+        self.conf_data = conf_data
         self.train_valid_split_ratio = train_valid_split_ratio
     
     @abstractmethod

@@ -20,12 +20,12 @@ def load_custom_class_map(id_mapping: List[str]):
     return idx_to_class
 
 class SegmentationDataSampler(BaseDataSampler):
-    def __init__(self, args_data, train_valid_split_ratio):
-        super(SegmentationDataSampler, self).__init__(args_data, train_valid_split_ratio)
+    def __init__(self, conf_data, train_valid_split_ratio):
+        super(SegmentationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
     
     def load_data(self, split='train'):
-        data_root = Path(self.args_data.path.root)
-        split_dir = self.args_data.path[split]
+        data_root = Path(self.conf_data.path.root)
+        split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
         annotation_dir: Path = data_root / split_dir.label
         images: List[str] = []
@@ -34,7 +34,7 @@ class SegmentationDataSampler(BaseDataSampler):
         if split in ['train', 'valid']:
             for ext in IMG_EXTENSIONS:
                 images.extend([str(file) for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
-                # TODO: get paired data from regex pattern matching (args.data.path.pattern)
+                # TODO: get paired data from regex pattern matching (conf_data.path.pattern)
                 labels.extend([str(file) for file in chain(annotation_dir.glob(f'*{ext}'), annotation_dir.glob(f'*{ext.upper()}'))])
             
             images = sorted(images, key=lambda k: natural_key(k))
@@ -52,13 +52,13 @@ class SegmentationDataSampler(BaseDataSampler):
         return images_and_targets
         
     def load_samples(self):
-        assert self.args_data.path.train.image is not None
-        assert self.args_data.id_mapping is not None
-        id_mapping: Optional[list] = list(self.args_data.id_mapping)
+        assert self.conf_data.path.train.image is not None
+        assert self.conf_data.id_mapping is not None
+        id_mapping: Optional[list] = list(self.conf_data.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
         
-        exists_valid = self.args_data.path.valid.image is not None
-        exists_test = self.args_data.path.test.image is not None
+        exists_valid = self.conf_data.path.valid.image is not None
+        exists_test = self.conf_data.path.test.image is not None
         
         valid_samples = None
         test_samples = None
@@ -80,15 +80,15 @@ class SegmentationDataSampler(BaseDataSampler):
     def load_huggingface_samples(self):
         from datasets import load_dataset
         
-        cache_dir = Path(self.args_data.metadata.custom_cache_dir)
-        root = self.args_data.metadata.repo
-        subset_name = self.args_data.metadata.subset
+        cache_dir = Path(self.conf_data.metadata.custom_cache_dir)
+        root = self.conf_data.metadata.repo
+        subset_name = self.conf_data.metadata.subset
         if cache_dir is not None:
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
         
-        assert self.args_data.metadata.id_mapping is not None
-        id_mapping: Optional[list] = list(self.args_data.metadata.id_mapping)
+        assert self.conf_data.metadata.id_mapping is not None
+        id_mapping: Optional[list] = list(self.conf_data.metadata.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
         
         exists_valid = 'validation' in total_dataset

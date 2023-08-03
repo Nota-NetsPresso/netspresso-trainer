@@ -12,47 +12,47 @@ logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def build_dataset(args):
+def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     logger.info('-'*40)
     logger.info('==> Loading data...')
 
-    task = args.data.task
+    task = conf_data.task
 
     assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = CREATE_TRANSFORM[task](args, is_training=True)
-    target_transform = CREATE_TRANSFORM[task](args, is_training=False)
+    train_transform = CREATE_TRANSFORM[task](model_name, is_training=True)
+    target_transform = CREATE_TRANSFORM[task](model_name, is_training=False)
     
-    data_format = args.data.format
+    data_format = conf_data.format
     
     assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
     
     if data_format == 'local':
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
-        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
         
         train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = CUSTOM_DATASET[task](
-            args, idx_to_class=idx_to_class, split='train',
+            conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
             samples=train_samples, transform=train_transform
         )
         
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = CUSTOM_DATASET[task](
-                args, idx_to_class=idx_to_class, split='valid',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
                 samples=valid_samples, transform=target_transform
             )
         
         test_dataset = None
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
-                args, idx_to_class=idx_to_class, split='test',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
                 samples=test_samples, transform=target_transform,
                 with_label=test_with_label
             )
@@ -61,28 +61,28 @@ def build_dataset(args):
         assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
         assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
         
-        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
         
         train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = HUGGINGFACE_DATASET[task](
-            args, idx_to_class=idx_to_class, split='train',
+            conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
             huggingface_dataset=train_samples, transform=train_transform
         )
         
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = HUGGINGFACE_DATASET[task](
-                args, idx_to_class=idx_to_class, split='valid',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
                 huggingface_dataset=valid_samples, transform=target_transform
             )
         
         test_dataset = None
         if test_samples is not None:
             test_dataset = HUGGINGFACE_DATASET[task](
-                args, idx_to_class=idx_to_class, split='test',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
                 huggingface_dataset=test_samples, transform=target_transform
             )
 
@@ -95,40 +95,40 @@ def build_dataset(args):
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=False):
+def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
         collate_fn = None
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            input_size=args.training.img_size,
-            batch_size=args.training.batch_size,
+            input_size=conf.augmentation.img_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            input_size=args.training.img_size,
-            batch_size=args.training.batch_size,
+            input_size=conf.augmentation.img_size,
+            batch_size=conf.training.batch_size,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=None,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
     elif task == 'segmentation':
@@ -136,31 +136,31 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=Fal
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size if model == 'pidnet' and not args.distributed else 1,
+            batch_size=conf.training.batch_size if model_name == 'pidnet' and not conf.distributed else 1,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=None,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
     elif task == 'detection':
@@ -168,32 +168,32 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=Fal
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
             # TODO: support batch size 1 inference
-            batch_size=args.training.batch_size if not args.distributed else 2,
+            batch_size=conf.training.batch_size if not conf.distributed else 2,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 

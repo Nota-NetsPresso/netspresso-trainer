@@ -11,11 +11,12 @@ MODE = ['train', 'valid', 'test']
 IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
 
 class LossFactory:
-    def __init__(self, args, **kwargs) -> None:
+    def __init__(self, conf_model, **kwargs) -> None:
         self.loss_func_dict = dict()
         self.loss_weight_dict = dict()
 
-        self._build_losses(args)
+        self.conf_model = conf_model
+        self._build_losses()
 
         self.loss_val_per_epoch = {
             mode: {
@@ -33,9 +34,9 @@ class LossFactory:
 
         self._clear()
 
-    def _build_losses(self, args):
+    def _build_losses(self):
 
-        for loss_element in args.model.losses:
+        for loss_element in self.conf_model.losses:
             criterion = loss_element.criterion
             loss_config = {k: v for k, v in loss_element.items() if k not in ['criterion', 'weight']}
             loss = LOSS_DICT[criterion](**loss_config)
@@ -81,6 +82,6 @@ class LossFactory:
         return self.loss_val_per_epoch[_mode]
 
 
-def build_losses(args, **kwargs):
-    loss_handler = LossFactory(args, **kwargs)
+def build_losses(conf_model, **kwargs):
+    loss_handler = LossFactory(conf_model, **kwargs)
     return loss_handler

@@ -49,12 +49,12 @@ def detection_collate_fn(original_batch):
     return outputs
 
 class DetectionDataSampler(BaseDataSampler):
-    def __init__(self, args_data, train_valid_split_ratio):
-        super(DetectionDataSampler, self).__init__(args_data, train_valid_split_ratio)
+    def __init__(self, conf_data, train_valid_split_ratio):
+        super(DetectionDataSampler, self).__init__(conf_data, train_valid_split_ratio)
     
     def load_data(self, split='train'):
-        data_root = Path(self.args_data.path.root)
-        split_dir = self.args_data.path[split]
+        data_root = Path(self.conf_data.path.root)
+        split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
         annotation_dir: Path = data_root / split_dir.label
         images: List[str] = []
@@ -68,7 +68,7 @@ class DetectionDataSampler(BaseDataSampler):
                         continue
                     images.append(str(file))
                     labels.append(str(ann_path_maybe))
-                # TODO: get paired data from regex pattern matching (args.data.path.pattern)
+                # TODO: get paired data from regex pattern matching (self.conf_data.path.pattern)
 
             images = sorted(images, key=lambda k: natural_key(k))
             labels = sorted(labels, key=lambda k: natural_key(k))
@@ -85,13 +85,13 @@ class DetectionDataSampler(BaseDataSampler):
         return images_and_targets
         
     def load_samples(self):
-        assert self.args_data.path.train.image is not None
-        assert self.args_data.id_mapping is not None
-        id_mapping: Optional[list] = list(self.args_data.id_mapping)
+        assert self.conf_data.path.train.image is not None
+        assert self.conf_data.id_mapping is not None
+        id_mapping: Optional[list] = list(self.conf_data.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
         
-        exists_valid = self.args_data.path.valid.image is not None
-        exists_test = self.args_data.path.test.image is not None
+        exists_valid = self.conf_data.path.valid.image is not None
+        exists_test = self.conf_data.path.test.image is not None
         
         valid_samples = None
         test_samples = None

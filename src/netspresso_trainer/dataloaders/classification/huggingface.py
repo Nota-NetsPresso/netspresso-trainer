@@ -12,16 +12,20 @@ class ClassificationHFDataset(BaseHFDataset):
 
     def __init__(
             self,
-            args,
+            conf_data,
+            conf_augmentation,
+            model_name,
             idx_to_class,
             split,
             huggingface_dataset,
             transform=None,
             with_label=True
     ):
-        root = args.data.metadata.repo
+        root = conf_data.metadata.repo
         super(ClassificationHFDataset, self).__init__(
-            args,
+            conf_data,
+            conf_augmentation,
+            model_name,
             root,
             split,
             with_label
@@ -34,8 +38,8 @@ class ClassificationHFDataset(BaseHFDataset):
         self.idx_to_class = idx_to_class
         self.class_to_idx = {v: k for k, v in self.idx_to_class.items()}
         
-        self.image_feature_name = args.data.metadata.features.image
-        self.label_feature_name = args.data.metadata.features.label
+        self.image_feature_name = conf_data.metadata.features.image
+        self.label_feature_name = conf_data.metadata.features.label
         
     @property
     def num_classes(self):
@@ -55,7 +59,7 @@ class ClassificationHFDataset(BaseHFDataset):
             target: int = self.class_to_idx[target]
         
         if self.transform is not None:
-            out = self.transform(args_augment=self.args.augment, img_size=self.args.training.img_size)(img)
+            out = self.transform(conf_augmentation=self.conf_augmentation, img_size=self.conf_augmentation.img_size)(img)
         if target is None:
             target = -1
         return out['image'], target

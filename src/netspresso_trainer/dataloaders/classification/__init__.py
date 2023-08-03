@@ -1,4 +1,4 @@
 from .dataset import ClassficationDataSampler
-from .transforms import create_classification_transform
+from .transforms import create_transform_classification
 from .local import ClassificationCustomDataset
 from .huggingface import ClassificationHFDataset

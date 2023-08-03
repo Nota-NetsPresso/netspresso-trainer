@@ -1,5 +1,5 @@
 import os
-from typing import Callable, Union
+from typing import Callable, Union, Optional
 from pathlib import Path
 from abc import abstractmethod
 
@@ -14,7 +14,8 @@ logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 
 class TaskModel(nn.Module):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
+    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
+                 img_size: Optional[int] = None) -> None:
         super(TaskModel, self).__init__()
         self.task = task
         self.backbone_name = backbone_name
@@ -33,7 +34,7 @@ class TaskModel(nn.Module):
                 logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
         
         head_module = MODEL_HEAD_DICT[self.task][head_name]
-        label_size = args.training.img_size if task in ['segmentation', 'detection'] else None
+        label_size = img_size if task in ['segmentation', 'detection'] else None
         self.head = head_module(feature_dim=self.backbone.last_channels, num_classes=num_classes, label_size=label_size)
         
     def _freeze_backbone(self):
@@ -53,8 +54,8 @@ class TaskModel(nn.Module):
 
 
 class ClassificationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
+    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size=None) -> None:
+        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size)
     
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
@@ -63,8 +64,8 @@ class ClassificationModel(TaskModel):
 
 
 class SegmentationModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
+    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size) -> None:
+        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size)
     
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
@@ -73,8 +74,8 @@ class SegmentationModel(TaskModel):
 
 
 class DetectionModel(TaskModel):
-    def __init__(self, args, task, backbone_name, head_name, num_classes, model_checkpoint) -> None:
-        super().__init__(args, task, backbone_name, head_name, num_classes, model_checkpoint)
+    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size) -> None:
+        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size)
     
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)

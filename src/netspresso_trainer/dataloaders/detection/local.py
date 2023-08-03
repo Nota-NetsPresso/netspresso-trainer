@@ -42,73 +42,12 @@ def get_label(label_file: Path):
 
 class DetectionCustomDataset(BaseCustomDataset):
 
-    def __init__(
-            self,
-            args,
-            idx_to_class,
-            split,
-            samples,
-            transform=None,
-            with_label=True,
-    ):
-        root = args.data.path.root
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
+                 split, samples, transform=None, with_label=True):
         super(DetectionCustomDataset, self).__init__(
-            args,
-            root,
-            split,
-            with_label
+            conf_data, conf_augmentation, model_name, idx_to_class,
+            split, samples, transform, with_label
         )
-        
-        self.transform = transform
-
-        self.samples = samples
-        self.idx_to_class = idx_to_class
-        self._num_classes = len(self.idx_to_class)
-
-        # if self._split in ['train', 'training', 'val', 'valid', 'test']:  # for training and test (= evaluation) phase
-        #     image_dir = Path(self._root) / 'images'
-        #     annotation_dir = Path(self._root) / 'labels'
-        #     self.image_dir = image_dir / TEMP_DIRECTORY_REDIRECT(self._split)
-        #     self.annotation_dir = annotation_dir / TEMP_DIRECTORY_REDIRECT(self._split)
-
-        #     img_name_maybe: List[Path] = list(sorted([path for path in self.image_dir.iterdir()]))
-        #     # self.ann_name = list(sorted([path for path in self.annotation_dir.iterdir()]))
-        #     self.img_name = []
-        #     self.ann_name = []
-        #     for image_path_maybe in img_name_maybe:
-        #         ann_path_maybe = self.annotation_dir / image_path_maybe.with_suffix('.txt').name
-        #         if not ann_path_maybe.exists():
-        #             continue
-        #         self.img_name.append(image_path_maybe)
-        #         self.ann_name.append(ann_path_maybe)
-            
-        #     del img_name_maybe
-        #     self.id2label = OmegaConf.load(TEMP_COCO_LABEL_FILE)
-
-        #     assert len(self.img_name) == len(self.ann_name), f"There must be as many images as there are detection label files! {len(self.img_name)}, {len(self.ann_name)}"
-
-        # else:  # self._split in ['infer', 'inference']
-
-        #     try:  # a folder with multiple images
-        #         self.img_name = list(sorted([path for path in Path(self._root).iterdir()]))
-        #     except:  # single image
-        #         raise AssertionError
-        #         # TODO: check the case for single image
-        #         self.file_name = [self.data_dir.split('/')[-1]]
-        #         self.img_name = [self.data_dir]
-
-        # self.transform = transform
-
-    @property
-    def num_classes(self):
-        return self._num_classes
-
-    @property
-    def class_map(self):
-        return self.idx_to_class
-    
-    def __len__(self):
-        return len(self.samples)
     
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
@@ -131,7 +70,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if ann_path is None:
-            out = self.transform(self.args.augment)(image=img)
+            out = self.transform(self.conf_augmentation)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
         
         outputs = {}
@@ -139,7 +78,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
         
-        out = self.transform(self.args.augment)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
+        out = self.transform(self.conf_augmentation)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
         assert out['bbox'].shape[-1] == 5  # ltrb + class_label
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
                         'label': torch.as_tensor(out['bbox'][..., 4], dtype=torch.int64)})
