@@ -13,7 +13,8 @@ compress and deploy your model with <b>NetsPresso</b>!
 <p align="center">
   <a href="https://py.netspresso.ai/">Website</a> •
   <a href="#getting-started">Getting Started</a> •
-  <a href="https://github.com/Nota-NetsPresso/netspresso-trainer/issues">Issues</a>
+  <a href="https://github.com/Nota-NetsPresso/netspresso-trainer/issues">Issues</a> •
+  <a href="https://nota-netspresso.github.io/netspresso-trainer">Docs</a>
 </p>
 </div>
 
@@ -83,7 +84,7 @@ pip install -e netspresso-trainer
 ### Set-up with docker
 
 Please clone this repository and refer to [`Dockerfile`](./Dockerfile) and [`docker-compose-example.yml`](./docker-compose-example.yml).  
-For docker users, we provide more detailed guide with [`DOCKER-INSTALLATION.md`](./DOCKER-INSTALLATION.md).
+For docker users, we provide more detailed guide in our [Docs](https://nota-netspresso.github.io/netspresso-trainer).
 
 ## Tensorboard
 
