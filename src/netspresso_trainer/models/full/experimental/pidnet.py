@@ -17,9 +17,9 @@ use_align_corners = False
 
 class PIDNet(nn.Module):
 
-    def __init__(self, args, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True):
+    def __init__(self, conf_model, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True):
         super(PIDNet, self).__init__()
-        self.args = args
+        self.conf_model = conf_model
         self.is_training = is_training
 
         # I Branch
@@ -194,8 +194,8 @@ class PIDNet(nn.Module):
 
         return PIDNetModelOutput(extra_p=x_extra_p, extra_d=x_extra_d, pred=x_)
 
-def pidnet(args, num_classes: int) -> PIDNet:
-    model = PIDNet(args, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, is_training=True)
+def pidnet(conf_model, num_classes: int) -> PIDNet:
+    model = PIDNet(conf_model, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, is_training=True)
     # if 's' in name:
     #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=32, ppm_planes=96, head_planes=128, is_training=True)
     # elif 'm' in name:

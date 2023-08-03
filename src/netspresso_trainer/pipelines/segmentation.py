@@ -30,7 +30,7 @@ class SegmentationPipeline(BasePipeline):
                                          lr=self.conf.training.lr0,
                                          wd=self.conf.training.weight_decay,
                                          momentum=self.conf.training.momentum)
-        sched_args = OmegaConf.create({
+        conf_sched = OmegaConf.create({
             'epochs': self.conf.training.epochs,
             'lr_noise': None,
             'sched': 'poly',
@@ -40,7 +40,7 @@ class SegmentationPipeline(BasePipeline):
             'warmup_epochs': self.conf.training.warmup_epochs,  # self.conf.training.warmup_epochs
             'cooldown_epochs': 0,
         })
-        self.scheduler, _ = build_scheduler(self.optimizer, sched_args)
+        self.scheduler, _ = build_scheduler(self.optimizer, conf_sched)
 
     def train_step(self, batch):
         self.model.train()
