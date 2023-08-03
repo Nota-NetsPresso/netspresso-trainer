@@ -62,49 +62,49 @@ def _parse_args_netspresso(is_graphmodule_training):
 
 def set_arguments(is_graphmodule_training=False):
     args_parsed = _parse_args_netspresso(is_graphmodule_training)
-    args_data = OmegaConf.load(args_parsed.data)
-    args_augmentation = OmegaConf.load(args_parsed.augmentation)
-    args_model = OmegaConf.load(args_parsed.model)
-    args_training = OmegaConf.load(args_parsed.training)
-    args_logging = OmegaConf.load(args_parsed.logging)
-    args_environment = OmegaConf.load(args_parsed.environment)
+    conf_data = OmegaConf.load(args_parsed.data)
+    conf_augmentation = OmegaConf.load(args_parsed.augmentation)
+    conf_model = OmegaConf.load(args_parsed.model)
+    conf_training = OmegaConf.load(args_parsed.training)
+    conf_logging = OmegaConf.load(args_parsed.logging)
+    conf_environment = OmegaConf.load(args_parsed.environment)
     
-    args = OmegaConf.create()
-    args.merge_with(args_data)
-    args.merge_with(args_augmentation)
-    args.merge_with(args_model)
-    args.merge_with(args_training)
-    args.merge_with(args_logging)
-    args.merge_with(args_environment)
+    conf = OmegaConf.create()
+    conf.merge_with(conf_data)
+    conf.merge_with(conf_augmentation)
+    conf.merge_with(conf_model)
+    conf.merge_with(conf_training)
+    conf.merge_with(conf_logging)
+    conf.merge_with(conf_environment)
     
-    return args_parsed, args
+    return args_parsed, conf
 
 def trainer(is_graphmodule_training=False):
-    args_parsed, args = set_arguments(is_graphmodule_training=is_graphmodule_training)
-    distributed, world_size, rank, devices = set_device(args.training.seed)
+    args_parsed, conf = set_arguments(is_graphmodule_training=is_graphmodule_training)
+    distributed, world_size, rank, devices = set_device(conf.training.seed)
 
-    args.distributed = distributed
-    args.world_size = world_size
-    args.rank = rank
+    conf.distributed = distributed
+    conf.world_size = world_size
+    conf.rank = rank
 
-    task = str(args.model.task).lower()
+    task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST
     
     # TODO: Get model name from checkpoint
-    model_name = args.model.architecture.full \
-        if args.model.architecture.full is not None \
-        else args.model.architecture.backbone
+    model_name = conf.model.architecture.full \
+        if conf.model.architecture.full is not None \
+        else conf.model.architecture.backbone
     model_name = str(model_name).lower()
     
     if is_graphmodule_training:
         model_name += "_graphmodule"
 
-    if args.distributed and args.rank != 0:
+    if conf.distributed and conf.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
 
-    train_dataset, valid_dataset, test_dataset = build_dataset(args)
+    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name)
 
-    if args.distributed and args.rank == 0:
+    if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
     if is_graphmodule_training:

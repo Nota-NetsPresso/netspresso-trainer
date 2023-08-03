@@ -12,47 +12,47 @@ logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def build_dataset(args):
+def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     logger.info('-'*40)
     logger.info('==> Loading data...')
 
-    task = args.data.task
+    task = conf_data.task
 
     assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = CREATE_TRANSFORM[task](args, is_training=True)
-    target_transform = CREATE_TRANSFORM[task](args, is_training=False)
+    train_transform = CREATE_TRANSFORM[task](model_name, is_training=True)
+    target_transform = CREATE_TRANSFORM[task](model_name, is_training=False)
     
-    data_format = args.data.format
+    data_format = conf_data.format
     
     assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
     
     if data_format == 'local':
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
-        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
         
         train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = CUSTOM_DATASET[task](
-            args, idx_to_class=idx_to_class, split='train',
+            conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
             samples=train_samples, transform=train_transform
         )
         
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = CUSTOM_DATASET[task](
-                args, idx_to_class=idx_to_class, split='valid',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
                 samples=valid_samples, transform=target_transform
             )
         
         test_dataset = None
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
-                args, idx_to_class=idx_to_class, split='test',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
                 samples=test_samples, transform=target_transform,
                 with_label=test_with_label
             )
@@ -61,28 +61,28 @@ def build_dataset(args):
         assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
         assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
         
-        data_sampler = DATA_SAMPLER[task](args.data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
+        data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
         
         train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
         
         train_dataset = HUGGINGFACE_DATASET[task](
-            args, idx_to_class=idx_to_class, split='train',
+            conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
             huggingface_dataset=train_samples, transform=train_transform
         )
         
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = HUGGINGFACE_DATASET[task](
-                args, idx_to_class=idx_to_class, split='valid',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
                 huggingface_dataset=valid_samples, transform=target_transform
             )
         
         test_dataset = None
         if test_samples is not None:
             test_dataset = HUGGINGFACE_DATASET[task](
-                args, idx_to_class=idx_to_class, split='test',
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
                 huggingface_dataset=test_samples, transform=target_transform
             )
 

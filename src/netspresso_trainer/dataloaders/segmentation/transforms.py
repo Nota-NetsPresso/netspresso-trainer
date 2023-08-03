@@ -149,18 +149,18 @@ def val_transforms_efficientformer(args_augment):
 
     return val_transforms_composed
 
-def create_segmentation_transform(args, is_training=False):
+def create_transform_segmentation(model_name: str, is_training=False):
 
-    if 'segformer' in args.model.architecture.values():
+    if model_name == 'segformer':
         if is_training:
             return train_transforms_segformer
         return val_transforms_segformer
-    elif 'pidnet' in args.model.architecture.values():
+    elif model_name == 'pidnet':
         if is_training:
             return train_transforms_pidnet
         return val_transforms_pidnet
-    elif 'efficientformer' in args.model.architecture.values():
+    elif model_name == 'efficientformer':
         if is_training:
             return train_transforms_efficientformer
         return val_transforms_efficientformer
-    raise ValueError(f"No such model named: {args.model.architecture.values()} !!!")
+    raise ValueError(f"No such model named: {model_name} !!!")

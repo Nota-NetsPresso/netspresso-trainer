@@ -68,12 +68,12 @@ def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     return True
 
 class ClassficationDataSampler(BaseDataSampler):
-    def __init__(self, args_data, train_valid_split_ratio):
-        super(ClassficationDataSampler, self).__init__(args_data, train_valid_split_ratio)
+    def __init__(self, conf_data, train_valid_split_ratio):
+        super(ClassficationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
     
     def load_data(self, file_or_dir_to_idx, split='train'):
-        data_root = Path(self.args_data.path.root)
-        split_dir = self.args_data.path[split]
+        data_root = Path(self.conf_data.path.root)
+        split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
         
         images_and_targets: List[Dict[str, Optional[Union[str, int]]]] = []
@@ -112,14 +112,14 @@ class ClassficationDataSampler(BaseDataSampler):
         return images_and_targets
         
     def load_samples(self):
-        assert self.args_data.path.train.image is not None
-        root_dir = Path(self.args_data.path.root)
-        train_dir = root_dir / self.args_data.path.train.image
-        id_mapping: Optional[dict] = dict(self.args_data.id_mapping) if self.args_data.id_mapping is not None else None
-        file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=self.args_data.path.train.label, id_mapping=id_mapping)
+        assert self.conf_data.path.train.image is not None
+        root_dir = Path(self.conf_data.path.root)
+        train_dir = root_dir / self.conf_data.path.train.image
+        id_mapping: Optional[dict] = dict(self.conf_data.id_mapping) if self.conf_data.id_mapping is not None else None
+        file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=self.conf_data.path.train.label, id_mapping=id_mapping)
         
-        exists_valid = self.args_data.path.valid.image is not None
-        exists_test = self.args_data.path.test.image is not None
+        exists_valid = self.conf_data.path.valid.image is not None
+        exists_test = self.conf_data.path.test.image is not None
         
         valid_samples = None
         test_samples = None
@@ -142,14 +142,14 @@ class ClassficationDataSampler(BaseDataSampler):
         from datasets import load_dataset
         from datasets import ClassLabel
         
-        cache_dir = Path(self.args_data.metadata.custom_cache_dir)
-        root = self.args_data.metadata.repo
-        subset_name = self.args_data.metadata.subset
+        cache_dir = Path(self.conf_data.metadata.custom_cache_dir)
+        root = self.conf_data.metadata.repo
+        subset_name = self.conf_data.metadata.subset
         if cache_dir is not None:
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
         
-        label_feature_name = self.args_data.metadata.features.label
+        label_feature_name = self.conf_data.metadata.features.label
         label_feature = total_dataset['train'].features[label_feature_name]
         if isinstance(label_feature, ClassLabel):
             labels: List[str] = label_feature.names

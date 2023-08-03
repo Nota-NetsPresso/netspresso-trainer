@@ -30,5 +30,5 @@ def transforms_custom_eval(args_augment, img_size=64):
     return TC.Compose(preprocess)
 
 
-def create_classification_transform(args, is_training=False):
+def create_transform_classification(model_name: str, is_training=False):
     return transforms_custom_train if is_training else transforms_custom_eval

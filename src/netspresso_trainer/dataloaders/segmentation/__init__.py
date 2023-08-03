@@ -1,4 +1,4 @@
 from .dataset import SegmentationDataSampler
-from .transforms import create_segmentation_transform
+from .transforms import create_transform_segmentation
 from .local import SegmentationCustomDataset
 from .huggingface import SegmentationHFDataset

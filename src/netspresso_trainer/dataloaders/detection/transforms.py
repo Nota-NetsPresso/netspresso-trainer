@@ -37,10 +37,10 @@ def val_transforms_efficientformer(args_augment):
 
     return val_transforms_composed
 
-def create_detection_transform(args, is_training=False):
+def create_transform_detection(model_name: str, is_training=False):
 
-    if 'efficientformer' in args.model.architecture.values():
+    if model_name == 'efficientformer':
         if is_training:
             return train_transforms_efficientformer
         return val_transforms_efficientformer
-    raise ValueError(f"No such model named: {args.model.architecture.values()} !!!")
+    raise ValueError(f"No such model named: {model_name} !!!")
