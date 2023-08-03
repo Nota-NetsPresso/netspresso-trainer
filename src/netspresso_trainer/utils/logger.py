@@ -16,8 +16,8 @@ class RankFilter(logging.Filter):
             return True
 
 
-def _custom_logger(name):
-    fmt = f'[%(levelname)s][%(filename)s:%(lineno)s][%(funcName)s] %(asctime)s >>> %(message)s'
+def _custom_logger(name: str):
+    fmt = f'%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     fmt_date = '%Y-%m-%d_%T %Z'
     logger = logging.getLogger(name)
     if not logger.hasHandlers():
@@ -32,7 +32,7 @@ def _custom_logger(name):
     return logger
 
 
-def set_logger(logger_name, level):
+def set_logger(logger_name="netspresso_trainer", level: str = 'INFO'):
     try:
         time.tzset()
     except AttributeError as e:

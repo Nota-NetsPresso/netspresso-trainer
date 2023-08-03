@@ -1,4 +1,4 @@
-import os
+import logging
 import csv
 from pathlib import Path
 from typing import Optional, Union, Tuple, List, Dict
@@ -12,9 +12,8 @@ from omegaconf import DictConfig
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
-from ...utils.logger import set_logger
 
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
+logger = logging.getLogger("netspresso_trainer")
     
 def load_class_map_with_id_mapping(root_dir, train_dir,
                                    map_or_filename: Optional[Union[str, Path]]=None,

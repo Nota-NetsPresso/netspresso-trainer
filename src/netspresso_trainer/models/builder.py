@@ -1,15 +1,15 @@
 import os
 from typing import List, Dict, Type, Callable
 from pathlib import Path
+import logging
 
 import torch
 import torch.nn as nn
 
 from .base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
 from .registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
-from ..utils.logger import set_logger
 
-logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]

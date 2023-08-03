@@ -3,9 +3,6 @@ import os
 import PIL.Image as Image
 
 from ..base import BaseCustomDataset
-from ...utils.logger import set_logger
-
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 class ClassificationCustomDataset(BaseCustomDataset):
 

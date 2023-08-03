@@ -11,9 +11,6 @@ from omegaconf import DictConfig
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
-from ...utils.logger import set_logger
-
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 def load_custom_class_map(id_mapping: List[str]):
     idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(id_mapping)}

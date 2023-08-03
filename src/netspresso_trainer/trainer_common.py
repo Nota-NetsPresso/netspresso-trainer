@@ -12,8 +12,7 @@ from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
 
-logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
-
+logger = set_logger(logger_name="netspresso_trainer", level=os.getenv('LOG_LEVEL', 'INFO'))
 
 def _parse_args_netspresso(is_graphmodule_training):
 

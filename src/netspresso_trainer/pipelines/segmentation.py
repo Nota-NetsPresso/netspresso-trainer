@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+import logging
 
 import torch
 import numpy as np
@@ -10,7 +10,7 @@ from ..schedulers import build_scheduler
 from .base import BasePipeline
 from ..utils.logger import set_logger
 
-logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 

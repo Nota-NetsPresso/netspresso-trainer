@@ -6,16 +6,15 @@ from typing import List, Dict, Union, Optional, Type
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, HUGGINGFACE_DATASET, DATA_SAMPLER
 from .detection import detection_collate_fn
 from .utils.loader import create_loader
-from ..utils.logger import set_logger
 
-logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
 def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     logger.info('-'*40)
-    logger.info('==> Loading data...')
+    logger.info("Loading data...")
 
     task = conf_data.task
 

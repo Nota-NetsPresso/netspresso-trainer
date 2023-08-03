@@ -1,5 +1,5 @@
 import os
-from pathlib import Path
+import logging
 
 from omegaconf import OmegaConf
 import torch
@@ -7,9 +7,8 @@ import torch
 from .base import BasePipeline
 from ..optimizers import build_optimizer
 from ..schedulers import build_scheduler
-from ..utils.logger import set_logger
 
-logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 MAX_SAMPLE_RESULT = 10
 
