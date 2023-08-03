@@ -4,9 +4,6 @@ from typing import Union
 import PIL.Image as Image
 
 from ..base import BaseHFDataset
-from ...utils.logger import set_logger
-
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 class ClassificationHFDataset(BaseHFDataset):
 

@@ -1,7 +1,7 @@
 import os
 from typing import Callable, Union, Optional
-from pathlib import Path
 from abc import abstractmethod
+import logging
 
 import torch
 import torch.nn as nn
@@ -9,8 +9,7 @@ import torch.nn as nn
 from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
 from .utils import BackboneOutput, ModelOutput, DetectionModelOutput
 
-from ..utils.logger import set_logger
-logger = set_logger('models', level=os.getenv('LOG_LEVEL', 'INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 
 class TaskModel(nn.Module):

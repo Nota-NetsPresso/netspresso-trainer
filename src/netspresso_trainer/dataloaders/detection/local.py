@@ -9,9 +9,6 @@ from omegaconf import OmegaConf
 import torch
 
 from ..base import BaseCustomDataset
-from ...utils.logger import set_logger
-
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 ID2LABEL_FILENAME = "id2label.json"
 

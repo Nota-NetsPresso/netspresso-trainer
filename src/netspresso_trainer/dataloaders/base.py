@@ -7,10 +7,6 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
-from ..utils.logger import set_logger
-
-logger = set_logger('dataloaders', level=os.getenv('LOG_LEVEL', 'INFO'))
-
 class BaseCustomDataset(data.Dataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label):

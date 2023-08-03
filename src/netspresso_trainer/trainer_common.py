@@ -12,8 +12,7 @@ from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
 
-logger = set_logger('train', level=os.getenv('LOG_LEVEL', 'INFO'))
-
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 def _parse_args_netspresso(is_graphmodule_training):
 
@@ -50,6 +49,11 @@ def _parse_args_netspresso(is_graphmodule_training):
         '--environment', type=str, default='config/environment.yaml',
         dest='environment',
         help="Config for training environment (# workers, etc.)")
+    
+    parser.add_argument(
+        '--log-level', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default=LOG_LEVEL,
+        dest='log_level',
+        help="Config for training environment (# workers, etc.)")
 
     parser.add_argument(
         '--model-checkpoint', type=str, required=is_graphmodule_training,
@@ -81,6 +85,7 @@ def set_arguments(is_graphmodule_training=False):
 
 def trainer(is_graphmodule_training=False):
     args_parsed, conf = set_arguments(is_graphmodule_training=is_graphmodule_training)
+    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level)
     distributed, world_size, rank, devices = set_device(conf.training.seed)
 
     conf.distributed = distributed
@@ -98,6 +103,8 @@ def trainer(is_graphmodule_training=False):
     
     if is_graphmodule_training:
         model_name += "_graphmodule"
+
+    logger.info(f"Task: {task} | Model: {model_name} | Training with torch.fx model? {is_graphmodule_training}")
 
     if conf.distributed and conf.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset

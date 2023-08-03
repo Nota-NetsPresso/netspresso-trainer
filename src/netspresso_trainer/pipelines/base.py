@@ -3,6 +3,7 @@ import os
 from statistics import mean
 from pathlib import Path
 from typing import final
+import logging
 
 import torch
 import torch.nn as nn
@@ -12,11 +13,11 @@ from ..losses import build_losses
 from ..metrics import build_metrics
 from ..loggers import build_logger, START_EPOCH_ZERO_OR_ONE
 from ..utils.record import Timer
-from ..utils.logger import set_logger, yaml_for_logging
+from ..utils.logger import yaml_for_logging
 from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
 
-logger = set_logger('pipelines', level=os.getenv('LOG_LEVEL', default='INFO'))
+logger = logging.getLogger("netspresso_trainer")
 
 VALID_FREQ = 1
 
@@ -93,7 +94,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     def train(self):
-        logger.info(f"Training configuration:\n{yaml_for_logging(self.conf)}")
+        logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
         logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')

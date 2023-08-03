@@ -6,9 +6,6 @@ import numpy as np
 
 from ..base import BaseCustomDataset
 from ..segmentation.transforms import generate_edge, reduce_label
-from ...utils.logger import set_logger
-
-logger = set_logger('data', level=os.getenv('LOG_LEVEL', default='INFO'))
 
 
 class SegmentationCustomDataset(BaseCustomDataset):
