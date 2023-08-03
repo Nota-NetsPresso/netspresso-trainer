@@ -102,7 +102,7 @@ class BasePipeline(ABC):
         for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.conf.training.epochs + START_EPOCH_ZERO_OR_ONE):
             self.timer.start_record(name=f'train_epoch_{num_epoch}')
             self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
-            self.metric = build_metrics(self.conf, ignore_index=self.ignore_index, num_classes=self.num_classes)
+            self.metric = build_metrics(self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
 
             self.train_one_epoch()
 
