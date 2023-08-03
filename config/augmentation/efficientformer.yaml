@@ -1,4 +1,5 @@
-augment: 
+augmentation:
+  img_size: &img_size 256
   hsv_h: ~
   hsv_s: ~
   hsv_v: ~
