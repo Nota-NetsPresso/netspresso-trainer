@@ -104,7 +104,7 @@ def val_transforms_pidnet(conf_augmentation):
     return val_transforms_composed
 
 
-def infer_transforms_pidnet(args_augment):
+def infer_transforms_pidnet(conf_augmentation):
     return
 
 
