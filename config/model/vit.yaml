@@ -1,6 +1,6 @@
 model:
   task: classification
-  checkpoint: /CHECKPOINT/backbones/vit/vit-tiny.pth
+  checkpoint: ./weights/vit/vit-tiny.pth
   architecture:
     full: ~ # auto
     backbone: vit

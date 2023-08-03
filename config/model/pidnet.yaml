@@ -1,6 +1,6 @@
 model:
   task: segmentation
-  checkpoint: ../../weights/modelsearch-trainer-allinone/full/pidnet/pidnet_s.pth
+  checkpoint: ./weights/pidnet/pidnet_s.pth
   architecture:
     full: pidnet
     backbone: ~
