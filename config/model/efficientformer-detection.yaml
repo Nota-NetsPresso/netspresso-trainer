@@ -1,6 +1,6 @@
 model:
   task: detection
-  checkpoint: ../../weights/modelsearch-trainer-allinone/backbones/efficientformer/efficientformer_l1_1000d.pth
+  checkpoint: ./weights/efficientformer/efficientformer_l1_1000d.pth
   architecture:
     full: ~ # auto
     backbone: efficientformer

@@ -1,6 +1,6 @@
 model:
   task: segmentation
-  checkpoint: ../../weights/modelsearch-trainer-allinone/backbones/segformer/segformer.pth
+  checkpoint: ./weights/segformer/segformer.pth
   architecture:
     full: ~ # auto
     backbone: segformer
