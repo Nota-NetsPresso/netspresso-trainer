@@ -106,14 +106,16 @@ def trainer(is_graphmodule_training=False):
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
+        
+    train_dataloader, eval_dataloader = \
+        build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
     if is_graphmodule_training:
         model = torch.load(args_parsed.model_checkpoint)
     else:
-        model = build_model(args, train_dataset.num_classes, args.model.checkpoint)
+        model = build_model(conf, train_dataset.num_classes, conf.model.checkpoint)
 
-    train_dataloader, eval_dataloader = \
-        build_dataloader(args, task, model, train_dataset=train_dataset, eval_dataset=valid_dataset)
+
 
     model = model.to(device=devices)
     if args.distributed:

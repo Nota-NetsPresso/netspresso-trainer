@@ -95,40 +95,40 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=False):
+def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
         collate_fn = None
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            input_size=args.training.img_size,
-            batch_size=args.training.batch_size,
+            input_size=conf.augmentation.img_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            input_size=args.training.img_size,
-            batch_size=args.training.batch_size,
+            input_size=conf.augmentation.img_size,
+            batch_size=conf.training.batch_size,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=None,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
     elif task == 'segmentation':
@@ -136,31 +136,31 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=Fal
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size if model == 'pidnet' and not args.distributed else 1,
+            batch_size=conf.training.batch_size if model_name == 'pidnet' and not conf.distributed else 1,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=None,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
     elif task == 'detection':
@@ -168,32 +168,32 @@ def build_dataloader(args, task, model, train_dataset, eval_dataset, profile=Fal
 
         train_loader = create_loader(
             train_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
-            batch_size=args.training.batch_size,
+            batch_size=conf.training.batch_size,
             is_training=True,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
         eval_loader = create_loader(
             eval_dataset,
-            args.data.name,
+            conf.data.name,
             logger,
             # TODO: support batch size 1 inference
-            batch_size=args.training.batch_size if not args.distributed else 2,
+            batch_size=conf.training.batch_size if not conf.distributed else 2,
             is_training=False,
-            num_workers=args.environment.num_workers if not profile else 1,
-            distributed=args.distributed,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
-            world_size=args.world_size,
-            rank=args.rank,
+            world_size=conf.world_size,
+            rank=conf.rank,
             kwargs=None
         )
 
