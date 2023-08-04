@@ -119,13 +119,13 @@ class MobileViTBlock(nn.Module):
         num_patch_h = new_h // self.patch_h  # n_h
         num_patches = num_patch_h * num_patch_w  # N
 
-        # [B, C, H, W] --> [B * C * n_h, p_h, n_w, p_w]
+        # [B, C, H, W] --> [B, C, n_h, p_h, n_w, p_w]
         reshaped_fm = feature_map.reshape(
-            batch_size * in_channels * num_patch_h, self.patch_h, num_patch_w, self.patch_w
+            batch_size, in_channels, num_patch_h, self.patch_h, num_patch_w, self.patch_w
         )
-        # [B * C * n_h, p_h, n_w, p_w] --> [B * C * n_h, n_w, p_h, p_w]
-        transposed_fm = reshaped_fm.transpose(1, 2)
-        # [B * C * n_h, n_w, p_h, p_w] --> [B, C, N, P] where P = p_h * p_w and N = n_h * n_w
+        # [B, C, n_h, p_h, n_w, p_w] --> [B, C, n_h, n_w, p_h, p_w]
+        transposed_fm = reshaped_fm.transpose(3, 4)
+        # [B, C, n_h, n_w, p_h, p_w] --> [B, C, N, P] where P = p_h * p_w and N = n_h * n_w
         reshaped_fm = transposed_fm.reshape(
             batch_size, in_channels, num_patches, self.patch_area
         )
@@ -165,13 +165,13 @@ class MobileViTBlock(nn.Module):
         # [B, P, N, C] --> [B, C, N, P]
         patches = patches.transpose(1, 3)
 
-        # [B, C, N, P] --> [B*C*n_h, n_w, p_h, p_w]
+        # [B, C, N, P] --> [B, C, n_h, n_w, p_h, p_w]
         feature_map = patches.reshape(
-            batch_size * channels * num_patch_h, num_patch_w, self.patch_h, self.patch_w
+            batch_size, channels, num_patch_h, num_patch_w, self.patch_h, self.patch_w
         )
-        # [B*C*n_h, n_w, p_h, p_w] --> [B*C*n_h, p_h, n_w, p_w]
-        feature_map = feature_map.transpose(1, 2)
-        # [B*C*n_h, p_h, n_w, p_w] --> [B, C, H, W]
+        # [B, C, n_h, n_w, p_h, p_w] --> [B, C, n_h, p_h, n_w, p_w]
+        feature_map = feature_map.transpose(3, 4)
+        # [B, C, n_h, p_h, n_w, p_w] --> [B, C, H, W]
         feature_map = feature_map.reshape(
             batch_size, channels, num_patch_h * self.patch_h, num_patch_w * self.patch_w
         )
@@ -380,7 +380,7 @@ class MobileViT(MetaFormer):
         
         self._last_channels = exp_channels
         
-    def forward(self, x: FXTensorType) -> BackboneOutput:
+    def forward(self, x: FXTensorType):
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.conv_1x1_exp(x)
