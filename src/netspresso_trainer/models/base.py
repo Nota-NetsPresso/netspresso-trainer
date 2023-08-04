@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-from .utils import BackboneOutput, ModelOutput, DetectionModelOutput
+from .utils import BackboneOutput, ModelOutput, DetectionModelOutput, load_from_checkpoint
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -23,14 +23,7 @@ class TaskModel(nn.Module):
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
         self.backbone: nn.Module = backbone_fn(task=self.task)
         
-        if model_checkpoint is not None:
-            model_state_dict = torch.load(model_checkpoint)
-            missing_keys, unexpected_keys = self.backbone.load_state_dict(model_state_dict, strict=False)
-            
-            if len(missing_keys) != 0:
-                logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
-            if len(unexpected_keys) != 0:
-                logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
+        self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
         
         head_module = MODEL_HEAD_DICT[self.task][head_name]
         label_size = img_size if task in ['segmentation', 'detection'] else None

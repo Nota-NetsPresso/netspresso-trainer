@@ -85,8 +85,8 @@ def set_arguments(is_graphmodule_training=False):
 
 def trainer(is_graphmodule_training=False):
     args_parsed, conf = set_arguments(is_graphmodule_training=is_graphmodule_training)
-    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level)
     distributed, world_size, rank, devices = set_device(conf.training.seed)
+    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed) 
 
     conf.distributed = distributed
     conf.world_size = world_size

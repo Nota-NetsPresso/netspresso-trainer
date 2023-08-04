@@ -16,31 +16,38 @@ class RankFilter(logging.Filter):
             return True
 
 
-def _custom_logger(name: str):
-    fmt = f'%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
+def _custom_logger(name: str, level: str, distributed: bool):
     fmt_date = '%Y-%m-%d_%T %Z'
+    debug_and_multi_gpu = (level == 'DEBUG' and distributed)
+    if debug_and_multi_gpu:
+        fmt = f'[GPU:{dist.get_rank()}] %(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
+    else:
+        fmt = f'%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     logger = logging.getLogger(name)
+    
     if not logger.hasHandlers():
         handler = logging.StreamHandler()
 
         formatter = logging.Formatter(fmt, fmt_date)
         handler.setFormatter(formatter)
-        handler.addFilter(RankFilter())
+        if distributed:
+            handler.addFilter(RankFilter())
 
         logger.setLevel(logging.DEBUG)
         logger.addHandler(handler)
     return logger
 
 
-def set_logger(logger_name="netspresso_trainer", level: str = 'INFO'):
+def set_logger(logger_name="netspresso_trainer", level: str = 'INFO', distributed=False):
     try:
         time.tzset()
     except AttributeError as e:
         print(e)
         print("Skipping timezone setting.")
-    _custom_logger(name=logger_name)
-    logger = logging.getLogger(logger_name)
     _level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = level.upper()
+    _custom_logger(logger_name, _level, distributed)
+    
+    logger = logging.getLogger(logger_name)
     if _level == 'DEBUG':
         logger.setLevel(logging.DEBUG)
     elif _level == 'INFO':
