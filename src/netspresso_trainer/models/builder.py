@@ -8,6 +8,7 @@ import torch.nn as nn
 
 from .base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
 from .registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
+from .utils import load_from_checkpoint
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -15,14 +16,7 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
     model: nn.Module = model_fn(conf_model, num_classes)
 
-    if model_checkpoint is not None:
-        model_state_dict = torch.load(model_checkpoint)
-        missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
-        
-        if len(missing_keys) != 0:
-            logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
-        if len(unexpected_keys) != 0:
-            logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
+    model = load_from_checkpoint(model, model_checkpoint)
         
     return model
 
