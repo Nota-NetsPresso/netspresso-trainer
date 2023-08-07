@@ -358,7 +358,7 @@ class EfficientFormer(MetaFormer):
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
-    def forward(self, x: FXTensorType) -> BackboneOutput:
+    def forward(self, x: FXTensorType):
         x = self.patch_embed(x)
         x = self.encoder(x)
         if self.use_intermediate_features:

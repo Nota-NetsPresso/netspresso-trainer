@@ -130,7 +130,7 @@ class ResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def forward(self, x: Tensor) -> BackboneOutput:
+    def forward(self, x: Tensor):
         # See note [TorchScript super()]
         x = self.conv1(x)
         x = self.maxpool(x)
