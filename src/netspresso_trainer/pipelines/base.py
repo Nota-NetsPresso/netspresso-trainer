@@ -53,9 +53,10 @@ class BasePipeline(ABC):
         self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
 
-        self.train_logger = build_logger(self.conf, self.task, self.model_name,
-                                         step_per_epoch=self.train_step_per_epoch, class_map=class_map,
-                                         num_sample_images=NUM_SAMPLES)
+        if self.single_gpu_or_rank_zero:
+            self.train_logger = build_logger(self.conf, self.task, self.model_name,
+                                            step_per_epoch=self.train_step_per_epoch, class_map=class_map,
+                                            num_sample_images=NUM_SAMPLES)
 
     @final
     def _is_ready(self):
