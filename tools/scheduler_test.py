@@ -16,29 +16,14 @@ IN_FEATURES = 10
 OUT_FEATURES = 4
 
 
-def parse_args_netspresso():
+def parse_args():
 
-    parser = argparse.ArgumentParser(description="Parser for NetsPresso configuration")
-
-    # -------- User arguments ----------------------------------------
+    parser = argparse.ArgumentParser(description="Scheduler test configuration")
 
     parser.add_argument(
-        '--config', type=str, default='example-dev-segmentation.yaml',
-        dest='config',
+        '--training', type=str, default='config/training/template/common.yaml',
+        dest='training',
         help="Config path")
-
-    parser.add_argument(
-        '-o', '--output_dir', type=str, default='..',
-        dest='output_dir',
-        help="Checkpoint and result saving directory")
-
-    parser.add_argument(
-        '--profile', action='store_true',
-        help="Whether to use profile mode")
-
-    parser.add_argument(
-        '--report-modelsearch-api', action='store_true',
-        help="Report elapsed time for single epoch to NetsPresso Modelsearch API")
 
     args, _ = parser.parse_known_args()
 
@@ -57,37 +42,26 @@ class SampleDataset:
 
 
 if __name__ == '__main__':
-    args_parsed = parse_args_netspresso()
-    args = OmegaConf.load(args_parsed.config)
+    args_parsed = parse_args()
+    conf = OmegaConf.load(args_parsed.training)
+    conf_training = conf.training
 
     model = nn.Linear(in_features=IN_FEATURES, out_features=OUT_FEATURES)
     model.cuda()
 
     optimizer = build_optimizer(model,
-                                opt=args.training.opt,
-                                lr=args.training.lr0,
-                                wd=args.training.weight_decay,
-                                momentum=args.training.momentum)
+                                opt=conf_training.opt,
+                                lr=conf_training.lr,
+                                wd=conf_training.weight_decay,
+                                momentum=conf_training.momentum)
 
     dataloader = torch.utils.data.DataLoader(SampleDataset(samples=25), batch_size=5)
-
-    sched_args = OmegaConf.create({
-        'epochs': args.training.epochs,
-        'lr_noise': None,
-        'sched': 'poly',
-        'decay_rate': args.training.schd_power,
-        'min_lr': args.training.lrf,
-        'warmup_lr': 0.00001,  # args.training.warmup_bias_lr
-        'warmup_epochs': 5,  # args.training.warmup_epochs
-        'cooldown_epochs': 0,
-    })
-
-    scheduler, _ = build_scheduler(optimizer, sched_args)
+    scheduler, _ = build_scheduler(optimizer, conf_training)
 
     loss_func = nn.MSELoss()
 
     steps = 0
-    for epoch in range(args.training.epochs):
+    for epoch in range(conf_training.epochs):
         for x, y in dataloader:
             x = x.cuda()
             y = y.cuda()
