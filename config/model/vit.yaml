@@ -1,6 +1,7 @@
 model:
   task: classification
   checkpoint: ./weights/vit/vit-tiny.pth
+  freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone: vit

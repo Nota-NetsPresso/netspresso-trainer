@@ -20,7 +20,7 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
         
     return model
 
-def load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size):
+def load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone):
     TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
         'classification': ClassificationModel,
         'segmentation': SegmentationModel,
@@ -30,7 +30,7 @@ def load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num
     if not task in TASK_MODEL_DICT:
         raise ValueError(f"No such task(s) named: {task}. This should be included in SUPPORTING_TASK_LIST ({SUPPORTING_TASK_LIST})")
 
-    return TASK_MODEL_DICT[task](conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size)
+    return TASK_MODEL_DICT[task](conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone)
 
 
 def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn.Module:
@@ -41,5 +41,5 @@ def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn
     
     backbone_name = str(conf_model.architecture.backbone).lower()
     head_name = str(conf_model.architecture.head).lower()
-    
-    return load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size)
+    freeze_backbone = conf_model.freeze_backbone
+    return load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone)

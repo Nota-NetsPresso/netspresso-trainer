@@ -1,6 +1,7 @@
 model:
   task: segmentation
   checkpoint: ./weights/efficientformer_l1_1000d.pth
+  freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone: efficientformer
