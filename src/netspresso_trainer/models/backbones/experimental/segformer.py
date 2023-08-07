@@ -164,7 +164,7 @@ class SegFormer(MetaFormer):
             )
             self.encoder_modules.append(module)
 
-    def forward(self, x: FXTensorType) -> BackboneOutput:
+    def forward(self, x: FXTensorType):
         B = x.size(0)
         all_hidden_states = () if self.use_intermediate_features else None
         

@@ -269,7 +269,7 @@ class MetaFormer(nn.Module):
     def last_channels(self):
         return self._last_channels
     
-    def forward(self, x: FXTensorType) -> BackboneOutput:
+    def forward(self, x: FXTensorType):
         x = self.patch_embed(x)
         x = self.encoder(x)
         x = self.norm(x)
