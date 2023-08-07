@@ -19,9 +19,10 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
         verbose (bool): If ``True``, prints a message to stdout for each update. Default: ``False``.
     """
 
-    def __init__(self, optimizer, warmup_iters=5, total_iters=5, lr_min=0, last_epoch=-1, verbose=False):
+    def __init__(self, optimizer, warmup_iters=5, total_iters=5, warmup_bias_lr=0, min_lr=0, last_epoch=-1, verbose=False, **kwargs):
         self.T_max = total_iters
-        self.eta_min = lr_min
+        self.eta_min = min_lr
+        self.warmup_bias_lr = warmup_bias_lr
         self.warmup_iters = warmup_iters
         super().__init__(optimizer, last_epoch, verbose)
 
@@ -30,12 +31,12 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
             warnings.warn("To get the last learning rate computed by the scheduler, "
                           "please use `get_last_lr()`.", UserWarning)
         
-        if self.last_epoch == 0 or self.last_epoch > self.T_max:
+        if self.last_epoch > self.T_max:
             return [group['lr'] for group in self.optimizer.param_groups]
         
         if self.last_epoch >= 0 and self.last_epoch < self.warmup_iters:
-            return [(float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * base_lr
-                     for base_lr in self.base_lrs]
+            return [self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr)
+                    for base_lr in self.base_lrs]
 
         if self._step_count == 1 and self.last_epoch > 0:
             return [self.eta_min + (base_lr - self.eta_min) *
@@ -53,6 +54,12 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
                 for group in self.optimizer.param_groups]
 
     def _get_closed_form_lr(self):
-        return [self.eta_min + (base_lr - self.eta_min) *
-                (1 + math.cos(math.pi * self.last_epoch / self.T_max)) / 2
-                for base_lr in self.base_lrs]
+        return [
+            (
+                min(
+                    self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr),
+                    self.eta_min + (base_lr - self.eta_min) * (1 + math.cos(math.pi * self.last_epoch / self.T_max)) / 2
+                )
+            )
+            for base_lr in self.base_lrs
+        ]

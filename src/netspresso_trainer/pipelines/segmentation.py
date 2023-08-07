@@ -27,20 +27,10 @@ class SegmentationPipeline(BasePipeline):
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
                                          opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr0,
+                                         lr=self.conf.training.lr,
                                          wd=self.conf.training.weight_decay,
                                          momentum=self.conf.training.momentum)
-        conf_sched = OmegaConf.create({
-            'epochs': self.conf.training.epochs,
-            'lr_noise': None,
-            'sched': 'poly',
-            'decay_rate': self.conf.training.schd_power,
-            'min_lr': self.conf.training.lrf,  # FIXME: add hyperparameter or approve to follow `self.conf.training.lrf`
-            'warmup_lr': self.conf.training.lr0,  # self.conf.training.lr0
-            'warmup_epochs': self.conf.training.warmup_epochs,  # self.conf.training.warmup_epochs
-            'cooldown_epochs': 0,
-        })
-        self.scheduler, _ = build_scheduler(self.optimizer, conf_sched)
+        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
 
     def train_step(self, batch):
         self.model.train()

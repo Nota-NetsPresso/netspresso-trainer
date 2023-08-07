@@ -18,10 +18,13 @@ class PolynomialLRWithWarmUp(_LRScheduler):
         verbose (bool): If ``True``, prints a message to stdout for
             each update. Default: ``False``.
     """
-    def __init__(self, optimizer, warmup_iters=5, total_iters=5, power=1.0, last_epoch=-1, verbose=False):
+    def __init__(self, optimizer, warmup_iters=5, total_iters=5, warmup_bias_lr=0, min_lr=0,
+                 power=1.0, last_epoch=-1, verbose=False, **kwargs):
         self.warmup_iters = warmup_iters
         self.total_iters = total_iters
-        self.power = power
+        self.warmup_bias_lr = warmup_bias_lr
+        self.min_lr = min_lr
+        self.power = power if power is not None else 1.0
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self):
@@ -33,20 +36,21 @@ class PolynomialLRWithWarmUp(_LRScheduler):
             return [group["lr"] for group in self.optimizer.param_groups]
         
         if self.last_epoch >= 0 and self.last_epoch < self.warmup_iters:
-            return [(float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * base_lr
-                         for base_lr in self.base_lrs]
+            return [self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr)
+                    for base_lr in self.base_lrs]
 
         decay_steps = self.total_iters - self.warmup_iters
         decay_current_step = self.last_epoch - self.warmup_iters
         decay_factor = ((1.0 - decay_current_step / decay_steps) / (1.0 - (decay_current_step - 1) / decay_steps)) ** self.power
-        return [group["lr"] * decay_factor for group in self.optimizer.param_groups]
+        return [self.min_lr + (group["lr"] - self.min_lr) * decay_factor for group in self.optimizer.param_groups]
 
     def _get_closed_form_lr(self):
         decay_steps = self.total_iters - self.warmup_iters        
         return [
             (
-                min(base_lr * float(self.last_epoch + 1) / float(max(1, self.warmup_iters)),
-                    base_lr * (1.0 - min(self.last_epoch - self.warmup_iters, decay_steps) / decay_steps) ** self.power
+                min(
+                    self.warmup_bias_lr + (base_lr - self.warmup_bias_lr) * float(self.last_epoch + 1) / float(max(1, self.warmup_iters)),
+                    self.min_lr + (base_lr - self.min_lr) * (1.0 - min(self.last_epoch - self.warmup_iters, decay_steps) / decay_steps) ** self.power
                 )
             )
             for base_lr in self.base_lrs
