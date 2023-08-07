@@ -1,6 +1,7 @@
 model:
   task: classification
   checkpoint: ./weights/mobilevit/mobilevit_s.pth
+  freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone: mobilevit

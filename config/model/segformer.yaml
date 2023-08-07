@@ -1,6 +1,7 @@
 model:
   task: segmentation
   checkpoint: ./weights/segformer/segformer.pth
+  freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone: segformer
