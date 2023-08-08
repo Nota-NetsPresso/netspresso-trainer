@@ -156,7 +156,7 @@ nav:
     - Tensorboard: training/tensorboard.md
     - Hugging Face datasets: training/huggingface-datasets.md
   - Models:
-    - MetaFormer: models/metaformer.md
+    - models/index.md
     - Implementations: models/implementations.md
     - Model List:
       - models/model-list/index.md
