@@ -15,10 +15,25 @@
 
 From the MetaFormer paper, the concept of MetaFormer can be expressed as follows:
 
+$$
+X = \mathrm{InputEmbedding}(I), \newline
+X' = \mathrm{MetaFormerEncoder}(X), \newline
+X'' = \mathrm{NormOrIdentity_{output}}(X'),
+$$
 
+where $\mathrm{MetaFormerEncoder}$ usually consists of repeated MetaFormer blocks.
 
-Inspired from this research, we try out best to design and build models with MetaFormer framework to utilize in various ways. By defining models with unified MetaFormer block, we can apply to all models whenever NetsPresso services progressed.
+One of MetaFormer blocks can be expressed as follows:
+
+$$
+X' = X + \mathrm{TokenMixer}\left(\mathrm{Norm_1}(X)\right), \newline
+X'' = X' + \mathrm{ChannelMLP}\left(\mathrm{Norm_2}(X')\right),
+$$
+where $\mathrm{TokenMixer}$ could be either $\mathrm{MultiHeadSelfAttention}$, $\mathrm{Identity}$, or $\mathrm{ConvLayers}$, and $\mathrm{ChannelMLP}$ usually consists of `Linear` layers and activation function.
+
+Inspired from the MetaFormer research, we try out best to design and build models (both ViT and non-ViT models) with MetaFormer framework to utilize in various ways. By defining models with unified MetaFormer block, we can apply to all models whenever NetsPresso services progressed. For example, Compressor API of [PyNetsPresso](https://py.netspresso.ai/) supports structural pruning for those models, which accelerates the inference only with negotiable performance drop.
 
 ### Retraining the model from NetsPresso
 
-You got compressed model from NetsPresso? Then, it's time to retrain your model to get the best performance!
+If you got compressed model from NetsPresso, then it's time to retrain your model to get the best performance.
+
