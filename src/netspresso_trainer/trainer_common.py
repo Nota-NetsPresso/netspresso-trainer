@@ -14,7 +14,7 @@ from .utils.logger import set_logger
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
-def _parse_args_netspresso(is_graphmodule_training):
+def parse_args_netspresso(is_graphmodule_training):
 
     parser = argparse.ArgumentParser(description="Parser for NetsPresso configuration")
 
@@ -56,16 +56,15 @@ def _parse_args_netspresso(is_graphmodule_training):
         help="Config for training environment (# workers, etc.)")
 
     parser.add_argument(
-        '--model-checkpoint', type=str, required=is_graphmodule_training,
-        dest='model_checkpoint',
+        '--fx-model-checkpoint', type=str, required=is_graphmodule_training,
+        dest='fx_model_checkpoint',
         help="Checkpoint path for graphmodule model")
 
     args_parsed, _ = parser.parse_known_args()
 
     return args_parsed
 
-def set_arguments(is_graphmodule_training=False):
-    args_parsed = _parse_args_netspresso(is_graphmodule_training)
+def set_arguments(args_parsed):
     conf_data = OmegaConf.load(args_parsed.data)
     conf_augmentation = OmegaConf.load(args_parsed.augmentation)
     conf_model = OmegaConf.load(args_parsed.model)
@@ -81,10 +80,12 @@ def set_arguments(is_graphmodule_training=False):
     conf.merge_with(conf_logging)
     conf.merge_with(conf_environment)
     
-    return args_parsed, conf
+    return conf
 
 def trainer(is_graphmodule_training=False):
-    args_parsed, conf = set_arguments(is_graphmodule_training=is_graphmodule_training)
+    args_parsed = parse_args_netspresso(is_graphmodule_training=is_graphmodule_training)
+    conf = set_arguments(args_parsed)
+    
     distributed, world_size, rank, devices = set_device(conf.training.seed)
     logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed) 
 
@@ -118,7 +119,7 @@ def trainer(is_graphmodule_training=False):
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
     if is_graphmodule_training:
-        model = torch.load(args_parsed.model_checkpoint)
+        model = torch.load(args_parsed.fx_model_checkpoint)
     else:
         model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
 

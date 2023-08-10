@@ -5,7 +5,7 @@ python train_fx.py\
   --training config/training/mobilevit.yaml\
   --logging config/logging.yaml\
   --environment config/environment.yaml\
-  --model-checkpoint classification_mobilevit_fx.pt
+  --fx-model-checkpoint classification_mobilevit_fx.pt
 
 
 # python train_fx.py\
@@ -15,7 +15,7 @@ python train_fx.py\
 #   --training config/training/pidnet.yaml\
 #   --logging config/logging.yaml\
 #   --environment config/environment.yaml\
-#   --model-checkpoint segmentation_pidnet_fx.pt
+#   --fx-model-checkpoint segmentation_pidnet_fx.pt
 
 
 #### Multi-GPU training
@@ -31,7 +31,7 @@ python train_fx.py\
 #   --training config/training/vit.yaml\
 #   --logging config/logging.yaml\
 #   --environment config/environment.yaml\
-#   --model-checkpoint classification_vit_fx.pt
+#   --fx-model-checkpoint classification_vit_fx.pt
 
 
 # python -m torch.distributed.launch\
