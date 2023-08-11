@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from .trainer_common import set_arguments, trainer
+from .trainer_common import parse_args_netspresso, set_arguments, trainer
 
 version = (Path(__file__).parent / "VERSION").read_text().strip()
 
