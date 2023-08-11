@@ -27,8 +27,8 @@ site_description: >-
   compress and deploy your model with NetsPresso!
 
 # Repository
-repo_name: Nota-NetsPresso/netspresso-trainer
-repo_url: https://github.com/Nota-NetsPresso/netspresso-trainer
+repo_name: nota-netspresso/netspresso-trainer
+repo_url: https://github.com/nota-netspresso/netspresso-trainer
 
 # Copyright
 copyright: © 2023 Nota Inc.
@@ -80,6 +80,14 @@ theme:
     code: Roboto Mono
   favicon: assets/images/favicon.png
   # logo: assets/images/NetsPresso.svg
+
+extra_javascript:
+  - assets/javascripts/katex.js
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.js  
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/contrib/auto-render.min.js
+
+extra_css:
+  - https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.7/katex.min.css
 
 # Plugins
 plugins:
@@ -150,26 +158,24 @@ nav:
     - Simple use: getting-started.md
     - Installation: installation.md
     - Docker: docker-installation.md
-    - Asking a question: https://github.com/orgs/Nota-NetsPresso/discussions
-  #   - Customization: customization.md
-  #   - Browser support: browser-support.md
-  #   - Philosophy: philosophy.md
-  #   - Alternatives: alternatives.md
-  #   - License: license.md
-  #   - Changelog:
-  #     - changelog/index.md
-  #     - How to upgrade: upgrade.md
-  #   - Contributing:
-  #     - contributing/index.md
-  #     - Reporting a bug: contributing/reporting-a-bug.md
-  #     - Reporting a docs issue: contributing/reporting-a-docs-issue.md
-  #     - Requesting a change: contributing/requesting-a-change.md
-  #     - Asking a question: https://github.com/squidfunk/mkdocs-material/discussions
-  #   - Guides:
-  #     - Creating a reproduction: guides/creating-a-reproduction.md
-  #   - FAQ:
-  #     - Sponsoring: faq/sponsoring.md
+    - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Training:
     - training/index.md
     - Tensorboard: training/tensorboard.md
     - Hugging Face datasets: training/huggingface-datasets.md
+  - Models:
+    - models/index.md
+    - Implementations: models/implementations.md
+    - Model List:
+      - models/model-list/index.md
+      - Backbones: models/model-list/backbones.md
+      - Heads: models/model-list/heads.md
+      - Full models: models/model-list/full-models.md
+    - Compatibility Matrix: models/compatibility.md
+  # - NetsPresso:
+  #   - netspresso/index.md
+  #   - torch.fx: netspresso/torch-fx.md
+  #   - Compressor: netspresso/compressor.md
+  #   - Best Practice:
+  #     - netspresso/best-practice/index.md
+  #     - Compress and Tune: netspresso/best-practice/compress-and-tune.md
