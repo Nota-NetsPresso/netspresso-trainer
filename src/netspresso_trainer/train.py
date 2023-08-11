@@ -2,7 +2,9 @@ from netspresso_trainer import trainer
 
 
 def netspresso_train():
-    trainer(is_graphmodule_training=False)
+    is_graphmodule_training = False
+    trainer(is_graphmodule_training=is_graphmodule_training)
     
 def netspresso_train_fx():
-    trainer(is_graphmodule_training=True)
+    is_graphmodule_training = True
+    trainer(is_graphmodule_training=is_graphmodule_training)
