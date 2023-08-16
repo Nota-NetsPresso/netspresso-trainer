@@ -3,7 +3,7 @@ data:
   task: detection
   format: local # local, huggingface
   path:
-    root: ....//data/traffic-sign # dataset root
+    root: ../../data/traffic-sign # dataset root
     train:
       image: images/train # directory for training images
       label: labels/train # directory for training labels
