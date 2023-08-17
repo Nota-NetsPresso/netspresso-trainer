@@ -8,6 +8,7 @@ training:
   min_lr: 1e-6
   warmup_bias_lr: 1e-5
   warmup_epochs: 5
+  iters_per_phase: 30
   sched_power: 1.0
   epochs: 20
   batch_size: 8 
