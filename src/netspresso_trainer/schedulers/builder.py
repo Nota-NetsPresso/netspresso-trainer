@@ -13,7 +13,7 @@ def build_scheduler(optimizer, conf_training):
         'warmup_bias_lr': conf_training.warmup_bias_lr,
         'warmup_iters': conf_training.warmup_epochs,
         'total_iters': num_epochs,
-        'iters_per_phase': 30,  # TODO: config for StepLR
+        'iters_per_phase': conf_training.iters_per_phase,  # TODO: config for StepLR
     })
     
     assert scheduler_name in SCHEDULER_DICT, f"{scheduler_name} not in scheduler dict!"
