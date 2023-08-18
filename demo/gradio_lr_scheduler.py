@@ -20,7 +20,7 @@ CURRENT_DIR = Path(__file__).resolve().parent
 def get_lr_list(scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[float]:
     lr_list = []
     for epoch in range(total_epochs):
-        lr = scheduler.get_lr()[0]
+        lr = scheduler.get_last_lr()[0]
         lr_list.append(lr)
         scheduler.step()
     return lr_list
@@ -43,14 +43,14 @@ def get_lr_dataframe_from_config(yaml_str: str):
         epochs=list(range(START_EPOCH_ZERO_OR_ONE, total_epochs + START_EPOCH_ZERO_OR_ONE))
     ))
 
-    return gr.LinePlot.update(df, x="epochs", y="lr", width=600, height=300)
+    return gr.LinePlot.update(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
 
 
 def launch_gradio(args):
     with gr.Blocks(theme='nota-ai/theme', title="LR Scheduler Simulator with NetsPresso Trainer") as demo:
         gr.Markdown((CURRENT_DIR / "docs" / "description_lr_scheduler.md").read_text())
         gr.Markdown(f"<center>Package version: <code>netspresso-trainer-{__version__}</code></center>")
-        with gr.Row().style(equal_height=True):
+        with gr.Row(equal_height=True):
             with gr.Column():
                 example_training_config_path = CURRENT_DIR.parent / "config" / "training" / "template" / "common.yaml"
                 config_input = gr.Code(label="Training configuration", value=example_training_config_path.read_text(), language='yaml', lines=30)
