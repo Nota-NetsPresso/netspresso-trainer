@@ -17,11 +17,12 @@ __version__ = netspresso_trainer.__version__
 CURRENT_DIR = Path(__file__).resolve().parent
 
 
-def get_lr_list(scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[float]:
+def get_lr_list(optimizer: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[float]:
     lr_list = []
     for epoch in range(total_epochs):
         lr = scheduler.get_last_lr()[0]
         lr_list.append(lr)
+        optimizer.step()
         scheduler.step()
     return lr_list
 
@@ -36,7 +37,7 @@ def get_lr_dataframe_from_config(yaml_str: str):
                                 wd=conf.training.weight_decay,
                                 momentum=conf.training.momentum)
     scheduler, total_epochs = build_scheduler(optimizer, conf.training)
-    lr_list = get_lr_list(scheduler, total_epochs)
+    lr_list = get_lr_list(optimizer, scheduler, total_epochs)
 
     df = pd.DataFrame(dict(
         lr=lr_list,
