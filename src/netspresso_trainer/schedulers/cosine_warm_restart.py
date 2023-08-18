@@ -53,15 +53,17 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             iters_per_phase = T_0_maybe
         if T_mult < 1 or not isinstance(T_mult, int):
             raise ValueError("Expected integer T_mult >= 1, but got {}".format(T_mult))
-        
+        if iters_per_phase > total_iters:
+            iters_per_phase = total_iters
         self.T_0 = iters_per_phase
         self.T_i = iters_per_phase
         self.T_mult = T_mult
+        self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_0, self.T_i * self.T_mult, total_iters)
+        self.total_iters = total_iters
         self.eta_min = min_lr
         self.T_cur = last_epoch
         self.warmup_bias_lr = warmup_bias_lr
         self.warmup_iters = warmup_iters
-        self.remain_iters = total_iters
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self):
@@ -75,6 +77,20 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
 
         return [self.eta_min + (base_lr - self.eta_min) * (1 + math.cos(math.pi * self.T_cur / self.T_i)) / 2
                 for base_lr in self.base_lrs]
+
+    @staticmethod
+    def get_reassigned_t_i(current_t_i, next_t_i, remain_epochs):
+        """adjust T_i to finish at last epoch in overall schedule
+        """
+        if remain_epochs == 0:
+            return current_t_i, 0
+
+        assert remain_epochs >= current_t_i, f"{remain_epochs}, {current_t_i}"
+
+        if remain_epochs < current_t_i + next_t_i:
+            return remain_epochs, remain_epochs
+
+        return current_t_i, remain_epochs
 
     def step(self, epoch=None):
         """Step could be called after every batch update
@@ -112,13 +128,9 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             self.T_cur = self.T_cur + 1
             if self.T_cur >= self.T_i:
                 self.T_cur = self.T_cur - self.T_i
+                self.remain_iters = self.remain_iters - self.T_i
                 self.T_i = self.T_i * self.T_mult
-                
-                T_i_next = self.T_i * self.T_mult
-                if self.remain_iters >= self.T_i + T_i_next:
-                    self.remain_iters -= self.T_i
-                else:
-                    self.T_i = self.remain_iters  # adjust T_i to finish at last epoch in overall schedule
+                self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_i, self.T_i * self.T_mult, self.remain_iters)
         else:
             if epoch < 0:
                 raise ValueError("Expected non-negative epoch, but got {}".format(epoch))
@@ -129,8 +141,8 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
                     n = int(math.log((epoch / self.T_0 * (self.T_mult - 1) + 1), self.T_mult))
                     self.T_cur = epoch - self.T_0 * (self.T_mult ** n - 1) / (self.T_mult - 1)
                     self.T_i = self.T_0 * self.T_mult ** (n)
+                    self.T_i, _ = self.get_reassigned_t_i(self.T_i, self.T_i * self.T_mult, self.total_iters - epoch)
             else:
-                self.T_i = self.T_0
                 self.T_cur = epoch
         self.last_epoch = math.floor(epoch)
 
