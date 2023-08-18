@@ -61,7 +61,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
         self.T_cur = last_epoch
         self.warmup_bias_lr = warmup_bias_lr
         self.warmup_iters = warmup_iters
-        self.remain_iters = total_iters
+        self.remain_iters = total_iters - self.T_i
         super().__init__(optimizer, last_epoch, verbose)
 
     def get_lr(self):
@@ -112,13 +112,13 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             self.T_cur = self.T_cur + 1
             if self.T_cur >= self.T_i:
                 self.T_cur = self.T_cur - self.T_i
+                self.remain_iters -= self.T_i
+                
                 self.T_i = self.T_i * self.T_mult
                 
                 T_i_next = self.T_i * self.T_mult
-                if self.remain_iters >= self.T_i + T_i_next:
-                    self.remain_iters -= self.T_i
-                else:
-                    self.T_i = self.remain_iters  # adjust T_i to finish at last epoch in overall schedule
+                if self.remain_iters < T_i_next:  # adjust T_i to finish at last epoch in overall schedule
+                    self.T_i = self.remain_iters
         else:
             if epoch < 0:
                 raise ValueError("Expected non-negative epoch, but got {}".format(epoch))
