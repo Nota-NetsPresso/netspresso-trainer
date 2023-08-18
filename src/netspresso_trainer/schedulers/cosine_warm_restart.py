@@ -113,7 +113,9 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             if self.T_cur >= self.T_i:
                 self.T_cur = self.T_cur - self.T_i
                 self.T_i = self.T_i * self.T_mult
-                if self.remain_iters >= self.T_i:
+                
+                T_i_next = self.T_i * self.T_mult
+                if self.remain_iters >= self.T_i + T_i_next:
                     self.remain_iters -= self.T_i
                 else:
                     self.T_i = self.remain_iters  # adjust T_i to finish at last epoch in overall schedule
