@@ -16,7 +16,6 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'mobilevit': mobilevit,
     'vit': vit,
     'efficientformer': efficientformer,
-    'pidnet': pidnet
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
