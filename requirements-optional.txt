@@ -1,5 +1,6 @@
 datasets
 gradio
+pandas
 requests
 albumentations
 pymongo[srv]==3.8.0
