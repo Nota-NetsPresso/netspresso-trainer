@@ -56,7 +56,7 @@ def launch_gradio(args):
             with gr.Column(scale=2):
                 transform_repr_output = gr.Code(label="Data transform", lines=10)
                 transform_button = gr.Button(value="Compose transform", variant='primary')
-                test_image = gr.Image(label="Test image", type='pil')
+                test_image = gr.Image(value=str(CURRENT_DIR.parent / "assets" / "kyunghwan_cat.jpg"), label="Test image", type='pil')
         run_button = gr.Button(value="Get augmented samples", variant='primary')
         augmented_images = gr.Gallery(label="Results", columns=5)
 
