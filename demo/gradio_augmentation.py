@@ -17,11 +17,15 @@ __version__ = netspresso_trainer.__version__
 CURRENT_DIR = Path(__file__).resolve().parent
 
 
-def summary_transform(yaml_str):
-    pass
+def summary_transform(phase, task, model_name, yaml_str):
+    conf = OmegaConf.create(yaml_str)
+    is_training = (phase == 'train')
+    transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+    transform_composed = transform(conf.augmentation)
+    return str(transform_composed)
 
 
-def get_augmented_images(yaml_str, sample_image):
+def get_augmented_images(phase, task, model_name, yaml_str, test_images):
     pass
 
 
@@ -36,19 +40,19 @@ def launch_gradio(args):
                 phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'validation'])
         model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
         with gr.Row(equal_height=True):
-            with gr.Column(scale=2):
-                with gr.Row(equal_height=True):
-                    example_training_config_path = CURRENT_DIR.parent / "config" / "augmentation" / "template" / "common.yaml"
-                    config_input = gr.Code(label="Augmentation configuration", value=example_training_config_path.read_text(), language='yaml', lines=30)
-                    transform_repr_output = gr.Code(label="Data transform", lines=30)
-                transform_button = gr.Button(value="Compose transform", variant='primary')
             with gr.Column(scale=1):
+                example_training_config_path = CURRENT_DIR.parent / "config" / "augmentation" / "template" / "common.yaml"
+                config_input = gr.Code(label="Augmentation configuration", value=example_training_config_path.read_text(), language='yaml', lines=30)
+            with gr.Column(scale=2):
+                transform_repr_output = gr.Code(label="Data transform", lines=10)
+                transform_button = gr.Button(value="Compose transform", variant='primary')
                 test_image = gr.Image(label="Test image")
         run_button = gr.Button(value="Get augmented samples", variant='primary')
         augmented_images = gr.Gallery(label="Results")
 
-        transform_button.click(summary_transform, inputs=config_input, outputs=transform_repr_output)
-        run_inputs = [config_input, test_image, phase_choices, task_choices, model_choices]
+        transform_compose_inputs = [phase_choices, task_choices, model_choices, config_input]
+        run_inputs = transform_compose_inputs + [test_image]
+        transform_button.click(summary_transform, inputs=transform_compose_inputs, outputs=transform_repr_output)
         run_button.click(get_augmented_images, inputs=run_inputs, outputs=augmented_images)
 
     demo.launch(server_name="0.0.0.0", server_port=50003)
