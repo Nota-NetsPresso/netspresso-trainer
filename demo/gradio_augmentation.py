@@ -29,6 +29,9 @@ def launch_gradio(args):
     with gr.Blocks(theme='nota-ai/theme', title="Data Augmentation Simulator with NetsPresso Trainer") as demo:
         gr.Markdown((CURRENT_DIR / "docs" / "description_augmentation.md").read_text())
         gr.Markdown(f"<center>Package version: <code>netspresso-trainer-{__version__}</code></center>")
+        with gr.Column():
+            task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
+            model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
         with gr.Row(equal_height=True):
             with gr.Column(scale=2):
                 with gr.Row(equal_height=True):
@@ -40,9 +43,6 @@ def launch_gradio(args):
             with gr.Column(scale=1):
                 test_image = gr.Image(label="Test image")
                 phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'validation'])
-        with gr.Row(equal_height=True):
-            task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
-            model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
         with gr.Row():
             run_button = gr.Button(value="Get augmented samples", variant='primary')
         with gr.Row():
