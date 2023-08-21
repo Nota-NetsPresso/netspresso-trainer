@@ -6,11 +6,11 @@ from ..augmentation import custom as TC
 from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
-def transforms_custom_train(conf_augmentation, img_size=64):
-    assert img_size > 32
-    primary_tfl = [TC.RandomResizedCrop(img_size, interpolation=InterpolationMode.BILINEAR),
+def transforms_custom_train(conf_augmentation):
+    assert conf_augmentation.img_size > 32
+    primary_tfl = [TC.RandomResizedCrop(conf_augmentation.img_size, interpolation=InterpolationMode.BILINEAR),
                    TC.RandomHorizontalFlip(p=conf_augmentation.fliplr)
-    ]
+                   ]
     preprocess = [
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
@@ -18,10 +18,11 @@ def transforms_custom_train(conf_augmentation, img_size=64):
     return TC.Compose(primary_tfl + preprocess)
 
 
-def transforms_custom_eval(conf_augmentation, img_size=64):
-    assert img_size > 32
+def transforms_custom_eval(conf_augmentation):
+    assert conf_augmentation.img_size > 32
     preprocess = [
-        TC.Resize((img_size, img_size), interpolation=InterpolationMode.BILINEAR),
+        TC.Resize((conf_augmentation.img_size, conf_augmentation.img_size),
+                  interpolation=InterpolationMode.BILINEAR),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ]
