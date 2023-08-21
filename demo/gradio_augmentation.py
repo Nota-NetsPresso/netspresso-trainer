@@ -29,24 +29,23 @@ def launch_gradio(args):
     with gr.Blocks(theme='nota-ai/theme', title="Data Augmentation Simulator with NetsPresso Trainer") as demo:
         gr.Markdown((CURRENT_DIR / "docs" / "description_augmentation.md").read_text())
         gr.Markdown(f"<center>Package version: <code>netspresso-trainer-{__version__}</code></center>")
-        with gr.Column():
-            task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
-            model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
+        with gr.Row(equal_height=True):
+            with gr.Column(scale=2):
+                task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
+            with gr.Column(scale=1):
+                phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'validation'])
+        model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
         with gr.Row(equal_height=True):
             with gr.Column(scale=2):
                 with gr.Row(equal_height=True):
                     example_training_config_path = CURRENT_DIR.parent / "config" / "augmentation" / "template" / "common.yaml"
                     config_input = gr.Code(label="Augmentation configuration", value=example_training_config_path.read_text(), language='yaml', lines=30)
                     transform_repr_output = gr.Code(label="Data transform", lines=30)
-                with gr.Row():
-                    transform_button = gr.Button(value="Compose transform", variant='primary')
+                transform_button = gr.Button(value="Compose transform", variant='primary')
             with gr.Column(scale=1):
                 test_image = gr.Image(label="Test image")
-                phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'validation'])
-        with gr.Row():
-            run_button = gr.Button(value="Get augmented samples", variant='primary')
-        with gr.Row():
-            augmented_images = gr.Gallery(label="Results")
+        run_button = gr.Button(value="Get augmented samples", variant='primary')
+        augmented_images = gr.Gallery(label="Results")
 
         transform_button.click(summary_transform, inputs=config_input, outputs=transform_repr_output)
         run_inputs = [config_input, test_image, phase_choices, task_choices, model_choices]
