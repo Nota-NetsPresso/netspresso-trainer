@@ -15,6 +15,7 @@ from netspresso_trainer.loggers import VISUALIZER
 __version__ = netspresso_trainer.__version__
 
 CURRENT_DIR = Path(__file__).resolve().parent
+NUM_AUGMENTATION_SAMPLES = 5
 
 
 def summary_transform(phase, task, model_name, yaml_str):
@@ -25,8 +26,17 @@ def summary_transform(phase, task, model_name, yaml_str):
     return str(transform_composed)
 
 
-def get_augmented_images(phase, task, model_name, yaml_str, test_images):
-    pass
+def get_augmented_images(phase, task, model_name, yaml_str, test_image,
+                         num_samples=NUM_AUGMENTATION_SAMPLES):
+    conf = OmegaConf.create(yaml_str)
+    is_training = (phase == 'train')
+    transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+    transform_composed = transform(conf.augmentation)
+
+    transformed_images = [transform_composed(test_image,
+                                             visualize_for_debug=True)['image']
+                          for _ in range(num_samples)]
+    return transformed_images
 
 
 def launch_gradio(args):
@@ -46,9 +56,9 @@ def launch_gradio(args):
             with gr.Column(scale=2):
                 transform_repr_output = gr.Code(label="Data transform", lines=10)
                 transform_button = gr.Button(value="Compose transform", variant='primary')
-                test_image = gr.Image(label="Test image")
+                test_image = gr.Image(label="Test image", type='pil')
         run_button = gr.Button(value="Get augmented samples", variant='primary')
-        augmented_images = gr.Gallery(label="Results")
+        augmented_images = gr.Gallery(label="Results", columns=5)
 
         transform_compose_inputs = [phase_choices, task_choices, model_choices, config_input]
         run_inputs = transform_compose_inputs + [test_image]
