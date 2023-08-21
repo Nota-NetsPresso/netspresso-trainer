@@ -10,11 +10,13 @@ import PIL.Image as Image
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
+
+
 class Compose:
-    def __init__(self, transforms, additional_targets: Dict={}):
+    def __init__(self, transforms, additional_targets: Dict = {}):
         self.transforms = transforms
         self.additional_targets = additional_targets
-    
+
     def _get_transformed(self, image, mask, bbox):
         for t in self.transforms:
             image, mask, bbox = t(image=image, mask=mask, bbox=bbox)
@@ -22,7 +24,7 @@ class Compose:
 
     def __call__(self, image, mask=None, bbox=None, **kwargs):
         additional_targets_result = {k: None for k in kwargs.keys() if k in self.additional_targets}
-        
+
         result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox)
         for key in additional_targets_result.keys():
             if self.additional_targets[key] == 'mask':
@@ -39,13 +41,24 @@ class Compose:
             return_dict.update({'bbox': result_bbox})
         return_dict.update(additional_targets_result)
         return return_dict
-    
+
+    def __repr__(self):
+        compose_summary = "CustomCompose"
+        compose_list = ",\n\t".join([str(t) for t in self.transforms])
+        compose_summary += "(\n\t" + compose_list + "\n)"
+        return compose_summary
+
+
 class Identity:
     def __init__(self):
         pass
 
     def __call__(self, image, mask=None, bbox=None):
         return image, mask, bbox
+
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
+
 
 class Pad(T.Pad):
     def forward(self, image, mask=None, bbox=None):
@@ -57,14 +70,19 @@ class Pad(T.Pad):
                 target_padding = [self.padding]
             else:
                 target_padding = self.padding
-                
+
             padding_left, padding_top, _, _ = \
-                target_padding * (4 / len(target_padding)) # supports 1, 2, 4 length
-                
+                target_padding * (4 / len(target_padding))  # supports 1, 2, 4 length
+
             bbox[..., 0:4:2] += padding_left
             bbox[..., 1:4:2] += padding_top
-            
+
         return image, mask, bbox
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(padding={0}, fill={1}, padding_mode={2})".format(
+            self.padding, self.fill, self.padding_mode)
+
 
 class Resize(T.Resize):
     def forward(self, image, mask=None, bbox=None):
@@ -80,6 +98,11 @@ class Resize(T.Resize):
             bbox[..., 1:4:2] *= float(target_h / h)
         return image, mask, bbox
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3})".format(
+            self.size, self.interpolation.value, self.max_size, self.antialias)
+
+
 class RandomHorizontalFlip:
     def __init__(self, p):
         self.p = p
@@ -94,6 +117,10 @@ class RandomHorizontalFlip:
                 bbox[..., 0:4:2] = w - bbox[..., 0:4:2]
         return image, mask, bbox
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(p={0})".format(self.p)
+
+
 class RandomVerticalFlip:
     def __init__(self, p):
         self.p = p
@@ -107,6 +134,10 @@ class RandomVerticalFlip:
             if bbox is not None:
                 bbox[..., 1:4:2] = h - bbox[..., 1:4:2]
         return image, mask, bbox
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(p={0})".format(self.p)
+
 
 class PadIfNeeded:
     def __init__(self, size, fill=0, padding_mode="constant"):
@@ -123,12 +154,12 @@ class PadIfNeeded:
     def __call__(self, image, mask=None, bbox=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
-        
+
         if isinstance(image, Image.Image):
             w, h = image.size
         else:
             w, h = image.shape[-1], image.shape[-2]
-        
+
         w_pad_needed = max(0, self.new_w - w)
         h_pad_needed = max(0, self.new_h - h)
         padding_ltrb = [w_pad_needed // 2,
@@ -144,11 +175,17 @@ class PadIfNeeded:
             bbox[..., 1:4:2] += padding_top
         return image, mask, bbox
 
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={0}, fill={1}, padding_mode={2})".format(
+            (self.new_h, self.new_w), self.fill, self.padding_mode
+        )
+
+
 class ColorJitter(T.ColorJitter):
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
         super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
         self.p: float = max(0., min(1., p))
-        
+
     def forward(self, image, mask=None, bbox=None):
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = \
             self.get_params(self.brightness, self.contrast, self.saturation, self.hue)
@@ -166,9 +203,18 @@ class ColorJitter(T.ColorJitter):
 
         return image, mask, bbox
 
+    def __repr__(self):
+        return self.__class__.__name__ + \
+            f"(brightness={self.brightness}, " + \
+            f"contrast={self.contrast}, " + \
+            f"saturation={self.saturation}, " + \
+            f"hue={self.hue}, " + \
+            f"p={self.p})"
+
+
 class RandomCrop:
     def __init__(self, size):
-        
+
         if not isinstance(size, (int, Sequence)):
             raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
         if isinstance(size, Sequence) and len(size) not in (1, 2):
@@ -176,7 +222,7 @@ class RandomCrop:
         self.size_h = size[0] if isinstance(size, Sequence) else size
         self.size_w = size[1] if isinstance(size, Sequence) else size
         self.image_pad_if_needed = PadIfNeeded((self.size_h, self.size_w))
-        
+
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
 
@@ -205,9 +251,13 @@ class RandomCrop:
                 _bbox_crop_count += 1
             bbox = bbox_candidate
         return image, mask, bbox
-    
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(size={0})".format((self.size_h, self.size_w))
+
+
 class RandomResizedCrop(T.RandomResizedCrop):
-    
+
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
 
@@ -219,7 +269,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
 
         bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
         return bbox
-    
+
     def forward(self, image, mask=None, bbox=None):
         w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
@@ -236,14 +286,23 @@ class RandomResizedCrop(T.RandomResizedCrop):
                 bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
                 _bbox_crop_count += 1
             bbox = bbox_candidate
-            
+
             # img = resize(img, size, interpolation)
             w_cropped, h_cropped = np.clip(w_orig - j, 0, w), np.clip(h_orig - i, 0, h)
             target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
             bbox[..., 0:4:2] *= float(target_w / w_cropped)
             bbox[..., 1:4:2] *= float(target_h / h_cropped)
-            
+
         return image, mask, bbox
+
+    def __repr__(self):
+        interpolate_str = self.interpolation.value
+        format_string = self.__class__.__name__ + '(size={0}'.format(self.size)
+        format_string += ', scale={0}'.format(tuple(round(s, 4) for s in self.scale))
+        format_string += ', ratio={0}'.format(tuple(round(r, 4) for r in self.ratio))
+        format_string += ', interpolation={0})'.format(interpolate_str)
+        return format_string
+
 
 class Normalize:
     def __init__(self, mean, std):
@@ -253,6 +312,12 @@ class Normalize:
     def __call__(self, image, mask=None, bbox=None):
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, mask, bbox
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(mean={0}, std={1})".format(
+            self.mean, self.std
+        )
+
 
 class ToTensor(T.ToTensor):
     def __call__(self, image, mask=None, bbox=None):
@@ -264,10 +329,13 @@ class ToTensor(T.ToTensor):
 
         return image, mask, bbox
 
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
+
 
 if __name__ == '__main__':
     from pathlib import Path
-    
+
     import PIL.Image as Image
     import albumentations as A
     import cv2
@@ -276,17 +344,16 @@ if __name__ == '__main__':
     im = Image.open(input_filename)
     im_array = np.array(im)
     print(f"Original image size (in array): {im_array.shape}")
-    
+
     """Pad"""
     torch_aug = PadIfNeeded(size=(1024, 1024))
     im_torch_aug, _, _ = torch_aug(im)
     im_torch_aug.save(f"{input_filename.stem}_torch{input_filename.suffix}")
     print(f"Aug image size (from torchvision): {np.array(im_torch_aug).shape}")
-    
+
     album_aug = A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=cv2.BORDER_CONSTANT)
     im_album_aug: np.ndarray = album_aug(image=im_array)['image']
     Image.fromarray(im_album_aug).save(f"{input_filename.stem}_album{input_filename.suffix}")
     print(f"Aug image size (from albumentations): {im_album_aug.shape}")
 
     print(np.all(np.array(im_torch_aug) == im_album_aug), np.mean(np.abs(np.array(im_torch_aug) - im_album_aug)))
-    
