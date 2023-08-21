@@ -17,15 +17,17 @@ class Compose:
         self.transforms = transforms
         self.additional_targets = additional_targets
 
-    def _get_transformed(self, image, mask, bbox):
+    def _get_transformed(self, image, mask, bbox, visualize_for_debug):
         for t in self.transforms:
-            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)
+            if visualize_for_debug and not t.visualize:
+                continue
+            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)    
         return image, mask, bbox
 
-    def __call__(self, image, mask=None, bbox=None, **kwargs):
+    def __call__(self, image, mask=None, bbox=None, visualize_for_debug=False, **kwargs):
         additional_targets_result = {k: None for k in kwargs.keys() if k in self.additional_targets}
 
-        result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox)
+        result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox, visualize_for_debug=visualize_for_debug)
         for key in additional_targets_result.keys():
             if self.additional_targets[key] == 'mask':
                 _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None)
@@ -50,6 +52,8 @@ class Compose:
 
 
 class Identity:
+    visualize = True
+
     def __init__(self):
         pass
 
@@ -61,6 +65,8 @@ class Identity:
 
 
 class Pad(T.Pad):
+    visualize = True
+
     def forward(self, image, mask=None, bbox=None):
         image = F.pad(image, self.padding, self.fill, self.padding_mode)
         if mask is not None:
@@ -85,6 +91,8 @@ class Pad(T.Pad):
 
 
 class Resize(T.Resize):
+    visualize = True
+
     def forward(self, image, mask=None, bbox=None):
         w, h = image.size
 
@@ -104,6 +112,8 @@ class Resize(T.Resize):
 
 
 class RandomHorizontalFlip:
+    visualize = True
+
     def __init__(self, p):
         self.p = p
 
@@ -122,6 +132,8 @@ class RandomHorizontalFlip:
 
 
 class RandomVerticalFlip:
+    visualize = True
+
     def __init__(self, p):
         self.p = p
 
@@ -140,6 +152,8 @@ class RandomVerticalFlip:
 
 
 class PadIfNeeded:
+    visualize = True
+
     def __init__(self, size, fill=0, padding_mode="constant"):
         super().__init__()
         if not isinstance(size, (int, Sequence)):
@@ -182,6 +196,8 @@ class PadIfNeeded:
 
 
 class ColorJitter(T.ColorJitter):
+    visualize = True
+
     def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
         super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
         self.p: float = max(0., min(1., p))
@@ -213,6 +229,8 @@ class ColorJitter(T.ColorJitter):
 
 
 class RandomCrop:
+    visualize = True
+
     def __init__(self, size):
 
         if not isinstance(size, (int, Sequence)):
@@ -257,6 +275,7 @@ class RandomCrop:
 
 
 class RandomResizedCrop(T.RandomResizedCrop):
+    visualize = True
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
@@ -305,6 +324,8 @@ class RandomResizedCrop(T.RandomResizedCrop):
 
 
 class Normalize:
+    visualize = False
+
     def __init__(self, mean, std):
         self.mean = mean
         self.std = std
@@ -320,6 +341,8 @@ class Normalize:
 
 
 class ToTensor(T.ToTensor):
+    visualize = False
+
     def __call__(self, image, mask=None, bbox=None):
         image = F.to_tensor(image)
         if mask is not None:
