@@ -34,7 +34,7 @@ class DetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
+
         self.optimizer.zero_grad()
         out = self.model(images, targets=targets)
         self.loss(out, target=targets, mode='train')
@@ -55,7 +55,7 @@ class DetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
+
         out = self.model(images, targets=targets)
         self.loss(out, target=targets, mode='valid')
 
@@ -69,7 +69,7 @@ class DetectionPipeline(BasePipeline):
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
             'pred': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                       for bbox, label in zip(out['post_boxes'], out['post_labels'])],                
+                     for bbox, label in zip(out['post_boxes'], out['post_labels'])],
         }
         return {k: v for k, v in logs.items()}
 
@@ -81,6 +81,9 @@ class DetectionPipeline(BasePipeline):
         out = self.model(images.unsqueeze(0))
 
         results = [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],        
+                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],
 
         return results
+
+    def get_metric_with_all_outputs(self, outputs):
+        pass

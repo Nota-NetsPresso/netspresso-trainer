@@ -70,5 +70,8 @@ class ClassificationPipeline(BasePipeline):
 
         if self.conf.distributed:
             torch.distributed.barrier()
-            
+
         return pred
+
+    def get_metric_with_all_outputs(self, outputs):
+        pass

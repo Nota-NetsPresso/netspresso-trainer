@@ -55,8 +55,8 @@ class BasePipeline(ABC):
 
         if self.single_gpu_or_rank_zero:
             self.train_logger = build_logger(self.conf, self.task, self.model_name,
-                                            step_per_epoch=self.train_step_per_epoch, class_map=class_map,
-                                            num_sample_images=NUM_SAMPLES)
+                                             step_per_epoch=self.train_step_per_epoch, class_map=class_map,
+                                             num_sample_images=NUM_SAMPLES)
 
     @final
     def _is_ready(self):
@@ -64,20 +64,20 @@ class BasePipeline(ABC):
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         """Append here if you need more assertion checks!"""
         return True
-    
+
     def _save_checkpoint(self, model: nn.Module):
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
-        
+
         save_onnx(model, model_path.with_suffix(".onnx"),
-                    sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
-        
+                  sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
+
         if self.is_graphmodule_training:
             torch.save(model, model_path.with_suffix(".pt"))
         else:
             torch.save(model.state_dict(), model_path.with_suffix(".pth"))
             save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
-        
+
     @abstractmethod
     def set_train(self):
         raise NotImplementedError
@@ -89,9 +89,13 @@ class BasePipeline(ABC):
     @abstractmethod
     def valid_step(self, batch):
         raise NotImplementedError
-    
+
     @abstractmethod
     def test_step(self, batch):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_metric_with_all_outputs(self, outputs):
         raise NotImplementedError
 
     def train(self):
@@ -132,7 +136,7 @@ class BasePipeline(ABC):
             self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
 
             model = self.model.module if hasattr(self.model, 'module') else self.model
-            
+
             self._save_checkpoint(model)
 
     def train_one_epoch(self):
@@ -143,13 +147,17 @@ class BasePipeline(ABC):
     def validate(self, num_samples=NUM_SAMPLES):
         num_returning_samples = 0
         returning_samples = []
+        outputs = []
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
-            if out is not None and num_returning_samples < num_samples:
-                returning_samples.append(out)
-                num_returning_samples += len(out['pred'])
+            if out is not None:
+                # outputs.append(out)
+                if num_returning_samples < num_samples:
+                    returning_samples.append(out)
+                    num_returning_samples += len(out['pred'])
+        # self.get_metric_with_all_outputs(outputs)
         return returning_samples
-    
+
     @torch.no_grad()
     def inference(self, test_dataset):
         returning_samples = []
@@ -157,7 +165,7 @@ class BasePipeline(ABC):
             out = self.test_step(batch)
             returning_samples.append(out)
         return returning_samples
-        
+
     def log_end_epoch(self, epoch, time_for_epoch, validation_samples=None, valid_logging=False):
         train_losses = self.loss.result('train')
         train_metrics = self.metric.result('train')
