@@ -151,11 +151,11 @@ class BasePipeline(ABC):
         for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
             if out is not None:
-                # outputs.append(out)
+                outputs.append(out)
                 if num_returning_samples < num_samples:
                     returning_samples.append(out)
                     num_returning_samples += len(out['pred'])
-        # self.get_metric_with_all_outputs(outputs)
+        self.get_metric_with_all_outputs(outputs)
         return returning_samples
 
     @torch.no_grad()

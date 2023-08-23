@@ -1,6 +1,7 @@
 import os
 import logging
 
+import numpy as np
 import torch
 from omegaconf import OmegaConf
 
@@ -86,4 +87,11 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs):
-        pass
+        detections = np.empty((0, 4))
+        indices = np.empty(0)
+        for output_batch in outputs:
+            for detection, class_idx in output_batch['pred']:
+                detections = np.vstack([detections, detection])
+                indices = np.append(indices, class_idx)
+        print(detections.shape)
+        print(indices.shape)
