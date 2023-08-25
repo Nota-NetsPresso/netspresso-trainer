@@ -47,7 +47,7 @@ def launch_gradio(args):
             with gr.Column(scale=2):
                 task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
             with gr.Column(scale=1):
-                phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'validation'])
+                phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'valid'])
         model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
         with gr.Row(equal_height=True):
             with gr.Column(scale=1):
