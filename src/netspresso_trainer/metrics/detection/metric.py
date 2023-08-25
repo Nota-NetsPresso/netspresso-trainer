@@ -178,11 +178,11 @@ class DetectionMetric(BaseMetric):
 
         # Gather matching stats for predictions and targets
 
-        predicted_objs_bbox, predicted_objs_class = pred
+        predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred
         true_objs_bbox, true_objs_class = target
 
         true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
-        predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis]), axis=-1)
+        predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
 
         if predicted_objs.shape[0] == 0:
             if true_objs.shape[0]:
