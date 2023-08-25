@@ -65,12 +65,14 @@ class DetectionPipeline(BasePipeline):
 
         if self.conf.distributed:
             torch.distributed.barrier()
+
         logs = {
             'images': images.detach().cpu().numpy(),
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
-            'pred': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                     for bbox, label in zip(out['post_boxes'], out['post_labels'])],
+            'pred': [(np.concatenate((bbox.detach().cpu().numpy(), confidence.detach().cpu().numpy()[..., np.newaxis]), axis=-1),
+                      label.detach().cpu().numpy())
+                     for bbox, confidence, label in zip(out['post_boxes'], out['post_scores'], out['post_labels'])],
         }
         return {k: v for k, v in logs.items()}
 
@@ -87,11 +89,18 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs):
-        detections = np.empty((0, 4))
-        indices = np.empty(0)
+        targets = np.empty((0, 4))
+        preds = np.empty((0, 5))  # with confidence score
+        targets_indices = np.empty(0)
+        preds_indices = np.empty(0)
         for output_batch in outputs:
+            for detection, class_idx in output_batch['target']:
+                targets = np.vstack([targets, detection])
+                targets_indices = np.append(targets_indices, class_idx)
+
             for detection, class_idx in output_batch['pred']:
-                detections = np.vstack([detections, detection])
-                indices = np.append(indices, class_idx)
-        print(detections.shape)
-        print(indices.shape)
+                preds = np.vstack([preds, detection])
+                preds_indices = np.append(preds_indices, class_idx)
+
+        print(targets.shape, targets_indices.shape)
+        print(preds.shape, preds_indices.shape)
