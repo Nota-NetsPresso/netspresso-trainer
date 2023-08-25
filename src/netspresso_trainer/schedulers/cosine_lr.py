@@ -14,7 +14,8 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
         optimizer (Optimizer): Wrapped optimizer.
         warmup_iters (int): The number of steps that the scheduler finishes to warmup the learning rate. Default: 5.
         total_iters (int): Maximum number of iterations. Originally named as `T_max`. Default: 5.
-        lr_min (float): Minimum learning rate. Originally named as `eta_min`. Default: 0.
+        warmup_bias_lr (int): Starting learning rate for warmup period. Default: 0.
+        min_lr (float): Minimum learning rate. Originally named as `eta_min`. Default: 0.
         last_epoch (int): The index of last epoch. Default: -1.
         verbose (bool): If ``True``, prints a message to stdout for each update. Default: ``False``.
     """

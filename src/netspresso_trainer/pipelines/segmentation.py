@@ -102,3 +102,6 @@ class SegmentationPipeline(BasePipeline):
         output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
 
         return output_seg
+    
+    def get_metric_with_all_outputs(self, outputs):
+        pass

@@ -75,7 +75,6 @@ class DetectionVisualizer:
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
                 image = cv2.putText(image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             return_images.append(image[np.newaxis, ...])
         return_images = np.concatenate(return_images, axis=0)
         return return_images

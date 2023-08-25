@@ -171,7 +171,6 @@ nav:
       - Backbones: models/model-list/backbones.md
       - Heads: models/model-list/heads.md
       - Full models: models/model-list/full-models.md
-    - Compatibility Matrix: models/compatibility.md
   # - NetsPresso:
   #   - netspresso/index.md
   #   - torch.fx: netspresso/torch-fx.md

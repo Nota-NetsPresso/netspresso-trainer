@@ -3,6 +3,8 @@ name: check-changelog
 
 on:
   pull_request:
+    branches:
+      - master
     types: [opened, synchronize, labeled, unlabeled]
 
 jobs:
@@ -18,4 +20,4 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
       - name: Release notes added
         run: |
-          cat CHANGELOG.md | grep -w "https://github.com/nota-netspresso/netspresso-trainer/pull/${{ github.event.number }}"
+          cat CHANGELOG.md | grep -w "https://github.com/Nota-NetsPresso/netspresso-trainer/pull/${{ github.event.number }}"

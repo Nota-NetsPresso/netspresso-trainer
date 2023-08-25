@@ -1,13 +1,14 @@
 training:
   seed: 1
   opt: adamw
-  lr: 6e-5
+  lr: 5e-3
   momentum: 0.937
-  weight_decay: 0.0005
+  weight_decay: 0.01
   sched: cosine
   min_lr: 1e-6
   warmup_bias_lr: 1e-5
   warmup_epochs: 5
+  iters_per_phase: 30
   sched_power: 1.0
   epochs: 3
-  batch_size: 16 
+  batch_size: 8 

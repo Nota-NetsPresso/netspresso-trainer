@@ -1,6 +1,7 @@
 import os
 import logging
 
+import numpy as np
 import torch
 from omegaconf import OmegaConf
 
@@ -34,7 +35,7 @@ class DetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
+
         self.optimizer.zero_grad()
         out = self.model(images, targets=targets)
         self.loss(out, target=targets, mode='train')
@@ -55,7 +56,7 @@ class DetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
+
         out = self.model(images, targets=targets)
         self.loss(out, target=targets, mode='valid')
 
@@ -64,12 +65,14 @@ class DetectionPipeline(BasePipeline):
 
         if self.conf.distributed:
             torch.distributed.barrier()
+
         logs = {
             'images': images.detach().cpu().numpy(),
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
-            'pred': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                       for bbox, label in zip(out['post_boxes'], out['post_labels'])],                
+            'pred': [(np.concatenate((bbox.detach().cpu().numpy(), confidence.detach().cpu().numpy()[..., np.newaxis]), axis=-1),
+                      label.detach().cpu().numpy())
+                     for bbox, confidence, label in zip(out['post_boxes'], out['post_scores'], out['post_labels'])],
         }
         return {k: v for k, v in logs.items()}
 
@@ -81,6 +84,23 @@ class DetectionPipeline(BasePipeline):
         out = self.model(images.unsqueeze(0))
 
         results = [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],        
+                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],
 
         return results
+
+    def get_metric_with_all_outputs(self, outputs):
+        targets = np.empty((0, 4))
+        preds = np.empty((0, 5))  # with confidence score
+        targets_indices = np.empty(0)
+        preds_indices = np.empty(0)
+        for output_batch in outputs:
+            for detection, class_idx in output_batch['target']:
+                targets = np.vstack([targets, detection])
+                targets_indices = np.append(targets_indices, class_idx)
+
+            for detection, class_idx in output_batch['pred']:
+                preds = np.vstack([preds, detection])
+                preds_indices = np.append(preds_indices, class_idx)
+
+        pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
+        self.metric((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), mode='valid')
