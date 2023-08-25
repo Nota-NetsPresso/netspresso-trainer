@@ -10,6 +10,9 @@ data:
     valid:
       image: image/val2017  # directory for valid images
       label: labels/val2017  # directory for valid labels
+    test:
+      image: ~  # directory for test images
+      label: ~
     pattern:
       image: "([0-9]{12})\\.jpg"  # regex for filepath whose id is grouped. If None, jointly paired with sorted lists
       label: "([0-9]{12})\\.txt"  # regex for filepath whose id is grouped. If None, jointly paired with sorted lists

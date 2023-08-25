@@ -69,10 +69,9 @@
 
 
 netspresso-train\
-  --data config/data/sidewalk-semantic.yaml\
-  --augmentation config/augmentation/pidnet.yaml\
-  --model config/model/pidnet.yaml\
-  --training config/training/pidnet.yaml\
+  --data config/data/traffic-sign.yaml\
+  --augmentation config/augmentation/efficientformer-detection.yaml\
+  --model config/model/efficientformer-detection.yaml\
+  --training config/training/efficientformer.yaml\
   --logging config/logging.yaml\
-  --environment config/environment.yaml\
-  --log-level DEBUG
+  --environment config/environment.yaml
