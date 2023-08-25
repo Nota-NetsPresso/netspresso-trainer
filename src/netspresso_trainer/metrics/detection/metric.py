@@ -111,7 +111,6 @@ def compute_average_precision(recall: np.ndarray, precision: np.ndarray) -> floa
     return average_precision
 
 
-@staticmethod
 def average_precisions_per_class(
     matches: np.ndarray,
     prediction_confidence: np.ndarray,
@@ -165,53 +164,6 @@ def average_precisions_per_class(
     return average_precisions
 
 
-def detection_metrics(pred, target, **kwargs):
-    iou_thresholds = np.linspace(0.5, 0.95, 10)
-    stats = []
-
-    # Gather matching stats for predictions and targets
-    for true_objs, predicted_objs in zip(target, pred):
-        if predicted_objs.shape[0] == 0:
-            if true_objs.shape[0]:
-                stats.append(
-                    (
-                        np.zeros((0, iou_thresholds.size), dtype=bool),
-                        *np.zeros((2, 0)),
-                        true_objs[:, 4],
-                    )
-                )
-            continue
-
-        if true_objs.shape[0]:
-            matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
-            stats.append(
-                (
-                    matches,
-                    predicted_objs[:, 5],
-                    predicted_objs[:, 4],
-                    true_objs[:, 4],
-                )
-            )
-
-    # Compute average precisions if any matches exist
-    if stats:
-        concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
-        average_precisions = average_precisions_per_class(*concatenated_stats)
-        map50 = average_precisions[:, 0].mean()
-        map75 = average_precisions[:, 5].mean()
-        map50_95 = average_precisions.mean()
-    else:
-        map50, map75, map50_95 = 0, 0, 0
-        average_precisions = []
-
-    return {
-        'map50': map50,
-        'map75': map75,
-        'map50_95': map50_95
-    }
-    # map50_95, map50, map75, average_precisions)
-
-
 class DetectionMetric(BaseMetric):
     metric_names: List[str] = ['map50', 'map75', 'map50_95']
 
@@ -225,28 +177,33 @@ class DetectionMetric(BaseMetric):
         stats = []
 
         # Gather matching stats for predictions and targets
-        for true_objs, predicted_objs in zip(target, pred):
-            if predicted_objs.shape[0] == 0:
-                if true_objs.shape[0]:
-                    stats.append(
-                        (
-                            np.zeros((0, iou_thresholds.size), dtype=bool),
-                            *np.zeros((2, 0)),
-                            true_objs[:, 4],
-                        )
-                    )
-                continue
 
+        predicted_objs_bbox, predicted_objs_class = pred
+        true_objs_bbox, true_objs_class = target
+
+        true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
+        predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis]), axis=-1)
+
+        if predicted_objs.shape[0] == 0:
             if true_objs.shape[0]:
-                matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
                 stats.append(
                     (
-                        matches,
-                        predicted_objs[:, 5],
-                        predicted_objs[:, 4],
+                        np.zeros((0, iou_thresholds.size), dtype=bool),
+                        *np.zeros((2, 0)),
                         true_objs[:, 4],
                     )
                 )
+
+        if true_objs.shape[0]:
+            matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
+            stats.append(
+                (
+                    matches,
+                    predicted_objs[:, 5],
+                    predicted_objs[:, 4],
+                    true_objs[:, 4],
+                )
+            )
 
         # Compute average precisions if any matches exist
         if stats:
@@ -260,4 +217,3 @@ class DetectionMetric(BaseMetric):
             average_precisions = []
 
         return result_dict
-        # map50_95, map50, map75, average_precisions)

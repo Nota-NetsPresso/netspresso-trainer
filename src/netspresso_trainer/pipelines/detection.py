@@ -102,5 +102,5 @@ class DetectionPipeline(BasePipeline):
                 preds = np.vstack([preds, detection])
                 preds_indices = np.append(preds_indices, class_idx)
 
-        print(targets.shape, targets_indices.shape)
-        print(preds.shape, preds_indices.shape)
+        self.metric((preds, preds_indices), (targets, targets_indices), mode='valid')
+        return (preds, preds_indices), (targets, targets_indices)
