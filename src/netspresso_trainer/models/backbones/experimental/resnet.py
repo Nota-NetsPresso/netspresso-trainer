@@ -81,7 +81,7 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2],
                                        expansion=expansion)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self._last_channels = 512 * expansion
+        self._feature_dim = 512 * expansion
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -145,8 +145,8 @@ class ResNet(nn.Module):
         return BackboneOutput(last_feature=x)
 
     @property
-    def last_channels(self):
-        return self._last_channels
+    def feature_dim(self):
+        return self._feature_dim
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK

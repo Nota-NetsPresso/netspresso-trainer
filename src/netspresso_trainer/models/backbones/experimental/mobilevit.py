@@ -378,7 +378,7 @@ class MobileViT(MetaFormer):
                                       use_act=True, use_norm=True)
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
         
-        self._last_channels = exp_channels
+        self._feature_dim = exp_channels
         
     def forward(self, x: FXTensorType):
         x = self.patch_embed(x)

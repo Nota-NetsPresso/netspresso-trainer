@@ -13,6 +13,7 @@ SUPPORTING_TASK = ['classification', 'segmentation']
 
 TEMP_HIDDEN_SZIE_AS_CONSTANT = 256
 
+
 class SegformerOverlapPatchEmbeddings(nn.Module):
     """Construct the overlapping patch embeddings."""
 
@@ -37,6 +38,7 @@ class SegformerOverlapPatchEmbeddings(nn.Module):
         embeddings = self.layer_norm(embeddings)
         return embeddings, H_embed, W_embed
 
+
 class SegformerDWConv(nn.Module):
     def __init__(self, intermediate_size=768):
         super().__init__()
@@ -59,7 +61,7 @@ class SegformerMixFFN(nn.Module):
         self.dwconv = SegformerDWConv(intermediate_size)
         self.intermediate_act_fn = ACTIVATION_REGISTRY[hidden_activation_type]()
         self.dense2 = nn.Linear(intermediate_size, in_features)
-        
+
         self.dropout = nn.Dropout(hidden_dropout_prob)
 
     def forward(self, hidden_states, height, width):
@@ -67,9 +69,10 @@ class SegformerMixFFN(nn.Module):
         hidden_states = self.dwconv(hidden_states, height, width)
         hidden_states = self.intermediate_act_fn(hidden_states)
         hidden_states = self.dense2(hidden_states)
-        
+
         hidden_states = self.dropout(hidden_states)
         return hidden_states
+
 
 class SegFormerBlock(MetaFormerBlock):
     def __init__(self, hidden_size, num_attention_heads, attention_dropout_prob, sequence_reduction_ratio,
@@ -87,19 +90,20 @@ class SegFormerBlock(MetaFormerBlock):
         )
         intermediate_size = int(hidden_size * intermediate_ratio)
         self.channel_mlp = SegformerMixFFN(hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type)
-        
+
     def forward(self, x, height, width):
         out_token_mixer = self.layernorm_before(x)
         out_token_mixer = self.token_mixer(out_token_mixer, height=height, width=width)
-        
+
         out_token_mixer = out_token_mixer + x
-        
+
         out_final = self.layernorm_after(out_token_mixer)
         out_final = self.channel_mlp(out_final, height=height, width=width)
-        
+
         out_final = out_final + out_token_mixer
-        
+
         return out_final
+
 
 class SegformerEncoder(MetaFormerEncoder):
     def __init__(self, num_blocks, hidden_size,
@@ -123,21 +127,22 @@ class SegformerEncoder(MetaFormerEncoder):
                     layer_norm_eps
                 )
             )
-        
+
     def forward(self, x, height, width):
         for block in self.blocks:
             x = block(x, height, width)
-        return x      
+        return x
+
 
 class SegFormer(MetaFormer):
     def __init__(self, task,
                  image_channels, num_modules, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
                  num_attention_heads, attention_dropout_prob, sr_ratios,
                  intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
-        super().__init__(hidden_sizes[-1])
+        super().__init__(hidden_sizes)
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
-                
+
         self.encoder_modules = nn.ModuleList()
         for i in range(num_modules):
             module = nn.ModuleDict(
@@ -167,17 +172,17 @@ class SegFormer(MetaFormer):
     def forward(self, x: FXTensorType):
         B = x.size(0)
         all_hidden_states = () if self.use_intermediate_features else None
-        
+
         for module in self.encoder_modules:
             x, H_embed, W_embed = module['patch_embed'](x)
             x = module['encoder'](x, height=H_embed, width=W_embed)
             x = module['norm'](x)
-            
+
             x = x.reshape(B, H_embed, W_embed, -1).permute(0, 3, 1, 2).contiguous()
 
             if self.use_intermediate_features:
                 all_hidden_states = all_hidden_states + (x,)
-        
+
         if self.use_intermediate_features:
             return BackboneOutput(intermediate_features=all_hidden_states)
 
@@ -185,7 +190,7 @@ class SegFormer(MetaFormer):
         feat = torch.mean(x.reshape(B, C, -1), dim=2)
         return BackboneOutput(last_feature=feat)
 
-        
+
 def segformer(task, **conf_model) -> SegformerEncoder:
     configuration = {
         'image_channels': 3,

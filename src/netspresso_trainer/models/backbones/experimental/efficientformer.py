@@ -335,7 +335,7 @@ class EfficientFormer(MetaFormer):
         vit_num=1
     ):
 
-        super().__init__(hidden_sizes[-1])
+        super().__init__(hidden_sizes)
         self.task = task.lower()
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
