@@ -368,7 +368,7 @@ class EfficientFormer(MetaFormer):
         feat = torch.mean(x, dim=-2)
         return BackboneOutput(last_feature=feat)
 
-def efficientformer(task, num_class=1000, *args, **kwargs) -> EfficientFormer:
+def efficientformer(task, **conf_model) -> EfficientFormer:
     
     # configuration for l1
     attention_hidden_size_splitted = 32

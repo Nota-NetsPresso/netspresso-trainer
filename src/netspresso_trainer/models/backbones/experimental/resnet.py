@@ -34,7 +34,6 @@ class ResNet(nn.Module):
         task: str,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
-        num_class: int = 1000,
         zero_init_residual: bool = False,
         groups: int = 1,
         width_per_group: int = 64,
@@ -83,7 +82,6 @@ class ResNet(nn.Module):
                                        expansion=expansion)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self._last_channels = 512 * expansion
-        # self.fc = nn.Linear(512 * block.expansion, num_class)
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -154,15 +152,23 @@ class ResNet(nn.Module):
         return task.lower() in SUPPORTING_TASK
 
 
-def resnet50(task, num_class=1000, **extra_params) -> ResNet:
+def resnet50(task, **conf_model) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(task, Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
+    configuration = {
+        'block': Bottleneck,
+        'layers': [3, 4, 6, 3]
+    }
+    return ResNet(task, **configuration)
 
 
-def resnet101(task, num_class=1000, **extra_params) -> ResNet:
-    """
-        ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
-    """
-    return ResNet(task, Bottleneck, [3, 4, 23, 3], num_class=num_class, **extra_params)
+# def resnet101(task, **conf_model) -> ResNet:
+#     """
+#         ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
+#     """
+#     configuration = {
+#         'block': Bottleneck,
+#         'layers': [3, 4, 23, 3]
+#     }
+#     return ResNet(task, **configuration)

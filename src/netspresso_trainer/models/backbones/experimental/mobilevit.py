@@ -387,7 +387,7 @@ class MobileViT(MetaFormer):
         feat = self.pool(x)
         return BackboneOutput(last_feature=feat)
 
-def mobilevit(task, *args, **kwargs):
+def mobilevit(task, **conf_model):
     mv2_exp_mult = 4
     num_heads = 4
     configuration = {

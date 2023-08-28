@@ -186,7 +186,7 @@ class SegFormer(MetaFormer):
         return BackboneOutput(last_feature=feat)
 
         
-def segformer(task, num_class=1000, *args, **kwargs) -> SegformerEncoder:
+def segformer(task, **conf_model) -> SegformerEncoder:
     configuration = {
         'image_channels': 3,
         'num_modules': 4,  # `num_encoder_blocks` in original
