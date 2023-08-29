@@ -1,0 +1,31 @@
+augmentation:
+  img_size: &img_size 512
+  hsv_h: ~
+  hsv_s: ~
+  hsv_v: ~
+  degrees: ~
+  translate: ~
+  scale: ~ 
+  max_scale: 1024
+  min_scale: *img_size
+  crop_size_h: *img_size
+  crop_size_w: *img_size
+  resize_ratio0: 1.0
+  resize_ratiof: 1.5
+  resize_add: 1
+  shear: ~
+  perspective: ~
+  flipud: ~
+  fliplr: 0.5
+  mosaic: ~
+  mixup: ~
+  copy_paste: ~
+  mixup_alpha: ~
+  cutmix_alpha: ~
+  mixup_switch_prob: ~
+  color_jitter:
+    brightness: 0.25
+    contrast: 0.25
+    saturation: 0.25
+    hue: 0.1
+    colorjitter_p: 0.5
