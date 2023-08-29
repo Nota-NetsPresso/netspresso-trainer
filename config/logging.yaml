@@ -5,4 +5,3 @@ logging:
   csv: false
   image: true
   stdout: true
-  netspresso: false

@@ -1,12 +1,12 @@
 model:
-  task: classification
+  task: segmentation
   checkpoint: ./weights/resnet/resnet50.pth
   freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone: resnet50
-    head: fc
+    head: all_mlp_decoder
   losses:
-    - criterion: label_smoothing_cross_entropy
-      smoothing: 0.01
+    - criterion: cross_entropy
       weight: ~
+      ignore_index: 255

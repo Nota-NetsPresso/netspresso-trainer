@@ -5,8 +5,8 @@ model:
   architecture:
     full: ~ # auto
     backbone: segformer
-    head: segformer_decode_head
+    head: fc
   losses:
-    - criterion: cross_entropy
+    - criterion: label_smoothing_cross_entropy
+      smoothing: 0.1
       weight: ~
-      ignore_index: 255
