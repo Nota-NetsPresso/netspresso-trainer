@@ -1,0 +1,12 @@
+model:
+  task: segmentation
+  checkpoint: ./weights/segformer/segformer.pth
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone: segformer
+    head: fc
+  losses:
+    - criterion: label_smoothing_cross_entropy
+      smoothing: 0.1
+      weight: ~
