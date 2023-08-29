@@ -257,17 +257,22 @@ class MetaFormerEncoder(nn.Module):
         return x
 
 class MetaFormer(nn.Module):
-    def __init__(self, hidden_size) -> None:
+    def __init__(self, hidden_sizes) -> None:
         super().__init__()
-        self._last_channels = hidden_size
+        self._feature_dim = hidden_sizes[-1]
+        self._intermediate_features_dim = hidden_sizes
         
         self.patch_embed = nn.Identity()
         self.encoder = MetaFormerEncoder()
         self.norm = nn.Identity()
 
     @property
-    def last_channels(self):
-        return self._last_channels
+    def feature_dim(self):
+        return self._feature_dim
+    
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
     
     def forward(self, x: FXTensorType):
         x = self.patch_embed(x)

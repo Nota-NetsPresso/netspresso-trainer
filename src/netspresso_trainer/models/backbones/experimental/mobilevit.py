@@ -378,7 +378,7 @@ class MobileViT(MetaFormer):
                                       use_act=True, use_norm=True)
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
         
-        self._last_channels = exp_channels
+        self._feature_dim = exp_channels
         
     def forward(self, x: FXTensorType):
         x = self.patch_embed(x)
@@ -387,7 +387,7 @@ class MobileViT(MetaFormer):
         feat = self.pool(x)
         return BackboneOutput(last_feature=feat)
 
-def mobilevit(task, *args, **kwargs):
+def mobilevit(task, **conf_model):
     mv2_exp_mult = 4
     num_heads = 4
     configuration = {

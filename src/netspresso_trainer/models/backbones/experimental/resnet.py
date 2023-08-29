@@ -34,7 +34,6 @@ class ResNet(nn.Module):
         task: str,
         block: Type[Union[BasicBlock, Bottleneck]],
         layers: List[int],
-        num_class: int = 1000,
         zero_init_residual: bool = False,
         groups: int = 1,
         width_per_group: int = 64,
@@ -45,7 +44,7 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
 
         self.task = task.lower()
-        self.intermediate_features = self.task in ['segmentation', 'detection']
+        self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         if norm_layer is None:
             norm_layer = 'batch_norm'
@@ -69,21 +68,24 @@ class ResNet(nn.Module):
         self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
                                kernel_size=7, stride=2, padding=3,
                                bias=False, norm_type='batch_norm', act_type='relu')
-
+        
+        planes =  [64, 128, 256, 512]
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, 64, layers[0], expansion=expansion)
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
+        self.layer1 = self._make_layer(block, planes[0], layers[0], expansion=expansion)
+        self.layer2 = self._make_layer(block, planes[1], layers[1], stride=2,
                                        dilate=replace_stride_with_dilation[0],
                                        expansion=expansion)
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
+        self.layer3 = self._make_layer(block, planes[2], layers[2], stride=2,
                                        dilate=replace_stride_with_dilation[1],
                                        expansion=expansion)
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
+        self.layer4 = self._make_layer(block, planes[3], layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2],
                                        expansion=expansion)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self._last_channels = 512 * expansion
-        # self.fc = nn.Linear(512 * block.expansion, num_class)
+        
+        hidden_sizes = list(map(lambda h: h * 4, planes))
+        self._feature_dim = hidden_sizes[-1]
+        self._intermediate_features_dim = hidden_sizes
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -135,10 +137,14 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.maxpool(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        all_hidden_states = () if self.use_intermediate_features else None
+        for layer in [self.layer1, self.layer2, self.layer3, self.layer4]:
+            x = layer(x)
+            if self.use_intermediate_features:
+                all_hidden_states = all_hidden_states + (x,)
+
+        if self.use_intermediate_features:
+            return BackboneOutput(intermediate_features=all_hidden_states)
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
@@ -147,22 +153,34 @@ class ResNet(nn.Module):
         return BackboneOutput(last_feature=x)
 
     @property
-    def last_channels(self):
-        return self._last_channels
+    def feature_dim(self):
+        return self._feature_dim
+    
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
 
-def resnet50(task, num_class=1000, **extra_params) -> ResNet:
+def resnet50(task, **conf_model) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(task, Bottleneck, [3, 4, 6, 3], num_class=num_class, **extra_params)
+    configuration = {
+        'block': Bottleneck,
+        'layers': [3, 4, 6, 3]
+    }
+    return ResNet(task, **configuration)
 
 
-def resnet101(task, num_class=1000, **extra_params) -> ResNet:
-    """
-        ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
-    """
-    return ResNet(task, Bottleneck, [3, 4, 23, 3], num_class=num_class, **extra_params)
+# def resnet101(task, **conf_model) -> ResNet:
+#     """
+#         ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
+#     """
+#     configuration = {
+#         'block': Bottleneck,
+#         'layers': [3, 4, 23, 3]
+#     }
+#     return ResNet(task, **configuration)

@@ -335,7 +335,7 @@ class EfficientFormer(MetaFormer):
         vit_num=1
     ):
 
-        super().__init__(hidden_sizes[-1])
+        super().__init__(hidden_sizes)
         self.task = task.lower()
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
@@ -368,7 +368,7 @@ class EfficientFormer(MetaFormer):
         feat = torch.mean(x, dim=-2)
         return BackboneOutput(last_feature=feat)
 
-def efficientformer(task, num_class=1000, *args, **kwargs) -> EfficientFormer:
+def efficientformer(task, **conf_model) -> EfficientFormer:
     
     # configuration for l1
     attention_hidden_size_splitted = 32
