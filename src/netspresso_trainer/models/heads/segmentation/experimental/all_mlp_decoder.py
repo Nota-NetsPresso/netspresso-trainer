@@ -5,15 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .config import SegformerConfig
 from ....utils import FXTensorListType, ModelOutput
 from ....op.custom import ConvLayer
-
-EfficientFormer_width = {
-    'l1': [48, 96, 224, 448],
-    'l3': [64, 128, 320, 512],
-    'l7': [96, 192, 384, 768],
-}
 
 
 class AllMLPDecoder(nn.Module):
@@ -65,16 +58,6 @@ class AllMLPDecoder(nn.Module):
             )
 
         return ModelOutput(pred=logits)
-
-
-# def segformer_decode_head(feature_dim, num_classes, label_size, **kwargs):
-#     config = SegformerConfig()
-#     return SegformerDecodeHead(config, num_classes, label_size=label_size)
-
-
-# def efficientformer_decode_head(feature_dim, num_classes, label_size, **kwargs):
-#     config = SegformerConfig(hidden_sizes=EfficientFormer_width['l1'])
-#     return SegformerDecodeHead(config, num_classes, label_size=label_size)
 
 
 def all_mlp_decoder(num_classes, intermediate_features_dim, label_size, **kwargs):
