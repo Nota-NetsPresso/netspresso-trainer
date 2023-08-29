@@ -1,11 +1,11 @@
 model:
   task: segmentation
-  checkpoint: ./weights/efficientformer_l1_1000d.pth
+  checkpoint: ./weights/segformer/segformer.pth
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: efficientformer
-    head: efficientformer_decode_head
+    backbone: segformer
+    head: all_mlp_decoder
   losses:
     - criterion: cross_entropy
       weight: ~
