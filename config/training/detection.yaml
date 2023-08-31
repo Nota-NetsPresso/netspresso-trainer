@@ -10,5 +10,5 @@ training:
   warmup_epochs: 5
   iters_per_phase: 30
   sched_power: 1.0
-  epochs: 20
+  epochs: 3
   batch_size: 8 

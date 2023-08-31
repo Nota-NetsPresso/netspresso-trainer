@@ -110,7 +110,7 @@ class VisionTransformer(MetaFormer):
         self.norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
 
 
-def vit(task, *args, **kwargs):
+def vit(task, **conf_model):
     # ViT tiny
     configuration = {
         "image_channels": 3,
