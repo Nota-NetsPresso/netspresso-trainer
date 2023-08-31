@@ -42,7 +42,7 @@ logger.info(f"model cpu memory footprint: {benchmark_task.memory_footprint_cpu} 
 
 ### Available Devices with PyNetsPresso Launcher (Convert, Benchmark)
 
-For PyNetsPresso launcher, the user has to use the checkpoint With [onnx] format. From our trainer, you can export the model checkpoint with onnx format when training is finished.  
+To fully use PyNetsPresso Launcher, model checkpoints from PyTorch has to be provided with [onnx] format. From our trainer, you can export the model checkpoint with onnx format when training is finished.  
 With onnx files, the following devices are executable with PyNetsPresso Launcher:
 
 - [Raspberry Pi]
