@@ -46,21 +46,21 @@ To fully use PyNetsPresso Launcher, model checkpoints from PyTorch has to be pro
 With onnx files, the following devices are executable with PyNetsPresso Launcher:
 
 - [Raspberry Pi]
-  - 4 Mobel B
-  - 3 Model B+
-  - Zero W
-  - Zero
+    - 4 Mobel B
+    - 3 Model B+
+    - Zero W
+    - Zero
 - [Renesas Embedded AI MPUs]
-  - RZ/V2L
-  - RZ/V2M
+    - RZ/V2L
+    - RZ/V2M
 - [NVIDIA Jetson]
-  - Nano
-  - TX2
-  - Xavier
-  - Nx
-  - AGX Orin
+    - Nano
+    - TX2
+    - Xavier
+    - Nx
+    - AGX Orin
 - [AWS instance]
-  - T4 
+    - T4  
 
 For more details, please refer to [compatibility matrix] in PyNetsPresso.
 
