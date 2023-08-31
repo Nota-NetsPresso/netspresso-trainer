@@ -171,10 +171,11 @@ nav:
       - Backbones: models/model-list/backbones.md
       - Heads: models/model-list/heads.md
       - Full models: models/model-list/full-models.md
-  # - NetsPresso:
-  #   - netspresso/index.md
-  #   - torch.fx: netspresso/torch-fx.md
-  #   - Compressor: netspresso/compressor.md
-  #   - Best Practice:
-  #     - netspresso/best-practice/index.md
-  #     - Compress and Tune: netspresso/best-practice/compress-and-tune.md
+  - PyNetsPresso:
+    - pynetspresso/index.md
+    - Compressor: pynetspresso/compressor.md
+    - Launcher: pynetspresso/launcher.md
+    - torch.fx: pynetspresso/torch-fx.md
+    - Best Practice:
+      - Compress and Retrain: pynetspresso/best-practice/compress-and-retrain.md
+      - Benchmark with Jetson AGX Orin: pynetspresso/best-practice/benchmark-with-launcher.md
