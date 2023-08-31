@@ -177,6 +177,5 @@ nav:
     - Launcher: pynetspresso/launcher.md
     - torch.fx: pynetspresso/torch-fx.md
     - Best Practice:
-      - pynetspresso/best-practice/index.md
       - Compress and Retrain: pynetspresso/best-practice/compress-and-retrain.md
       - Benchmark with Jetson AGX Orin: pynetspresso/best-practice/benchmark-with-launcher.md
