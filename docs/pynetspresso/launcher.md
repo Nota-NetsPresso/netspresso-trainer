@@ -1,3 +1,4 @@
+<!-- FIXME: mostly copied from https://github.com/Nota-NetsPresso/PyNetsPresso/blob/main/README.md?plain=1 -->
 
 ### Convert Model and Benchmark the Converted Model
 Convert an ONNX model into a TensorRT model, and benchmark the TensorRT model on the Jetson Nano.
@@ -61,7 +62,10 @@ With onnx files, the following devices are executable with PyNetsPresso Launcher
 - [AWS instance]
   - T4 
 
-For more details, please refer to [compatibility matrix] in PyNetsPresso
+For more details, please refer to [compatibility matrix] in PyNetsPresso.
+
+</br>
+</br>
 
 
 [onnx]: https://onnx.ai/

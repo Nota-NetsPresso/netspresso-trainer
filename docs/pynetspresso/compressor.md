@@ -1,3 +1,5 @@
+<!-- FIXME: copied from https://github.com/Nota-NetsPresso/PyNetsPresso/blob/main/README.md?plain=1 -->
+
 ### Automatic Compression
 
 Automatically compress the model by setting the compression ratio for the model.
