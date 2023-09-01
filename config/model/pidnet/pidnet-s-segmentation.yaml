@@ -4,7 +4,7 @@ model:
   freeze_backbone: False
   architecture:
     full:
-      type: pidnet
+      name: pidnet
     backbone: ~
     head: ~
   losses:

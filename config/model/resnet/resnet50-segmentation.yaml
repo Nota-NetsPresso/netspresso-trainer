@@ -4,11 +4,13 @@ model:
   freeze_backbone: False
   architecture:
     full:
-      type: ~ # auto
+      name: ~ # auto
     backbone:
-      type: resnet50
+      name: resnet50
+      block: bottleneck
+      layers: [3, 4, 6, 3]
     head:
-      type: all_mlp_decoder
+      name: all_mlp_decoder
   losses:
     - criterion: cross_entropy
       weight: ~

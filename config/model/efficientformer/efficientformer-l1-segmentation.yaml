@@ -5,9 +5,9 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      type: efficientformer
+      name: efficientformer
     head:
-      type: all_mlp_decoder
+      name: all_mlp_decoder
   losses:
     - criterion: cross_entropy
       weight: ~

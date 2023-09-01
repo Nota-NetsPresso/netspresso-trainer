@@ -5,9 +5,9 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      type: efficientformer
+      name: efficientformer
     head:
-      type: efficientformer_detection_head
+      name: efficientformer_detection_head
   losses:
     - criterion: roi_head_loss
       weight: ~

@@ -5,9 +5,9 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      type: efficientformer
+      name: efficientformer
     head:
-      type: fc
+      name: fc
   losses:
     - criterion: label_smoothing_cross_entropy
       smoothing: 0.1

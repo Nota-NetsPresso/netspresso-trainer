@@ -5,9 +5,11 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      type: resnet50
+      name: resnet50
+      block: bottleneck
+      layers: [3, 4, 6, 3]
     head:
-      type: fc
+      name: fc
   losses:
     - criterion: label_smoothing_cross_entropy
       smoothing: 0.1
