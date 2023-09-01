@@ -21,7 +21,7 @@ class TaskModel(nn.Module):
         self.head_name = head_name
 
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        self.backbone: nn.Module = backbone_fn(task=self.task)
+        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model.architecture.backbone)
 
         self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
 

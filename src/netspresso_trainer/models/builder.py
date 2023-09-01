@@ -8,11 +8,9 @@ import torch.nn as nn
 
 from .base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
 from .registry import SUPPORTING_TASK_LIST, MODEL_FULL_DICT
-from .utils import load_from_checkpoint, load_model_name
+from .utils import load_from_checkpoint
 
 logger = logging.getLogger("netspresso_trainer")
-
-
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
@@ -39,11 +37,11 @@ def load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num
 
 def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn.Module:
 
-    if conf_model.architecture.full is not None:
-        model_name = load_model_name(conf_model.architecture.full)
+    if conf_model.single_task_model:
+        model_name = str(conf_model.architecture.full.name).lower()
         return load_full_model(conf_model, model_name, num_classes, model_checkpoint)
 
-    backbone_name = load_model_name(conf_model.architecture.backbone)
-    head_name = load_model_name(conf_model.architecture.head)
+    backbone_name = str(conf_model.architecture.backbone.name).lower()
+    head_name = str(conf_model.architecture.head.name).lower()
     freeze_backbone = conf_model.freeze_backbone
     return load_backbone_and_head_model(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone)

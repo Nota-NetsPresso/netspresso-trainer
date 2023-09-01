@@ -56,11 +56,10 @@ def load_from_checkpoint(model: nn.Module, model_checkpoint: Optional[Union[str,
     return model
 
 
-def load_model_name(conf_model_sub: Union[omegaconf.DictConfig, str]):
-    if isinstance(conf_model_sub, (omegaconf.DictConfig, omegaconf.ListConfig, dict, list)):
-        assert hasattr(conf_model_sub, 'type')
-        model_name: str = conf_model_sub.type
-    else:
-        assert isinstance(conf_model_sub, str)
-        model_name = conf_model_sub
-    return model_name.lower()
+def is_single_task_model(conf_model: omegaconf.DictConfig):
+    conf_model_architecture_full = conf_model.architecture.full
+    if conf_model_architecture_full is None:
+        return False
+    if conf_model_architecture_full.name is None:
+        return False
+    return True

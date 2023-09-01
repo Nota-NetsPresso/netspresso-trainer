@@ -7,7 +7,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
 
 from .dataloaders import build_dataset, build_dataloader
-from .models import build_model, SUPPORTING_TASK_LIST, load_model_name
+from .models import build_model, SUPPORTING_TASK_LIST, is_single_task_model
 from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
@@ -100,11 +100,11 @@ def trainer(is_graphmodule_training=False):
     assert task in SUPPORTING_TASK_LIST
 
     # TODO: Get model name from checkpoint
-    conf_model_sub = conf.model.architecture.full
-    if conf_model_sub is None:
-        conf_model_sub = conf.model.architecture.backbone
+    single_task_model = is_single_task_model(conf.model)
+    conf_model_sub = conf.model.architecture.full if single_task_model else conf.model.architecture.backbone
+    conf.model.single_task_model = single_task_model
 
-    model_name = load_model_name(conf_model_sub)
+    model_name = str(conf_model_sub.name).lower()
 
     if is_graphmodule_training:
         model_name += "_graphmodule"
