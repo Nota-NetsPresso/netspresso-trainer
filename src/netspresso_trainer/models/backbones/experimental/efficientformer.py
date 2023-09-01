@@ -23,6 +23,7 @@ from ...utils import BackboneOutput, FXTensorType
 
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
 
+
 class EfficientFormerStem(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
@@ -32,7 +33,7 @@ class EfficientFormerStem(nn.Module):
             ConvLayer(out_channels // 2, out_channels, kernel_size=3, stride=2, padding=1, bias=True,
                       use_act=True, use_norm=True, norm_type='batch_norm', act_type='relu'),
         )
-        
+
     def forward(self, x):
         x = self.stem(x)
         return x
@@ -59,7 +60,7 @@ class EfficientFormerMeta4DMLP(nn.Module):
         # hidden_dropout_prob = drop = 0.
         super().__init__()
         intermediate_size = intermediate_size or hidden_size
-        
+
         self.ffn = nn.Sequential()
         self.ffn.add_module(
             'conv_1x1_1', ConvLayer(hidden_size, intermediate_size, kernel_size=1, bias=True,
@@ -71,7 +72,7 @@ class EfficientFormerMeta4DMLP(nn.Module):
             'conv_1x1_2', ConvLayer(intermediate_size, hidden_size, kernel_size=1, bias=True,
                                     use_norm=True, use_act=False, norm_type='batch_norm')
         )
-        
+
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
         self.apply(self._init_weights)
 
@@ -102,7 +103,7 @@ class Meta3D(MetaFormerBlock):
         # hidden_dropout_prob: drop
         # hidden_size: dim
         # hidden_size: key_dim * num_attention_heads
-        
+
         # self.token_mixer = Attention(dim)
         # (dim=384, key_dim=32, num_heads=8, attn_ratio=4, resolution=16)
         # num_attention_heads: 8
@@ -136,12 +137,12 @@ class Meta3D(MetaFormerBlock):
     def forward(self, x):
         if self.use_layer_scale:
             x = x + self.drop_path(
-                self.layer_scale_1.unsqueeze(0).unsqueeze(0) * \
-                    self.token_mixer(self.layernorm_before(x))
+                self.layer_scale_1.unsqueeze(0).unsqueeze(0) *
+                self.token_mixer(self.layernorm_before(x))
             )
             x = x + self.drop_path(
-                self.layer_scale_2.unsqueeze(0).unsqueeze(0) * \
-                    self.channel_mlp(self.layernorm_after(x))
+                self.layer_scale_2.unsqueeze(0).unsqueeze(0) *
+                self.channel_mlp(self.layernorm_after(x))
             )
 
         else:
@@ -192,34 +193,34 @@ class Meta4D(MetaFormerBlock):
 
 class EfficientFormerEncoder(MetaFormerEncoder):
     def __init__(self, use_intermediate_features, num_blocks, hidden_sizes,
-                num_attention_heads, attention_hidden_size, attention_dropout_prob,
-                attention_ratio, attention_bias_resolution,
-                pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
-                layer_norm_eps,
-                drop_path_rate, use_layer_scale, layer_scale_init_value,
-                downsamples, down_patch_size, down_stride, down_pad,
-                vit_num=1):
+                 num_attention_heads, attention_hidden_size, attention_dropout_prob,
+                 attention_ratio, attention_bias_resolution,
+                 pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
+                 layer_norm_eps,
+                 drop_path_rate, use_layer_scale, layer_scale_init_value,
+                 downsamples, down_patch_size, down_stride, down_pad,
+                 vit_num=1):
         # intermediate_ratio: mlp_ratio
         # hidden_size: dim
         # hidden_dropout_prob: drop
         # hidden_activation_type: act_type
-        
+
         # intermediate_ratio: mlp_ratio
         # hidden_activation_type: act_type
         # hidden_dropout_prob: drop
         # hidden_size: dim
         # attention_hidden_size: key_dim * num_attention_heads
-        
+
         # self.token_mixer = Attention(dim)
         # (dim=384, key_dim=32, num_heads=8, attn_ratio=4, resolution=16)
         # num_attention_heads: 8
         # hidden_size: key_dim*num_attention_heads = 32 * 8
         # value_hidden_size: key_dim*num_attention_heads*attn_ratio = 32 * 8 * 4
         # attention_bias_resolution: resolution = 16
-        
+
         super().__init__()
         self.use_intermediate_features = use_intermediate_features
-         
+
         blocks = []
         for module_idx in range(len(num_blocks)):
             stage = self.meta_blocks(
@@ -247,7 +248,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
                 )
 
         self.blocks = nn.ModuleList(blocks)
-        
+
         if self.use_intermediate_features:
             # add a norm layer for each output
             self.intermediate_features_indices = [0, 2, 4, 6]
@@ -266,7 +267,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
                     layer_norm_eps,
                     drop_path_rate, use_layer_scale, layer_scale_init_value,
                     vit_num=1):
-        
+
         blocks = []
         if module_idx == 3 and vit_num == num_blocks[module_idx]:
             blocks.append(Image2Sequence())
@@ -300,7 +301,7 @@ class EfficientFormerEncoder(MetaFormerEncoder):
 
         blocks = nn.Sequential(*blocks)
         return blocks
-    
+
     def forward(self, x):
         all_hidden_states = () if self.use_intermediate_features else None
         for idx, block in enumerate(self.blocks):
@@ -315,12 +316,13 @@ class EfficientFormerEncoder(MetaFormerEncoder):
                     x = x.transpose(1, 2).reshape(B, C, H, W)
                 x = norm_layer(x)
                 all_hidden_states = all_hidden_states + (x,)
-        
+
         if self.use_intermediate_features:
             # output the features of four stages for dense prediction
             return all_hidden_states
         # output only the features of last layer for image classification
         return x
+
 
 class EfficientFormer(MetaFormer):
 
@@ -331,8 +333,8 @@ class EfficientFormer(MetaFormer):
         pool_size, intermediate_ratio, hidden_dropout_prob, hidden_activation_type,
         layer_norm_eps,
         drop_path_rate=0., use_layer_scale=True, layer_scale_init_value=1e-5,
-        downsamples=None, down_patch_size=3, down_stride=2, down_pad=1, 
-        vit_num=1
+        downsamples=None, down_patch_size=3, down_stride=2, down_pad=1,
+        vit_num=1, **kwargs
     ):
 
         super().__init__(hidden_sizes)
@@ -354,7 +356,7 @@ class EfficientFormer(MetaFormer):
         )
 
         self.norm = nn.LayerNorm(hidden_sizes[-1], eps=layer_norm_eps)
-    
+
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
@@ -368,31 +370,6 @@ class EfficientFormer(MetaFormer):
         feat = torch.mean(x, dim=-2)
         return BackboneOutput(last_feature=feat)
 
-def efficientformer(task, **conf_model) -> EfficientFormer:
-    
-    # configuration for l1
-    attention_hidden_size_splitted = 32
-    configuration = {
-        'num_blocks': [3, 2, 6, 4],
-        'hidden_sizes': [48, 96, 224, 448],
-        'num_attention_heads': 8,
-        'attention_hidden_size': 32 * 8, # attention_hidden_size_splitted * num_attention_heads
-        'attention_dropout_prob': 0.,
-        'attention_ratio': 4,
-        'attention_bias_resolution': 16,
-        'pool_size': 3,
-        'intermediate_ratio': 4,
-        'hidden_dropout_prob': 0.,
-        'hidden_activation_type': 'gelu',
-        'layer_norm_eps': 1e-5,
-        'drop_path_rate': 0.,
-        'use_layer_scale': True,
-        'layer_scale_init_value': 1e-5,
-        'downsamples': [True, True, True, True],
-        'down_patch_size': 3,
-        'down_stride': 2,
-        'down_pad': 1,
-        'vit_num': 1
-    }
 
-    return EfficientFormer(task, **configuration)
+def efficientformer(task, conf_model_backbone) -> EfficientFormer:
+    return EfficientFormer(task, **conf_model_backbone)
