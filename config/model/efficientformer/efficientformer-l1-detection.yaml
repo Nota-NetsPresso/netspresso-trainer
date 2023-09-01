@@ -4,8 +4,10 @@ model:
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: efficientformer
-    head: efficientformer_detection_head
+    backbone:
+      type: efficientformer
+    head:
+      type: efficientformer_detection_head
   losses:
     - criterion: roi_head_loss
       weight: ~

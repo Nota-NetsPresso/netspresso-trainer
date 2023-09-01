@@ -4,8 +4,10 @@ model:
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: efficientformer
-    head: fc
+    backbone:
+      type: efficientformer
+    head:
+      type: fc
   losses:
     - criterion: label_smoothing_cross_entropy
       smoothing: 0.1

@@ -4,8 +4,10 @@ model:
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: vit
-    head: fc
+    backbone:
+      type: vit
+    head:
+      type: fc
   losses:
     - criterion: label_smoothing_cross_entropy
       smoothing: 0.1
