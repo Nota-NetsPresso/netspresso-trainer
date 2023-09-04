@@ -4,8 +4,12 @@ model:
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: resnet50
-    head: fc
+    backbone:
+      name: resnet50
+      block: bottleneck
+      layers: [3, 4, 6, 3]
+    head:
+      name: fc
   losses:
     - criterion: label_smoothing_cross_entropy
       smoothing: 0.1

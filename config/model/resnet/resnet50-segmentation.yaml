@@ -3,9 +3,14 @@ model:
   checkpoint: ./weights/resnet/resnet50.pth
   freeze_backbone: False
   architecture:
-    full: ~ # auto
-    backbone: resnet50
-    head: all_mlp_decoder
+    full:
+      name: ~ # auto
+    backbone:
+      name: resnet50
+      block: bottleneck
+      layers: [3, 4, 6, 3]
+    head:
+      name: all_mlp_decoder
   losses:
     - criterion: cross_entropy
       weight: ~

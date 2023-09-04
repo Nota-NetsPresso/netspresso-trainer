@@ -30,9 +30,9 @@ class Compose:
         result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox, visualize_for_debug=visualize_for_debug)
         for key in additional_targets_result.keys():
             if self.additional_targets[key] == 'mask':
-                _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None)
+                _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None, visualize_for_debug=visualize_for_debug)
             elif self.additional_targets[key] == 'bbox':
-                _, _, additional_targets_result[key] = self._get_transformed(image=image, mask=None, bbox=kwargs[key])
+                _, _, additional_targets_result[key] = self._get_transformed(image=image, mask=None, bbox=kwargs[key], visualize_for_debug=visualize_for_debug)
             else:
                 del additional_targets_result[key]
 

@@ -3,7 +3,13 @@ model:
   checkpoint: ./weights/pidnet/pidnet_s.pth
   freeze_backbone: False
   architecture:
-    full: pidnet
+    full:
+      name: pidnet
+      m: 2
+      n: 3
+      planes: 32
+      ppm_planes: 96
+      head_planes: 128
     backbone: ~
     head: ~
   losses:

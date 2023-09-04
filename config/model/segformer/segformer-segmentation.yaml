@@ -4,8 +4,22 @@ model:
   freeze_backbone: False
   architecture:
     full: ~ # auto
-    backbone: segformer
-    head: all_mlp_decoder
+    backbone:
+      name: segformer
+      num_modules: 4  # `num_encoder_blocks` in original
+      num_blocks: [2, 2, 2, 2]  # `depth` in original
+      sr_ratios: [8, 4, 2, 1]
+      hidden_sizes: [32, 64, 160, 256]
+      embedding_patch_sizes: [7, 3, 3, 3]
+      embedding_strides: [4, 2, 2, 2]
+      num_attention_heads: [1, 2, 5, 8]
+      intermediate_ratio: 4
+      hidden_activation_type: "gelu"
+      hidden_dropout_prob: 0.0
+      attention_dropout_prob: 0.0
+      layer_norm_eps: 1e-5
+    head:
+      name: all_mlp_decoder
   losses:
     - criterion: cross_entropy
       weight: ~
