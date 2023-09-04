@@ -378,28 +378,5 @@ class MobileViT(MetaFormer):
         feat = self.pool(x)
         return BackboneOutput(last_feature=feat)
     
-def mobilevit(task, **conf_model):
-    
-    mv2_exp_mult = 4
-    num_heads = 4
-    configuration = {
-        "out_channels": [32, 64, 96, 128, 160],
-        "block_type": ['mv2', 'mv2', 'mobilevit', 'mobilevit', 'mobilevit'],
-        "num_blocks": [1, 3, None, None, None],
-        "stride": [1, 2, 2, 2, 2],
-        "hidden_size": [None, None, 144, 192, 240],
-        "intermediate_size": [None, None, 288, 384, 480],
-        "num_transformer_blocks": [None, None, 2, 4, 3],
-        "dilate": [None, None, False, False, False],
-        "expand_ratio": [mv2_exp_mult, mv2_exp_mult, mv2_exp_mult, mv2_exp_mult, mv2_exp_mult],
-        "patch_embedding_out_channels": 16,
-        "local_kernel_size": 3,
-        "patch_size": 2,
-        "num_attention_heads": num_heads,
-        "attention_dropout_prob": 0.1,
-        "hidden_dropout_prob": 0.0,
-        "exp_factor": 4,
-        "layer_norm_eps": 1e-5,
-        "use_fusion_layer": True,
-    }
-    return MobileViT(task, **configuration)
+def mobilevit(task, conf_model_backbone):
+    return MobileViT(task, **conf_model_backbone)
