@@ -19,7 +19,7 @@ from ...op.base_metaformer import (
     Pooling
 )
 from ...op.custom import ConvLayer
-from ...utils import BackboneOutput, FXTensorType
+from ...utils import BackboneOutput
 
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
 
@@ -360,7 +360,7 @@ class EfficientFormer(MetaFormer):
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
 
-    def forward(self, x: FXTensorType):
+    def forward(self, x):
         x = self.patch_embed(x)
         x = self.encoder(x)
         if self.use_intermediate_features:
