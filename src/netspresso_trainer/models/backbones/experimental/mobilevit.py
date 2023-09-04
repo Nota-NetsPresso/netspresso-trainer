@@ -4,7 +4,7 @@ https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f
 """
 
 import argparse
-from typing import Dict, Tuple, Optional, Any, Union
+from typing import Dict, Tuple, Optional, Any, Union, Literal
 import math
 
 import torch
@@ -253,7 +253,9 @@ class MobileViTBlock(nn.Module):
         return out
 
 class MobileViTEncoder(MetaFormerEncoder):
-    def __init__(self, config_stages, patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
+    def __init__(self, out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
+                 patch_embedding_out_channels, local_kernel_size, patch_size,
+                 num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
         super().__init__()
         stages = []
         
@@ -267,22 +269,16 @@ class MobileViTEncoder(MetaFormerEncoder):
         self.use_fusion_layer = use_fusion_layer
         
         in_channels = patch_embedding_out_channels
-        for config_stage in config_stages:
-            stages.append(self._make_block(config_stage, in_channels))
-            in_channels = config_stage['out_channels']
+        for idx in range(len(out_channels)):
+            stages.append(self._make_block(out_channels[idx], block_type[idx], num_blocks[idx], stride[idx], hidden_size[idx],
+                                           intermediate_size[idx], num_transformer_blocks[idx], dilate[idx], expand_ratio[idx],
+                                           in_channels))
+            in_channels = out_channels[idx]
         self.blocks = nn.Sequential(*stages)
     
-    def _make_block(self, config_stage, in_channels):
-        block_type = config_stage['block_type']
-        
-        out_channels = config_stage['out_channels']
-        stride = config_stage['stride']
-        expand_ratio = config_stage['expand_ratio']
-        if block_type.lower() == 'mobilevit':
-            dilate = config_stage['dilate']
-            num_transformer_blocks = config_stage['num_transformer_blocks']
-            hidden_size = config_stage['hidden_size']
-            intermediate_size = config_stage['intermediate_size']
+    def _make_block(self, out_channels, block_type: Literal['mv2', 'mobilevit'], num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio, in_channels):
+
+        if block_type == 'mobilevit':
             return self._make_mobilevit_blocks(
                 num_transformer_blocks, in_channels, out_channels, stride, expand_ratio,
                 hidden_size, intermediate_size, self.patch_size, self.local_kernel_size, self.num_attention_heads,
@@ -290,7 +286,6 @@ class MobileViTEncoder(MetaFormerEncoder):
                 dilate
             )
             
-        num_blocks = config_stage['num_blocks']
         return self._make_inverted_residual_blocks(
             num_blocks, in_channels, out_channels, stride, expand_ratio
         )
@@ -350,30 +345,26 @@ class MobileViTEncoder(MetaFormerEncoder):
 
 class MobileViT(MetaFormer):
     def __init__(
-        self,
-        task,
-        config_stages,
-        image_channels,
-        patch_embedding_out_channels,
-        local_kernel_size,
-        patch_size,
-        num_attention_heads,
-        attention_dropout_prob,
-        hidden_dropout_prob,
-        exp_factor,
-        layer_norm_eps=1e-6,
-        use_fusion_layer = True,
+        self, task,
+        out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
+        patch_embedding_out_channels, local_kernel_size, patch_size,
+        num_attention_heads, attention_dropout_prob, hidden_dropout_prob,
+        exp_factor, layer_norm_eps=1e-6, use_fusion_layer = True,
+        **kwargs
     ) -> None:
-        super().__init__(patch_embedding_out_channels)
+        exp_channels = min(exp_factor * out_channels[-1], 960)
+        hidden_sizes = out_channels + [exp_channels]
+        super().__init__(hidden_sizes)
+        
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         
+        image_channels = 3
         self.patch_embed = MobileViTEmbeddings(image_channels, patch_embedding_out_channels)
-        self.encoder = MobileViTEncoder(config_stages, patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
+        self.encoder = MobileViTEncoder(out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
+                                        patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
         
-        encoder_out_channel = config_stages[-1]['out_channels']
-        exp_channels = min(exp_factor * encoder_out_channel, 960)
-        self.conv_1x1_exp = ConvLayer(opts=None, in_channels=encoder_out_channel, out_channels=exp_channels,
+        self.conv_1x1_exp = ConvLayer(opts=None, in_channels=out_channels[-1], out_channels=exp_channels,
                                       kernel_size=1, stride=1,
                                       use_act=True, use_norm=True)
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
@@ -386,58 +377,21 @@ class MobileViT(MetaFormer):
         x = self.conv_1x1_exp(x)
         feat = self.pool(x)
         return BackboneOutput(last_feature=feat)
-
+    
 def mobilevit(task, **conf_model):
+    
     mv2_exp_mult = 4
     num_heads = 4
     configuration = {
-        "config_stages": [
-            {
-                "out_channels": 32,
-                "expand_ratio": mv2_exp_mult,
-                "num_blocks": 1,
-                "stride": 1,
-                "block_type": "mv2",
-            },
-            {
-                "out_channels": 64,
-                "expand_ratio": mv2_exp_mult,
-                "num_blocks": 3,
-                "stride": 2,
-                "block_type": "mv2",
-            },
-            {  # 28x28
-                "out_channels": 96,
-                "hidden_size": 144,
-                "intermediate_size": 288,
-                "num_transformer_blocks": 2,
-                "stride": 2,
-                "expand_ratio": mv2_exp_mult,
-                "dilate": False,
-                "block_type": "mobilevit",
-            },
-            {  # 14x14
-                "out_channels": 128,
-                "hidden_size": 192,
-                "intermediate_size": 384,
-                "num_transformer_blocks": 4,
-                "stride": 2,
-                "expand_ratio": mv2_exp_mult,
-                "dilate": False,
-                "block_type": "mobilevit",
-            },
-            {  # 7x7
-                "out_channels": 160,
-                "hidden_size": 240,
-                "intermediate_size": 480,
-                "num_transformer_blocks": 3,
-                "stride": 2,
-                "expand_ratio": mv2_exp_mult,
-                "dilate": False,
-                "block_type": "mobilevit",
-            }
-        ],
-        "image_channels": 3,
+        "out_channels": [32, 64, 96, 128, 160],
+        "block_type": ['mv2', 'mv2', 'mobilevit', 'mobilevit', 'mobilevit'],
+        "num_blocks": [1, 3, None, None, None],
+        "stride": [1, 2, 2, 2, 2],
+        "hidden_size": [None, None, 144, 192, 240],
+        "intermediate_size": [None, None, 288, 384, 480],
+        "num_transformer_blocks": [None, None, 2, 4, 3],
+        "dilate": [None, None, False, False, False],
+        "expand_ratio": [mv2_exp_mult, mv2_exp_mult, mv2_exp_mult, mv2_exp_mult, mv2_exp_mult],
         "patch_embedding_out_channels": 16,
         "local_kernel_size": 3,
         "patch_size": 2,
