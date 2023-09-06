@@ -5,10 +5,7 @@ import torch
 import numpy as np
 from omegaconf import OmegaConf
 
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
 from .base import BasePipeline
-from ..utils.logger import set_logger
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -21,16 +18,6 @@ class SegmentationPipeline(BasePipeline):
                                                    train_dataloader, eval_dataloader, class_map, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
-
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
 
     def train_step(self, batch):
         self.model.train()
@@ -102,6 +89,6 @@ class SegmentationPipeline(BasePipeline):
         output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
 
         return output_seg
-    
+
     def get_metric_with_all_outputs(self, outputs):
         pass

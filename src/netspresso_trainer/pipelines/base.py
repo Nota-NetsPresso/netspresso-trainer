@@ -10,6 +10,8 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
+from ..optimizers import build_optimizer
+from ..schedulers import build_scheduler
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..loggers import build_logger, START_EPOCH_ZERO_OR_ONE
@@ -128,9 +130,15 @@ class BasePipeline(ABC):
         torch.save({'summary': asdict(training_summary), 'optimizer': optimizer_state_dict}, summary_path)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
-    @abstractmethod
     def set_train(self):
-        raise NotImplementedError
+
+        assert self.model is not None
+        self.optimizer = build_optimizer(self.model,
+                                         opt=self.conf.training.opt,
+                                         lr=self.conf.training.lr,
+                                         wd=self.conf.training.weight_decay,
+                                         momentum=self.conf.training.momentum)
+        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
 
     @abstractmethod
     def train_step(self, batch):

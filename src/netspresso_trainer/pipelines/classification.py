@@ -5,8 +5,6 @@ from omegaconf import OmegaConf
 import torch
 
 from .base import BasePipeline
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -18,16 +16,6 @@ class ClassificationPipeline(BasePipeline):
                  train_dataloader, eval_dataloader, class_map, **kwargs):
         super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
                                                      train_dataloader, eval_dataloader, class_map, **kwargs)
-
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
 
     def train_step(self, batch):
         self.model.train()
