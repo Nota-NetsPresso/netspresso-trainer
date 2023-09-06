@@ -20,6 +20,7 @@ def accuracy_topk(output, target):
 
 class ClassificationMetric(BaseMetric):
     metric_names: List[str] = ['Acc@1', 'Acc@5']
+    primary_metric: str = 'Acc@1'
 
     def __init__(self, **kwargs):
         super().__init__()

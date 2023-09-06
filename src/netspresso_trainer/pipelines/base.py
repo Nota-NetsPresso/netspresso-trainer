@@ -2,8 +2,9 @@ from abc import ABC, abstractmethod
 import os
 from statistics import mean
 from pathlib import Path
-from typing import final
+from typing import final, List, Dict, Union, Literal
 import logging
+from dataclasses import dataclass, asdict, field
 
 import torch
 import torch.nn as nn
@@ -19,9 +20,26 @@ from ..utils.onnx import save_onnx
 
 logger = logging.getLogger("netspresso_trainer")
 
+TYPE_SUMMARY_RECORD = Dict[int, Union[float, Dict[str, float]]]  # {epoch: value, ...}
 VALID_FREQ = 1
-
 NUM_SAMPLES = 16
+
+
+@dataclass
+class TrainingSummary:
+    total_train_time: float
+    total_epoch: int
+    train_losses: TYPE_SUMMARY_RECORD
+    valid_losses: TYPE_SUMMARY_RECORD
+    train_metrics: TYPE_SUMMARY_RECORD
+    valid_metrics: TYPE_SUMMARY_RECORD
+    metrics_list: List[str]
+    primary_metric: str
+    start_epoch: int = START_EPOCH_ZERO_OR_ONE
+    best_epoch: int = field(init=False)
+
+    def __post_init__(self):
+        self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
 
 
 class BasePipeline(ABC):
@@ -37,6 +55,9 @@ class BasePipeline(ABC):
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
         self.train_step_per_epoch = len(train_dataloader)
+        self.training_history: Dict[int, Dict[
+            Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
+        ]] = {}
 
         self.timer = Timer()
 
@@ -83,6 +104,23 @@ class BasePipeline(ABC):
 
         logger.info(f"PyTorch FX model tracing and saving at {str(model_path.with_suffix('.pt'))}")
         save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+
+    def _save_summary(self):
+        total_train_time = self.timer.get(name='train_all')
+        training_summary = TrainingSummary(
+            total_train_time=total_train_time,
+            total_epoch=self.conf.training.epochs,
+            train_losses={epoch: value['train_losses'].get('total') for epoch, value in self.training_history.items()},
+            valid_losses={epoch: value['valid_losses'].get('total') for epoch, value in self.training_history.items()},
+            train_metrics={epoch: value['train_metrics'] for epoch, value in self.training_history.items()},
+            valid_metrics={epoch: value['valid_metrics'] for epoch, value in self.training_history.items()},
+            metrics_list=self.metric.metric_names,
+            primary_metric=self.metric.primary_metric
+        )
+
+        result_dir = self.train_logger.result_dir
+        model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
+        torch.save(asdict(training_summary), model_path)
 
     @abstractmethod
     def set_train(self):
@@ -142,6 +180,7 @@ class BasePipeline(ABC):
             if self.single_gpu_or_rank_zero:
                 self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
                 self._save_checkpoint()
+                self._save_summary()
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
@@ -197,6 +236,11 @@ class BasePipeline(ABC):
             learning_rate=self.learning_rate,
             elapsed_time=time_for_epoch
         )
+
+        summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}
+        if valid_logging:
+            summary_record.update({'valid_losses': valid_losses, 'valid_metrics': valid_metrics})
+        self.training_history.update({epoch: summary_record})
 
     @property
     def learning_rate(self):
