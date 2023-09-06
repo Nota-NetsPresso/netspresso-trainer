@@ -94,18 +94,18 @@ class BasePipeline(ABC):
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
 
-        logger.info(f"ONNX model converting and saving at {str(model_path.with_suffix('.onnx'))}")
         save_onnx(model, model_path.with_suffix(".onnx"),
                   sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
+        logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
 
-        logger.info(f"PyTorch model saving at {str(model_path.with_suffix('.pt'))}")
         if self.is_graphmodule_training:
             torch.save(model, model_path.with_suffix(".pt"))
             return
         torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+        logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pt'))}")
 
-        logger.info(f"PyTorch FX model tracing and saving at {str(model_path.with_suffix('.pt'))}")
         save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+        logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
 
     def _save_summary(self):
         total_train_time = self.timer.get(name='train_all')
@@ -121,8 +121,9 @@ class BasePipeline(ABC):
         )
 
         result_dir = self.train_logger.result_dir
-        model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
-        torch.save(asdict(training_summary), model_path)
+        summary_path = Path(result_dir) / f"training_summary.ckpt"
+        torch.save(asdict(training_summary), summary_path)
+        logger.info(f"Model training summary saved at {str(summary_path)}")
 
     @abstractmethod
     def set_train(self):
