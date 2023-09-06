@@ -37,9 +37,11 @@ class TrainingSummary:
     primary_metric: str
     start_epoch: int = START_EPOCH_ZERO_OR_ONE
     best_epoch: int = field(init=False)
+    last_epoch: int = field(init=False)
 
     def __post_init__(self):
         self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
+        self.last_epoch = list(self.train_losses.keys())[-1]
 
 
 class BasePipeline(ABC):
@@ -186,6 +188,7 @@ class BasePipeline(ABC):
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
                 self._save_checkpoint()
+                self._save_summary()
             raise e
         except Exception as e:
             logger.error(str(e))
