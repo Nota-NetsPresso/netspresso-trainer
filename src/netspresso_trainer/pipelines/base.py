@@ -37,7 +37,7 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
-    start_epoch: int = START_EPOCH_ZERO_OR_ONE
+    start_epoch_at_one: bool = bool(START_EPOCH_ZERO_OR_ONE)
     best_epoch: int = field(init=False)
     last_epoch: int = field(init=False)
 
@@ -68,6 +68,8 @@ class BasePipeline(ABC):
         self.loss = None
         self.metric = None
         self.optimizer = None
+        self.start_epoch_at_one = bool(START_EPOCH_ZERO_OR_ONE)
+        self.start_epoch = int(self.start_epoch_at_one)
 
         self.ignore_index = None
         self.num_classes = None
@@ -75,7 +77,7 @@ class BasePipeline(ABC):
         self.profile = profile  # TODO: provide torch_tb_profiler for training
         self.is_graphmodule_training = is_graphmodule_training
 
-        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == START_EPOCH_ZERO_OR_ONE % VALID_FREQ
+        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == self.start_epoch_at_one % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
 
         if self.single_gpu_or_rank_zero:
@@ -114,6 +116,7 @@ class BasePipeline(ABC):
         training_summary = TrainingSummary(
             total_train_time=total_train_time,
             total_epoch=self.conf.training.epochs,
+            start_epoch_at_one=self.start_epoch_at_one,
             train_losses={epoch: value['train_losses'].get('total') for epoch, value in self.training_history.items()},
             valid_losses={epoch: value['valid_losses'].get('total') for epoch, value in self.training_history.items()},
             train_metrics={epoch: value['train_metrics'] for epoch, value in self.training_history.items()},
@@ -130,7 +133,7 @@ class BasePipeline(ABC):
         torch.save({'summary': asdict(training_summary), 'optimizer': optimizer_state_dict}, summary_path)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
-    def set_train(self):
+    def set_train(self, resume_training_checkpoint=None):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
@@ -139,6 +142,22 @@ class BasePipeline(ABC):
                                          wd=self.conf.training.weight_decay,
                                          momentum=self.conf.training.momentum)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
+        if resume_training_checkpoint is not None:
+            resume_training_checkpoint = Path(resume_training_checkpoint)
+            if not resume_training_checkpoint.exists():
+                logger.warning(f"Traning summary checkpoint path {str(resume_training_checkpoint)} is not found!"
+                               f"Skip loading the previous history and trainer will be started from the beginning")
+
+            training_summary_dict = torch.load(resume_training_checkpoint, map_location='cpu')
+            optimizer_state_dict = training_summary_dict['optimizer']
+            start_epoch = training_summary_dict['summary']['last_epoch'] + 1  # Start from the next to the end of last training
+            start_epoch_at_one = training_summary_dict['summary']['start_epoch_at_one']
+
+            self.optimizer.load_state_dict(optimizer_state_dict)
+            self.scheduler.step(epoch=start_epoch)
+
+            self.start_epoch_at_one = start_epoch_at_one
+            self.start_epoch = start_epoch
 
     @abstractmethod
     def train_step(self, batch):
@@ -164,7 +183,7 @@ class BasePipeline(ABC):
         self._is_ready()
 
         try:
-            for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.conf.training.epochs + START_EPOCH_ZERO_OR_ONE):
+            for num_epoch in range(self.start_epoch, self.conf.training.epochs + self.start_epoch_at_one):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
                 self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
                 self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)

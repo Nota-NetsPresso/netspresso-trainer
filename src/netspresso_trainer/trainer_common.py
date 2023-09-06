@@ -57,6 +57,11 @@ def parse_args_netspresso(is_graphmodule_training):
         help="Config for training environment (# workers, etc.)")
 
     parser.add_argument(
+        '--resume-training-checkpoint', type=str, default=None,
+        dest='resume_training_checkpoint',
+        help="Checkpoint path to resume training with the previous history")
+
+    parser.add_argument(
         '--fx-model-checkpoint', type=str, required=is_graphmodule_training,
         dest='fx_model_checkpoint',
         help="Checkpoint path for graphmodule model")
@@ -136,7 +141,7 @@ def trainer(is_graphmodule_training=False):
                              class_map=train_dataset.class_map,
                              is_graphmodule_training=is_graphmodule_training)
 
-    trainer.set_train()
+    trainer.set_train(args_parsed.resume_training_checkpoint)
     try:
         trainer.train()
 
