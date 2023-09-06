@@ -120,9 +120,12 @@ class BasePipeline(ABC):
             primary_metric=self.metric.primary_metric
         )
 
+        optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
+        optimizer_state_dict = optimizer.state_dict()
+
         result_dir = self.train_logger.result_dir
         summary_path = Path(result_dir) / f"training_summary.ckpt"
-        torch.save(asdict(training_summary), summary_path)
+        torch.save({'summary': asdict(training_summary), 'optimizer': optimizer_state_dict}, summary_path)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
     @abstractmethod
