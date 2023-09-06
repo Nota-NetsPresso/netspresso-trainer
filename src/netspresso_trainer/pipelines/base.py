@@ -65,18 +65,24 @@ class BasePipeline(ABC):
         """Append here if you need more assertion checks!"""
         return True
 
-    def _save_checkpoint(self, model: nn.Module):
+    def _save_checkpoint(self):
+
+        model = self.model.module if hasattr(self.model, 'module') else self.model
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
 
+        logger.info(f"ONNX model converting and saving at {str(model_path.with_suffix('.onnx'))}")
         save_onnx(model, model_path.with_suffix(".onnx"),
                   sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
 
+        logger.info(f"PyTorch model saving at {str(model_path.with_suffix('.pt'))}")
         if self.is_graphmodule_training:
             torch.save(model, model_path.with_suffix(".pt"))
-        else:
-            torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+            return
+        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+
+        logger.info(f"PyTorch FX model tracing and saving at {str(model_path.with_suffix('.pt'))}")
+        save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
 
     @abstractmethod
     def set_train(self):
@@ -105,39 +111,46 @@ class BasePipeline(ABC):
         self.timer.start_record(name='train_all')
         self._is_ready()
 
-        for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.conf.training.epochs + START_EPOCH_ZERO_OR_ONE):
-            self.timer.start_record(name=f'train_epoch_{num_epoch}')
-            self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
-            self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+        try:
+            for num_epoch in range(START_EPOCH_ZERO_OR_ONE, self.conf.training.epochs + START_EPOCH_ZERO_OR_ONE):
+                self.timer.start_record(name=f'train_epoch_{num_epoch}')
+                self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
+                self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
 
-            self.train_one_epoch()
+                self.train_one_epoch()
 
-            with_valid_logging = self.epoch_with_valid_logging(num_epoch)
-            # FIXME: multi-gpu sample counting & validation
-            valid_samples = self.validate() if with_valid_logging else None
+                with_valid_logging = self.epoch_with_valid_logging(num_epoch)
+                # FIXME: multi-gpu sample counting & validation
+                valid_samples = self.validate() if with_valid_logging else None
 
-            self.timer.end_record(name=f'train_epoch_{num_epoch}')
-            time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
+                self.timer.end_record(name=f'train_epoch_{num_epoch}')
+                time_for_epoch = self.timer.get(name=f'train_epoch_{num_epoch}', as_pop=False)
+
+                if self.single_gpu_or_rank_zero:
+                    self.log_end_epoch(epoch=num_epoch,
+                                       time_for_epoch=time_for_epoch,
+                                       valid_samples=valid_samples,
+                                       valid_logging=with_valid_logging)
+
+                self.scheduler.step()  # call after reporting the current `learning_rate`
+                logger.info("-" * 40)
+
+            self.timer.end_record(name='train_all')
+            total_train_time = self.timer.get(name='train_all')
+            logger.info(f"Total time: {total_train_time:.2f} s")
 
             if self.single_gpu_or_rank_zero:
-                self.log_end_epoch(epoch=num_epoch,
-                                   time_for_epoch=time_for_epoch,
-                                   valid_samples=valid_samples,
-                                   valid_logging=with_valid_logging)
-
-            self.scheduler.step()  # call after reporting the current `learning_rate`
-            logger.info("-" * 40)
-
-        self.timer.end_record(name='train_all')
-        total_train_time = self.timer.get(name='train_all')
-        logger.info(f"Total time: {total_train_time:.2f} s")
-
-        if self.single_gpu_or_rank_zero:
-            self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
-
-            model = self.model.module if hasattr(self.model, 'module') else self.model
-
-            self._save_checkpoint(model)
+                self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
+                self._save_checkpoint()
+        except KeyboardInterrupt as e:
+            # TODO: add independent procedure for KeyboardInterupt
+            logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
+            if self.single_gpu_or_rank_zero:
+                self._save_checkpoint()
+            raise e
+        except Exception as e:
+            logger.error(str(e))
+            raise e
 
     def train_one_epoch(self):
         for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):

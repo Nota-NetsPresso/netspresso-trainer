@@ -137,7 +137,12 @@ def trainer(is_graphmodule_training=False):
                              is_graphmodule_training=is_graphmodule_training)
 
     trainer.set_train()
-    trainer.train()
+    try:
+        trainer.train()
 
-    if test_dataset:
-        trainer.inference(test_dataset)
+        if test_dataset:
+            trainer.inference(test_dataset)
+    except KeyboardInterrupt as e:
+        pass
+    except Exception as e:
+        raise e
