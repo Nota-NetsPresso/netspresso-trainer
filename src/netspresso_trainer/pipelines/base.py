@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import os
 from statistics import mean
 from pathlib import Path
-from typing import final, List, Dict, Union, Literal
+from typing import final, List, Dict, Union, Optional, Literal
 import logging
 from dataclasses import dataclass, asdict, field
 
@@ -30,7 +30,6 @@ NUM_SAMPLES = 16
 
 @dataclass
 class TrainingSummary:
-    total_train_time: float
     total_epoch: int
     train_losses: TYPE_SUMMARY_RECORD
     valid_losses: TYPE_SUMMARY_RECORD
@@ -38,8 +37,9 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
-    macs: int
-    params: int
+    macs: Optional[int] = None
+    params: Optional[int] = None
+    total_train_time: Optional[float] = None
     start_epoch_at_one: bool = bool(START_EPOCH_ZERO_OR_ONE)
     best_epoch: int = field(init=False)
     last_epoch: int = field(init=False)
@@ -80,7 +80,6 @@ class BasePipeline(ABC):
         self.profile = profile  # TODO: provide torch_tb_profiler for training
         self.is_graphmodule_training = is_graphmodule_training
 
-        self.epoch_with_valid_logging = lambda e: e % VALID_FREQ == self.start_epoch_at_one % VALID_FREQ
         self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
 
         if self.single_gpu_or_rank_zero:
@@ -95,32 +94,30 @@ class BasePipeline(ABC):
         """Append here if you need more assertion checks!"""
         return True
 
-    def _save_checkpoint(self):
+    def _save_checkpoint(self, epoch: int, end_training=False):
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         result_dir = self.train_logger.result_dir
-        model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
-        save_onnx(model, model_path.with_suffix(".onnx"),
-                  sample_input=self.sample_input)
-        logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
+        model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
 
         if self.is_graphmodule_training:
+            # Just save graphmodule checkpoint
             torch.save(model, model_path.with_suffix(".pt"))
+            logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pt'))}")
             return
         torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-        logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pt'))}")
+        logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
 
-        save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
-        logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
+        if end_training:
+            save_onnx(model, model_path.with_suffix(".onnx"),
+                      sample_input=self.sample_input)
+            logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
 
-    def _save_summary(self):
+            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+            logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
 
-        total_train_time = self.timer.get(name='train_all')
-        print(self.sample_input.size())
-        macs, params = get_params_and_macs(self.model, self.sample_input)
-        logger.info(f"(Model stats) Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+    def _save_summary(self, end_training=False):
         training_summary = TrainingSummary(
-            total_train_time=total_train_time,
             total_epoch=self.conf.training.epochs,
             start_epoch_at_one=self.start_epoch_at_one,
             train_losses={epoch: value['train_losses'].get('total') for epoch, value in self.training_history.items()},
@@ -129,9 +126,14 @@ class BasePipeline(ABC):
             valid_metrics={epoch: value['valid_metrics'] for epoch, value in self.training_history.items()},
             metrics_list=self.metric.metric_names,
             primary_metric=self.metric.primary_metric,
-            macs=macs,
-            params=params
         )
+        if end_training:
+            total_train_time = self.timer.get(name='train_all')
+            macs, params = get_params_and_macs(self.model, self.sample_input)
+            logger.info(f"(Model stats) Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+            training_summary.total_train_time = total_train_time
+            training_summary.macs = macs
+            training_summary.params = params
 
         optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
         optimizer_state_dict = optimizer.state_dict()
@@ -167,6 +169,15 @@ class BasePipeline(ABC):
             self.start_epoch_at_one = start_epoch_at_one
             self.start_epoch = start_epoch
 
+    def epoch_with_valid_logging(self, epoch: int):
+
+        validation_freq = self.conf.logging.validation_epoch
+        return epoch % validation_freq == self.start_epoch_at_one % validation_freq
+
+    def epoch_with_checkpoint_saving(self, epoch: int):
+        checkpoint_freq = self.conf.logging.save_checkpoint_epoch
+        return epoch % checkpoint_freq == self.start_epoch_at_one % checkpoint_freq
+
     @abstractmethod
     def train_step(self, batch):
         raise NotImplementedError
@@ -190,6 +201,7 @@ class BasePipeline(ABC):
         self.timer.start_record(name='train_all')
         self._is_ready()
 
+        num_epoch = -1
         try:
             for num_epoch in range(self.start_epoch, self.conf.training.epochs + self.start_epoch_at_one):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
@@ -199,6 +211,7 @@ class BasePipeline(ABC):
                 self.train_one_epoch()
 
                 with_valid_logging = self.epoch_with_valid_logging(num_epoch)
+                with_checkpoint_saving = self.epoch_with_checkpoint_saving(num_epoch)
                 # FIXME: multi-gpu sample counting & validation
                 valid_samples = self.validate() if with_valid_logging else None
 
@@ -210,6 +223,9 @@ class BasePipeline(ABC):
                                        time_for_epoch=time_for_epoch,
                                        valid_samples=valid_samples,
                                        valid_logging=with_valid_logging)
+                    if with_checkpoint_saving:
+                        self._save_checkpoint(epoch=num_epoch)
+                        self._save_summary()
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`
                 logger.info("-" * 40)
@@ -220,13 +236,13 @@ class BasePipeline(ABC):
 
             if self.single_gpu_or_rank_zero:
                 self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
-                self._save_checkpoint()
-                self._save_summary()
+                self._save_checkpoint(epoch=num_epoch)
+                self._save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
-                self._save_checkpoint()
+                self._save_checkpoint(epoch=num_epoch)
                 self._save_summary()
             raise e
         except Exception as e:
