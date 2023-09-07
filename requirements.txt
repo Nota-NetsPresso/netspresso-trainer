@@ -5,3 +5,4 @@ omegaconf
 numpy
 pillow
 opencv-python
+tensorboard
