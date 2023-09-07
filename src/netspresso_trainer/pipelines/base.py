@@ -19,6 +19,7 @@ from ..utils.record import Timer
 from ..utils.logger import yaml_for_logging
 from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
+from ..utils.stats import get_params_and_macs
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -37,6 +38,8 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
+    macs: int
+    params: int
     start_epoch_at_one: bool = bool(START_EPOCH_ZERO_OR_ONE)
     best_epoch: int = field(init=False)
     last_epoch: int = field(init=False)
@@ -97,9 +100,8 @@ class BasePipeline(ABC):
         model = self.model.module if hasattr(self.model, 'module') else self.model
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}.ckpt"
-
         save_onnx(model, model_path.with_suffix(".onnx"),
-                  sample_input=torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size)))
+                  sample_input=self.sample_input)
         logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
 
         if self.is_graphmodule_training:
@@ -112,7 +114,11 @@ class BasePipeline(ABC):
         logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
 
     def _save_summary(self):
+
         total_train_time = self.timer.get(name='train_all')
+        print(self.sample_input.size())
+        macs, params = get_params_and_macs(self.model, self.sample_input)
+        logger.info(f"(Model stats) Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
         training_summary = TrainingSummary(
             total_train_time=total_train_time,
             total_epoch=self.conf.training.epochs,
@@ -122,7 +128,9 @@ class BasePipeline(ABC):
             train_metrics={epoch: value['train_metrics'] for epoch, value in self.training_history.items()},
             valid_metrics={epoch: value['valid_metrics'] for epoch, value in self.training_history.items()},
             metrics_list=self.metric.metric_names,
-            primary_metric=self.metric.primary_metric
+            primary_metric=self.metric.primary_metric,
+            macs=macs,
+            params=params
         )
 
         optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -287,6 +295,10 @@ class BasePipeline(ABC):
     @property
     def valid_loss(self):
         return self.loss.result('valid').get('total').avg
+
+    @property
+    def sample_input(self):
+        return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
 
     def profile_one_epoch(self):
         PROFILE_WAIT = 1

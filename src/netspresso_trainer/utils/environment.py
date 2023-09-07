@@ -1,11 +1,15 @@
 import os
 import random
+from typing import Union
+from pathlib import Path
 
 import torch
+import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import numpy as np
 
-__all__ = ['set_device']
+
+__all__ = ['set_device', 'get_device']
 
 
 def set_device(seed):
@@ -36,3 +40,11 @@ def set_device(seed):
     assert rank >= 0
 
     return distributed, world_size, rank, devices
+
+
+def get_device(x: Union[torch.Tensor, nn.Module]):
+    if isinstance(x, torch.Tensor):
+        return x.device
+    if isinstance(x, nn.Module):
+        return next(x.parameters()).device
+    raise RuntimeError(f'{type(x)} do not have `device`')
