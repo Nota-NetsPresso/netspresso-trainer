@@ -286,13 +286,16 @@ class BasePipeline(ABC):
             torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
             logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
 
-        if save_converted_model:
-            save_onnx(model, model_path.with_suffix(".onnx"),
-                      sample_input=self.sample_input)
-            logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
+            if save_converted_model:
+                try:
+                    save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                    logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
 
-            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
-            logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
+                    save_graphmodule(model, (model_path.parent / f"{best_model_path.stem}_fx").with_suffix(".pt"))
+                    logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
+                except Exception as e:
+                    logger.error(e)
+                    pass
 
     def save_summary(self, end_training=False):
         training_summary = TrainingSummary(
