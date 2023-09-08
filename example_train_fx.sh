@@ -4,5 +4,4 @@ python train_fx.py\
   --model config/model/resnet/resnet50-classification.yaml\
   --training config/training/classification.yaml\
   --logging config/logging.yaml\
-  --environment config/environment.yaml\
-  --fx-model-checkpoint classification_resnet_fx.pt
+  --environment config/environment.yaml

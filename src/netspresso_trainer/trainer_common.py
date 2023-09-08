@@ -56,16 +56,6 @@ def parse_args_netspresso(is_graphmodule_training):
         dest='log_level',
         help="Config for training environment (# workers, etc.)")
 
-    parser.add_argument(
-        '--resume-training-checkpoint', type=str, default=None,
-        dest='resume_training_checkpoint',
-        help="Checkpoint path to resume training with the previous history")
-
-    parser.add_argument(
-        '--fx-model-checkpoint', type=str, required=is_graphmodule_training,
-        dest='fx_model_checkpoint',
-        help="Checkpoint path for graphmodule model")
-
     args_parsed, _ = parser.parse_known_args()
 
     return args_parsed
