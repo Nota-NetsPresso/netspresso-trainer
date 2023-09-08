@@ -56,11 +56,6 @@ def parse_args_netspresso(is_graphmodule_training):
         dest='log_level',
         help="Config for training environment (# workers, etc.)")
 
-    parser.add_argument(
-        '--fx-model-checkpoint', type=str, required=is_graphmodule_training,
-        dest='fx_model_checkpoint',
-        help="Checkpoint path for graphmodule model")
-
     args_parsed, _ = parser.parse_known_args()
 
     return args_parsed
@@ -122,8 +117,11 @@ def trainer(is_graphmodule_training=False):
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
+    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     if is_graphmodule_training:
-        model = torch.load(args_parsed.fx_model_checkpoint)
+        assert conf.model.fx_model_checkpoint is not None
+        assert Path(conf.model.fx_model_checkpoint).exists()
+        model = torch.load(conf.model.fx_model_checkpoint)
     else:
         model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
 
@@ -137,7 +135,12 @@ def trainer(is_graphmodule_training=False):
                              is_graphmodule_training=is_graphmodule_training)
 
     trainer.set_train()
-    trainer.train()
+    try:
+        trainer.train()
 
-    if test_dataset:
-        trainer.inference(test_dataset)
+        if test_dataset:
+            trainer.inference(test_dataset)
+    except KeyboardInterrupt as e:
+        pass
+    except Exception as e:
+        raise e

@@ -39,6 +39,14 @@ class MetricFactory:
     def result(self, mode='train'):
         return self.metric_meter_dict[mode.lower()]
 
+    @property
+    def metric_names(self):
+        return self.metric_fn.metric_names
+
+    @property
+    def primary_metric(self):
+        return self.metric_fn.primary_metric
+
 
 def build_metrics(task: str, conf_model, **kwargs) -> MetricFactory:
     metric_handler = MetricFactory(task, conf_model, **kwargs)
