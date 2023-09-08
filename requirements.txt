@@ -6,3 +6,4 @@ thop
 tqdm
 omegaconf
 opencv-python
+tensorboard
