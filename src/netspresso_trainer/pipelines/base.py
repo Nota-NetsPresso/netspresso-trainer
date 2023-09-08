@@ -56,6 +56,7 @@ class BasePipeline(ABC):
 
         self.profile = profile  # TODO: provide torch_tb_profiler for training
         self.is_graphmodule_training = is_graphmodule_training
+        self.save_optimizer_state = self.conf.logging.save_optimizer_state
 
         self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
 
@@ -73,73 +74,6 @@ class BasePipeline(ABC):
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
         return True
 
-    def save_checkpoint(self, epoch: int, save_optimizer_state: bool, save_converted_model=False):
-
-        # Check whether the valid loss is minimum at this epoch
-        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                        if 'valid_losses' in record}
-        best_epoch = min(valid_losses, key=valid_losses.get)
-        save_best_model = best_epoch == epoch
-
-        model = self.model.module if hasattr(self.model, 'module') else self.model
-        result_dir = self.train_logger.result_dir
-        model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
-        optimizer_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
-
-        if save_optimizer_state:
-            optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
-            torch.save(optimizer.state_dict(), optimizer_path)
-            logger.debug(f"Optimizer state saved at {str(optimizer_path)}")
-
-        if self.is_graphmodule_training:
-            # Just save graphmodule checkpoint
-            torch.save(model, model_path.with_suffix(".pt"))
-            logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
-            if save_best_model:
-                torch.save(model, best_model_path.with_suffix(".pt"))
-                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
-            return
-        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
-        if save_best_model:
-            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
-            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
-
-        if save_converted_model:
-            save_onnx(model, model_path.with_suffix(".onnx"),
-                      sample_input=self.sample_input)
-            logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
-
-            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
-            logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
-
-    def save_summary(self, end_training=False):
-        training_summary = TrainingSummary(
-            total_epoch=self.conf.training.epochs,
-            start_epoch_at_one=self.start_epoch_at_one,
-            train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
-            valid_losses={epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                          if 'valid_losses' in record},
-            train_metrics={epoch: record['train_metrics'] for epoch, record in self.training_history.items()},
-            valid_metrics={epoch: record['valid_metrics'] for epoch, record in self.training_history.items()
-                           if 'valid_metrics' in record},
-            metrics_list=self.metric.metric_names,
-            primary_metric=self.metric.primary_metric,
-        )
-        if end_training:
-            total_train_time = self.timer.get(name='train_all', as_pop=True)
-            macs, params = get_params_and_macs(self.model, self.sample_input)
-            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
-            training_summary.total_train_time = total_train_time
-            training_summary.macs = macs
-            training_summary.params = params
-
-        result_dir = self.train_logger.result_dir
-        summary_path = Path(result_dir) / f"training_summary.ckpt"
-        torch.save(asdict(training_summary), summary_path)
-        logger.info(f"Model training summary saved at {str(summary_path)}")
-
     def set_train(self, resume_training_checkpoint=None):
 
         assert self.model is not None
@@ -154,17 +88,19 @@ class BasePipeline(ABC):
             if not resume_training_checkpoint.exists():
                 logger.warning(f"Traning summary checkpoint path {str(resume_training_checkpoint)} is not found!"
                                f"Skip loading the previous history and trainer will be started from the beginning")
+                return
 
             training_summary_dict = torch.load(resume_training_checkpoint, map_location='cpu')
             optimizer_state_dict = training_summary_dict['optimizer']
-            start_epoch = training_summary_dict['summary']['last_epoch'] + 1  # Start from the next to the end of last training
-            start_epoch_at_one = training_summary_dict['summary']['start_epoch_at_one']
+            start_epoch = training_summary_dict['last_epoch'] + 1  # Start from the next to the end of last training
+            start_epoch_at_one = training_summary_dict['start_epoch_at_one']
 
             self.optimizer.load_state_dict(optimizer_state_dict)
             self.scheduler.step(epoch=start_epoch)
 
             self.start_epoch_at_one = start_epoch_at_one
             self.start_epoch = start_epoch
+            logger.info(f"Resume training from {str(resume_training_checkpoint)}. Start training at epoch: {self.start_epoch}")
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch
@@ -189,6 +125,22 @@ class BasePipeline(ABC):
     @abstractmethod
     def get_metric_with_all_outputs(self, outputs):
         raise NotImplementedError
+
+    @property
+    def learning_rate(self):
+        return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
+
+    @property
+    def train_loss(self):
+        return self.loss.result('train').get('total').avg
+
+    @property
+    def valid_loss(self):
+        return self.loss.result('valid').get('total').avg
+
+    @property
+    def sample_input(self):
+        return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
 
     def train(self):
         logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
@@ -221,8 +173,7 @@ class BasePipeline(ABC):
                                        valid_logging=with_valid_logging)
                     if with_checkpoint_saving:
                         assert with_valid_logging
-                        self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
-                                             save_converted_model=False)
+                        self.save_checkpoint(epoch=num_epoch, save_converted_model=False)
                         self.save_summary()
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`
@@ -234,15 +185,13 @@ class BasePipeline(ABC):
 
             if self.single_gpu_or_rank_zero:
                 self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
-                self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
-                                     save_converted_model=True)
+                self.save_checkpoint(epoch=num_epoch, save_converted_model=True)
                 self.save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
-                self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
-                                     save_converted_model=True)
+                self.save_checkpoint(epoch=num_epoch, save_converted_model=True)
                 self.save_summary()
             raise e
         except Exception as e:
@@ -300,21 +249,73 @@ class BasePipeline(ABC):
             summary_record.update({'valid_losses': valid_losses, 'valid_metrics': valid_metrics})
         self.training_history.update({epoch: summary_record})
 
-    @property
-    def learning_rate(self):
-        return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
+    def save_checkpoint(self, epoch: int, save_converted_model=False):
 
-    @property
-    def train_loss(self):
-        return self.loss.result('train').get('total').avg
+        # Check whether the valid loss is minimum at this epoch
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                        if 'valid_losses' in record}
+        best_epoch = min(valid_losses, key=valid_losses.get)
+        save_best_model = best_epoch == epoch
 
-    @property
-    def valid_loss(self):
-        return self.loss.result('valid').get('total').avg
+        model = self.model.module if hasattr(self.model, 'module') else self.model
+        result_dir = self.train_logger.result_dir
+        model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
+        optimizer_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
 
-    @property
-    def sample_input(self):
-        return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
+        if self.save_optimizer_state:
+            optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
+            save_dict = {'optimizer': optimizer.state_dict(), 'start_epoch_at_one': self.start_epoch_at_one, 'last_epoch': epoch}
+            torch.save(save_dict, optimizer_path)
+            logger.debug(f"Optimizer state saved at {str(optimizer_path)}")
+
+        if self.is_graphmodule_training:
+            # Just save graphmodule checkpoint
+            torch.save(model, model_path.with_suffix(".pt"))
+            logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
+            if save_best_model:
+                torch.save(model, best_model_path.with_suffix(".pt"))
+                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
+            return
+        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        if save_best_model:
+            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
+            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
+
+        if save_converted_model:
+            save_onnx(model, model_path.with_suffix(".onnx"),
+                      sample_input=self.sample_input)
+            logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
+
+            save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
+            logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
+
+    def save_summary(self, end_training=False):
+        training_summary = TrainingSummary(
+            total_epoch=self.conf.training.epochs,
+            start_epoch_at_one=self.start_epoch_at_one,
+            train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
+            valid_losses={epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                          if 'valid_losses' in record},
+            train_metrics={epoch: record['train_metrics'] for epoch, record in self.training_history.items()},
+            valid_metrics={epoch: record['valid_metrics'] for epoch, record in self.training_history.items()
+                           if 'valid_metrics' in record},
+            metrics_list=self.metric.metric_names,
+            primary_metric=self.metric.primary_metric,
+        )
+        if end_training:
+            total_train_time = self.timer.get(name='train_all', as_pop=True)
+            macs, params = get_params_and_macs(self.model, self.sample_input)
+            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+            training_summary.total_train_time = total_train_time
+            training_summary.macs = macs
+            training_summary.params = params
+
+        result_dir = self.train_logger.result_dir
+        summary_path = Path(result_dir) / f"training_summary.ckpt"
+        torch.save(asdict(training_summary), summary_path)
+        logger.info(f"Model training summary saved at {str(summary_path)}")
 
     def profile_one_epoch(self):
         PROFILE_WAIT = 1
