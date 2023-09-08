@@ -84,6 +84,7 @@ class BasePipeline(ABC):
                                          momentum=self.conf.training.momentum)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
+        self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
         resume_optimizer_checkpoint = self.conf.model.resume_optimizer_checkpoint
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
@@ -156,7 +157,7 @@ class BasePipeline(ABC):
             for num_epoch in range(self.start_epoch, self.conf.training.epochs + self.start_epoch_at_one):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
                 self.loss.reset_values()
-                self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+                self.metric.reset_values()
 
                 self.train_one_epoch()
 
