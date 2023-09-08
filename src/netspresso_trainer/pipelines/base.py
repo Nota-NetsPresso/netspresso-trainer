@@ -92,23 +92,44 @@ class BasePipeline(ABC):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         """Append here if you need more assertion checks!"""
+        assert self.conf.logging.save_checkpoint_epoch % self.conf.logging.validation_epoch == 0, \
+            "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
         return True
 
-    def _save_checkpoint(self, epoch: int, end_training=False):
+    def save_checkpoint(self, epoch: int, save_optimizer_state: bool, save_converted_model=False):
+
+        # Check whether the valid loss is minimum at this epoch
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                        if 'valid_losses' in record}
+        best_epoch = min(valid_losses, key=valid_losses.get)
+        save_best_model = best_epoch == epoch
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
+        optimizer_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
+
+        if save_optimizer_state:
+            optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
+            torch.save(optimizer.state_dict(), optimizer_path)
+            logger.debug(f"Optimizer state saved at {str(optimizer_path)}")
 
         if self.is_graphmodule_training:
             # Just save graphmodule checkpoint
             torch.save(model, model_path.with_suffix(".pt"))
-            logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pt'))}")
+            logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
+            if save_best_model:
+                torch.save(model, best_model_path.with_suffix(".pt"))
+                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
         torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-        logger.info(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        if save_best_model:
+            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
+            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
 
-        if end_training:
+        if save_converted_model:
             save_onnx(model, model_path.with_suffix(".onnx"),
                       sample_input=self.sample_input)
             logger.info(f"ONNX model converting and saved at {str(model_path.with_suffix('.onnx'))}")
@@ -116,31 +137,30 @@ class BasePipeline(ABC):
             save_graphmodule(model, (model_path.parent / f"{model_path.stem}_fx").with_suffix(".pt"))
             logger.info(f"PyTorch FX model tracing and saved at {str(model_path.with_suffix('.pt'))}")
 
-    def _save_summary(self, end_training=False):
+    def save_summary(self, end_training=False):
         training_summary = TrainingSummary(
             total_epoch=self.conf.training.epochs,
             start_epoch_at_one=self.start_epoch_at_one,
-            train_losses={epoch: value['train_losses'].get('total') for epoch, value in self.training_history.items()},
-            valid_losses={epoch: value['valid_losses'].get('total') for epoch, value in self.training_history.items()},
-            train_metrics={epoch: value['train_metrics'] for epoch, value in self.training_history.items()},
-            valid_metrics={epoch: value['valid_metrics'] for epoch, value in self.training_history.items()},
+            train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
+            valid_losses={epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                          if 'valid_losses' in record},
+            train_metrics={epoch: record['train_metrics'] for epoch, record in self.training_history.items()},
+            valid_metrics={epoch: record['valid_metrics'] for epoch, record in self.training_history.items()
+                           if 'valid_metrics' in record},
             metrics_list=self.metric.metric_names,
             primary_metric=self.metric.primary_metric,
         )
         if end_training:
-            total_train_time = self.timer.get(name='train_all')
+            total_train_time = self.timer.get(name='train_all', as_pop=True)
             macs, params = get_params_and_macs(self.model, self.sample_input)
-            logger.info(f"(Model stats) Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
             training_summary.params = params
 
-        optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
-        optimizer_state_dict = optimizer.state_dict()
-
         result_dir = self.train_logger.result_dir
         summary_path = Path(result_dir) / f"training_summary.ckpt"
-        torch.save({'summary': asdict(training_summary), 'optimizer': optimizer_state_dict}, summary_path)
+        torch.save(asdict(training_summary), summary_path)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
     def set_train(self, resume_training_checkpoint=None):
@@ -170,7 +190,6 @@ class BasePipeline(ABC):
             self.start_epoch = start_epoch
 
     def epoch_with_valid_logging(self, epoch: int):
-
         validation_freq = self.conf.logging.validation_epoch
         return epoch % validation_freq == self.start_epoch_at_one % validation_freq
 
@@ -224,26 +243,30 @@ class BasePipeline(ABC):
                                        valid_samples=valid_samples,
                                        valid_logging=with_valid_logging)
                     if with_checkpoint_saving:
-                        self._save_checkpoint(epoch=num_epoch)
-                        self._save_summary()
+                        assert with_valid_logging
+                        self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
+                                             save_converted_model=False)
+                        self.save_summary()
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`
                 logger.info("-" * 40)
 
             self.timer.end_record(name='train_all')
-            total_train_time = self.timer.get(name='train_all')
+            total_train_time = self.timer.get(name='train_all', as_pop=False)
             logger.info(f"Total time: {total_train_time:.2f} s")
 
             if self.single_gpu_or_rank_zero:
                 self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
-                self._save_checkpoint(epoch=num_epoch)
-                self._save_summary(end_training=True)
+                self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
+                                     save_converted_model=True)
+                self.save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
-                self._save_checkpoint(epoch=num_epoch)
-                self._save_summary()
+                self.save_checkpoint(epoch=num_epoch, save_optimizer_state=self.conf.logging.save_optimizer_state,
+                                     save_converted_model=True)
+                self.save_summary()
             raise e
         except Exception as e:
             logger.error(str(e))
