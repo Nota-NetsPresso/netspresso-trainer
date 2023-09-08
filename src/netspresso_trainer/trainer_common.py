@@ -127,8 +127,11 @@ def trainer(is_graphmodule_training=False):
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
+    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     if is_graphmodule_training:
-        model = torch.load(args_parsed.fx_model_checkpoint)
+        assert conf.model.fx_model_checkpoint is not None
+        assert Path(conf.model.fx_model_checkpoint).exists()
+        model = torch.load(conf.model.fx_model_checkpoint)
     else:
         model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
 

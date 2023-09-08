@@ -1,6 +1,7 @@
 model:
   task: detection
   checkpoint: ./weights/efficientformer/efficientformer_l1_1000d.pth
+  fx_model_checkpoint: ~
   freeze_backbone: False
   architecture:
     full: ~ # auto

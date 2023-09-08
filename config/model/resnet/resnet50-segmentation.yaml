@@ -1,6 +1,7 @@
 model:
   task: segmentation
   checkpoint: ./weights/resnet/resnet50.pth
+  fx_model_checkpoint: ~
   freeze_backbone: False
   architecture:
     full:

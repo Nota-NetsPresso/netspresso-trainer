@@ -1,6 +1,7 @@
 model:
   task: segmentation
   checkpoint: ./weights/pidnet/pidnet_s.pth
+  fx_model_checkpoint: ~
   freeze_backbone: False
   architecture:
     full:
