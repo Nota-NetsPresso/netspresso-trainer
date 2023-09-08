@@ -144,7 +144,7 @@ def trainer(is_graphmodule_training=False):
                              class_map=train_dataset.class_map,
                              is_graphmodule_training=is_graphmodule_training)
 
-    trainer.set_train(args_parsed.resume_training_checkpoint)
+    trainer.set_train()
     try:
         trainer.train()
 

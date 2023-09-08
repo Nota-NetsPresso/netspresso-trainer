@@ -74,7 +74,7 @@ class BasePipeline(ABC):
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
         return True
 
-    def set_train(self, resume_training_checkpoint=None):
+    def set_train(self):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
@@ -83,24 +83,25 @@ class BasePipeline(ABC):
                                          wd=self.conf.training.weight_decay,
                                          momentum=self.conf.training.momentum)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
-        if resume_training_checkpoint is not None:
-            resume_training_checkpoint = Path(resume_training_checkpoint)
-            if not resume_training_checkpoint.exists():
-                logger.warning(f"Traning summary checkpoint path {str(resume_training_checkpoint)} is not found!"
+        resume_optimizer_checkpoint = self.conf.model.resume_optimizer_checkpoint
+        if resume_optimizer_checkpoint is not None:
+            resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
+            if not resume_optimizer_checkpoint.exists():
+                logger.warning(f"Traning summary checkpoint path {str(resume_optimizer_checkpoint)} is not found!"
                                f"Skip loading the previous history and trainer will be started from the beginning")
                 return
 
-            training_summary_dict = torch.load(resume_training_checkpoint, map_location='cpu')
-            optimizer_state_dict = training_summary_dict['optimizer']
-            start_epoch = training_summary_dict['last_epoch'] + 1  # Start from the next to the end of last training
-            start_epoch_at_one = training_summary_dict['start_epoch_at_one']
+            optimizer_dict = torch.load(resume_optimizer_checkpoint, map_location='cpu')
+            optimizer_state_dict = optimizer_dict['optimizer']
+            start_epoch = optimizer_dict['last_epoch'] + 1  # Start from the next to the end of last training
+            start_epoch_at_one = optimizer_dict['start_epoch_at_one']
 
             self.optimizer.load_state_dict(optimizer_state_dict)
             self.scheduler.step(epoch=start_epoch)
 
             self.start_epoch_at_one = start_epoch_at_one
             self.start_epoch = start_epoch
-            logger.info(f"Resume training from {str(resume_training_checkpoint)}. Start training at epoch: {self.start_epoch}")
+            logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {self.start_epoch}")
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch

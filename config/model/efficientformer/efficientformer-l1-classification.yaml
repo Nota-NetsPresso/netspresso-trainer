@@ -2,6 +2,7 @@ model:
   task: classification
   checkpoint: ./weights/efficientformer/efficientformer_l1_1000d.pth
   fx_model_checkpoint: ~
+  resume_optimizer_checkpoint: ~
   freeze_backbone: False
   architecture:
     full: ~ # auto
