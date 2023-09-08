@@ -61,7 +61,10 @@ class LossFactory:
     def reset_values(self):
         self._clear_epoch_start()
 
-    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase='train', *args: Any, **kwargs: Any) -> None:
+    def calc(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase='train', *args: Any, **kwargs: Any) -> None:
+        self.__call__(out=out, target=target, phase=phase, *args, **kwargs)
+
+    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase: str, *args: Any, **kwargs: Any) -> None:
         phase = phase.lower()
         assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
 

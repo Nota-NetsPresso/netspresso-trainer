@@ -29,7 +29,10 @@ class MetricFactory:
     def reset_values(self):
         self._clear_epoch_start()
 
-    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase='train', *args: Any, **kwargs: Any) -> Any:
+    def calc(self, pred: torch.Tensor, target: torch.Tensor, phase='train', *args: Any, **kwargs: Any) -> None:
+        self.__call__(pred=pred, target=target, phase=phase, *args, **kwargs)
+
+    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, *args: Any, **kwargs: Any) -> None:
 
         metric_result_dict = self.metric_fn.calibrate(pred, target)
         phase = phase.lower()
