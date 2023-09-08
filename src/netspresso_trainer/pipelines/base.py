@@ -2,9 +2,9 @@ from abc import ABC, abstractmethod
 import os
 from statistics import mean
 from pathlib import Path
-from typing import final, List, Dict, Union, Optional, Literal
+from typing import final, Dict, Literal
 import logging
-from dataclasses import dataclass, asdict, field
+from dataclasses import asdict
 
 import torch
 import torch.nn as nn
@@ -15,7 +15,7 @@ from ..schedulers import build_scheduler
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..loggers import build_logger, START_EPOCH_ZERO_OR_ONE
-from ..utils.record import Timer
+from ..utils.record import Timer, TrainingSummary
 from ..utils.logger import yaml_for_logging
 from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
@@ -23,30 +23,7 @@ from ..utils.stats import get_params_and_macs
 
 logger = logging.getLogger("netspresso_trainer")
 
-TYPE_SUMMARY_RECORD = Dict[int, Union[float, Dict[str, float]]]  # {epoch: value, ...}
-VALID_FREQ = 1
 NUM_SAMPLES = 16
-
-
-@dataclass
-class TrainingSummary:
-    total_epoch: int
-    train_losses: TYPE_SUMMARY_RECORD
-    valid_losses: TYPE_SUMMARY_RECORD
-    train_metrics: TYPE_SUMMARY_RECORD
-    valid_metrics: TYPE_SUMMARY_RECORD
-    metrics_list: List[str]
-    primary_metric: str
-    macs: Optional[int] = None
-    params: Optional[int] = None
-    total_train_time: Optional[float] = None
-    start_epoch_at_one: bool = bool(START_EPOCH_ZERO_OR_ONE)
-    best_epoch: int = field(init=False)
-    last_epoch: int = field(init=False)
-
-    def __post_init__(self):
-        self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
-        self.last_epoch = list(self.train_losses.keys())[-1]
 
 
 class BasePipeline(ABC):
