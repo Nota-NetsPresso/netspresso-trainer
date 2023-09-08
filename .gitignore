@@ -25,3 +25,7 @@ docker-compose.yml
 
 !data/.gitkeep
 !weights/.gitkeep
+
+# temp
+config_custom/
+example_train_custom.sh
