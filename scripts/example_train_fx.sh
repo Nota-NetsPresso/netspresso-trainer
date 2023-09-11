@@ -1,3 +1,7 @@
+#!/bin/bash
+
+cd "$(dirname ${0})/.."
+
 python train_fx.py\
   --data config/data/beans.yaml\
   --augmentation config/augmentation/classification.yaml\
