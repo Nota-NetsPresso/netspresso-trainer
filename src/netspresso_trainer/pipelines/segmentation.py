@@ -32,15 +32,15 @@ class SegmentationPipeline(BasePipeline):
         self.optimizer.zero_grad()
         out = self.model(images)
         if 'edges' in batch:
-            self.loss_factory.calc(out, target, bd_gt=bd_gt, mode='train')
+            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='train')
         else:
-            self.loss_factory.calc(out, target, mode='train')
+            self.loss_factory.calc(out, target, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
 
         out = {k: v.detach() for k, v in out.items()}
-        self.metric_factory.calc(out['pred'], target, mode='train')
+        self.metric_factory.calc(out['pred'], target, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -57,11 +57,11 @@ class SegmentationPipeline(BasePipeline):
 
         out = self.model(images)
         if 'edges' in batch:
-            self.loss_factory.calc(out, target, bd_gt=bd_gt, mode='valid')
+            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='valid')
         else:
-            self.loss_factory.calc(out, target, mode='valid')
+            self.loss_factory.calc(out, target, phase='valid')
 
-        self.metric_factory.calc(out['pred'], target, mode='valid')
+        self.metric_factory.calc(out['pred'], target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
