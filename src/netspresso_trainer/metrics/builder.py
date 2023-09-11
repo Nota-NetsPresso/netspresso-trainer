@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 import torch
 
-from .registry import TASK_METRIC, PHASE_LIST
 from ..utils.record import AverageMeter
+from .registry import PHASE_LIST, TASK_METRIC
 
 
 class MetricFactory:
