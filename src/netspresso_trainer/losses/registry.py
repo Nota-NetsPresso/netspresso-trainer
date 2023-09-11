@@ -14,3 +14,5 @@ LOSS_DICT = {
     'roi_head_loss': RoiHeadLoss,
     'rpn_loss': RPNLoss,
 }
+
+PHASE_LIST = ['train', 'valid', 'test']

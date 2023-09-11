@@ -4,11 +4,9 @@ from itertools import chain
 import torch
 import torch.nn as nn
 
-from .registry import LOSS_DICT
+from .registry import LOSS_DICT, PHASE_LIST
 from ..utils.record import AverageMeter
 
-MODE = ['train', 'valid', 'test']
-IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
 
 class LossFactory:
     def __init__(self, conf_model, **kwargs) -> None:
@@ -18,21 +16,9 @@ class LossFactory:
         self.conf_model = conf_model
         self._build_losses()
 
-        self.loss_val_per_epoch = {
-            mode: {
-                loss_key: AverageMeter(loss_key, ':.4e') for loss_key in chain(self.loss_func_dict.keys(), ['total'])
-            }
-            for mode in MODE
-        }
-
-        self.loss_val_per_step = {
-            mode: {
-                loss_key: 0. for loss_key in chain(self.loss_func_dict.keys(), ['total'])
-            }
-            for mode in MODE
-        }
-
-        self._clear()
+        self._dirty_backward: bool = False
+        self.loss_val_per_epoch: Dict[str, Dict[str, AverageMeter]] = {}
+        self._clear_epoch_start()
 
     def _build_losses(self):
 
@@ -40,46 +26,61 @@ class LossFactory:
             criterion = loss_element.criterion
             loss_config = {k: v for k, v in loss_element.items() if k not in ['criterion', 'weight']}
             loss = LOSS_DICT[criterion](**loss_config)
-            
+
             self.loss_func_dict.update({criterion: loss})
             loss_weight = loss_element.weight if loss_element.weight is not None else 1.0
             self.loss_weight_dict.update({criterion: loss_weight})
 
-    def _clear(self):
-        self.total_loss_for_backward = 0  
+    def _clear_step_start(self):
+        self.total_loss_for_backward: Union[int, torch.Tensor] = 0
+        self._dirty_backward = False
 
-    def backward(self):
-        self.total_loss_for_backward.requires_grad_(True)
-        self.total_loss_for_backward.mean().backward()
-        
+    def _clear_epoch_start(self):
+        self.loss_val_per_epoch = {
+            phase: {
+                loss_key: AverageMeter(loss_key, ':.4e') for loss_key in chain(self.loss_func_dict.keys(), ['total'])
+            }
+            for phase in PHASE_LIST
+        }
+        self._clear_step_start()
+
     def _assert_argument(self, kwargs):
         if 'boundary_loss' in self.loss_func_dict:
             assert 'bd_gt' in kwargs, "BoundaryLoss failed!"
 
-    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], mode='train', *args: Any, **kwargs: Any) -> None:
-        _mode = mode.lower()
-        assert _mode in MODE, f"{_mode} is not defined at our mode list ({MODE})"
-        
+    def backward(self):
+        assert not self._dirty_backward
+        self.total_loss_for_backward.requires_grad_(True)
+        self.total_loss_for_backward.mean().backward()
+        self._dirty_backward = True
+
+    def result(self, phase='train'):
+        phase = phase.lower()
+        return self.loss_val_per_epoch[phase]
+
+    def reset_values(self):
+        self._clear_epoch_start()
+
+    def calc(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase='train', *args: Any, **kwargs: Any) -> None:
+        self.__call__(out=out, target=target, phase=phase, *args, **kwargs)
+
+    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase: str, *args: Any, **kwargs: Any) -> None:
+        phase = phase.lower()
+        assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
+
         bd_gt = kwargs['bd_gt'] if 'bd_gt' in kwargs else None
         self._assert_argument(kwargs)
-        self._clear()
-        
+        self._clear_step_start()
+
         for loss_key, loss_func in self.loss_func_dict.items():
             if loss_key == 'boundary_loss':
                 loss_val = loss_func(out, bd_gt)
             else:
                 loss_val = loss_func(out, target)
-            self.loss_val_per_step[_mode][loss_key] = loss_val.item()
-            self.loss_val_per_epoch[_mode][loss_key].update(loss_val.item())
-            
+            self.loss_val_per_epoch[phase][loss_key].update(loss_val.item())
             self.total_loss_for_backward += loss_val * self.loss_weight_dict[loss_key]
 
-        self.loss_val_per_step[_mode]['total'] = self.total_loss_for_backward.item()
-        self.loss_val_per_epoch[_mode]['total'].update(self.total_loss_for_backward.item())
-
-    def result(self, mode='train'):
-        _mode = mode.lower()
-        return self.loss_val_per_epoch[_mode]
+        self.loss_val_per_epoch[phase]['total'].update(self.total_loss_for_backward.item())
 
 
 def build_losses(conf_model, **kwargs):

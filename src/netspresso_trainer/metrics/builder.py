@@ -2,11 +2,8 @@ from typing import Any, Dict
 
 import torch
 
-from .registry import TASK_METRIC
+from .registry import TASK_METRIC, PHASE_LIST
 from ..utils.record import AverageMeter
-
-MODE = ['train', 'valid', 'test']
-IGNORE_INDEX_NONE_AS = -100  # following PyTorch preference
 
 
 class MetricFactory:
@@ -15,29 +12,37 @@ class MetricFactory:
         self.conf_model = conf_model
 
         assert self.task in TASK_METRIC
-        metric_cls = TASK_METRIC[self.task]
+        self.metric_cls = TASK_METRIC[self.task]
 
+        self.metric_fn = self.metric_cls(**kwargs)
+        self._clear_epoch_start()
+
+    def _clear_epoch_start(self):
         self.metric_meter_dict: Dict[str, Dict[str, AverageMeter]] = {
-            mode: {
+            phase: {
                 metric_key: AverageMeter(metric_key, ':6.2f')
-                for metric_key in metric_cls.metric_names
+                for metric_key in self.metric_cls.metric_names
             }
-            for mode in MODE
+            for phase in PHASE_LIST
         }
 
-        self.metric_fn = metric_cls(**kwargs)
+    def reset_values(self):
+        self._clear_epoch_start()
 
-    def __call__(self, pred: torch.Tensor, target: torch.Tensor, mode='train', *args: Any, **kwargs: Any) -> Any:
+    def calc(self, pred: torch.Tensor, target: torch.Tensor, phase='train', *args: Any, **kwargs: Any) -> None:
+        self.__call__(pred=pred, target=target, phase=phase, *args, **kwargs)
+
+    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, *args: Any, **kwargs: Any) -> None:
 
         metric_result_dict = self.metric_fn.calibrate(pred, target)
-        mode = mode.lower()
-        assert mode in MODE, f"{mode} is not defined at our mode list ({MODE})"
-        for metric_key in self.metric_meter_dict[mode]:
+        phase = phase.lower()
+        assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
+        for metric_key in self.metric_meter_dict[phase]:
             assert metric_key in metric_result_dict
-            self.metric_meter_dict[mode][metric_key].update(float(metric_result_dict[metric_key]))
+            self.metric_meter_dict[phase][metric_key].update(float(metric_result_dict[metric_key]))
 
-    def result(self, mode='train'):
-        return self.metric_meter_dict[mode.lower()]
+    def result(self, phase='train'):
+        return self.metric_meter_dict[phase.lower()]
 
     @property
     def metric_names(self):

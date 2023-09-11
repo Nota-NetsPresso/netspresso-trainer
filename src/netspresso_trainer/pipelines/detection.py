@@ -25,14 +25,14 @@ class DetectionPipeline(BasePipeline):
 
         self.optimizer.zero_grad()
         out = self.model(images, targets=targets)
-        self.loss(out, target=targets, mode='train')
+        self.loss_factory.calc(out, target=targets, mode='train')
 
-        self.loss.backward()
+        self.loss_factory.backward()
         self.optimizer.step()
 
         # TODO: metric update
         # out = {k: v.detach() for k, v in out.items()}
-        # self.metric(out['pred'], target=targets, mode='train')
+        # self.metric_factory(out['pred'], target=targets, mode='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -45,10 +45,10 @@ class DetectionPipeline(BasePipeline):
                    for box, label in zip(bboxes, labels)]
 
         out = self.model(images, targets=targets)
-        self.loss(out, target=targets, mode='valid')
+        self.loss_factory.calc(out, target=targets, mode='valid')
 
         # TODO: metric update
-        # self.metric(out['pred'], (labels, bboxes), mode='valid')
+        # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -90,4 +90,4 @@ class DetectionPipeline(BasePipeline):
                 preds_indices = np.append(preds_indices, class_idx)
 
         pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
-        self.metric((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), mode='valid')
+        self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), mode='valid')

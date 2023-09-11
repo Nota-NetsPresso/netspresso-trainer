@@ -45,8 +45,8 @@ class BasePipeline(ABC):
 
         self.timer = Timer()
 
-        self.loss = None
-        self.metric = None
+        self.loss_factory = None
+        self.metric_factory = None
         self.optimizer = None
         self.start_epoch_at_one = bool(START_EPOCH_ZERO_OR_ONE)
         self.start_epoch = int(self.start_epoch_at_one)
@@ -83,6 +83,8 @@ class BasePipeline(ABC):
                                          wd=self.conf.training.weight_decay,
                                          momentum=self.conf.training.momentum)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
+        self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
+        self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
         resume_optimizer_checkpoint = self.conf.model.resume_optimizer_checkpoint
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
@@ -133,11 +135,11 @@ class BasePipeline(ABC):
 
     @property
     def train_loss(self):
-        return self.loss.result('train').get('total').avg
+        return self.loss_factory.result('train').get('total').avg
 
     @property
     def valid_loss(self):
-        return self.loss.result('valid').get('total').avg
+        return self.loss_factory.result('valid').get('total').avg
 
     @property
     def sample_input(self):
@@ -154,8 +156,8 @@ class BasePipeline(ABC):
         try:
             for num_epoch in range(self.start_epoch, self.conf.training.epochs + self.start_epoch_at_one):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
-                self.loss = build_losses(self.conf.model, ignore_index=self.ignore_index)
-                self.metric = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+                self.loss_factory.reset_values()
+                self.metric_factory.reset_values()
 
                 self.train_one_epoch()
 
@@ -227,11 +229,11 @@ class BasePipeline(ABC):
         return returning_samples
 
     def log_end_epoch(self, epoch, time_for_epoch, valid_samples=None, valid_logging=False):
-        train_losses = self.loss.result('train')
-        train_metrics = self.metric.result('train')
+        train_losses = self.loss_factory.result('train')
+        train_metrics = self.metric_factory.result('train')
 
-        valid_losses = self.loss.result('valid') if valid_logging else None
-        valid_metrics = self.metric.result('valid') if valid_logging else None
+        valid_losses = self.loss_factory.result('valid') if valid_logging else None
+        valid_metrics = self.metric_factory.result('valid') if valid_logging else None
 
         self.train_logger.update_epoch(epoch)
         self.train_logger.log(
@@ -305,8 +307,8 @@ class BasePipeline(ABC):
             train_metrics={epoch: record['train_metrics'] for epoch, record in self.training_history.items()},
             valid_metrics={epoch: record['valid_metrics'] for epoch, record in self.training_history.items()
                            if 'valid_metrics' in record},
-            metrics_list=self.metric.metric_names,
-            primary_metric=self.metric.primary_metric,
+            metrics_list=self.metric_factory.metric_names,
+            primary_metric=self.metric_factory.primary_metric,
         )
         if end_training:
             total_train_time = self.timer.get(name='train_all', as_pop=True)
