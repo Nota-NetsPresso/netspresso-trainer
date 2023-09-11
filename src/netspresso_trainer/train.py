@@ -1,4 +1,4 @@
-from netspresso_trainer import trainer
+from netspresso_trainer import trainer, ev
 
 
 def netspresso_train():
