@@ -2,13 +2,13 @@
 Based on the Torchvision implementation of ResNet.
 https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
-from typing import Type, Union, Optional, List, Dict, Literal
+from typing import Dict, List, Literal, Optional, Type, Union
 
 import torch
-from torch import Tensor
 import torch.nn as nn
+from torch import Tensor
 
-from ...op.custom import ConvLayer, BasicBlock, Bottleneck
+from ...op.custom import BasicBlock, Bottleneck, ConvLayer
 from ...utils import BackboneOutput
 
 __all__ = ['resnet50']
@@ -79,7 +79,7 @@ class ResNet(nn.Module):
                                        expansion=expansion)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        hidden_sizes = list(map(lambda h: h * 4, planes))
+        hidden_sizes = [h * 4 for h in planes]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 

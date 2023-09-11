@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 
 import numpy as np
 import torch
@@ -61,7 +61,7 @@ class DetectionPipeline(BasePipeline):
                       label.detach().cpu().numpy())
                      for bbox, confidence, label in zip(out['post_boxes'], out['post_scores'], out['post_labels'])],
         }
-        return {k: v for k, v in logs.items()}
+        return dict(logs.items())
 
     def test_step(self, batch):
         self.model.eval()

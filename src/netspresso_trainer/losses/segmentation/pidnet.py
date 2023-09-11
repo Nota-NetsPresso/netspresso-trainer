@@ -103,9 +103,9 @@ class PIDNetBoundaryAwareCrossEntropy(PIDNetCrossEntropy):
 #             raise ValueError("lengths of prediction and target are not identical!")
 
 
-class BondaryLoss(nn.Module):
+class BoundaryLoss(nn.Module):
     def __init__(self):
-        super(BondaryLoss, self).__init__()
+        super(BoundaryLoss, self).__init__()
 
     @staticmethod
     def weighted_bce(bd_pre, target):

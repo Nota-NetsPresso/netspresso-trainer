@@ -1,8 +1,8 @@
-import os
 import logging
+import os
 
-import torch
 import numpy as np
+import torch
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
@@ -77,7 +77,7 @@ class SegmentationPipeline(BasePipeline):
             logs.update({
                 'bd_gt': bd_gt.detach().cpu().numpy()
             })
-        return {k: v for k, v in logs.items()}
+        return dict(logs.items())
 
     def test_step(self, batch):
         self.model.eval()

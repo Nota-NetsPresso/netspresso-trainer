@@ -1,3 +1,7 @@
+#!/bin/bash
+
+cd "$(dirname ${0})/.."
+
 #### HuggingFace datasets training
 # To use HuggingFace datasets, you need to additionally install requirements-optional.txt
 # `pip install -r requirements-optional.txt`

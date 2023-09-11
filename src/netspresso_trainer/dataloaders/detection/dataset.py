@@ -1,21 +1,22 @@
-import os
-from pathlib import Path
 import json
-from typing import Optional, Union, Tuple, List, Dict
+import os
 from itertools import chain
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
-import PIL.Image as Image
 import numpy as np
+import PIL.Image as Image
+import torch
 from omegaconf import DictConfig
 from torch.utils.data import random_split
-import torch
 
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
+
 def load_custom_class_map(id_mapping: List[str]):
-    idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(id_mapping)}
+    idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
     return idx_to_class
 
 def detection_collate_fn(original_batch):
@@ -100,7 +101,7 @@ class DetectionDataSampler(BaseDataSampler):
             test_samples = self.load_data(split='test')
 
         if not exists_valid:
-            num_train_splitted = int(len(train_samples) * TRAIN_VALID_SPLIT_RATIO) 
+            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio) 
             train_samples, valid_samples = \
                 random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
                                 generator=torch.Generator().manual_seed(42))

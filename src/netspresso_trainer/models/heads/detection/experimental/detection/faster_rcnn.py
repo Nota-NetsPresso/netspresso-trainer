@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
-from torchvision.ops import misc as misc_nn_ops 
+from torchvision.ops import misc as misc_nn_ops
 
 # from ...ops import misc as misc_nn_ops
 # from ...transforms._presets import ObjectDetection
@@ -15,12 +15,12 @@ from torchvision.ops import misc as misc_nn_ops
 # from ..resnet import resnet50, ResNet50_Weights
 from ._utils import overwrite_eps
 from .anchor_utils import AnchorGenerator
+
 # from .backbone_utils import _mobilenet_extractor, _resnet_fpn_extractor, _validate_trainable_layers
 from .generalized_rcnn import GeneralizedRCNN
 from .roi_heads import RoIHeads
 from .rpn import RegionProposalNetwork, RPNHead
 from .transform import GeneralizedRCNNTransform
-
 
 __all__ = [
     "FasterRCNN",
@@ -230,8 +230,8 @@ class FasterRCNN(GeneralizedRCNN):
         if rpn_head is None:
             rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
 
-        rpn_pre_nms_top_n = dict(training=rpn_pre_nms_top_n_train, testing=rpn_pre_nms_top_n_test)
-        rpn_post_nms_top_n = dict(training=rpn_post_nms_top_n_train, testing=rpn_post_nms_top_n_test)
+        rpn_pre_nms_top_n = {"training": rpn_pre_nms_top_n_train, "testing": rpn_pre_nms_top_n_test}
+        rpn_post_nms_top_n = {"training": rpn_post_nms_top_n_train, "testing": rpn_post_nms_top_n_test}
 
         rpn = RegionProposalNetwork(
             rpn_anchor_generator,

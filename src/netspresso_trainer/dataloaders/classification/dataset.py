@@ -1,19 +1,21 @@
-import logging
 import csv
-from pathlib import Path
-from typing import Optional, Union, Tuple, List, Dict
+import logging
 from collections import Counter
 from itertools import chain
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
-from torch.utils.data import random_split
 from omegaconf import DictConfig
+from torch.utils.data import random_split
 
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
 logger = logging.getLogger("netspresso_trainer")
+
+VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
     
 def load_class_map_with_id_mapping(root_dir, train_dir,
                                    map_or_filename: Optional[Union[str, Path]]=None,
@@ -61,7 +63,7 @@ def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     if file_or_dir.exists():
         return file_or_dir.is_file()
     
-    file_candidates = [x for x in image_dir.glob(f"{candidate_name}.*")]
+    file_candidates = list(image_dir.glob(f"{candidate_name}.*"))
     assert len(file_candidates) != 0, f"Unknown label format! Is there any something file like {file_or_dir} ?"
     
     return True
@@ -76,38 +78,34 @@ class ClassficationDataSampler(BaseDataSampler):
         image_dir: Path = data_root / split_dir.image
         
         images_and_targets: List[Dict[str, Optional[Union[str, int]]]] = []
+        
+        assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}"
         if split in ['train', 'valid']:
             
             if is_file_dict(image_dir, file_or_dir_to_idx):
                 file_to_idx = file_or_dir_to_idx
-                for ext in IMG_EXTENSIONS:
-                    for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
-                        if file.name in file_to_idx:
-                            images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
-                            continue
-                        if file.stem in file_to_idx:
-                            images_and_targets.append({'image': str(file), 'label': file_to_idx[file.stem]})
-                            continue
-                        logger.debug(f"Found file wihtout label: {file}")
+                for file in chain(image_dir.glob(f'*{ext}') for ext in VALID_IMG_EXTENSIONS):
+                    if file.name in file_to_idx:
+                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
+                        continue
+                    if file.stem in file_to_idx:
+                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.stem]})
+                        continue
+                    logger.debug(f"Found file wihtout label: {file}")
             
             else:
                 dir_to_idx = file_or_dir_to_idx
                 for dir_name, dir_idx in dir_to_idx.items():
                     _dir = Path(image_dir) / dir_name
-                    for ext in IMG_EXTENSIONS:
-                        images_and_targets.extend([{'image': str(file), 'label': dir_idx}
-                                                for file in chain(_dir.glob(f'*{ext}'), _dir.glob(f'*{ext.upper()}'))])
+                    for ext in VALID_IMG_EXTENSIONS:
+                        images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in _dir.glob(f'*{ext}')])
 
-            images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
-        elif split == 'test':
-            for ext in IMG_EXTENSIONS:
-                images_and_targets.extend([{'image': str(file), 'label': None}
-                                        for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
-            images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
+        else:  # split == test
+            for ext in VALID_IMG_EXTENSIONS:
+                images_and_targets.extend([{'image': str(file), 'label': None} for file in image_dir.glob(f'*{ext}')])
+            
 
-        else:
-            raise AssertionError(f"split should be either {['train', 'valid', 'test']}")
-
+        images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         return images_and_targets
         
     def load_samples(self):
@@ -138,8 +136,7 @@ class ClassficationDataSampler(BaseDataSampler):
         return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
     
     def load_huggingface_samples(self):
-        from datasets import load_dataset
-        from datasets import ClassLabel
+        from datasets import ClassLabel, load_dataset
         
         cache_dir = Path(self.conf_data.metadata.custom_cache_dir)
         root = self.conf_data.metadata.repo
@@ -159,7 +156,7 @@ class ClassficationDataSampler(BaseDataSampler):
             # TODO: find class_map <-> idx and apply it (ex. using id_mapping)
             idx_to_class: Dict[int, int] = {k: k for k in labels}
         elif isinstance(labels[0], str):
-            idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(labels)}
+            idx_to_class: Dict[int, str] = dict(enumerate(labels))
         
         exists_valid = 'validation' in total_dataset
         exists_test = 'test' in total_dataset

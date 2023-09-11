@@ -1,8 +1,8 @@
-import os
 import logging
+import os
 
-from omegaconf import OmegaConf
 import torch
+from omegaconf import OmegaConf
 
 from .base import BasePipeline
 

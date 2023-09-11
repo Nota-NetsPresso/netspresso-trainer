@@ -1,6 +1,6 @@
-import os
-from typing import Any, List, Dict, Tuple, Optional, Union
 import logging
+import os
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 logger = logging.getLogger("netspresso_trainer")
 

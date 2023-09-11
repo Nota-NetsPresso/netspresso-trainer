@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 import torch
 
-from .registry import TASK_METRIC, PHASE_LIST
 from ..utils.record import AverageMeter
+from .registry import PHASE_LIST, TASK_METRIC
 
 
 class MetricFactory:
@@ -29,10 +29,10 @@ class MetricFactory:
     def reset_values(self):
         self._clear_epoch_start()
 
-    def calc(self, pred: torch.Tensor, target: torch.Tensor, phase='train', *args: Any, **kwargs: Any) -> None:
-        self.__call__(pred=pred, target=target, phase=phase, *args, **kwargs)
+    def calc(self, pred: torch.Tensor, target: torch.Tensor, phase='train', **kwargs: Any) -> None:
+        self.__call__(pred=pred, target=target, phase=phase, **kwargs)
 
-    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, *args: Any, **kwargs: Any) -> None:
+    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
 
         metric_result_dict = self.metric_fn.calibrate(pred, target)
         phase = phase.lower()

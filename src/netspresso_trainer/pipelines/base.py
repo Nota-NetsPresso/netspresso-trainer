@@ -1,24 +1,24 @@
-from abc import ABC, abstractmethod
-import os
-from statistics import mean
-from pathlib import Path
-from typing import final, Dict, Literal
 import logging
+import os
+from abc import ABC, abstractmethod
 from dataclasses import asdict
+from pathlib import Path
+from statistics import mean
+from typing import Dict, Literal, final
 
 import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
+from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
 from ..losses import build_losses
 from ..metrics import build_metrics
-from ..loggers import build_logger, START_EPOCH_ZERO_OR_ONE
-from ..utils.record import Timer, TrainingSummary
-from ..utils.logger import yaml_for_logging
+from ..optimizers import build_optimizer
+from ..schedulers import build_scheduler
 from ..utils.fx import save_graphmodule
+from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
+from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
 
 logger = logging.getLogger("netspresso_trainer")
@@ -202,7 +202,7 @@ class BasePipeline(ABC):
             raise e
 
     def train_one_epoch(self):
-        for idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
+        for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             self.train_step(batch)
 
     @torch.no_grad()
@@ -210,7 +210,7 @@ class BasePipeline(ABC):
         num_returning_samples = 0
         returning_samples = []
         outputs = []
-        for idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
+        for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(batch)
             if out is not None:
                 outputs.append(out)
@@ -223,7 +223,7 @@ class BasePipeline(ABC):
     @torch.no_grad()
     def inference(self, test_dataset):
         returning_samples = []
-        for idx, batch in enumerate(tqdm(test_dataset, leave=False)):
+        for _idx, batch in enumerate(tqdm(test_dataset, leave=False)):
             out = self.test_step(batch)
             returning_samples.append(out)
         return returning_samples
@@ -319,7 +319,7 @@ class BasePipeline(ABC):
             training_summary.params = params
 
         result_dir = self.train_logger.result_dir
-        summary_path = Path(result_dir) / f"training_summary.ckpt"
+        summary_path = Path(result_dir) / "training_summary.ckpt"
         torch.save(asdict(training_summary), summary_path)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 

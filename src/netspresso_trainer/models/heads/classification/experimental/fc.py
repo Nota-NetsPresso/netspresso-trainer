@@ -7,6 +7,7 @@ from torch.fx.proxy import Proxy
 
 from ....utils import ModelOutput
 
+
 class FC(nn.Module):
     def __init__(self, feature_dim: int, num_classes: int) -> None:
         super(FC, self).__init__()

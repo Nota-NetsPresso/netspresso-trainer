@@ -1,13 +1,12 @@
 import os
 import random
-from typing import Union
 from pathlib import Path
+from typing import Union
 
-import torch
-import torch.nn as nn
-import torch.backends.cudnn as cudnn
 import numpy as np
-
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
 
 __all__ = ['set_device', 'get_device']
 
@@ -31,7 +30,7 @@ def set_device(seed):
     world_size = 1
     rank = 0  # global rank
     if distributed:
-        assert seed is not None and cudnn.benchmark == False, "distributed training requires reproducibility"
+        assert seed is not None and cudnn.benchmark is False, "distributed training requires reproducibility"
         torch.distributed.init_process_group(backend='nccl', init_method='env://')
         rank = torch.distributed.get_rank()
         devices = torch.device(f'cuda:{rank}')

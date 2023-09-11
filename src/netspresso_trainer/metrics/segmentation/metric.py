@@ -3,9 +3,8 @@ from typing import List
 import numpy as np
 import torch
 
-from ..base import BaseMetric
 from ...utils.record import AverageMeter
-
+from ..base import BaseMetric
 
 IGNORE_INDEX_NONE_VALUE = -100
 

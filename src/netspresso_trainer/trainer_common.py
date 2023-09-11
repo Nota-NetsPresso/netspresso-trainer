@@ -3,11 +3,11 @@ import os
 from pathlib import Path
 
 import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
+from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .dataloaders import build_dataset, build_dataloader
-from .models import build_model, SUPPORTING_TASK_LIST, is_single_task_model
+from .dataloaders import build_dataloader, build_dataset
+from .models import SUPPORTING_TASK_LIST, build_model, is_single_task_model
 from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
@@ -140,7 +140,7 @@ def trainer(is_graphmodule_training=False):
 
         if test_dataset:
             trainer.inference(test_dataset)
-    except KeyboardInterrupt as e:
+    except KeyboardInterrupt:
         pass
     except Exception as e:
         raise e
