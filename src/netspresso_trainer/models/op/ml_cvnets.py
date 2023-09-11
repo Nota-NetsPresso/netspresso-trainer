@@ -1065,7 +1065,6 @@ class TransformerEncoder(nn.Module):
         x_prev: Optional[Tensor] = None,
         key_padding_mask: Optional[Tensor] = None,
         attn_mask: Optional[Tensor] = None,
-        *args,
         **kwargs
     ) -> Tensor:
 
@@ -1077,7 +1076,6 @@ class TransformerEncoder(nn.Module):
             x_kv=x_prev,
             key_padding_mask=key_padding_mask,
             attn_mask=attn_mask,
-            *args,
             **kwargs
         )  # mha
         x = self.pre_norm_mha[2](x)  # dropout
