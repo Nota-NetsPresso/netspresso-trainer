@@ -25,7 +25,7 @@ class DetectionPipeline(BasePipeline):
 
         self.optimizer.zero_grad()
         out = self.model(images, targets=targets)
-        self.loss_factory.calc(out, target=targets, mode='train')
+        self.loss_factory.calc(out, target=targets, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -45,7 +45,7 @@ class DetectionPipeline(BasePipeline):
                    for box, label in zip(bboxes, labels)]
 
         out = self.model(images, targets=targets)
-        self.loss_factory.calc(out, target=targets, mode='valid')
+        self.loss_factory.calc(out, target=targets, phase='valid')
 
         # TODO: metric update
         # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')
@@ -90,4 +90,4 @@ class DetectionPipeline(BasePipeline):
                 preds_indices = np.append(preds_indices, class_idx)
 
         pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
-        self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), mode='valid')
+        self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), phase='valid')
