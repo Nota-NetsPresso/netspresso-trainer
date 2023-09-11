@@ -47,67 +47,6 @@ def fast_collate(batch):
         raise AssertionError()
 
 
-class PrefetchLoader:
-
-    def __init__(
-            self,
-            loader,
-            mean=IMAGENET_DEFAULT_MEAN,
-            std=IMAGENET_DEFAULT_STD,
-            channels=3,
-            fp16=False):
-
-        mean = expand_to_chs(mean, channels)
-        std = expand_to_chs(std, channels)
-        normalization_shape = (1, channels, 1, 1)
-
-        self.loader = loader
-        self.mean = torch.tensor([x * 255 for x in mean]).cuda().view(normalization_shape)
-        self.std = torch.tensor([x * 255 for x in std]).cuda().view(normalization_shape)
-        self.fp16 = fp16
-        if fp16:
-            self.mean = self.mean.half()
-            self.std = self.std.half()
-
-        self.random_erasing = None
-
-    def __iter__(self):
-        stream = torch.cuda.Stream()
-        first = True
-
-        for next_input, next_target in self.loader:
-            with torch.cuda.stream(stream):
-                next_input = next_input.cuda(non_blocking=True)
-                next_target = next_target.type(torch.int64).cuda(non_blocking=True)
-                if self.fp16:
-                    next_input = next_input.half().sub_(self.mean).div_(self.std)
-                else:
-                    next_input = next_input.float().sub_(self.mean).div_(self.std)
-                if self.random_erasing is not None:
-                    next_input = self.random_erasing(next_input)
-
-            if not first:
-                yield input, target
-            else:
-                first = False
-
-            torch.cuda.current_stream().wait_stream(stream)
-            input = next_input
-            target = next_target
-        yield input, target
-
-    def __len__(self):
-        return len(self.loader)
-
-    @property
-    def sampler(self):
-        return self.loader.sampler
-
-    @property
-    def dataset(self):
-        return self.loader.dataset
-
-
 def init_worker(worker_id, worker_seeding='all'):
     worker_info = torch.utils.data.get_worker_info()
     assert worker_info.id == worker_id
