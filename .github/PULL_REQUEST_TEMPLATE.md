@@ -13,11 +13,16 @@ PRs from forked repository not accepted.
 
 ## Changelog
 
-Please add a brief summary of the change to the Upcoming Release section of the [`CHANGELOG.md`](https://github.com/nota-netspresso/netspresso-trainer/blob/master/CHANGELOG.md) file
+If you PR to `master` branch, please add a brief summary of the change to the **Upcoming Release** section of the [`CHANGELOG.md`](https://github.com/nota-netspresso/netspresso-trainer/blob/master/CHANGELOG.md) file
 and include a link to the PR (formatted in markdown) and a link to your github profile (if you like).
 
 For example:
 
 ```
-- Added a cool new feature by `@myusername` in `[PR 2023](https://github.com/nota-netspresso/netspresso-trainer/pull/2023)`
+- Added a cool new feature by `@myusername` in [PR 2023](https://github.com/nota-netspresso/netspresso-trainer/pull/2023)
 ```
+
+## Code Formatting
+
+You should follow the code linting process. Please check your code with `lint_check.sh` in `./scripts` directory.
+For more information, please read the contribution guide in `CONTRIBUTING.md`. 
