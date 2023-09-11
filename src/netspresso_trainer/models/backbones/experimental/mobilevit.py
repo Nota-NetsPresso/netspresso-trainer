@@ -4,18 +4,17 @@ https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f
 """
 
 import argparse
-from typing import Dict, Tuple, Optional, Any, Union, Literal
 import math
+from typing import Any, Dict, Literal, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
 
-from ...op.ml_cvnets import ConvLayer, GlobalPool
-from ...op.ml_cvnets import InvertedResidual
-from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP
-from ...utils import FXTensorType, BackboneOutput
+from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
+from ...op.ml_cvnets import ConvLayer, GlobalPool, InvertedResidual
+from ...utils import BackboneOutput, FXTensorType
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
@@ -146,7 +145,7 @@ class MobileViTBlock(nn.Module):
         return patches, info_dict
 
     def folding(self, patches: Tensor, info_dict: Dict) -> Tensor:
-        n_dim = patches.dim()
+        patches.dim()
         
         # @deepkyu: [fx tracing] Found always satisfied: assert n_dim == 3
         # assert n_dim == 3, "Tensor should be of shape BPxNxC. Got: {}".format(

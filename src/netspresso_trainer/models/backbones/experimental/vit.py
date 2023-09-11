@@ -3,14 +3,20 @@ Based on the vit implementation of apple/ml-cvnets.
 https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 import argparse
-from typing import Union, Dict, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 
-from ...op.ml_cvnets import ConvLayer
-from ...op.ml_cvnets import SinusoidalPositionalEncoding
-from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
+from ...op.base_metaformer import (
+    ChannelMLP,
+    Image2Sequence,
+    MetaFormer,
+    MetaFormerBlock,
+    MetaFormerEncoder,
+    MultiHeadAttention,
+)
+from ...op.ml_cvnets import ConvLayer, SinusoidalPositionalEncoding
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']

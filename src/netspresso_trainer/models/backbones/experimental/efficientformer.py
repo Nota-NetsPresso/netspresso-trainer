@@ -1,24 +1,26 @@
 """
 EfficientFormer implementation
 """
-import os
 import copy
-import torch
-import torch.nn as nn
-import math
-from typing import Optional, Dict
 import itertools
+import math
+import os
+from typing import Dict, Optional
 
 import torch
 import torch.nn as nn
 
-from ...op.depth import DropPath
 from ...op.base_metaformer import (
-    MetaFormer, MetaFormerBlock, MetaFormerEncoder,
-    MultiHeadAttention, ChannelMLP, Image2Sequence,
-    Pooling
+    ChannelMLP,
+    Image2Sequence,
+    MetaFormer,
+    MetaFormerBlock,
+    MetaFormerEncoder,
+    MultiHeadAttention,
+    Pooling,
 )
 from ...op.custom import ConvLayer
+from ...op.depth import DropPath
 from ...utils import BackboneOutput
 
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection']

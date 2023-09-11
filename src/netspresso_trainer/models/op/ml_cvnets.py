@@ -2,14 +2,14 @@
 Based on the mobilevit official implementation.
 https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f/cvnets/models/classification/mobilevit.py
 """
-import math
-from typing import Optional, Union, Tuple, List, Dict
 import argparse
+import math
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor, Size
+from torch import Size, Tensor
 
 # from .base_layer import BaseLayer
 # from .normalization_layers import get_normalization_layer

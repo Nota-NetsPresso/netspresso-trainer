@@ -1,11 +1,11 @@
-from typing import Optional, Tuple, List, Any, Union, Dict
 import warnings
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from ..op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 
 
 class ConvLayer(nn.Module):

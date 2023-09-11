@@ -1,12 +1,12 @@
-from pathlib import Path
-from typing import Any, List, TypedDict, Optional, Union
 import logging
+from pathlib import Path
+from typing import Any, List, Optional, TypedDict, Union
 
+import omegaconf
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
-import omegaconf
 
 logger = logging.getLogger("netspresso_trainer")
 

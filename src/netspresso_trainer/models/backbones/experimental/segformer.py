@@ -1,10 +1,10 @@
-from typing import Optional
 import math
+from typing import Optional
 
 import torch
 import torch.nn as nn
 
-from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
+from ...op.base_metaformer import Image2Sequence, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
 from ...op.custom import ConvLayer
 from ...op.registry import ACTIVATION_REGISTRY
 from ...utils import BackboneOutput

@@ -1,14 +1,14 @@
-import os
-from typing import Callable, Union, Optional, Tuple
-from abc import abstractmethod
 import logging
+import os
+from abc import abstractmethod
+from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
 
 from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
-from .utils import BackboneOutput, ModelOutput, DetectionModelOutput, load_from_checkpoint
+from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
 
 logger = logging.getLogger("netspresso_trainer")
 

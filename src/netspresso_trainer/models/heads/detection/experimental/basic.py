@@ -1,18 +1,18 @@
-from typing import Union, Tuple, Optional, Dict, List
-from collections import OrderedDict
-import warnings
 import copy
+import warnings
+from collections import OrderedDict
 from functools import partial
+from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-import numpy as np
 from torchvision.ops import MultiScaleRoIAlign
 
-from .detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
-from ....utils import FXTensorListType, DetectionModelOutput
+from ....utils import DetectionModelOutput, FXTensorListType
+from .detection import FasterRCNN, MaskRCNNHeads, MaskRCNNPredictor
 
 
 class FPN(nn.Module):
@@ -29,9 +29,12 @@ class FPN(nn.Module):
                  conv_cfg=None,
                  norm_cfg=None,
                  act_cfg=None,
-                 upsample_cfg=dict(mode='nearest'),
-                 init_cfg=dict(
-                     type='Xavier', layer='Conv2d', distribution='uniform')):
+                 upsample_cfg=None,
+                 init_cfg=None):
+        if init_cfg is None:
+            init_cfg = {'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}
+        if upsample_cfg is None:
+            upsample_cfg = {'mode': 'nearest'}
         super(FPN, self).__init__()
         assert isinstance(in_channels, list)
         self.in_channels = in_channels

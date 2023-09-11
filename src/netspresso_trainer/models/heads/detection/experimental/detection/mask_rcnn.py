@@ -3,13 +3,12 @@ from typing import Any, Callable, Optional
 
 from torch import nn
 from torchvision.ops import MultiScaleRoIAlign
-from torchvision.ops import misc as misc_nn_ops 
+from torchvision.ops import misc as misc_nn_ops
 
 # from ._utils import overwrite_eps
 # from .backbone_utils import _resnet_fpn_extractor, _validate_trainable_layers
 # from .faster_rcnn import _default_anchorgen, FasterRCNN, FastRCNNConvFCHead, RPNHead
 from .faster_rcnn import FasterRCNN
-
 
 __all__ = [
     "MaskRCNN",
@@ -203,9 +202,8 @@ class MaskRCNN(FasterRCNN):
                 f"mask_roi_pool should be of type MultiScaleRoIAlign or None instead of {type(mask_roi_pool)}"
             )
 
-        if num_classes is not None:
-            if mask_predictor is not None:
-                raise ValueError("num_classes should be None when mask_predictor is specified")
+        if num_classes is not None and mask_predictor is not None:
+            raise ValueError("num_classes should be None when mask_predictor is specified")
 
         out_channels = backbone.out_channels
 

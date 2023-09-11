@@ -180,8 +180,8 @@ class DAPPM(nn.Module):
         self.resize_to = PAPPM_DAPPM_RESIZE_TO
 
     def forward(self, x):
-        width = x.shape[-1]
-        height = x.shape[-2]
+        x.shape[-1]
+        x.shape[-2]
         x_list = []
 
         x_list.append(self.scale0(x))
@@ -253,8 +253,8 @@ class PAPPM(nn.Module):
         self.resize_to = PAPPM_DAPPM_RESIZE_TO
 
     def forward(self, x):
-        width = x.shape[-1]
-        height = x.shape[-2]
+        x.shape[-1]
+        x.shape[-2]
         scale_list = []
 
         x_ = self.scale0(x)
