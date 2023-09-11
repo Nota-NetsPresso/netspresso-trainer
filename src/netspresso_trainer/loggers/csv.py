@@ -14,9 +14,10 @@ class ClassificationCSVLogger(BaseCSVLogger):
             'train/Acc@1': 'train_accuracy',
             'valid/Acc@1': 'valid_accuracy',
         }
-        
+    
+    @property
     def key_map(self):
-        raise self._key_map
+        return self._key_map
 
 class SegmentationCSVLogger(BaseCSVLogger):
     csv_header = ['epoch', 'train_loss', 'train_miou %', 'valid_miou %', 'valid_pixAcc %']
@@ -31,6 +32,7 @@ class SegmentationCSVLogger(BaseCSVLogger):
             'valid/iou': 'valid_miou %',
             'valid/pixel_acc': 'valid_pixAcc %',
         }
-    
+
+    @property
     def key_map(self):
-        raise self._key_map
+        return self._key_map
