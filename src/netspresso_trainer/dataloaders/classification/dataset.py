@@ -1,13 +1,13 @@
-import logging
 import csv
-from pathlib import Path
-from typing import Optional, Union, Tuple, List, Dict
+import logging
 from collections import Counter
 from itertools import chain
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
-from torch.utils.data import random_split
 from omegaconf import DictConfig
+from torch.utils.data import random_split
 
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
@@ -61,7 +61,7 @@ def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     if file_or_dir.exists():
         return file_or_dir.is_file()
     
-    file_candidates = [x for x in image_dir.glob(f"{candidate_name}.*")]
+    file_candidates = list(image_dir.glob(f"{candidate_name}.*"))
     assert len(file_candidates) != 0, f"Unknown label format! Is there any something file like {file_or_dir} ?"
     
     return True
@@ -138,8 +138,7 @@ class ClassficationDataSampler(BaseDataSampler):
         return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
     
     def load_huggingface_samples(self):
-        from datasets import load_dataset
-        from datasets import ClassLabel
+        from datasets import ClassLabel, load_dataset
         
         cache_dir = Path(self.conf_data.metadata.custom_cache_dir)
         root = self.conf_data.metadata.repo
@@ -159,7 +158,7 @@ class ClassficationDataSampler(BaseDataSampler):
             # TODO: find class_map <-> idx and apply it (ex. using id_mapping)
             idx_to_class: Dict[int, int] = {k: k for k in labels}
         elif isinstance(labels[0], str):
-            idx_to_class: Dict[int, str] = {k: v for k, v in enumerate(labels)}
+            idx_to_class: Dict[int, str] = dict(enumerate(labels))
         
         exists_valid = 'validation' in total_dataset
         exists_test = 'test' in total_dataset

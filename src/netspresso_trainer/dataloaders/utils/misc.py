@@ -1,6 +1,7 @@
-from itertools import repeat
-import re
 import json
+import re
+from itertools import repeat
+
 
 def read_json(json_path):
     with open(json_path, 'r') as f:

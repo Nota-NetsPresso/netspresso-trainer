@@ -1,7 +1,7 @@
 from typing import Optional
 
-import numpy as np
 import cv2
+import numpy as np
 import PIL.Image as Image
 
 from ..augmentation import custom as TC

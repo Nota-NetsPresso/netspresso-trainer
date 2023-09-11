@@ -1,10 +1,10 @@
+import logging
 import os
 from pathlib import Path
-import logging
-from typing import List, Dict, Union, Optional, Type
+from typing import Dict, List, Optional, Type, Union
 
-from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, HUGGINGFACE_DATASET, DATA_SAMPLER
 from .detection import detection_collate_fn
+from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
 
 logger = logging.getLogger("netspresso_trainer")

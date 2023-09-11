@@ -1,14 +1,13 @@
-import torch
-import numpy as np
-from typing import Callable
 import random
 from functools import partial
+from typing import Callable
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from .misc import expand_to_chs
 from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from .misc import expand_to_chs
 
 NUM_RGB_CHANNEL = 3
 
@@ -45,7 +44,7 @@ def fast_collate(batch):
             tensor[i].copy_(batch[i][0])
         return tensor, targets
     else:
-        assert False
+        raise AssertionError()
 
 
 class PrefetchLoader:
@@ -150,20 +149,20 @@ def create_loader(
 
     sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank)
 
-    loader_args = dict(
-        batch_size=batch_size,
-        shuffle=not isinstance(dataset, torch.utils.data.IterableDataset) and sampler is None and is_training,
-        num_workers=num_workers,
-        sampler=sampler,
-        collate_fn=collate_fn,
-        pin_memory=pin_memory,
-        drop_last=is_training,
-        worker_init_fn=partial(init_worker, worker_seeding=worker_seeding),
-        persistent_workers=persistent_workers
-    )
+    loader_args = {
+        'batch_size': batch_size,
+        'shuffle': not isinstance(dataset, torch.utils.data.IterableDataset) and sampler is None and is_training,
+        'num_workers': num_workers,
+        'sampler': sampler,
+        'collate_fn': collate_fn,
+        'pin_memory': pin_memory,
+        'drop_last': is_training,
+        'worker_init_fn': partial(init_worker, worker_seeding=worker_seeding),
+        'persistent_workers': persistent_workers
+    }
     try:
         loader = DataLoader(dataset, **loader_args)
-    except TypeError as e:
+    except TypeError:
         loader_args.pop('persistent_workers')  # only in Pytorch 1.7+
         loader = DataLoader(dataset, **loader_args)
 
