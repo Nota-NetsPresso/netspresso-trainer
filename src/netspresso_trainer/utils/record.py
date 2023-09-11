@@ -1,8 +1,6 @@
-from typing import Union, Optional
 import time
-from typing import List, Dict, Union, Optional
 from dataclasses import dataclass, field
-
+from typing import Dict, List, Optional, Union
 
 __all__ = ['AverageMeter', 'Timer', 'TrainingSummary']
 
@@ -61,7 +59,7 @@ class Timer:
         self.history = {}
 
     def start_record(self, name) -> bool:
-        if not name in self.history:
+        if name not in self.history:
             self.history[name] = TimeRecode()  # create
             return True
         return False  # fail cause alreay exists
