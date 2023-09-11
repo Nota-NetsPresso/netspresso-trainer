@@ -1,6 +1,6 @@
 import random
 from collections import Sequence
-from typing import Dict, Optional, Sequence
+from typing import Dict, Optional
 
 import numpy as np
 import PIL.Image as Image
@@ -10,7 +10,6 @@ import torchvision.transforms.functional as F
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
-
 
 class Compose:
     def __init__(self, transforms, additional_targets: Dict = None):

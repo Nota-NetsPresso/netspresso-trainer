@@ -17,7 +17,7 @@ TEMP_COCO_LABEL_FILE = "data/detection/coco.yaml"
 def exist_name(candidate, folder_iterable):
     try:
         return list(filter(lambda x: candidate[0] in x, folder_iterable))[0]
-    except:
+    except IndexError:
         return list(filter(lambda x: candidate[1] in x, folder_iterable))[0]
 
 
