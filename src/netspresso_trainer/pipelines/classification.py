@@ -26,8 +26,8 @@ class ClassificationPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         out = self.model(images)
-        self.loss_factory.calc(out, target, mode='train')
-        self.metric_factory.calc(out['pred'], target, mode='train')
+        self.loss_factory.calc(out, target, phase='train')
+        self.metric_factory.calc(out['pred'], target, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -42,8 +42,8 @@ class ClassificationPipeline(BasePipeline):
         target = target.to(self.devices)
 
         out = self.model(images)
-        self.loss_factory.calc(out, target, mode='valid')
-        self.metric_factory.calc(out['pred'], target, mode='valid')
+        self.loss_factory.calc(out, target, phase='valid')
+        self.metric_factory.calc(out['pred'], target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
