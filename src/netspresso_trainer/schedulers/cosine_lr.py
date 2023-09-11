@@ -1,6 +1,6 @@
 import logging
-import warnings
 import math
+import warnings
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler

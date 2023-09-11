@@ -3,8 +3,8 @@ This code is modified from https://pytorch.org/docs/stable/_modules/torch/optim/
 """
 
 import logging
-import warnings
 import math
+import warnings
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
