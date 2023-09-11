@@ -15,8 +15,15 @@ ignore = [
 ]
 
 extend-exclude = [
-  "docs",
-  "src/netspresso_trainer/models"
+  "docs/*.py",
+  "src/netspresso_trainer/models/backbones/core",
+  "src/netspresso_trainer/models/backbones/experimental",
+  "src/netspresso_trainer/models/heads/classification",
+  "src/netspresso_trainer/models/heads/detection",
+  "src/netspresso_trainer/models/heads/segmentation",
+  "src/netspresso_trainer/models/heads/experimental",
+  "src/netspresso_trainer/models/full/core",
+  "src/netspresso_trainer/models/full/experimental",
 ]
 
 [tool.ruff.per-file-ignores]
