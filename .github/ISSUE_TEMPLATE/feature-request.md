@@ -9,7 +9,7 @@ assignees: deepkyu
 
 - [ ] I have searched to see if a similar issue already exists.
 
-**Is there any feature that you would like to add? **  
+**Is there any feature that you would like to add?**  
 Please write a clear and concise description.
 
 **Is there any suggestion (or solution) to solve this issue?**  

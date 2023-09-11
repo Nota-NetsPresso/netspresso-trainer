@@ -3,7 +3,7 @@ name: "\U0001F41E Bug report"
 about: Create a report to help us improve
 title: "[BUG] Please write your own title"
 labels: bug, enhancement
-assignees: ''
+assignees: deepkyu
 
 ---
 
