@@ -1,19 +1,21 @@
 import random
-from typing import Sequence, Optional, Dict
 from collections import Sequence
+from typing import Dict, Optional, Sequence
 
+import numpy as np
+import PIL.Image as Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
-import numpy as np
-import PIL.Image as Image
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
 
 
 class Compose:
-    def __init__(self, transforms, additional_targets: Dict = {}):
+    def __init__(self, transforms, additional_targets: Dict = None):
+        if additional_targets is None:
+            additional_targets = {}
         self.transforms = transforms
         self.additional_targets = additional_targets
 
@@ -25,10 +27,10 @@ class Compose:
         return image, mask, bbox
 
     def __call__(self, image, mask=None, bbox=None, visualize_for_debug=False, **kwargs):
-        additional_targets_result = {k: None for k in kwargs.keys() if k in self.additional_targets}
+        additional_targets_result = {k: None for k in kwargs if k in self.additional_targets}
 
         result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox, visualize_for_debug=visualize_for_debug)
-        for key in additional_targets_result.keys():
+        for key in additional_targets_result:
             if self.additional_targets[key] == 'mask':
                 _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None, visualize_for_debug=visualize_for_debug)
             elif self.additional_targets[key] == 'bbox':
@@ -72,10 +74,7 @@ class Pad(T.Pad):
         if mask is not None:
             mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
         if bbox is not None:
-            if not isinstance(self.padding, Sequence):
-                target_padding = [self.padding]
-            else:
-                target_padding = self.padding
+            target_padding = [self.padding] if not isinstance(self.padding, Sequence) else self.padding
 
             padding_left, padding_top, _, _ = \
                 target_padding * (4 / len(target_padding))  # supports 1, 2, 4 length
@@ -354,29 +353,3 @@ class ToTensor(T.ToTensor):
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
-
-
-if __name__ == '__main__':
-    from pathlib import Path
-
-    import PIL.Image as Image
-    import albumentations as A
-    import cv2
-    import numpy as np
-    input_filename = Path("astronaut.jpg")
-    im = Image.open(input_filename)
-    im_array = np.array(im)
-    print(f"Original image size (in array): {im_array.shape}")
-
-    """Pad"""
-    torch_aug = PadIfNeeded(size=(1024, 1024))
-    im_torch_aug, _, _ = torch_aug(im)
-    im_torch_aug.save(f"{input_filename.stem}_torch{input_filename.suffix}")
-    print(f"Aug image size (from torchvision): {np.array(im_torch_aug).shape}")
-
-    album_aug = A.PadIfNeeded(min_height=1024, min_width=1024, border_mode=cv2.BORDER_CONSTANT)
-    im_album_aug: np.ndarray = album_aug(image=im_array)['image']
-    Image.fromarray(im_album_aug).save(f"{input_filename.stem}_album{input_filename.suffix}")
-    print(f"Aug image size (from albumentations): {im_album_aug.shape}")
-
-    print(np.all(np.array(im_torch_aug) == im_album_aug), np.mean(np.abs(np.array(im_torch_aug) - im_album_aug)))
