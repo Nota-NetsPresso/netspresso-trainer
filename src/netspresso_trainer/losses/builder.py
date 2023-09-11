@@ -1,17 +1,17 @@
-from typing import Any, Dict, Union
 from itertools import chain
+from typing import Any, Dict, Union
 
 import torch
 import torch.nn as nn
 
-from .registry import LOSS_DICT, PHASE_LIST
 from ..utils.record import AverageMeter
+from .registry import LOSS_DICT, PHASE_LIST
 
 
 class LossFactory:
     def __init__(self, conf_model, **kwargs) -> None:
-        self.loss_func_dict = dict()
-        self.loss_weight_dict = dict()
+        self.loss_func_dict = {}
+        self.loss_weight_dict = {}
 
         self.conf_model = conf_model
         self._build_losses()
@@ -61,10 +61,10 @@ class LossFactory:
     def reset_values(self):
         self._clear_epoch_start()
 
-    def calc(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase='train', *args: Any, **kwargs: Any) -> None:
-        self.__call__(out=out, target=target, phase=phase, *args, **kwargs)
+    def calc(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase='train', **kwargs: Any) -> None:
+        self.__call__(out=out, target=target, phase=phase, **kwargs)
 
-    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase: str, *args: Any, **kwargs: Any) -> None:
+    def __call__(self, out: Dict, target: Union[torch.Tensor, Dict[str, torch.Tensor]], phase: str, **kwargs: Any) -> None:
         phase = phase.lower()
         assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
 
@@ -73,10 +73,7 @@ class LossFactory:
         self._clear_step_start()
 
         for loss_key, loss_func in self.loss_func_dict.items():
-            if loss_key == 'boundary_loss':
-                loss_val = loss_func(out, bd_gt)
-            else:
-                loss_val = loss_func(out, target)
+            loss_val = loss_func(out, bd_gt) if loss_key == 'boundary_loss' else loss_func(out, target)
             self.loss_val_per_epoch[phase][loss_key].update(loss_val.item())
             self.total_loss_for_backward += loss_val * self.loss_weight_dict[loss_key]
 
