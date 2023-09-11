@@ -101,7 +101,7 @@ class DetectionDataSampler(BaseDataSampler):
             test_samples = self.load_data(split='test')
 
         if not exists_valid:
-            num_train_splitted = int(len(train_samples) * TRAIN_VALID_SPLIT_RATIO) 
+            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio) 
             train_samples, valid_samples = \
                 random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
                                 generator=torch.Generator().manual_seed(42))
