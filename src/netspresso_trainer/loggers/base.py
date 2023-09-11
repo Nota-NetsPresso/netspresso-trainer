@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 CSV_FILENAME = "results.csv"
 class BaseCSVLogger(ABC):
@@ -15,7 +15,7 @@ class BaseCSVLogger(ABC):
         self.header: List = []
         self.key_map: Dict = {}
         
-        self._temp_row_dict = dict()
+        self._temp_row_dict = {}
         
         if self.csv_path.exists():
             self.csv_path.unlink()
@@ -42,7 +42,7 @@ class BaseCSVLogger(ABC):
             f.write("\n")
 
     def _clear_temp(self):
-        self._temp_row_dict = dict()
+        self._temp_row_dict = {}
     
     def _update_with_list(self, data: List):
         if data is not None and len(data) != 0:

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image as Image
@@ -26,9 +26,8 @@ class ImageSaver:
         
     def save_ndarray_as_image(self, image_array: np.ndarray, filename: Union[str, Path], dataformats: Literal['HWC', 'CHW'] = 'HWC'):
         assert image_array.ndim == 3
-        if dataformats != 'HWC':
-            if dataformats == 'CHW':
-                image_array = image_array.transpose((1, 2, 0))
+        if dataformats != 'HWC' and dataformats == 'CHW':
+            image_array = image_array.transpose((1, 2, 0))
         
         # HWC
         assert image_array.shape[-1] in [1, 3]

@@ -1,7 +1,7 @@
-import os
-import requests
 import logging
+import os
 
+import requests
 from bson.objectid import ObjectId
 from pymongo.mongo_client import MongoClient
 
