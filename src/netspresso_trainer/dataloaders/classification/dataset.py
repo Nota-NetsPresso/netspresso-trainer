@@ -15,7 +15,7 @@ from ..utils.misc import natural_key
 
 logger = logging.getLogger("netspresso_trainer")
 
-VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + [ext.upper() for ext in IMG_EXTENSIONS]
+VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
     
 def load_class_map_with_id_mapping(root_dir, train_dir,
                                    map_or_filename: Optional[Union[str, Path]]=None,
