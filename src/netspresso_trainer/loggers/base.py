@@ -13,7 +13,6 @@ class BaseCSVLogger(ABC):
         self.model = model
         self.csv_path = Path(result_dir) / CSV_FILENAME
         self.header: List = []
-        self.key_map: Dict = {}
         
         self._temp_row_dict = {}
         
@@ -21,6 +20,11 @@ class BaseCSVLogger(ABC):
             self.csv_path.unlink()
             
         self._epoch = None
+        
+    @property
+    @abstractmethod
+    def key_map(self) -> Dict[str, str]:
+        raise NotImplementedError
     
     def init_epoch(self):
         self._epoch = 0
