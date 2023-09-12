@@ -1,12 +1,16 @@
-## Training with HuggingFace datasets
+blah
 
-We do our best to give you a good experience in training process. We integrate [HuggingFace(HF) datasets](https://huggingface.co/datasets) into our training pipeline. Note that we apply our custom augmentation methods in training datasets, instead of albumentations which is mostly used in HF datasets.
+## Supporting transforms
 
-To do so, firstly you need to install additional libraries with the following command:
+Currently, we fix the augmentation recipe for each task. Soon, we'll provide a feature for custom transform.
 
-```bash
-pip install -r requirements-data.txt
-```
+### RandomResizedCrop
 
-Then, you can write your own data configuration for HF datasets. Please refer to [data configuration template](./config/data/template).  
-Some datasets in HF datasets needs `login`. You can login with `huggingface-cli login` with their [official guide](https://huggingface.co/docs/huggingface_hub/quick-start#login).
+### PadIfNeeded
+
+## Gradio demo for simulating the data transformation
+
+### How to use
+
+## Field list
+
