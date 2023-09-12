@@ -52,7 +52,8 @@ theme:
     - navigation.indexes
     # - navigation.instant
     # - navigation.prune
-    - navigation.sections
+    # - navigation.sections
+    - navigation.expand
     - navigation.tabs
     # - navigation.tabs.sticky
     - navigation.top
@@ -165,7 +166,6 @@ nav:
     - Augmentation: components/augmentation.md
     - Training: components/training.md
     - Model:
-      - components/model/index.md
       - Common: components/model/common.md
       - Backbones: components/model/backbones.md
       - Task heads: components/model/heads.md
