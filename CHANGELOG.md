@@ -6,7 +6,8 @@ No changes to highlight.
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Add conditional import for `Sequence` by `illian01` in [PR 155](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/155)
+- Add last epoch validation and delete save_converted_model by `illian01` in [PR 157](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/157)
 
 ## Breaking Changes:
 
