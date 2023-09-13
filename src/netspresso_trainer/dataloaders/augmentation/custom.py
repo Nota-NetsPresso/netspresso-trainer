@@ -1,6 +1,11 @@
 import random
-from collections import Sequence
+import sys
 from typing import Dict, Optional
+
+if sys.version_info.minor >= 10:
+    from collections.abc import Sequence
+else:
+    from collections import Sequence
 
 import numpy as np
 import PIL.Image as Image
