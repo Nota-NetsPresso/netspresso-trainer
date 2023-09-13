@@ -1,12 +1,12 @@
-from pathlib import Path
-from typing import Any, List, Dict, Tuple, Optional, Union
 import math
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
+from omegaconf import OmegaConf
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.tensorboard.summary import hparams
-from omegaconf import OmegaConf
 
 
 class TensorboardLogger:
@@ -89,8 +89,10 @@ class TensorboardLogger:
             rasterized_dict[key] = rasterized_value
         return rasterized_dict
 
-    def log_hparams(self, hp_omegaconf: Union[Dict, List], final_metrics={}):
+    def log_hparams(self, hp_omegaconf: Union[Dict, List], final_metrics=None):
         
+        if final_metrics is None:
+            final_metrics = {}
         final_metrics = {f"hparams_metrics/{k}": v for k, v in final_metrics.items()}
         
         hp_dict = OmegaConf.to_container(hp_omegaconf, resolve=True)

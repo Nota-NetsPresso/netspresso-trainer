@@ -7,7 +7,7 @@ from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 # from ...utils import _log_api_usage_once
 

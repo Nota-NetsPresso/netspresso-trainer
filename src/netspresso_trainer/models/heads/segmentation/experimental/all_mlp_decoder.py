@@ -1,12 +1,12 @@
 import math
-from typing import List, Union, Tuple
+from typing import List, Tuple, Union
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ....utils import FXTensorListType, ModelOutput
 from ....op.custom import ConvLayer
+from ....utils import FXTensorListType, ModelOutput
 
 
 class AllMLPDecoder(nn.Module):

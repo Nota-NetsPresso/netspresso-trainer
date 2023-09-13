@@ -1,10 +1,10 @@
 """ Inspired from https://github.com/huggingface/pytorch-image-models/blob/main/timm/optim/optim_factory.py
 """
-from typing import Optional, Callable, Tuple, Literal
-
-from .registry import OPTIMIZER_DICT
+from typing import Callable, Literal, Optional, Tuple
 
 import torch.nn as nn
+
+from .registry import OPTIMIZER_DICT
 
 
 def build_optimizer(
@@ -15,12 +15,7 @@ def build_optimizer(
     momentum: float = 0.9,
 ):
 
-    if isinstance(model_or_params, nn.Module):
-        # a model was passed in, extract parameters and add weight decays to appropriate layers
-        parameters = model_or_params.parameters()
-    else:
-        # iterable of parameters or param groups passed in
-        parameters = model_or_params
+    parameters = model_or_params.parameters() if isinstance(model_or_params, nn.Module) else model_or_params
 
     opt_name: Literal['sgd', 'nesterov', 'momentum',
                       'adam', 'adamw', 'adamax',

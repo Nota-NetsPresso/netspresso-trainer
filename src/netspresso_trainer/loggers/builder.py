@@ -1,18 +1,18 @@
 from pathlib import Path
-from typing import List, Dict, Tuple, Optional, Union, Literal
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
-import torch
 import PIL.Image as Image
+import torch
 from omegaconf import OmegaConf
 
-from .base import BaseCSVLogger
-from .registry import CSV_LOGGER, VISUALIZER
-from .image import ImageSaver
-from .tensorboard import TensorboardLogger
-from .stdout import StdOutLogger
-from .visualizer import magic_image_handler
 from ..utils.record import AverageMeter
+from .base import BaseCSVLogger
+from .image import ImageSaver
+from .registry import CSV_LOGGER, VISUALIZER
+from .stdout import StdOutLogger
+from .tensorboard import TensorboardLogger
+from .visualizer import magic_image_handler
 
 OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1
@@ -95,7 +95,7 @@ class TrainingLogger():
 
     def _convert_scalar_as_readable(self, scalar_dict: Dict):
         for k, v in scalar_dict.items():
-            if isinstance(v, np.ndarray) or isinstance(v, float) or isinstance(v, int):
+            if isinstance(v, (np.ndarray, float, int)):
                 pass
                 continue
             if isinstance(v, torch.Tensor):
@@ -208,7 +208,9 @@ class TrainingLogger():
                 elapsed_time=elapsed_time
             )
 
-    def log_end_of_traning(self, final_metrics={}):
+    def log_end_of_traning(self, final_metrics=None):
+        if final_metrics is None:
+            final_metrics = {}
         if self.use_tensorboard:
             self.tensorboard_logger.log_hparams(self.conf, final_metrics=final_metrics)
 

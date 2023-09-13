@@ -1,15 +1,16 @@
-from typing import Optional, Tuple, List, Any, Union, Dict
-import math
-import itertools
 import collections
+import itertools
+import math
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from ..op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
-from ..utils import FXTensorType, BackboneOutput
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from ..utils import BackboneOutput, FXTensorType
+
 
 class Pooling(nn.Module):
     """
@@ -100,7 +101,7 @@ class MultiHeadAttention(nn.Module):
             # See https://github.com/snap-research/EfficientFormer/blob/main/models/efficientformer.py#L48-L61
             assert attention_bias_resolution is not None
             points = list(itertools.product(range(attention_bias_resolution), range(attention_bias_resolution)))
-            N = len(points)
+            len(points)
             attention_offsets = {}
             idxs = []
             for p1 in points:

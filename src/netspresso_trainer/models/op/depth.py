@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 # Copied from transformers.models.convnext.modeling_convnext.drop_path
 def drop_path(input, drop_prob: float = 0.0, training: bool = False, scale_by_keep=True):
     """

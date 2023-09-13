@@ -1,18 +1,20 @@
-from typing import Union, Tuple, Optional, Dict, List
-from collections import OrderedDict
-import warnings
 import copy
+import warnings
+from collections import OrderedDict
 from functools import partial
+from typing import Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-import numpy as np
 from torchvision.ops import MultiScaleRoIAlign
 
-from .detection import FasterRCNN, MaskRCNNPredictor, MaskRCNNHeads
-from ....utils import FXTensorListType, DetectionModelOutput
+from ....utils import DetectionModelOutput, FXTensorListType
+from .detection import FasterRCNN, MaskRCNNHeads, MaskRCNNPredictor
+
+
 class FPN(nn.Module):
 
     def __init__(self,
@@ -27,9 +29,12 @@ class FPN(nn.Module):
                  conv_cfg=None,
                  norm_cfg=None,
                  act_cfg=None,
-                 upsample_cfg=dict(mode='nearest'),
-                 init_cfg=dict(
-                     type='Xavier', layer='Conv2d', distribution='uniform')):
+                 upsample_cfg=None,
+                 init_cfg=None):
+        if init_cfg is None:
+            init_cfg = {'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}
+        if upsample_cfg is None:
+            upsample_cfg = {'mode': 'nearest'}
         super(FPN, self).__init__()
         assert isinstance(in_channels, list)
         self.in_channels = in_channels
@@ -95,16 +100,6 @@ class FPN(nn.Module):
                 else:
                     in_channels = out_channels
                 extra_fpn_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
-                # ConvModule(
-                #     in_channels,
-                #     out_channels,
-                #     3,
-                #     stride=2,
-                #     padding=1,
-                #     conv_cfg=conv_cfg,
-                #     norm_cfg=norm_cfg,
-                #     act_cfg=act_cfg,
-                #     inplace=False)
                 self.fpn_convs.append(extra_fpn_conv)
 
     def forward(self, inputs):
@@ -161,11 +156,12 @@ class FPN(nn.Module):
                         outs.append(self.fpn_convs[i](outs[-1]))
         return outs
 
+
 class DetectionHead(FasterRCNN):
     def __init__(
         self,
-        feature_dim,
-        num_classes=None,
+        num_classes,
+        intermediate_features_dim,
         # transform parameters
         min_size=800,
         max_size=1333,
@@ -199,7 +195,6 @@ class DetectionHead(FasterRCNN):
         # Mask parameters
         mask_roi_pool=None,
         mask_head=None,
-        mask_predictor=None,
         **kwargs,
     ):
 
@@ -208,28 +203,9 @@ class DetectionHead(FasterRCNN):
                 f"mask_roi_pool should be of type MultiScaleRoIAlign or None instead of {type(mask_roi_pool)}"
             )
 
-        if num_classes is not None:
-            if mask_predictor is not None:
-                raise ValueError("num_classes should be None when mask_predictor is specified")
-
-        out_channels = feature_dim
-        
-        # if mask_roi_pool is None:
-        #     mask_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=14, sampling_ratio=2)
-
-        # if mask_head is None:
-        #     mask_layers = (256, 256, 256, 256)
-        #     mask_dilation = 1
-        #     mask_head = MaskRCNNHeads(out_channels, mask_layers, mask_dilation)
-
-        # if mask_predictor is None:
-        #     mask_predictor_in_channels = 256  # == mask_layers[-1]
-        #     mask_dim_reduced = 256
-        #     mask_predictor = MaskRCNNPredictor(mask_predictor_in_channels, mask_dim_reduced, num_classes)
-
         super().__init__(
-            feature_dim,
             num_classes,
+            intermediate_features_dim[-1],
             # transform parameters
             min_size,
             max_size,
@@ -263,24 +239,21 @@ class DetectionHead(FasterRCNN):
             **kwargs,
         )
 
-        # self.roi_heads.mask_roi_pool = mask_roi_pool
-        # self.roi_heads.mask_head = mask_head
-        # self.roi_heads.mask_predictor = mask_predictor
-        
-        self.neck = FPN(in_channels=[48, 96, 224, 448], out_channels=feature_dim, num_outs=4)
-        
+        self.neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=4)
+
     def forward(self, features: FXTensorListType, targets) -> DetectionModelOutput:
         assert targets is not None
         features = self.neck(features)
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = self.rpn(features)
         roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0), targets=targets)
-        
+
         out_features = DetectionModelOutput()
         out_features.update(rpn_features)
         out_features.update(roi_features)
-        
-        return out_features        
 
-def efficientformer_detection_head(feature_dim, num_classes, **kwargs):
-    return DetectionHead(feature_dim=feature_dim, num_classes=num_classes)
+        return out_features
+
+
+def efficientformer_detection_head(num_classes, intermediate_features_dim, **kwargs):
+    return DetectionHead(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim)

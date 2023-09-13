@@ -1,13 +1,13 @@
-from typing import Optional
 import math
+from typing import Optional
 
 import torch
 import torch.nn as nn
 
-from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, Image2Sequence
+from ...op.base_metaformer import Image2Sequence, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
 from ...op.custom import ConvLayer
 from ...op.registry import ACTIVATION_REGISTRY
-from ...utils import FXTensorType, BackboneOutput
+from ...utils import BackboneOutput
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 
@@ -135,14 +135,16 @@ class SegformerEncoder(MetaFormerEncoder):
 
 
 class SegFormer(MetaFormer):
-    def __init__(self, task,
-                 image_channels, num_modules, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
+    def __init__(self, task, num_modules, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
                  num_attention_heads, attention_dropout_prob, sr_ratios,
-                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps):
+                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps,
+                 **kwargs):
         super().__init__(hidden_sizes)
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
+        image_channels = 3
+        
         self.encoder_modules = nn.ModuleList()
         for i in range(num_modules):
             module = nn.ModuleDict(
@@ -169,7 +171,7 @@ class SegFormer(MetaFormer):
             )
             self.encoder_modules.append(module)
 
-    def forward(self, x: FXTensorType):
+    def forward(self, x):
         B = x.size(0)
         all_hidden_states = () if self.use_intermediate_features else None
 
@@ -191,20 +193,5 @@ class SegFormer(MetaFormer):
         return BackboneOutput(last_feature=feat)
 
 
-def segformer(task, **conf_model) -> SegformerEncoder:
-    configuration = {
-        'image_channels': 3,
-        'num_modules': 4,  # `num_encoder_blocks` in original
-        'num_blocks': [2, 2, 2, 2],  # `depth` in original
-        'sr_ratios': [8, 4, 2, 1],
-        'hidden_sizes': [32, 64, 160, 256],
-        'embedding_patch_sizes': [7, 3, 3, 3],
-        'embedding_strides': [4, 2, 2, 2],
-        'num_attention_heads': [1, 2, 5, 8],
-        'intermediate_ratio': 4,
-        'hidden_activation_type': "gelu",
-        'hidden_dropout_prob': 0.0,
-        'attention_dropout_prob': 0.0,
-        'layer_norm_eps': 1e-5,
-    }
-    return SegFormer(task, **configuration)
+def segformer(task, conf_model_backbone) -> SegformerEncoder:
+    return SegFormer(task, **conf_model_backbone)

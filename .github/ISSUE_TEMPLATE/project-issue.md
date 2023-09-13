@@ -13,5 +13,5 @@ assignees: ''
 
 ## Checklists
 
-- [ ] I would create a corresponding branch for this issue from the designated (mostly `master`) branch.
+- [ ] I would create a corresponding branch for this issue from the designated (mostly `dev`) branch.
 - [ ] This issue only contains a preceding agreement between project owners.

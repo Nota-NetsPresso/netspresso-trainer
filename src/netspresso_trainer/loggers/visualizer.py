@@ -6,6 +6,7 @@ import torch
 
 from ..dataloaders import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
+
 def _voc_color_map(N=256, normalized=False):
     def bitget(byteval, idx):
         return ((byteval & (1 << idx)) != 0)
@@ -48,7 +49,7 @@ class DetectionVisualizer:
             color_image[2][mask] = self.cmap[label][2]
 
         # handle void
-        mask = (255 == gray_image)
+        mask = (gray_image == 255)
         color_image[0][mask] = color_image[1][mask] = color_image[2][mask] = 255
 
         return color_image
@@ -101,7 +102,7 @@ class SegmentationVisualizer:
             color_image[2][mask] = self.cmap[label][2]
 
         # handle void
-        mask = (255 == gray_image)
+        mask = (gray_image == 255)
         color_image[0][mask] = color_image[1][mask] = color_image[2][mask] = 255
 
         return color_image

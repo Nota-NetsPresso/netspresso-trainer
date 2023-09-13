@@ -3,8 +3,9 @@ from typing import Dict, List, Optional, Tuple
 import torch
 import torch.nn.functional as F
 import torchvision
-from torch import nn, Tensor
-from torchvision.ops import boxes as box_ops, roi_align
+from torch import Tensor, nn
+from torchvision.ops import boxes as box_ops
+from torchvision.ops import roi_align
 
 from . import _utils as det_utils
 
@@ -482,10 +483,7 @@ def paste_masks_in_image(masks, boxes, img_shape, padding=1):
             masks, boxes, torch.scalar_tensor(im_h, dtype=torch.int64), torch.scalar_tensor(im_w, dtype=torch.int64)
         )[:, None]
     res = [paste_mask_in_image(m[0], b, im_h, im_w) for m, b in zip(masks, boxes)]
-    if len(res) > 0:
-        ret = torch.stack(res, dim=0)[:, None]
-    else:
-        ret = masks.new_empty((0, 1, im_h, im_w))
+    ret = torch.stack(res, dim=0)[:, None] if len(res) > 0 else masks.new_empty((0, 1, im_h, im_w))
     return ret
 
 
@@ -604,7 +602,7 @@ class RoIHeads(nn.Module):
         # type: (List[Tensor]) -> List[Tensor]
         sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
         sampled_inds = []
-        for img_idx, (pos_inds_img, neg_inds_img) in enumerate(zip(sampled_pos_inds, sampled_neg_inds)):
+        for _img_idx, (pos_inds_img, neg_inds_img) in enumerate(zip(sampled_pos_inds, sampled_neg_inds)):
             img_sampled_inds = torch.where(pos_inds_img | neg_inds_img)[0]
             sampled_inds.append(img_sampled_inds)
         return sampled_inds
@@ -619,13 +617,12 @@ class RoIHeads(nn.Module):
         # type: (Optional[List[Dict[str, Tensor]]]) -> None
         if targets is None:
             raise ValueError("targets should not be None")
-        if not all(["boxes" in t for t in targets]):
+        if not all("boxes" in t for t in targets):
             raise ValueError("Every element of targets should have a boxes key")
-        if not all(["labels" in t for t in targets]):
+        if not all("labels" in t for t in targets):
             raise ValueError("Every element of targets should have a labels key")
-        if self.has_mask():
-            if not all(["masks" in t for t in targets]):
-                raise ValueError("Every element of targets should have a masks key")
+        if self.has_mask() and not all("masks" in t for t in targets):
+            raise ValueError("Every element of targets should have a masks key")
 
     def select_training_samples(
         self,
@@ -743,13 +740,12 @@ class RoIHeads(nn.Module):
             for t in targets:
                 # TODO: https://github.com/pytorch/pytorch/issues/26731
                 floating_point_types = (torch.float, torch.double, torch.half)
-                if not t["boxes"].dtype in floating_point_types:
+                if t["boxes"].dtype not in floating_point_types:
                     raise TypeError(f"target boxes must of float type, instead got {t['boxes'].dtype}")
                 if not t["labels"].dtype == torch.int64:
                     raise TypeError(f"target labels must of int64 type, instead got {t['labels'].dtype}")
-                if self.has_keypoint():
-                    if not t["keypoints"].dtype == torch.float32:
-                        raise TypeError(f"target keypoints must of float type, instead got {t['keypoints'].dtype}")
+                if self.has_keypoint() and not t["keypoints"].dtype == torch.float32:
+                    raise TypeError(f"target keypoints must of float type, instead got {t['keypoints'].dtype}")
 
         # if self.training:
         #     proposals, matched_idxs, labels, regression_targets = self.select_training_samples(proposals, targets)

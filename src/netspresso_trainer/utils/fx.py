@@ -1,6 +1,6 @@
 import torch
-import torch.nn as nn
 import torch.fx as fx
+import torch.nn as nn
 
 __all__ = ['convert_graphmodule', 'save_graphmodule']
 

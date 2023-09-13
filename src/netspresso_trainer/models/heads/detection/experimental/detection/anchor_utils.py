@@ -2,7 +2,7 @@ import math
 from typing import List, Optional
 
 import torch
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from .image_list import ImageList
 
@@ -129,7 +129,7 @@ class AnchorGenerator(nn.Module):
         anchors_over_all_feature_maps = self.grid_anchors(grid_sizes, strides)
         anchors: List[List[torch.Tensor]] = []
         for _ in range(len(feature_maps[0])):
-            anchors_in_image = [anchors_per_feature_map for anchors_per_feature_map in anchors_over_all_feature_maps]
+            anchors_in_image = list(anchors_over_all_feature_maps)
             anchors.append(anchors_in_image)
         anchors = [torch.cat(anchors_per_image) for anchors_per_image in anchors]
         return anchors

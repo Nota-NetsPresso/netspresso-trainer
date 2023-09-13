@@ -1,14 +1,11 @@
-import os
 import logging
+import os
 
-import torch
 import numpy as np
+import torch
 from omegaconf import OmegaConf
 
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
 from .base import BasePipeline
-from ..utils.logger import set_logger
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -21,16 +18,6 @@ class SegmentationPipeline(BasePipeline):
                                                    train_dataloader, eval_dataloader, class_map, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
-
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
 
     def train_step(self, batch):
         self.model.train()
@@ -45,15 +32,15 @@ class SegmentationPipeline(BasePipeline):
         self.optimizer.zero_grad()
         out = self.model(images)
         if 'edges' in batch:
-            self.loss(out, target, bd_gt=bd_gt, mode='train')
+            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='train')
         else:
-            self.loss(out, target, mode='train')
+            self.loss_factory.calc(out, target, phase='train')
 
-        self.loss.backward()
+        self.loss_factory.backward()
         self.optimizer.step()
 
         out = {k: v.detach() for k, v in out.items()}
-        self.metric(out['pred'], target, mode='train')
+        self.metric_factory.calc(out['pred'], target, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -70,11 +57,11 @@ class SegmentationPipeline(BasePipeline):
 
         out = self.model(images)
         if 'edges' in batch:
-            self.loss(out, target, bd_gt=bd_gt, mode='valid')
+            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='valid')
         else:
-            self.loss(out, target, mode='valid')
+            self.loss_factory.calc(out, target, phase='valid')
 
-        self.metric(out['pred'], target, mode='valid')
+        self.metric_factory.calc(out['pred'], target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -90,7 +77,7 @@ class SegmentationPipeline(BasePipeline):
             logs.update({
                 'bd_gt': bd_gt.detach().cpu().numpy()
             })
-        return {k: v for k, v in logs.items()}
+        return dict(logs.items())
 
     def test_step(self, batch):
         self.model.eval()
@@ -102,6 +89,6 @@ class SegmentationPipeline(BasePipeline):
         output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
 
         return output_seg
-    
+
     def get_metric_with_all_outputs(self, outputs):
         pass

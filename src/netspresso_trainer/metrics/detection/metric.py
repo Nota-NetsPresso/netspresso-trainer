@@ -166,7 +166,8 @@ def average_precisions_per_class(
 
 class DetectionMetric(BaseMetric):
     metric_names: List[str] = ['map50', 'map75', 'map50_95']
-
+    primary_metric: str = 'map50_95'
+    
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -184,15 +185,14 @@ class DetectionMetric(BaseMetric):
         true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
         predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
 
-        if predicted_objs.shape[0] == 0:
-            if true_objs.shape[0]:
-                stats.append(
-                    (
-                        np.zeros((0, iou_thresholds.size), dtype=bool),
-                        *np.zeros((2, 0)),
-                        true_objs[:, 4],
-                    )
+        if predicted_objs.shape[0] == 0 and true_objs.shape[0]:
+            stats.append(
+                (
+                    np.zeros((0, iou_thresholds.size), dtype=bool),
+                    *np.zeros((2, 0)),
+                    true_objs[:, 4],
                 )
+            )
 
         if true_objs.shape[0]:
             matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)

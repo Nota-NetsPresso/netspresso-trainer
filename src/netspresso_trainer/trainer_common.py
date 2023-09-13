@@ -3,16 +3,17 @@ import os
 from pathlib import Path
 
 import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
 from omegaconf import OmegaConf
+from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .dataloaders import build_dataset, build_dataloader
-from .models import build_model, SUPPORTING_TASK_LIST
+from .dataloaders import build_dataloader, build_dataset
+from .models import SUPPORTING_TASK_LIST, build_model, is_single_task_model
 from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
 
 def parse_args_netspresso(is_graphmodule_training):
 
@@ -24,12 +25,12 @@ def parse_args_netspresso(is_graphmodule_training):
         '--data', type=str, required=True,
         dest='data',
         help="Config for dataset information")
-    
+
     parser.add_argument(
         '--augmentation', type=str, required=True,
         dest='augmentation',
         help="Config for data augmentation")
-    
+
     parser.add_argument(
         '--model', type=str, required=True,
         dest='model',
@@ -39,30 +40,26 @@ def parse_args_netspresso(is_graphmodule_training):
         '--training', type=str, required=True,
         dest='training',
         help="Config for training options")
-    
+
     parser.add_argument(
         '--logging', type=str, default='config/logging.yaml',
         dest='logging',
         help="Config for logging options")
-    
+
     parser.add_argument(
         '--environment', type=str, default='config/environment.yaml',
         dest='environment',
         help="Config for training environment (# workers, etc.)")
-    
+
     parser.add_argument(
         '--log-level', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default=LOG_LEVEL,
         dest='log_level',
         help="Config for training environment (# workers, etc.)")
 
-    parser.add_argument(
-        '--fx-model-checkpoint', type=str, required=is_graphmodule_training,
-        dest='fx_model_checkpoint',
-        help="Checkpoint path for graphmodule model")
-
     args_parsed, _ = parser.parse_known_args()
 
     return args_parsed
+
 
 def set_arguments(args_parsed):
     conf_data = OmegaConf.load(args_parsed.data)
@@ -71,7 +68,7 @@ def set_arguments(args_parsed):
     conf_training = OmegaConf.load(args_parsed.training)
     conf_logging = OmegaConf.load(args_parsed.logging)
     conf_environment = OmegaConf.load(args_parsed.environment)
-    
+
     conf = OmegaConf.create()
     conf.merge_with(conf_data)
     conf.merge_with(conf_augmentation)
@@ -79,15 +76,16 @@ def set_arguments(args_parsed):
     conf.merge_with(conf_training)
     conf.merge_with(conf_logging)
     conf.merge_with(conf_environment)
-    
+
     return conf
+
 
 def trainer(is_graphmodule_training=False):
     args_parsed = parse_args_netspresso(is_graphmodule_training=is_graphmodule_training)
     conf = set_arguments(args_parsed)
-    
+
     distributed, world_size, rank, devices = set_device(conf.training.seed)
-    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed) 
+    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed)
 
     conf.distributed = distributed
     conf.world_size = world_size
@@ -95,13 +93,14 @@ def trainer(is_graphmodule_training=False):
 
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST
-    
+
     # TODO: Get model name from checkpoint
-    model_name = conf.model.architecture.full \
-        if conf.model.architecture.full is not None \
-        else conf.model.architecture.backbone
-    model_name = str(model_name).lower()
-    
+    single_task_model = is_single_task_model(conf.model)
+    conf_model_sub = conf.model.architecture.full if single_task_model else conf.model.architecture.backbone
+    conf.model.single_task_model = single_task_model
+
+    model_name = str(conf_model_sub.name).lower()
+
     if is_graphmodule_training:
         model_name += "_graphmodule"
 
@@ -114,16 +113,17 @@ def trainer(is_graphmodule_training=False):
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
-        
+
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
+    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     if is_graphmodule_training:
-        model = torch.load(args_parsed.fx_model_checkpoint)
+        assert conf.model.fx_model_checkpoint is not None
+        assert Path(conf.model.fx_model_checkpoint).exists()
+        model = torch.load(conf.model.fx_model_checkpoint)
     else:
         model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
-
-
 
     model = model.to(device=devices)
     if conf.distributed:
@@ -135,7 +135,12 @@ def trainer(is_graphmodule_training=False):
                              is_graphmodule_training=is_graphmodule_training)
 
     trainer.set_train()
-    trainer.train()
-    
-    if test_dataset:
-        trainer.inference(test_dataset)
+    try:
+        trainer.train()
+
+        if test_dataset:
+            trainer.inference(test_dataset)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        raise e

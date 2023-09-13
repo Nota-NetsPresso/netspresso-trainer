@@ -1,11 +1,14 @@
 import os
 import random
+from pathlib import Path
+from typing import Union
 
+import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
-import numpy as np
+import torch.nn as nn
 
-__all__ = ['set_device']
+__all__ = ['set_device', 'get_device']
 
 
 def set_device(seed):
@@ -27,7 +30,7 @@ def set_device(seed):
     world_size = 1
     rank = 0  # global rank
     if distributed:
-        assert seed is not None and cudnn.benchmark == False, "distributed training requires reproducibility"
+        assert seed is not None and cudnn.benchmark is False, "distributed training requires reproducibility"
         torch.distributed.init_process_group(backend='nccl', init_method='env://')
         rank = torch.distributed.get_rank()
         devices = torch.device(f'cuda:{rank}')
@@ -36,3 +39,11 @@ def set_device(seed):
     assert rank >= 0
 
     return distributed, world_size, rank, devices
+
+
+def get_device(x: Union[torch.Tensor, nn.Module]):
+    if isinstance(x, torch.Tensor):
+        return x.device
+    if isinstance(x, nn.Module):
+        return next(x.parameters()).device
+    raise RuntimeError(f'{type(x)} do not have `device`')

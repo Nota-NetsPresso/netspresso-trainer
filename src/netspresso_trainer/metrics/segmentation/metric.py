@@ -3,15 +3,15 @@ from typing import List
 import numpy as np
 import torch
 
-from ..base import BaseMetric
 from ...utils.record import AverageMeter
-
+from ..base import BaseMetric
 
 IGNORE_INDEX_NONE_VALUE = -100
 
 
 class SegmentationMetric(BaseMetric):
     metric_names: List[str] = ['iou', 'pixel_acc']
+    primary_metric: str = 'iou'
 
     def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
         super().__init__()

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torchvision
-from torch import nn, Tensor
+from torch import Tensor, nn
 
 from .image_list import ImageList
 from .roi_heads import paste_masks_in_image
@@ -29,10 +29,7 @@ def _resize_image_and_masks(
     target: Optional[Dict[str, Tensor]] = None,
     fixed_size: Optional[Tuple[int, int]] = None,
 ) -> Tuple[Tensor, Optional[Dict[str, Tensor]]]:
-    if torchvision._is_tracing():
-        im_shape = _get_shape_onnx(image)
-    else:
-        im_shape = torch.tensor(image.shape[-2:])
+    im_shape = _get_shape_onnx(image) if torchvision._is_tracing() else torch.tensor(image.shape[-2:])
 
     size: Optional[List[int]] = None
     scale_factor: Optional[float] = None
@@ -47,10 +44,7 @@ def _resize_image_and_masks(
             self_max_size_f = float(self_max_size)
             scale = torch.min(self_min_size_f / min_size, self_max_size_f / max_size)
 
-            if torchvision._is_tracing():
-                scale_factor = _fake_cast_onnx(scale)
-            else:
-                scale_factor = scale.item()
+            scale_factor = _fake_cast_onnx(scale) if torchvision._is_tracing() else scale.item()
 
         else:
             # Do it the normal way
@@ -117,7 +111,7 @@ class GeneralizedRCNNTransform(nn.Module):
     def forward(
         self, images: List[Tensor], targets: Optional[List[Dict[str, Tensor]]] = None
     ) -> Tuple[ImageList, Optional[List[Dict[str, Tensor]]]]:
-        images = [img for img in images]
+        images = list(images)
         if targets is not None:
             # make a copy of targets to avoid modifying it in-place
             # once torchscript supports dict comprehension

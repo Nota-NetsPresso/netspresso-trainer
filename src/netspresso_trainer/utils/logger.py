@@ -3,7 +3,7 @@ import time
 from typing import Literal
 
 import torch.distributed as dist
-from omegaconf import OmegaConf, DictConfig, ListConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 __all__ = ['set_logger', 'yaml_for_logging']
 
@@ -12,7 +12,7 @@ class RankFilter(logging.Filter):
     def filter(self, record):
         try:
             return dist.get_rank() == 0
-        except RuntimeError as e:  # Default process group has not been initialized, please make sure to call init_process_group.
+        except RuntimeError:  # Default process group has not been initialized, please make sure to call init_process_group.
             return True
 
 
@@ -22,7 +22,7 @@ def _custom_logger(name: str, level: str, distributed: bool):
     if debug_and_multi_gpu:
         fmt = f'[GPU:{dist.get_rank()}] %(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     else:
-        fmt = f'%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
+        fmt = '%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     logger = logging.getLogger(name)
     
     if not logger.hasHandlers():

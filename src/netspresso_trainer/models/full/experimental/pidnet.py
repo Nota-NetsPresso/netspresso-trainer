@@ -8,8 +8,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from ...op.custom import ConvLayer, BasicBlock, Bottleneck
-from ...op.pidnet import segmenthead, DAPPM, PAPPM, PagFM, Bag, Light_Bag
+from ...op.custom import BasicBlock, Bottleneck, ConvLayer
+from ...op.pidnet import DAPPM, PAPPM, Bag, Light_Bag, PagFM, segmenthead
 from ...utils import FXTensorType, PIDNetModelOutput
 
 use_align_corners = False
@@ -17,9 +17,8 @@ use_align_corners = False
 
 class PIDNet(nn.Module):
 
-    def __init__(self, conf_model, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True):
+    def __init__(self, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True, **kwargs):
         super(PIDNet, self).__init__()
-        self.conf_model = conf_model
         self.is_training = is_training
 
         # I Branch
@@ -194,13 +193,7 @@ class PIDNet(nn.Module):
 
         return PIDNetModelOutput(extra_p=x_extra_p, extra_d=x_extra_d, pred=x_)
 
-def pidnet(conf_model, num_classes: int) -> PIDNet:
-    model = PIDNet(conf_model, num_classes=num_classes, m=2, n=3, planes=32, ppm_planes=96, head_planes=128, is_training=True)
-    # if 's' in name:
-    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=32, ppm_planes=96, head_planes=128, is_training=True)
-    # elif 'm' in name:
-    #     model = PIDNet(m=2, n=3, num_classes=num_classes, planes=64, ppm_planes=96, head_planes=128, is_training=True)
-    # else:
-    #     model = PIDNet(m=3, n=4, num_classes=num_classes, planes=64, ppm_planes=112, head_planes=256, is_training=True)
+def pidnet(num_classes: int, conf_model_full) -> PIDNet:
+    # PIDNet-S
+    return PIDNet(num_classes=num_classes, is_training=True, **conf_model_full)
 
-    return model

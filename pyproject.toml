@@ -1,0 +1,33 @@
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+extend-select = [
+  "B",
+  "C",
+  "I",
+  "SIM",
+]
+
+ignore = [
+  "E501",
+  "F401",
+]
+
+extend-exclude = [
+  "docs/*.py",
+  "src/netspresso_trainer/models/backbones/core",
+  "src/netspresso_trainer/models/backbones/experimental",
+  "src/netspresso_trainer/models/heads/classification",
+  "src/netspresso_trainer/models/heads/detection",
+  "src/netspresso_trainer/models/heads/segmentation",
+  "src/netspresso_trainer/models/heads/experimental",
+  "src/netspresso_trainer/models/full/core",
+  "src/netspresso_trainer/models/full/experimental",
+]
+
+[tool.ruff.per-file-ignores]
+
+"src/netspresso_trainer/__init__.py" = [
+  "F401", # "Imported but unused"
+]

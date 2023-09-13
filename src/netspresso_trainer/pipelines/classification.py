@@ -1,12 +1,10 @@
-import os
 import logging
+import os
 
-from omegaconf import OmegaConf
 import torch
+from omegaconf import OmegaConf
 
 from .base import BasePipeline
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -19,16 +17,6 @@ class ClassificationPipeline(BasePipeline):
         super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
                                                      train_dataloader, eval_dataloader, class_map, **kwargs)
 
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
-
     def train_step(self, batch):
         self.model.train()
         images, target = batch
@@ -38,10 +26,10 @@ class ClassificationPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         out = self.model(images)
-        self.loss(out, target, mode='train')
-        self.metric(out['pred'], target, mode='train')
+        self.loss_factory.calc(out, target, phase='train')
+        self.metric_factory.calc(out['pred'], target, phase='train')
 
-        self.loss.backward()
+        self.loss_factory.backward()
         self.optimizer.step()
 
         if self.conf.distributed:
@@ -54,8 +42,8 @@ class ClassificationPipeline(BasePipeline):
         target = target.to(self.devices)
 
         out = self.model(images)
-        self.loss(out, target, mode='valid')
-        self.metric(out['pred'], target, mode='valid')
+        self.loss_factory.calc(out, target, phase='valid')
+        self.metric_factory.calc(out['pred'], target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()

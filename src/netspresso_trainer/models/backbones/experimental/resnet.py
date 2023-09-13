@@ -2,29 +2,23 @@
 Based on the Torchvision implementation of ResNet.
 https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
-from typing import Type, Union, List, Optional
+from typing import Dict, List, Literal, Optional, Type, Union
 
 import torch
-from torch import Tensor
 import torch.nn as nn
+from torch import Tensor
 
-from ...op.custom import ConvLayer, BasicBlock, Bottleneck
+from ...op.custom import BasicBlock, Bottleneck, ConvLayer
 from ...utils import BackboneOutput
 
-__all__ = ['resnet50', 'resnet101']
+__all__ = ['resnet50']
 
-SUPPORTING_TASK = ['classification']
+SUPPORTING_TASK = ['classification', 'segmentation']
 
-
-# 'resnet18': 'https://download.pytorch.org/models/resnet18-f37072fd.pth'
-# 'resnet34': 'https://download.pytorch.org/models/resnet34-b627a593.pth'
-# 'resnet50': 'https://download.pytorch.org/models/resnet50-0676ba61.pth'
-# 'resnet101': 'https://download.pytorch.org/models/resnet101-63fe2227.pth'
-# 'resnet152': 'https://download.pytorch.org/models/resnet152-394f9c45.pth'
-# 'resnext50_32x4d': 'https://download.pytorch.org/models/resnext50_32x4d-7cdf4587.pth'
-# 'resnext101_32x8d': 'https://download.pytorch.org/models/resnext101_32x8d-8ba56ff5.pth'
-# 'wide_resnet50_2': 'https://download.pytorch.org/models/wide_resnet50_2-95faca4d.pth'
-# 'wide_resnet101_2': 'https://download.pytorch.org/models/wide_resnet101_2-32ee1156.pth'
+BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
+    'basicblock': BasicBlock,
+    'bottleneck': Bottleneck,
+}
 
 
 class ResNet(nn.Module):
@@ -32,7 +26,7 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        block: Type[Union[BasicBlock, Bottleneck]],
+        block: Literal['basicblock', 'bottleneck'],
         layers: List[int],
         zero_init_residual: bool = False,
         groups: int = 1,
@@ -40,10 +34,12 @@ class ResNet(nn.Module):
         replace_stride_with_dilation: Optional[List[bool]] = None,
         norm_layer: Optional[str] = None,
         expansion: Optional[int] = None,
+        **kwargs
     ) -> None:
         super(ResNet, self).__init__()
 
         self.task = task.lower()
+        block = BLOCK_FROM_LITERAL[block.lower()]
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         if norm_layer is None:
@@ -68,8 +64,8 @@ class ResNet(nn.Module):
         self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
                                kernel_size=7, stride=2, padding=3,
                                bias=False, norm_type='batch_norm', act_type='relu')
-        
-        planes =  [64, 128, 256, 512]
+
+        planes = [64, 128, 256, 512]
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, planes[0], layers[0], expansion=expansion)
         self.layer2 = self._make_layer(block, planes[1], layers[1], stride=2,
@@ -82,8 +78,8 @@ class ResNet(nn.Module):
                                        dilate=replace_stride_with_dilation[2],
                                        expansion=expansion)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        
-        hidden_sizes = list(map(lambda h: h * 4, planes))
+
+        hidden_sizes = [h * 4 for h in planes]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 
@@ -155,7 +151,7 @@ class ResNet(nn.Module):
     @property
     def feature_dim(self):
         return self._feature_dim
-    
+
     @property
     def intermediate_features_dim(self):
         return self._intermediate_features_dim
@@ -164,23 +160,8 @@ class ResNet(nn.Module):
         return task.lower() in SUPPORTING_TASK
 
 
-def resnet50(task, **conf_model) -> ResNet:
+def resnet50(task, conf_model_backbone) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    configuration = {
-        'block': Bottleneck,
-        'layers': [3, 4, 6, 3]
-    }
-    return ResNet(task, **configuration)
-
-
-# def resnet101(task, **conf_model) -> ResNet:
-#     """
-#         ResNet-101 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
-#     """
-#     configuration = {
-#         'block': Bottleneck,
-#         'layers': [3, 4, 23, 3]
-#     }
-#     return ResNet(task, **configuration)
+    return ResNet(task, **conf_model_backbone)

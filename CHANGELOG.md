@@ -16,12 +16,40 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v0.0.5
+
+Notice: there are some changes in maintaining the repository and we transferred the original `private` repository to the public(planned) location. Some PR links may be expired because those links are based on the previous version of repository. Hope you understand.  
+This change is applied at [PR 151](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/151)
+
+## New Features:
+
+- Update the model configuration to handle the architecture by `@deepkyu` in [PR 130](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/130)
+
+## Bug Fixes:
+
+- Add `tensorboard` in requirements.txt by `@illian01` in [PR 134](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/134)
+- Fix typo in `scripts/example_train.sh` by `@illian01` in [PR 137](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/137)
+- Initialize loss and metric at same time with optimizer and lr schedulers by `@deepkyu` in [PR 138](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/138)
+- Hotfix the error which shows 0 for validation loss and metrics by fixing the variable name by `@deepkyu` in [PR 140](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/140)
+- Add missing field, `save_optimizer_state`, in `logging.yaml` by `@illian01` in [PR 149](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/149)
+
+## Breaking Changes:
+
+- Add checkpoint saving while training, resume training with the checkpoint, save the training summary with # Params and MACs by `@deepkyu` in [PR 135](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/135)
+- Change parsing argument for FX model retraining and resuming training to model configuration by `@deepkyu` in [PR 135](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/135)
+- Apply ruff linter and add workflow for ruff checking by `@deepkyu` in [PR 143](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/143)
+
+## Other Changes:
+
+- Add PyNetsPresso tab in documentation page by `@deepkyu` in [PR 128](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/128)
+- Fix issue template and default assignee per issue type by `@deepkyu` in [PR 144](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/144)
+
 
 # v0.0.4
 
 ## New Features:
 
-- Generalize segmentation head and add support ResNet50 + segmentation by `@deepkyu` in [PR 3](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/3)
+- Generalize segmentation head and add support ResNet50 + segmentation by `@deepkyu` in [PR 122](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/122)
 
 ## Bug Fixes:
 
@@ -33,17 +61,17 @@ No changes to highlight.
 
 ## Other Changes:
 
-- Simplify training configuration and example training scripts by `@deepkyu` in [PR 3](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/3)
-- Add `PyNetsPresso` tab in docs page by `@deepkyu` in [PR 3](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/3)
+- Simplify training configuration and example training scripts by `@deepkyu` in [PR 124](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/124)
+- Add `PyNetsPresso` tab in docs page by `@deepkyu` in [PR 128](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/128)
 
 
 # v0.0.3
 
 ## New Features:
 
-- Add LR simulator (powered by gradio) with `training` configuration by `@deepkyu` in `[PR 2](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/2)`
-- Add augmentation simulator (powered by gradio) with `augmentation` configuration by `@deepkyu` in `[PR 2](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/2)`
-- Add LR scheduler (cosine with warm restart, step_lr) by `@deepkyu` in `[PR 2](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/2)`
+- Add LR simulator (powered by gradio) with `training` configuration by `@deepkyu` in `[PR 116](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/116)`
+- Add augmentation simulator (powered by gradio) with `augmentation` configuration by `@deepkyu` in `[PR 118](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/118)`
+- Add LR scheduler (cosine with warm restart, step_lr) by `@deepkyu` in `[PR 114](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/114)`
 
 ## Bug Fixes:
 
@@ -51,7 +79,7 @@ No changes to highlight.
 
 ## Breaking Changes:
 
-- Support detection training with its metric by `@deepkyu` in `[PR 2](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/2)`
+- Support detection training with its metric by `@deepkyu` in `[PR 119](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/119)`
 
 ## Other Changes:
 

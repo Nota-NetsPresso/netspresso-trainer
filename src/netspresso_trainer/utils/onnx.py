@@ -1,19 +1,14 @@
-from typing import Union
 from pathlib import Path
+from typing import Union
 
 import torch
 import torch.nn as nn
 from torch import Tensor
 
+from .environment import get_device
 
-__all__ = ['get_device', 'save_onnx']
+__all__ = ['save_onnx']
 
-def get_device(x: Union[Tensor, nn.Module]):
-    if isinstance(x, Tensor):
-        return x.device
-    if isinstance(x, nn.Module):
-        return next(x.parameters()).device
-    raise RuntimeError(f'{type(x)} do not have `device`')
 
 def _save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor,
                opset_version=13, input_names='images', output_names='output'):
@@ -27,6 +22,7 @@ def _save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor,
                       output_names=[output_names],  # the model's output names
                       dynamic_axes={input_names: {0: 'batch_size'},  # variable length axes
                                     output_names: {0: 'batch_size'}})
+
 
 def save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor):
     sample_input = sample_input.to(get_device(model))

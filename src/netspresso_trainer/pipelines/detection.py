@@ -1,14 +1,11 @@
-import os
 import logging
+import os
 
 import numpy as np
 import torch
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
-from ..utils.logger import set_logger
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -19,16 +16,6 @@ class DetectionPipeline(BasePipeline):
                                                 train_dataloader, eval_dataloader, class_map, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
-
     def train_step(self, batch):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
@@ -38,14 +25,14 @@ class DetectionPipeline(BasePipeline):
 
         self.optimizer.zero_grad()
         out = self.model(images, targets=targets)
-        self.loss(out, target=targets, mode='train')
+        self.loss_factory.calc(out, target=targets, phase='train')
 
-        self.loss.backward()
+        self.loss_factory.backward()
         self.optimizer.step()
 
         # TODO: metric update
         # out = {k: v.detach() for k, v in out.items()}
-        # self.metric(out['pred'], target=targets, mode='train')
+        # self.metric_factory(out['pred'], target=targets, mode='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -58,10 +45,10 @@ class DetectionPipeline(BasePipeline):
                    for box, label in zip(bboxes, labels)]
 
         out = self.model(images, targets=targets)
-        self.loss(out, target=targets, mode='valid')
+        self.loss_factory.calc(out, target=targets, phase='valid')
 
         # TODO: metric update
-        # self.metric(out['pred'], (labels, bboxes), mode='valid')
+        # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -74,7 +61,7 @@ class DetectionPipeline(BasePipeline):
                       label.detach().cpu().numpy())
                      for bbox, confidence, label in zip(out['post_boxes'], out['post_scores'], out['post_labels'])],
         }
-        return {k: v for k, v in logs.items()}
+        return dict(logs.items())
 
     def test_step(self, batch):
         self.model.eval()
@@ -103,4 +90,4 @@ class DetectionPipeline(BasePipeline):
                 preds_indices = np.append(preds_indices, class_idx)
 
         pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
-        self.metric((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), mode='valid')
+        self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), phase='valid')

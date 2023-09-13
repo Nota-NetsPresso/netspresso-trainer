@@ -3,8 +3,8 @@ This code is modified from https://pytorch.org/docs/stable/_modules/torch/optim/
 """
 
 import logging
-import warnings
 import math
+import warnings
 
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
@@ -69,7 +69,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
     def get_lr(self):
         if not self._get_lr_called_within_step:
             warnings.warn("To get the last learning rate computed by the scheduler, "
-                          "please use `get_last_lr()`.", UserWarning)
+                          "please use `get_last_lr()`.", UserWarning, stacklevel=2)
 
         if self.last_epoch >= 0 and self.last_epoch < self.warmup_iters:
             return [self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr)
@@ -91,7 +91,21 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             return remain_epochs, remain_epochs
 
         return current_t_i, remain_epochs
+    
+    def _step_without_given_epoch(self) -> int:
+        if self.last_epoch < 0:
+            epoch = 0
+            return epoch
 
+        epoch = self.last_epoch + 1
+        self.T_cur = self.T_cur + 1
+        if self.T_cur >= self.T_i:
+            self.T_cur = self.T_cur - self.T_i
+            self.remain_iters = self.remain_iters - self.T_i
+            self.T_i = self.T_i * self.T_mult
+            self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_i, self.T_i * self.T_mult, self.remain_iters)
+        return epoch
+        
     def step(self, epoch=None):
         """Step could be called after every batch update
 
@@ -120,20 +134,12 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             >>> scheduler.step() # scheduler.step(27), instead of scheduler(20)
         """
 
-        if epoch is None and self.last_epoch < 0:
-            epoch = 0
-
         if epoch is None:
-            epoch = self.last_epoch + 1
-            self.T_cur = self.T_cur + 1
-            if self.T_cur >= self.T_i:
-                self.T_cur = self.T_cur - self.T_i
-                self.remain_iters = self.remain_iters - self.T_i
-                self.T_i = self.T_i * self.T_mult
-                self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_i, self.T_i * self.T_mult, self.remain_iters)
+            epoch = self._step_without_given_epoch()
         else:
             if epoch < 0:
                 raise ValueError("Expected non-negative epoch, but got {}".format(epoch))
+            
             if epoch >= self.T_0:
                 if self.T_mult == 1:
                     self.T_cur = epoch % self.T_0

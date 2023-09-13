@@ -1,11 +1,11 @@
-from typing import Optional, Tuple, List, Any, Union, Dict
 import warnings
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from ..op.registry import NORM_REGISTRY, ACTIVATION_REGISTRY
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 
 
 class ConvLayer(nn.Module):
@@ -67,7 +67,7 @@ class ConvLayer(nn.Module):
         if use_norm or norm_type is not None:
             _norm_type = norm_type.lower() if norm_type is not None else 'batch_norm'
             if bias:
-                warnings.warn("Bias would be ignored in batch normalization")
+                warnings.warn("Bias would be ignored in batch normalization", stacklevel=2)
             assert _norm_type in NORM_REGISTRY
             cls_norm = NORM_REGISTRY[_norm_type]
             norm_layer = cls_norm(num_features=out_channels)

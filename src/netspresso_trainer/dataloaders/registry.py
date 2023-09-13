@@ -1,17 +1,20 @@
-from typing import Dict, Type, Callable
-
-from .base import BaseCustomDataset, BaseHFDataset, BaseDataSampler
-from .classification import (
-    ClassificationCustomDataset, ClassificationHFDataset, ClassficationDataSampler, create_transform_classification
-)
-from .segmentation import (
-    SegmentationCustomDataset, SegmentationHFDataset, SegmentationDataSampler, create_transform_segmentation
-)
-from .detection import (
-    DetectionCustomDataset, DetectionDataSampler, create_transform_detection
-)
+from typing import Callable, Dict, Type
 
 from .augmentation import custom as TC
+from .base import BaseCustomDataset, BaseDataSampler, BaseHFDataset
+from .classification import (
+    ClassficationDataSampler,
+    ClassificationCustomDataset,
+    ClassificationHFDataset,
+    create_transform_classification,
+)
+from .detection import DetectionCustomDataset, DetectionDataSampler, create_transform_detection
+from .segmentation import (
+    SegmentationCustomDataset,
+    SegmentationDataSampler,
+    SegmentationHFDataset,
+    create_transform_segmentation,
+)
 
 CREATE_TRANSFORM: Dict[str, Callable[..., Callable[..., TC.Compose]]] = {
     'classification': create_transform_classification,

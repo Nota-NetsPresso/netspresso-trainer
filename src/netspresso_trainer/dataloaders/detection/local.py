@@ -1,25 +1,23 @@
+import logging
 import os
 from pathlib import Path
-import logging
 from typing import List
 
-import PIL.Image as Image
 import numpy as np
-from omegaconf import OmegaConf
+import PIL.Image as Image
 import torch
+from omegaconf import OmegaConf
 
 from ..base import BaseCustomDataset
 
 ID2LABEL_FILENAME = "id2label.json"
-
-TEMP_DIRECTORY_REDIRECT = lambda x: f"{x}2017"
 TEMP_COCO_LABEL_FILE = "data/detection/coco.yaml"
 
 
 def exist_name(candidate, folder_iterable):
     try:
         return list(filter(lambda x: candidate[0] in x, folder_iterable))[0]
-    except:
+    except IndexError:
         return list(filter(lambda x: candidate[1] in x, folder_iterable))[0]
 
 

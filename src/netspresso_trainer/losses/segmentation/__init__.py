@@ -1,1 +1,1 @@
-from .pidnet import PIDNetCrossEntropy, PIDNetBoundaryAwareCrossEntropy, BondaryLoss
+from .pidnet import BoundaryLoss, PIDNetBoundaryAwareCrossEntropy, PIDNetCrossEntropy

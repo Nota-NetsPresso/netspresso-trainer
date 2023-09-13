@@ -53,7 +53,7 @@ netspresso-train\
   --environment config/environment.yaml
 ```
 
-Please refer to [`example_train.sh`](./example_train.sh) and [`example_train_fx.sh`](./example_train_fx.sh).
+Please refer to [`scripts/example_train.sh`](./scripts/example_train.sh) and [`scripts/example_train_fx.sh`](./scripts/example_train_fx.sh).
 
 ## Installation
 

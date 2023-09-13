@@ -3,15 +3,20 @@ Based on the vit implementation of apple/ml-cvnets.
 https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 import argparse
-from typing import Union, Dict, Optional, Tuple, Any
+from typing import Any, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from torch import Tensor
 
-from ...op.ml_cvnets import ConvLayer
-from ...op.ml_cvnets import SinusoidalPositionalEncoding
-from ...op.base_metaformer import MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention, ChannelMLP, Image2Sequence
+from ...op.base_metaformer import (
+    ChannelMLP,
+    Image2Sequence,
+    MetaFormer,
+    MetaFormerBlock,
+    MetaFormerEncoder,
+    MultiHeadAttention,
+)
+from ...op.ml_cvnets import ConvLayer, SinusoidalPositionalEncoding
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -50,7 +55,7 @@ class ViTEmbeddings(nn.Module):
         )
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
     
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, x):
         B = x.shape[0]  # B x 3(={RGB}) x H x W
 
         patch_emb = self.patch_emb(x)  # B x C(=embed_dim) x H'(=patch_size) x W'(=patch_size)
@@ -90,7 +95,6 @@ class VisionTransformer(MetaFormer):
     def __init__(
         self,
         task,
-        image_channels,
         patch_size,
         hidden_size,
         num_blocks,
@@ -100,26 +104,20 @@ class VisionTransformer(MetaFormer):
         hidden_dropout_prob,
         layer_norm_eps=1e-6,
         use_cls_token=True,
-        vocab_size=1000
+        vocab_size=1000,
+        **kwargs
     ) -> None:
-        super().__init__(hidden_size)
+        hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
+        super().__init__(hidden_sizes)
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
-        self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
-        self.encoder = ViTEncoder(num_blocks, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
-        self.norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
+        
+        image_channels = 3
+        self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_sizes[-1], hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
+        self.encoder = ViTEncoder(num_blocks, hidden_sizes[-1], num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
+        self.norm = nn.LayerNorm(hidden_sizes[-1], eps=layer_norm_eps)
 
 
-def vit(task, **conf_model):
+def vit(task, conf_model_backbone):
     # ViT tiny
-    configuration = {
-        "image_channels": 3,
-        "patch_size": 16,
-        "hidden_size": 192,
-        "num_blocks": 12,
-        "num_attention_heads": 3,
-        "attention_dropout_prob": 0.0,
-        "intermediate_size": 192 * 4,
-        "hidden_dropout_prob": 0.1
-    }
-    return VisionTransformer(task, **configuration)
+    return VisionTransformer(task, **conf_model_backbone)
