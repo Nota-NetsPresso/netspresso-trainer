@@ -6,8 +6,8 @@ No changes to highlight.
 
 ## Bug Fixes:
 
-- Add conditional import for `Sequence` by `illian01` in [PR 155](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/155)
-- Add last epoch validation and delete save_converted_model by `illian01` in [PR 157](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/157)
+- Fix import error for `Sequence` by `@illian01` in [PR 155](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/155)
+- Add last epoch validation and delete save_converted_model by `@illian01` in [PR 157](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/157)
 
 ## Breaking Changes:
 
@@ -15,7 +15,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-- Add `save_onnx` function call and `logger.info` in best model saving step of graph model training by `illian01` in [PR 160](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/160).
+- Add onnx save in best model saving step of graph model training by `@illian01` in [PR 160](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/160).
 
 # v0.0.5
 
