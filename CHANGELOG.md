@@ -15,7 +15,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Add `save_onnx` function call and `logger.info` in best model saving step of graph model training by `illian01` in [PR 160](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/160).
 
 # v0.0.5
 
