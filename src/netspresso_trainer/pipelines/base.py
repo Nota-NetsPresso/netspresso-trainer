@@ -278,6 +278,8 @@ class BasePipeline(ABC):
             torch.save(model, model_path.with_suffix(".pt"))
             logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
             if save_best_model:
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
                 torch.save(model, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
