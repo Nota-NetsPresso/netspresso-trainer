@@ -15,13 +15,13 @@ NetsPresso Trainer uses the optimizers implemented in PyTorch as is. By selectin
 
 ### Supporting optimizers
 
-- AdamW
-- Adam
-- Adadelta
-- Adagrad
-- RMSprop
-- Adamax
-- SGD
+- [AdamW](https://pytorch.org/docs/stable/generated/torch.optim.AdamW.html) (`adamw`)
+- [Adam](https://pytorch.org/docs/stable/generated/torch.optim.Adam.html) (`adam`)
+- [Adadelta](https://pytorch.org/docs/stable/generated/torch.optim.Adadelta.html) (`adadelta`)
+- [Adagrad](https://pytorch.org/docs/stable/generated/torch.optim.Adagrad.html) (`adagrad`)
+- [RMSprop](https://pytorch.org/docs/stable/generated/torch.optim.RMSprop.html) (`rmsprop`)
+- [Adamax](https://pytorch.org/docs/stable/generated/torch.optim.Adamax.html) (`adamax`)
+- [SGD](https://pytorch.org/docs/stable/generated/torch.optim.SGD.html) (`sgd`)
 
 If you are unsure which optimizer to use, we recommend reading the [blog post from *towardsdatascience*](https://towardsdatascience.com/7-tips-to-choose-the-best-optimizer-47bb9c1219e).
 
@@ -29,6 +29,7 @@ If you are unsure which optimizer to use, we recommend reading the [blog post fr
 
 NetsPresso Trainer supports various learning rate schedulers based on PyTorch.
 In particular, warm-up is supported for frequently used learning rate schedulers, and warm restart is supported for some schedulers, such as cosine annealing.
+NetsPresso Trainer updates the learning rate at the end of epoch, not the end of step, so users will set the scheduler with epoch-level counts.
 
 ### Supporting schedulers
 
@@ -49,16 +50,18 @@ By copying the training configuration into the simulator, users can see how the 
 
 ## Field list
 
-- `training.seed` : 
-- `training.opt` : 
-- `training.lr` : 
-- `training.momentum` : 
-- `training.weight_decay` : 
-- `training.sched` : 
-- `training.min_lr` : 
-- `training.warmup_bias_lr` : 
-- `training.warmup_epochs` : 
-- `training.iters_per_phase` : 
-- `training.sched_power` : 
-- `training.epochs` : 
-- `training.batch_size` : 
+| Field <img width=200/> | Description |
+|---|---|
+| `training.seed` | (int) random seed |
+| `training.opt` | (str) the type of optimizer. Please check [the list of supporting optimizer](#supporting-optimizers) for more details. |
+| `training.lr` | (float) base learning rate |
+| `training.momentum` | (float) momentum value for optimizer |
+| `training.weight_decay` | (float) the strength of L2 penalty  |
+| `training.sched` | (str) the type of scheduler. Please check [the list of supporting LR schedulers](#supporting-schedulers) for more details. |
+| `training.min_lr` | (float) the minimum value of learning rate |
+| `training.warmup_bias_lr` | (float) the starting learning rate of warmup period in learning rate scheduling |
+| `training.warmup_epochs` | (int) the warmup period |
+| `training.iters_per_phase` | (int) the period of base phase in learning rate scheduling. Applied when the scheduler is `step` or `cosine`. |
+| `training.sched_power` | (float) the power value of polynomial scheduler. Applied when the scheduler is `poly`. |
+| `training.epochs` | (int) the total number of epoch for training the model |
+| `training.batch_size` | (int) the number of samples in single batch input |
