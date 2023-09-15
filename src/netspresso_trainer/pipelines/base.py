@@ -107,11 +107,13 @@ class BasePipeline(ABC):
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch
-        return epoch % validation_freq == self.start_epoch_at_one % validation_freq
+        last_epoch = epoch == (self.conf.training.epochs + self.start_epoch_at_one - 1)
+        return (epoch % validation_freq == self.start_epoch_at_one % validation_freq) or last_epoch
 
     def epoch_with_checkpoint_saving(self, epoch: int):
         checkpoint_freq = self.conf.logging.save_checkpoint_epoch
-        return epoch % checkpoint_freq == self.start_epoch_at_one % checkpoint_freq
+        last_epoch = epoch == (self.conf.training.epochs + self.start_epoch_at_one - 1)
+        return (epoch % checkpoint_freq == self.start_epoch_at_one % checkpoint_freq) or last_epoch
 
     @abstractmethod
     def train_step(self, batch):
@@ -176,7 +178,7 @@ class BasePipeline(ABC):
                                        valid_logging=with_valid_logging)
                     if with_checkpoint_saving:
                         assert with_valid_logging
-                        self.save_checkpoint(epoch=num_epoch, save_converted_model=False)
+                        self.save_checkpoint(epoch=num_epoch)
                         self.save_summary()
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`
@@ -188,13 +190,12 @@ class BasePipeline(ABC):
 
             if self.single_gpu_or_rank_zero:
                 self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
-                self.save_checkpoint(epoch=num_epoch, save_converted_model=True)
                 self.save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
-                self.save_checkpoint(epoch=num_epoch, save_converted_model=True)
+                self.save_checkpoint(epoch=num_epoch)
                 self.save_summary()
             raise e
         except Exception as e:
@@ -252,7 +253,7 @@ class BasePipeline(ABC):
             summary_record.update({'valid_losses': valid_losses, 'valid_metrics': valid_metrics})
         self.training_history.update({epoch: summary_record})
 
-    def save_checkpoint(self, epoch: int, save_converted_model=False):
+    def save_checkpoint(self, epoch: int):
 
         # Check whether the valid loss is minimum at this epoch
         valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
@@ -277,6 +278,8 @@ class BasePipeline(ABC):
             torch.save(model, model_path.with_suffix(".pt"))
             logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
             if save_best_model:
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
                 torch.save(model, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
@@ -286,16 +289,15 @@ class BasePipeline(ABC):
             torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
             logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
 
-            if save_converted_model:
-                try:
-                    save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
-                    logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
+            try:
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
 
-                    save_graphmodule(model, (model_path.parent / f"{best_model_path.stem}_fx").with_suffix(".pt"))
-                    logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
-                except Exception as e:
-                    logger.error(e)
-                    pass
+                save_graphmodule(model, (model_path.parent / f"{best_model_path.stem}_fx").with_suffix(".pt"))
+                logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
+            except Exception as e:
+                logger.error(e)
+                pass
 
     def save_summary(self, end_training=False):
         training_summary = TrainingSummary(
