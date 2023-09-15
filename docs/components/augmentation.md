@@ -46,13 +46,7 @@ Our team hopes that the learning process with NetsPresso Trainer will become a m
 *FIXME*
 
 #### Hugging Face Spaces
-*FIXME*
 
-<script
-	type="module"
-	src="https://gradio.s3-us-west-2.amazonaws.com/3.28.0/gradio.js"
-></script>
-
-<gradio-app src="https://nota-ai-compressed-wav2lip.hf.space"></gradio-app>
+(HF Spaces demo link)
 
 ## Field list

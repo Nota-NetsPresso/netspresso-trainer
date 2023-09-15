@@ -44,6 +44,7 @@ By copying the training configuration into the simulator, users can see how the 
 *FIXME*
 
 #### Hugging Face Spaces
-*FIXME*
+
+(HF Spaces demo link)
 
 ## Field list
