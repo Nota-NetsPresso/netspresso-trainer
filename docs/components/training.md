@@ -48,3 +48,17 @@ By copying the training configuration into the simulator, users can see how the 
 (HF Spaces demo link)
 
 ## Field list
+
+- `training.seed` : 
+- `training.opt` : 
+- `training.lr` : 
+- `training.momentum` : 
+- `training.weight_decay` : 
+- `training.sched` : 
+- `training.min_lr` : 
+- `training.warmup_bias_lr` : 
+- `training.warmup_epochs` : 
+- `training.iters_per_phase` : 
+- `training.sched_power` : 
+- `training.epochs` : 
+- `training.batch_size` : 

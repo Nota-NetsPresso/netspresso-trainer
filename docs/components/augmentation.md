@@ -50,3 +50,31 @@ Our team hopes that the learning process with NetsPresso Trainer will become a m
 (HF Spaces demo link)
 
 ## Field list
+
+### Common
+
+- `augmentation.img_size` :
+
+### Resize
+
+- `augmentation.crop_size_h` :
+- `augmentation.crop_size_w` :
+
+### RandomResizedCrop
+
+- `augmentation.crop_size_h` :
+- `augmentation.crop_size_w` :
+- `augmentation.resize_ratio0` :
+- `augmentation.resize_ratiof` :
+
+### RandomHorizontalFlip
+
+- `augmentation.fliplr` :
+
+### ColorJitter
+
+- `augmentation.color_jitter.brightness` :
+- `augmentation.color_jitter.contrast` :
+- `augmentation.color_jitter.saturation` :
+- `augmentation.color_jitter.hue` :
+- `augmentation.color_jitter.colorjitter_p` :

@@ -141,4 +141,46 @@ data:
 
 ```
 
-### Field list
+## Field list
+
+### Local dataset
+
+#### Common
+
+- `data.name` : 
+- `data.task` : 
+- `data.format` : 
+- `data.path.root` : 
+- `data.path.train.image` : 
+- `data.path.train.label` : 
+- `data.path.valid.image` : 
+- `data.path.valid.label` : 
+- `data.path.test.image` : 
+- `data.path.test.label` :
+
+#### Classification
+
+- `data.path.id_mapping` :
+
+#### Segmentation
+
+- `data.path.id_mapping` :
+- `data.path.palette` :
+
+#### Detection
+
+- `data.path.id_mapping` :
+- `data.path.palette` :
+
+
+
+### Hugging Face datasets
+
+- `data.name` :
+- `data.task` :
+- `data.format` :
+- `data.metadata.custom_cache_dir` :
+- `data.metadata.repo` :
+- `data.metadata.subset` :
+- `data.metadata.features.image` :
+- `data.metadata.features.label` :
