@@ -147,40 +147,49 @@ data:
 
 #### Common
 
-- `data.name` : 
-- `data.task` : 
-- `data.format` : 
-- `data.path.root` : 
-- `data.path.train.image` : 
-- `data.path.train.label` : 
-- `data.path.valid.image` : 
-- `data.path.valid.label` : 
-- `data.path.test.image` : 
-- `data.path.test.label` :
+| Field <img width=200/> | Description |
+|---|---|
+| `data.name` | (str) the name of dataset |
+| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection |
+| `data.format` | **`local`** as an identifier of dataset format |
+| `data.path.root` | (str) root directory of dataset |
+| `data.path.train.image` | (str) training image directory. Should be **relative** path to root directory. | 
+| `data.path.train.label` | (str) training label directory. Should be **relative** path to root directory. | 
+| `data.path.valid.image` | (str) validation image directory. Should be **relative** path to root directory. | 
+| `data.path.valid.label` | (str) validation label directory. Should be **relative** path to root directory. | 
+| `data.path.test.image` | (str) image directory for test dataset. Should be **relative** path to root directory. | 
+| `data.path.test.label` | (str) image directory for test dataset. Should be **relative** path to root directory. | 
 
 #### Classification
 
-- `data.path.id_mapping` :
+| Field <img width=200/> | Description |
+|---|---|
+| `data.path.id_mapping` | (dict) key-value pair between directory name and class name. Should be a list of (**dirname: classname**). |
 
 #### Segmentation
 
-- `data.path.id_mapping` :
-- `data.path.palette` :
+| Field <img width=200/> | Description |
+|---|---|
+| `data.path.id_mapping` | (dict) key-value pair between pixel value (RGB or image type) and class name. Should be a list of (**(R, G, B): classname**). |
+| `data.path.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 #### Detection
 
-- `data.path.id_mapping` :
-- `data.path.palette` :
-
+| Field <img width=200/> | Description |
+|---|---|
+| `data.path.id_mapping` | (list) class list for each class index |
+| `data.path.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 
 ### Hugging Face datasets
 
-- `data.name` :
-- `data.task` :
-- `data.format` :
-- `data.metadata.custom_cache_dir` :
-- `data.metadata.repo` :
-- `data.metadata.subset` :
-- `data.metadata.features.image` :
-- `data.metadata.features.label` :
+| Field <img width=200/> | Description |
+|---|---|
+| `data.name` | (str) the name of dataset |
+| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection |
+| `data.format` | **`huggingface`** as an identifier of dataset format |
+| `data.metadata.custom_cache_dir` | (str) cache directory to load and save dataset files from Hugging Face |
+| `data.metadata.repo` | (str) Repository name. (e.g. `competitions/aiornot` represents the dataset `huggingface.co/datasets/competitions/aiornot`.) | 
+| `data.metadata.subset` | (str, optional) subset name if the dataset contains multiple versions | 
+| `data.metadata.features.image` | (str) key which represents the image at the dataset header | 
+| `data.metadata.features.label` | (str) key which represents the label at the dataset header | 
