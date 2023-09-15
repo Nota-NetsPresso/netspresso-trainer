@@ -53,28 +53,38 @@ Our team hopes that the learning process with NetsPresso Trainer will become a m
 
 ### Common
 
-- `augmentation.img_size` :
+| Field <img width=200/> | Description |
+|---|---|
+| `augmentation.img_size` | (int) the image size of model input after finishing the data augmentation |
 
 ### Resize
 
-- `augmentation.crop_size_h` :
-- `augmentation.crop_size_w` :
+| Field <img width=200/> | Description |
+|---|---|
+| `augmentation.crop_size_h` | (int) the height of cropped image |
+| `augmentation.crop_size_w` | (int) the width of cropped image |
 
 ### RandomResizedCrop
 
-- `augmentation.crop_size_h` :
-- `augmentation.crop_size_w` :
-- `augmentation.resize_ratio0` :
-- `augmentation.resize_ratiof` :
+| Field <img width=200/> | Description |
+|---|---|
+| `augmentation.crop_size_h` | (int) the height of cropped image |
+| `augmentation.crop_size_w` | (int) the width of cropped image |
+| `augmentation.resize_ratio0` | (float) the minimum scale of random image resizing |
+| `augmentation.resize_ratiof` | (float) the maximum scale of random image resizing |
 
 ### RandomHorizontalFlip
 
-- `augmentation.fliplr` :
+| Field <img width=200/> | Description |
+|---|---|
+| `augmentation.fliplr` | (float) the probability of the flip. If `1.0`, it always flips the image. |
 
 ### ColorJitter
 
-- `augmentation.color_jitter.brightness` :
-- `augmentation.color_jitter.contrast` :
-- `augmentation.color_jitter.saturation` :
-- `augmentation.color_jitter.hue` :
-- `augmentation.color_jitter.colorjitter_p` :
+| Field <img width=200/> | Description |
+|---|---|
+| `augmentation.color_jitter.brightness` | (float) the maximum scale of adjusting the brightness of an image. The scale value is selected within range. |
+| `augmentation.color_jitter.contrast` | (float) the maximum scale of adjusting the contrast of an image. The scale value is selected within range. |
+| `augmentation.color_jitter.saturation` | (float) the maximum scale of adjusting the saturation of an image. The scale value is selected within range. |
+| `augmentation.color_jitter.hue` | (float) the maximum scale of adjusting the hue of an image. The scale value is selected within range. |
+| `augmentation.color_jitter.colorjitter_p` | (float) the probability of applying color jitter. If `1.0`, it always applies the color transform. |
