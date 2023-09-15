@@ -1,7 +1,7 @@
 ## Overview
 
 NetsPresso Trainer supports learning functions for various vision tasks with your custom data. 
-In addition to data stored in a local repository, it also supports learning with data accessible through APIs such as Hugging Face datasets. 
+In addition to data stored in a local repository, it also supports learning with data accessible through APIs such as [Hugging Face datasets](https://huggingface.co/datasets). 
 Currently, the dataset formats supported by NetsPresso Trainer are fixed in a specific form, but we plan to expand to more dataset formats such as COCO format in the future.  
 
 On this page, we will guide you on the data format you need to learn with your custom data and how to learn using Hugging Face datasets. 
@@ -12,7 +12,7 @@ The following sections introduce how to organize data for each task.
 
 ### Image classification
 
-To train an image classification model using NetsPresso Trainer, the data must be in the following format: 
+To train an image classification model using NetsPresso Trainer, **the data must be in following formats**: 
 
 - There must be a directory for each class to be distinguished by the classification model.
 - Each class directory must contain all the images corresponding to that class.
@@ -53,7 +53,7 @@ data:
 
 ### Semantic segmentation
 
-To train a semantic segmentation model using NetsPresso Trainer, the data must be in the following format:
+To train a semantic segmentation model using NetsPresso Trainer, **the data must be in following formats**: 
 
 - For each training image, there must be a label file (image) indicating the original image and the class index of each pixel of the image.
 - Users must create an image and label directory under the root directory and put the corresponding files in each directory.
@@ -77,7 +77,7 @@ An example yaml configuration for this is as follows:
 
 ### Object detection
 
-To train an object detection model using NetsPresso Trainer, the data must be in the following format: 
+To train an object detection model using NetsPresso Trainer, **the data must be in following formats**: 
 
 - For object model training, there must be a `.txt` file for each training image indicating the original image and the bounding box and class index corresponding to each bounding box of the image.
 - The format of the bounding box follows the YOLO dataset format ([x_center, y_center, width, height], normalized).
@@ -123,3 +123,22 @@ data:
 
 NetsPresso Trainer is striving to support various dataset hubs and platforms. 
 As part of that effort and first step, NetsPresso Trainer can be used with data in [Hugging Face datasets](https://huggingface.co/datasets). 
+
+An example configuration for Hugging Face datasets is as follows: 
+
+```yaml
+data:
+  name: beans
+  task: classification
+  format: huggingface
+  metadata:
+    custom_cache_dir: ./data/huggingface 
+    repo: beans
+    subset: ~
+    features:
+      image: image
+      label: labels
+
+```
+
+### Field list
