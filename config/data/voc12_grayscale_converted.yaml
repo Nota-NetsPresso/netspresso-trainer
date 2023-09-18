@@ -16,7 +16,7 @@ data:
     pattern:
       image: ~
       label: ~
-  label_image_format: L
+  label_image_mode: L
   id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
   pallete:
     - [0, 0, 0]

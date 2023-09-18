@@ -38,8 +38,8 @@ class SegmentationHFDataset(BaseHFDataset):
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
 
-        self.label_image_format: Literal['RGB', 'L', 'P'] = str(conf_data.metadata.label_image_format).upper() \
-            if conf_data.metadata.label_image_format is not None else 'RGB'
+        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.metadata.label_image_mode).upper() \
+            if conf_data.metadata.label_image_mode is not None else 'L'
 
         self.image_feature_name = conf_data.metadata.features.image
         self.label_feature_name = conf_data.metadata.features.label
@@ -58,10 +58,10 @@ class SegmentationHFDataset(BaseHFDataset):
     def __getitem__(self, index):
 
         img_name = f"{index:06d}"
-        img = self.samples[index][self.image_feature_name]
-        label = self.samples[index][self.label_feature_name] if self.label_feature_name in self.samples[index] else None
+        img: Image.Image = self.samples[index][self.image_feature_name]
+        label: Image.Image = self.samples[index][self.label_feature_name] if self.label_feature_name in self.samples[index] else None
 
-        label_array = np.array(label)
+        label_array = np.array(label.convert(self.label_image_mode))
         label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
         # if self.conf_augmentation.reduce_zero_label:
         #     label = reduce_label(np.array(label))

@@ -20,8 +20,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
 
-        self.label_image_format: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_format).upper() \
-            if conf_data.label_image_format is not None else 'RGB'
+        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_mode).upper() \
+            if conf_data.label_image_mode is not None else 'L'
 
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
@@ -38,7 +38,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         outputs = {}
 
-        label = Image.open(ann_path).convert(self.label_image_format)
+        label = Image.open(ann_path).convert(self.label_image_mode)
         label_array = np.array(label)
         label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
         # if self.conf_augmentation.reduce_zero_label:

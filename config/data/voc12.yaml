@@ -16,7 +16,7 @@ data:
     pattern:
       image: ~
       label: ~
-  label_image_format: rgb
+  label_image_mode: rgb
   id_mapping:
     (0, 0, 0): background
     (128, 0, 0): aeroplane
