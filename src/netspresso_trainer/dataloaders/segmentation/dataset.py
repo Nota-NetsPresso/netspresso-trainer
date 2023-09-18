@@ -25,7 +25,7 @@ def load_custom_class_map(id_mapping: Union[ListConfig, DictConfig]) -> Tuple[Di
     if isinstance(id_mapping, ListConfig):
         assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"
         idx_to_class: Dict[int, str] = {k: class_name for k, class_name in enumerate(id_mapping)}
-        label_value_to_idx = {k: k for k in enumerate(id_mapping)}
+        label_value_to_idx = {k: k for k in idx_to_class}
         return idx_to_class, label_value_to_idx
 
     idx_to_class: Dict[int, str] = {}
