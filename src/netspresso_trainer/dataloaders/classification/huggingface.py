@@ -17,7 +17,8 @@ class ClassificationHFDataset(BaseHFDataset):
             split,
             huggingface_dataset,
             transform=None,
-            with_label=True
+            with_label=True,
+            **kwargs
     ):
         root = conf_data.metadata.repo
         super(ClassificationHFDataset, self).__init__(
