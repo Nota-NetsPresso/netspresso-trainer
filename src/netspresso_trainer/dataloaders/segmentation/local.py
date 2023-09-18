@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import PIL.Image as Image
@@ -11,11 +12,16 @@ from ..segmentation.transforms import generate_edge, reduce_label
 class SegmentationCustomDataset(BaseCustomDataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
-                 split, samples, transform=None, with_label=True):
+                 split, samples, transform=None, with_label=True, **kwargs):
         super(SegmentationCustomDataset, self).__init__(
             conf_data, conf_augmentation, model_name, idx_to_class,
             split, samples, transform, with_label
         )
+        assert "label_value_to_idx" in kwargs
+        self.label_value_to_idx = kwargs["label_value_to_idx"]
+
+        self.label_image_format: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_format).upper() \
+            if conf_data.label_image_format is not None else 'RGB'
 
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
@@ -32,16 +38,26 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         outputs = {}
 
-        label = Image.open(ann_path).convert('L')
+        label = Image.open(ann_path).convert(self.label_image_format)
+        label_array = np.array(label)
+        label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
         # if self.conf_augmentation.reduce_zero_label:
         #     label = reduce_label(np.array(label))
 
+        mask = np.zeros((label.size[1], label.size[0]), dtype=np.uint8)
+        for label_value in self.label_value_to_idx:
+            bool_mask = (label_array == np.array(label_value))
+            class_mask = (bool_mask.sum(-1) == label_array.shape[-1])  # match all channel values
+            mask[class_mask] = self.label_value_to_idx[label_value]
+
+        mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
+
         if self.model_name == 'pidnet':
-            edge = generate_edge(np.array(label))
-            out = self.transform(self.conf_augmentation)(image=img, mask=label, edge=edge)
+            edge = generate_edge(np.array(mask))
+            out = self.transform(self.conf_augmentation)(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})
         else:
-            out = self.transform(self.conf_augmentation)(image=img, mask=label)
+            out = self.transform(self.conf_augmentation)(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
         if self._split in ['train', 'training']:
