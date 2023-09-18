@@ -46,8 +46,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         mask = np.zeros((label.size[1], label.size[0]), dtype=np.uint8)
         for label_value in self.label_value_to_idx:
-            bool_mask = (label_array == np.array(label_value))
-            class_mask = (bool_mask.sum(-1) == label_array.shape[-1])  # match all channel values
+            class_mask = (label_array == np.array(label_value)).all(axis=-1)
             mask[class_mask] = self.label_value_to_idx[label_value]
 
         mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
