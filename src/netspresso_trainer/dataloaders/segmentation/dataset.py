@@ -114,9 +114,9 @@ class SegmentationDataSampler(BaseDataSampler):
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
 
-        assert self.conf_data.metadata.id_mapping is not None
-        id_mapping: Optional[list] = list(self.conf_data.metadata.id_mapping)
-        idx_to_class, label_value_to_idx = load_custom_class_map(id_mapping=id_mapping)
+        assert isinstance(self.conf_data.metadata.id_mapping, (ListConfig, DictConfig))
+
+        idx_to_class, label_value_to_idx = load_custom_class_map(id_mapping=self.conf_data.metadata.id_mapping)
 
         exists_valid = 'validation' in total_dataset
         exists_test = 'test' in total_dataset
