@@ -205,21 +205,22 @@ data:
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.path.id_mapping` | (dict) key-value pair between directory name and class name. Should be a list of (**dirname: classname**). |
+| `data.id_mapping` | (dict) key-value pair between directory name and class name. Should be a dict of {**dirname: classname**}. |
 
 #### Segmentation
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.path.id_mapping` | (dict) key-value pair between pixel value (RGB or image type) and class name. Should be a list of (**(R, G, B): classname**). |
-| `data.path.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
+| `data.label_image_mode` | (str) Image mode to convert the label. Should be one of `RGB`, `L`, and `P`. This field is not case-sensitive.
+| `data.id_mapping` | (dict, list) key-value pair between label value (`RGB`, `L`, or `P`) and class name. Should be a dict of {**label_value: classname**} or a list of class names whose indices are same with the label value (image_mode: `L` or `P`). |
+| `data.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 #### Detection
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.path.id_mapping` | (list) class list for each class index |
-| `data.path.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
+| `data.id_mapping` | (list) class list for each class index |
+| `data.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 
 ### Hugging Face datasets
