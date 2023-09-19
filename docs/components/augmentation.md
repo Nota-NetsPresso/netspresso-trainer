@@ -11,25 +11,48 @@ Currently, there is no function for users to directly implement augmentation rec
 
 ### ColorJitter
 
+- This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/generated/torchvision.transforms.ColorJitter.html?highlight=colorjitter#torchvision.transforms.ColorJitter) in torchvision library.
+
 ### Identity
+
+- Identity passing. No changes in data.
 
 ### Normalize
 
+- Normalize the value to follow the distribution. It is mostly used in converting from pillow image to `torch.Tensor`.
+
 ### Pad
+
+- Pad an image. This augmentation follows the [Pad](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Pad.html#torchvision.transforms.Pad) in torchvision library.
 
 ### PadIfNeeded
 
+- Relatively pad an image to get the final image with the given size. This augmentation follows the [PadIfNeeded](https://albumentations.ai/docs/api_reference/augmentations/geometric/transforms/#albumentations.augmentations.geometric.transforms.PadIfNeeded) in albumentations library.
+
 ### RandomCrop
+
+- Crop the given image at a random location. This augmentation follows the [RandomCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomCrop.html#torchvision.transforms.RandomCrop) in torchvision library.
 
 ### RandomHorizontalFlip
 
+- Horizontally flip the given image randomly with a given probability. This augmentation follows the [RandomHorizontalFlip](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomHorizontalFlip.html#torchvision.transforms.RandomHorizontalFlip) in torchvision library.
+
 ### RandomResizedCrop
+
+- Crop a random portion of image with different aspect of ratio in width and height, and resize it to a given size. This augmentation follows the [RandomResizedCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomResizedCrop.html#torchvision.transforms.RandomResizedCrop) in torchvision library.
 
 ### RandomVerticalFlip
 
+- Vertically flip the given image randomly with a given probability. This augmentation follows the [RandomVerticalFlip](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomVerticalFlip.html#torchvision.transforms.RandomVerticalFlip) in torchvision library.
+
 ### Resize
 
+- Naively resize the input image to the given size. This augmentation follows the [Resize](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Resize.html#torchvision.transforms.Resize) in torchvision library.
+
 ### ToTensor
+
+- Convert from pillow image to `torch.Tensor` by transposing dimensions and changing `dtype` from `uint8` to `float32` if needed.
+
 
 ## Gradio demo for simulating the transform
 
@@ -43,11 +66,16 @@ Our team hopes that the learning process with NetsPresso Trainer will become a m
 ### How to use
 
 #### Running on your environment
-*FIXME*
+
+Please run the gradio demo with following command:
+
+```
+python demo/gradio_augmentation.py
+```
 
 #### Hugging Face Spaces
 
-(HF Spaces demo link)
+The example simulation will be able to use with Hugging Face Spaces at [nota-ai/netspresso-trainer-augmentation](https://huggingface.co/spaces/nota-ai/netspresso-trainer-augmentation).
 
 ## Field list
 
