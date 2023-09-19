@@ -11,6 +11,7 @@ logger = logging.getLogger("netspresso_trainer")
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
+
 def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     logger.info('-'*40)
@@ -23,66 +24,68 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     train_transform = CREATE_TRANSFORM[task](model_name, is_training=True)
     target_transform = CREATE_TRANSFORM[task](model_name, is_training=False)
-    
+
     data_format = conf_data.format
-    
+
     assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
-    
+
     if data_format == 'local':
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
         data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
-        
+
         train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
-        
+
         train_dataset = CUSTOM_DATASET[task](
             conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
-            samples=train_samples, transform=train_transform
+            samples=train_samples, transform=train_transform, label_value_to_idx=label_value_to_idx
         )
-        
+
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = CUSTOM_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
-                samples=valid_samples, transform=target_transform
+                samples=valid_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
-        
+
         test_dataset = None
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
                 samples=test_samples, transform=target_transform,
-                with_label=test_with_label
+                with_label=test_with_label, label_value_to_idx=label_value_to_idx
             )
-            
+
     elif data_format == 'huggingface':
         assert task in CUSTOM_DATASET, f"HuggingFace dataset for {task} is not yet supported!"
         assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
-        
+
         data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
-        
+
         train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
+        label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
-        
+
         train_dataset = HUGGINGFACE_DATASET[task](
             conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
-            huggingface_dataset=train_samples, transform=train_transform
+            huggingface_dataset=train_samples, transform=train_transform, label_value_to_idx=label_value_to_idx
         )
-        
+
         valid_dataset = None
         if valid_samples is not None:
             valid_dataset = HUGGINGFACE_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='valid',
-                huggingface_dataset=valid_samples, transform=target_transform
+                huggingface_dataset=valid_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
-        
+
         test_dataset = None
         if test_samples is not None:
             test_dataset = HUGGINGFACE_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
-                huggingface_dataset=test_samples, transform=target_transform
+                huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
     logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")

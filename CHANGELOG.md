@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Support RGB segmentation map and class with label value by `@deepkyu` in [PR 163](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/163)
 
 ## Bug Fixes:
 
