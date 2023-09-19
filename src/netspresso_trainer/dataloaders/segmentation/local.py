@@ -15,7 +15,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
                  split, samples, transform=None, with_label=True, **kwargs):
         super(SegmentationCustomDataset, self).__init__(
             conf_data, conf_augmentation, model_name, idx_to_class,
-            split, samples, transform, with_label
+            split, samples, transform, with_label, **kwargs
         )
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
