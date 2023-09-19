@@ -42,11 +42,17 @@ By copying the training configuration into the simulator, users can see how the 
 > :warning: This simulation is not supported for some schedulers which adjust the learning rate dynamically with training results.
 
 #### Running on your environment
-*FIXME*
+
+Please run the gradio demo with following command:
+
+```
+python demo/gradio_lr_scheduler.py
+```
 
 #### Hugging Face Spaces
 
-(HF Spaces demo link)
+The example simulation will be able to use with Hugging Face Spaces at [nota-ai/netspresso-trainer-lr-scheduler](https://huggingface.co/spaces/nota-ai/netspresso-trainer-lr-scheduler).
+
 
 ## Field list
 
