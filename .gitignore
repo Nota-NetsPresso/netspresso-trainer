@@ -8,6 +8,7 @@ __pycache__/
 *.pt
 *.pth
 *.egg-info
+*.whl
 
 **/*/exp/
 **/*/events*
@@ -17,6 +18,7 @@ data/*
 log/
 pretrained/
 weights/*
+build/
 
 docker-compose.yml
 

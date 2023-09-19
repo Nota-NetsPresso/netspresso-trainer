@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Support RGB segmentation map and class with label value by `@deepkyu` in [PR 163](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/163)
 
 ## Bug Fixes:
 
@@ -16,6 +16,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Add onnx save in best model saving step of graph model training by `@illian01` in [PR 160](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/160).
+- Update to keep community standards by `@illian01` in [PR 162](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/162)
 
 # v0.0.5
 

@@ -9,4 +9,5 @@ data:
     features:
       image: pixel_values
       label: label
+    label_image_format: L
     id_mapping: ['unlabeled', 'flat-road', 'flat-sidewalk', 'flat-crosswalk', 'flat-cyclinglane', 'flat-parkingdriveway', 'flat-railtrack', 'flat-curb', 'human-person', 'human-rider', 'vehicle-car', 'vehicle-truck', 'vehicle-bus', 'vehicle-tramtrain', 'vehicle-motorcycle', 'vehicle-bicycle', 'vehicle-caravan', 'vehicle-cartrailer', 'construction-building', 'construction-door', 'construction-wall', 'construction-fenceguardrail', 'construction-bridge', 'construction-tunnel', 'construction-stairs', 'object-pole', 'object-trafficsign', 'object-trafficlight', 'nature-vegetation', 'nature-terrain', 'sky', 'void-ground', 'void-dynamic', 'void-static', 'void-unclear']
