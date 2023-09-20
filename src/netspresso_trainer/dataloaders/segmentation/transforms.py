@@ -114,7 +114,7 @@ def create_transform_segmentation(model_name: str, is_training=False):
         if is_training:
             return train_transforms_pidnet
         return val_transforms_pidnet
-    elif model_name in ['segformer', 'efficientformer', 'resnet50']:
+    elif model_name in ['segformer', 'efficientformer', 'resnet50', 'mobilenetv3_small']:
         if is_training:
             return train_transforms_segmentation
         return val_transforms_segmentation

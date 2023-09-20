@@ -1,3 +1,4 @@
+from itertools import accumulate
 from typing import Dict, List, Literal, Optional, Type, Union
 
 import torch
@@ -12,6 +13,12 @@ __all__ = ['mobilenetv3_small']
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 
+
+def list_depth(block_info):
+    if isinstance(block_info[0], list):
+        return 1 + list_depth(block_info[0])
+    else:
+        return 1
 
 class MobileNetV3(nn.Module):
 
@@ -31,6 +38,16 @@ class MobileNetV3(nn.Module):
         act_type = 'hard_swish'
 
         layers: List[nn.Module] = []
+
+        # block_info can have 2-level or 1-level hierarchy
+        if list_depth(block_info) == 3:
+            self.intermediate_out_step = list(accumulate([len(b)for b in block_info]))
+            self._intermediate_features_dim = [b[-1][3] for b in block_info]
+            block_info = sum(block_info, [])
+        else:
+            self.intermediate_out_step = [len(block_info)]
+            self._intermediate_features_dim = [block_info[-1][3]]
+        self.intermediate_out_step[-1] += 1 # last conv layer
 
         # building first layer
         firstconv_output_channels = block_info[0][0]
@@ -86,6 +103,10 @@ class MobileNetV3(nn.Module):
         )
 
         self._feature_dim = last_channel
+        self._intermediate_features_dim[-1] = lastconv_output_channels
+        if self.use_intermediate_features:
+            for i in self.intermediate_out_step:
+                self.features[i].register_forward_hook(self.get_intermediate_features())
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -99,8 +120,22 @@ class MobileNetV3(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.zeros_(m.bias)
 
+    def get_intermediate_features(self):
+        def hook(model, input, output):
+            model.all_hidden_states.append(output)
+        return hook
+
     def forward(self, x: Tensor):
+        all_hidden_states = [] if self.use_intermediate_features else None
+        if self.use_intermediate_features:
+            for i in self.intermediate_out_step:
+                self.features[i].all_hidden_states = all_hidden_states
+        
         x = self.features(x)
+
+        if self.use_intermediate_features:
+            return BackboneOutput(intermediate_features=all_hidden_states)
+
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.last_layer(x)
@@ -113,7 +148,7 @@ class MobileNetV3(nn.Module):
 
     @property
     def intermediate_features_dim(self):
-        return None
+        return self._intermediate_features_dim
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
