@@ -1,11 +1,14 @@
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Callable
+from functools import partial
 
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
+from torchvision.ops.misc import SqueezeExcitation as SElayer
 
 from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from ..op.ml_cvnets import make_divisible
 
 
 class ConvLayer(nn.Module):
@@ -198,3 +201,77 @@ class Bottleneck(nn.Module):
         out = self.final_act(out)
 
         return out
+
+
+class InvertedResidual(nn.Module):
+    # Implemented as described at section 5 of MobileNetV3 paper
+    def __init__(
+        self,
+        in_channels: int,
+        hidden_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = 1,
+        dilation: Optional[Union[int, Tuple[int, int]]] = 1,
+        norm_type: Optional[str] = None,
+        act_type: Optional[str] = None,
+        use_se: bool = False,
+        se_layer: Callable[..., nn.Module] = partial(SElayer, scale_activation=nn.Hardsigmoid),
+    ):
+        super().__init__()
+        if not (1 <= stride <= 2):
+            raise ValueError("illegal stride value")
+
+        self.use_res_connect = stride == 1 and in_channels == out_channels
+
+        layers: List[nn.Module] = []
+
+        # expand
+        layers.append(
+            ConvLayer(
+                in_channels=in_channels,
+                out_channels=hidden_channels,
+                kernel_size=1,
+                norm_type=norm_type,
+                act_type=act_type,
+            )
+        )
+
+        # depthwise
+        stride = 1 if dilation > 1 else stride
+        layers.append(
+            ConvLayer(
+                in_channels=hidden_channels,
+                out_channels=hidden_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                dilation=dilation,
+                groups=hidden_channels,
+                norm_type=norm_type,
+                act_type=act_type,
+            )
+        )
+        if use_se:
+            squeeze_channels = make_divisible(hidden_channels // 4, 8)
+            layers.append(se_layer(hidden_channels, squeeze_channels))
+
+        # project
+        layers.append(
+            ConvLayer(
+                in_channels=hidden_channels, 
+                out_channels=out_channels, 
+                kernel_size=1, 
+                norm_type=norm_type,
+                use_act=False
+            )
+        )
+
+        self.block = nn.Sequential(*layers)
+        self.out_channels = out_channels
+        self._is_cn = stride > 1
+
+    def forward(self, input: Tensor) -> Tensor:
+        result = self.block(input)
+        if self.use_res_connect:
+            result = result + input
+        return result
