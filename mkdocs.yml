@@ -52,7 +52,8 @@ theme:
     - navigation.indexes
     # - navigation.instant
     # - navigation.prune
-    - navigation.sections
+    # - navigation.sections
+    - navigation.expand
     - navigation.tabs
     # - navigation.tabs.sticky
     - navigation.top
@@ -159,10 +160,19 @@ nav:
     - Installation: installation.md
     - Docker: docker-installation.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
-  - Training:
-    - training/index.md
-    - Tensorboard: training/tensorboard.md
-    - Hugging Face datasets: training/huggingface-datasets.md
+  - Components:
+    - components/index.md
+    - Data: components/data.md
+    - Augmentation: components/augmentation.md
+    - Training: components/training.md
+    - Model:
+      - Common: components/model/common.md
+      - Backbones: components/model/backbones.md
+      - Task heads: components/model/heads.md
+      - Full models: components/model/fulls.md
+      - Losses: components/model/losses.md
+      - Field list: components/model/field.md
+    - Logging: components/logging.md
   - Models:
     - models/index.md
     - Implementations: models/implementations.md
