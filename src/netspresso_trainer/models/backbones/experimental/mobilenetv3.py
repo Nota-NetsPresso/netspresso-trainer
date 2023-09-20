@@ -20,13 +20,13 @@ def list_depth(block_info):
     else:
         return 1
 
+
 class MobileNetV3(nn.Module):
 
     def __init__(
         self,
         task: str,
         block_info, # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
-        last_channel,
         **kwargs
     ) -> None:
         super(MobileNetV3, self).__init__()
@@ -97,12 +97,8 @@ class MobileNetV3(nn.Module):
 
         self.features = nn.Sequential(*layers)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
-        self.last_layer = nn.Sequential(
-            nn.Linear(lastconv_output_channels, last_channel),
-            ACTIVATION_REGISTRY[act_type](),
-        )
 
-        self._feature_dim = last_channel
+        self._feature_dim = lastconv_output_channels
         self._intermediate_features_dim[-1] = lastconv_output_channels
         if self.use_intermediate_features:
             for i in self.intermediate_out_step:
@@ -138,7 +134,6 @@ class MobileNetV3(nn.Module):
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
-        x = self.last_layer(x)
 
         return BackboneOutput(last_feature=x)
 

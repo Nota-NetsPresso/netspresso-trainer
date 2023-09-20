@@ -1,6 +1,6 @@
 model:
   task: classification
-  checkpoint: ~
+  checkpoint: ./weights/mobilenetv3/mobilenet_v3_small.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False
@@ -20,7 +20,6 @@ model:
         - [48, 5, 288, 96, True, "hard_swish", 2, 1]  # C4
         - [96, 5, 576, 96, True, "hard_swish", 1, 1]
         - [96, 5, 576, 96, True, "hard_swish", 1, 1]
-      last_channel: 1024  # C5
     head:
       name: fc
   losses:
