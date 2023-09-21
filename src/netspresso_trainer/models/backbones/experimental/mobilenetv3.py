@@ -1,3 +1,7 @@
+"""
+Based on the Torchvision implementation of MobileNetV3.
+https://pytorch.org/vision/main/_modules/torchvision/models/mobilenetv3.html
+"""
 from itertools import accumulate
 from typing import Dict, List, Literal, Optional, Type, Union
 
