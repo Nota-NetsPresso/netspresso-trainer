@@ -6,7 +6,7 @@ No changes to highlight.
 
 ## Bug Fixes:
 
-No changes to highlight.
+- ⚠️ Fix pypi package import by `@deepkyu` in [PR 169](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/169)
 
 ## Breaking Changes:
 
