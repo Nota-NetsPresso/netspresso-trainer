@@ -9,7 +9,7 @@ TBD
 First of all, you need to install `ruff` package to verify that you passed all conditions for formatting.
 
 ```
-pip install ruff~=0.0.287
+pip install ruff==0.0.287
 ```
 
 ### Apply linter before PR
