@@ -227,15 +227,16 @@ class InvertedResidual(nn.Module):
         layers: List[nn.Module] = []
 
         # expand
-        layers.append(
-            ConvLayer(
-                in_channels=in_channels,
-                out_channels=hidden_channels,
-                kernel_size=1,
-                norm_type=norm_type,
-                act_type=act_type,
+        if hidden_channels != in_channels:
+            layers.append(
+                ConvLayer(
+                    in_channels=in_channels,
+                    out_channels=hidden_channels,
+                    kernel_size=1,
+                    norm_type=norm_type,
+                    act_type=act_type,
+                )
             )
-        )
 
         # depthwise
         stride = 1 if dilation > 1 else stride
