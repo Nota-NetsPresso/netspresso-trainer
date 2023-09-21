@@ -16,6 +16,24 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v0.0.7
+
+## New Features:
+
+No changes to highlight.
+
+## Bug Fixes:
+
+- ⚠️ Fix pypi package import by `@deepkyu` in [PR 169](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/169)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
 
 # v0.0.6
 
