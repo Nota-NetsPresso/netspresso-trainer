@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add MobileNetV3 by `@illian01` in [PR 173](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/173)
 
 ## Bug Fixes:
 
