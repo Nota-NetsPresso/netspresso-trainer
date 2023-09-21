@@ -21,7 +21,7 @@ setup(
     install_requires=requirements,
     package_dir={"": "src"},
     packages=find_packages("src", exclude=("tests",)),
-    package_data={},
+    package_data={"": ["VERSION"]},
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
