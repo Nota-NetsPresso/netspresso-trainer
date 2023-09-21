@@ -108,9 +108,4 @@ We appreciate all the original authors and we also do our best to make other val
 
 | Family           | Model    | Link    | Origianl repository    |
 | ------           | -----    | ----    | -------------------    |
-| ResNet           | [`resnet50`](./config/model/resnet.yaml) | [Google Drive](https://drive.google.com/file/d/1xFfPcea8VyZ5KlegrIcSMUpRZ-FKOvKF/view?usp=drive_link) | [torchvision](https://download.pytorch.org/models/resnet50-0676ba61.pth) |
-| ViT              | [`vit_tiny`](./config/model/vit.yaml) | [Google Drive](https://drive.google.com/file/d/1meGp4epqXcqplHnSkXHIVuvV2LYSaLFU/view?usp=drive_link) | [apple/ml-cvnets](https://docs-assets.developer.apple.com/ml-research/models/cvnets-v2/classification/vit-tiny.pt) |
-| MobileViT        | [`mobilevit_s`](./config/model/mobilevit.yaml) | [Google Drive](https://drive.google.com/file/d/1HF6iq1T0QSUqPViJobXx639xlBxkBHWd/view?usp=drive_link) | [apple/ml-cvnets](https://docs-assets.developer.apple.com/ml-research/models/cvnets/classification/mobilevit_s.pt) |
-| SegFormer        | [`segformer`](./config/model/segformer.yaml) | [Google Drive](https://drive.google.com/file/d/1QIvgBOwGKXfUS9ysDk3K9AkTAOaiyRXK/view?usp=drive_link) | [(Hugging Face) nvidia](https://huggingface.co/nvidia/mit-b0) |
-| EfficientForemer | [`efficientformer_l1_3000d`](./config/model/efficientformer.yaml) | [Google Drive](https://drive.google.com/file/d/1I0SoTFs5AcI3mHpG_kDM2mW1PXDmG8X_/view?usp=drive_link) | [snap-research/EfficientFormer](https://drive.google.com/file/d/11SbX-3cfqTOc247xKYubrAjBiUmr818y/view) |
-| PIDNet           | [`pidnet_s`](./config/model/pidnet.yaml) | [Google Drive](https://drive.google.com/file/d/16mGyzAJAgrefs7oXnxhGZaiG7T7Uriuf/view?usp=drive_link) | [XuJiacong/PIDNet](https://drive.google.com/file/d/1hIBp_8maRr60-B3PF0NVtaA6TYBvO4y-/view) |
+| MobileNetV3      | [`mobilenetv3_small`](./config/model/mobilenetv3) | [Google Drive](https://drive.google.com/file/d/1gzBIQLcj75VpU6JRPsHT4GhLPYT6KcQm/view?usp=drive_link) | [torchvision](https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth ) |
