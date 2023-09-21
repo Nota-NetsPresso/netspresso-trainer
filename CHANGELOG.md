@@ -16,6 +16,30 @@ No changes to highlight.
 
 No changes to highlight.
 
+
+# v0.0.6
+
+## New Features:
+
+- Support RGB segmentation map and class with label value by `@deepkyu` in [PR 163](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/163)
+
+## Bug Fixes:
+
+- Fix import error for `Sequence` by `@illian01` in [PR 155](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/155)
+- Add last epoch validation and delete save_converted_model by `@illian01` in [PR 157](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/157)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Add onnx save in best model saving step of graph model training by `@illian01` in [PR 160](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/160).
+- Update to keep community standards by `@illian01` in [PR 162](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/162)
+- Update a lot of contents in docs (but not finished...) by `@deepkyu` in [PR 165](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/165)
+- Add github workflow for pypi packaging by `@deepkyu` in [PR 166](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/166)
+
+
 # v0.0.5
 
 Notice: there are some changes in maintaining the repository and we transferred the original `private` repository to the public(planned) location. Some PR links may be expired because those links are based on the previous version of repository. Hope you understand.  

@@ -10,7 +10,7 @@ import torch.utils.data as data
 
 class BaseCustomDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label):
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label, **kwargs):
         super(BaseCustomDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
