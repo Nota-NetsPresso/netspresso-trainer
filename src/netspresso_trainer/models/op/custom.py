@@ -1,14 +1,14 @@
 import warnings
-from typing import Any, Dict, List, Optional, Tuple, Union, Callable
 from functools import partial
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 from torchvision.ops.misc import SqueezeExcitation as SElayer
 
-from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 from ..op.ml_cvnets import make_divisible
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 
 
 class ConvLayer(nn.Module):
