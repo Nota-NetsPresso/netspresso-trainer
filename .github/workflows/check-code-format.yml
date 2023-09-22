@@ -22,4 +22,4 @@ jobs:
       - uses: chartboost/ruff-action@v1
         with:
           src: "./src/netspresso_trainer"
-          version: 0.0.259
+          version: 0.0.287

@@ -1,0 +1,28 @@
+model:
+  task: classification
+  checkpoint: ./weights/mobilenetv3/mobilenet_v3_small.pth
+  fx_model_checkpoint: ~
+  resume_optimizer_checkpoint: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mobilenetv3_small
+      block_info: # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
+        - [16, 3, 16, 16, True, "relu", 2, 1] # C1
+        - [16, 3, 72, 24, False, "relu", 2, 1] # C2
+        - [24, 3, 88, 24, False, "relu", 1, 1]
+        - [24, 5, 96, 40, True, "hard_swish", 2, 1]  # C3
+        - [40, 5, 240, 40, True, "hard_swish", 1, 1]
+        - [40, 5, 240, 40, True, "hard_swish", 1, 1]
+        - [40, 5, 120, 48, True, "hard_swish", 1, 1]
+        - [48, 5, 144, 48, True, "hard_swish", 1, 1]
+        - [48, 5, 288, 96, True, "hard_swish", 2, 1]  # C4
+        - [96, 5, 576, 96, True, "hard_swish", 1, 1]
+        - [96, 5, 576, 96, True, "hard_swish", 1, 1]
+    head:
+      name: fc
+  losses:
+    - criterion: label_smoothing_cross_entropy
+      smoothing: 0.1
+      weight: ~
