@@ -264,7 +264,8 @@ class BasePipeline(ABC):
         save_best_model = best_epoch == epoch
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
-        model = copy.deepcopy(model).type(self.save_dtype)
+        if self.save_dtype == torch.float16:
+            model = copy.deepcopy(model).type(self.save_dtype)
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
         best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
