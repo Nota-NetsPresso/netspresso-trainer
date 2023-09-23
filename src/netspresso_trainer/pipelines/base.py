@@ -1,3 +1,4 @@
+import copy
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -34,7 +35,8 @@ class BasePipeline(ABC):
         self.conf = conf
         self.task = task
         self.model_name = model_name
-        self.model = model
+        self.save_dtype = next(model.parameters()).dtype
+        self.model = model.float()
         self.devices = devices
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
@@ -262,6 +264,8 @@ class BasePipeline(ABC):
         save_best_model = best_epoch == epoch
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
+        if self.save_dtype == torch.float16:
+            model = copy.deepcopy(model).type(self.save_dtype)
         result_dir = self.train_logger.result_dir
         model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
         best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
@@ -278,7 +282,7 @@ class BasePipeline(ABC):
             torch.save(model, model_path.with_suffix(".pt"))
             logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
             if save_best_model:
-                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
                 logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
                 torch.save(model, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
@@ -290,7 +294,7 @@ class BasePipeline(ABC):
             logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
 
             try:
-                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input)
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
                 logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
 
                 save_graphmodule(model, (model_path.parent / f"{best_model_path.stem}_fx").with_suffix(".pt"))
@@ -314,7 +318,7 @@ class BasePipeline(ABC):
         )
         if end_training:
             total_train_time = self.timer.get(name='train_all', as_pop=True)
-            macs, params = get_params_and_macs(self.model, self.sample_input)
+            macs, params = get_params_and_macs(self.model, self.sample_input.float())
             logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
