@@ -15,7 +15,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- removed `model_name` check in `create_transform_segmentation` function by `@illian01` in [Pr 176](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/176)
 
 # v0.0.7
 
