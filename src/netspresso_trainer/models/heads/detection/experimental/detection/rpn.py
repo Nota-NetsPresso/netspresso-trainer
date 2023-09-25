@@ -10,7 +10,6 @@ from . import _utils as det_utils
 
 # Import AnchorGenerator to keep compatibility.
 from .anchor_utils import AnchorGenerator  # noqa: 401
-from .image_list import ImageList
 
 IMAGE_SIZE = (512, 512)
 

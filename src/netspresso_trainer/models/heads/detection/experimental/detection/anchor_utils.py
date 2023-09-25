@@ -4,8 +4,6 @@ from typing import List, Optional
 import torch
 from torch import Tensor, nn
 
-from .image_list import ImageList
-
 IMAGE_SIZE = (512, 512)
 
 class AnchorGenerator(nn.Module):
