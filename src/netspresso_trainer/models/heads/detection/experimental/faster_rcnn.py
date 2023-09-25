@@ -2,7 +2,7 @@ import copy
 import warnings
 from collections import OrderedDict
 from functools import partial
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union, Callable
 
 import numpy as np
 import torch
@@ -12,20 +12,22 @@ from torch import Tensor
 from torchvision.ops import MultiScaleRoIAlign
 
 from ....utils import DetectionModelOutput, FXTensorListType
-from .detection import FasterRCNN, MaskRCNNHeads, MaskRCNNPredictor
+from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads, GeneralizedRCNN
 from .fpn import FPN
 
 
-class DetectionHead(FasterRCNN):
+def _default_anchorgen():
+    # anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
+    anchor_sizes = ((64,), (128,), (256,), (512,))
+    aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
+    return AnchorGenerator(anchor_sizes, aspect_ratios)
+
+
+class FasterRCNN(GeneralizedRCNN):
     def __init__(
         self,
         num_classes,
         intermediate_features_dim,
-        # transform parameters
-        min_size=800,
-        max_size=1333,
-        image_mean=None,
-        image_std=None,
         # RPN parameters
         rpn_anchor_generator=None,
         rpn_head=None,
@@ -51,68 +53,139 @@ class DetectionHead(FasterRCNN):
         box_batch_size_per_image=512,
         box_positive_fraction=0.25,
         bbox_reg_weights=None,
-        # Mask parameters
-        mask_roi_pool=None,
-        mask_head=None,
         **kwargs,
     ):
 
-        if not isinstance(mask_roi_pool, (MultiScaleRoIAlign, type(None))):
+        # if not hasattr(backbone, "out_channels"):
+        #     raise ValueError(
+        #         "backbone should contain an attribute out_channels "
+        #         "specifying the number of output channels (assumed to be the "
+        #         "same for all the levels)"
+        #     )
+
+        if not isinstance(rpn_anchor_generator, (AnchorGenerator, type(None))):
             raise TypeError(
-                f"mask_roi_pool should be of type MultiScaleRoIAlign or None instead of {type(mask_roi_pool)}"
+                f"rpn_anchor_generator should be of type AnchorGenerator or None instead of {type(rpn_anchor_generator)}"
+            )
+        if not isinstance(box_roi_pool, (MultiScaleRoIAlign, type(None))):
+            raise TypeError(
+                f"box_roi_pool should be of type MultiScaleRoIAlign or None instead of {type(box_roi_pool)}"
             )
 
-        super().__init__(
-            num_classes,
-            intermediate_features_dim[-1],
-            # transform parameters
-            min_size,
-            max_size,
-            image_mean,
-            image_std,
-            # RPN-specific parameters
+        if num_classes is not None:
+            if box_predictor is not None:
+                raise ValueError("num_classes should be None when box_predictor is specified")
+        else:
+            if box_predictor is None:
+                raise ValueError("num_classes should not be None when box_predictor is not specified")
+
+        neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=4)
+
+        out_channels = intermediate_features_dim[-1]
+
+        if rpn_anchor_generator is None:
+            rpn_anchor_generator = _default_anchorgen()
+        if rpn_head is None:
+            rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
+
+        rpn_pre_nms_top_n = {"training": rpn_pre_nms_top_n_train, "testing": rpn_pre_nms_top_n_test}
+        rpn_post_nms_top_n = {"training": rpn_post_nms_top_n_train, "testing": rpn_post_nms_top_n_test}
+
+        rpn = RegionProposalNetwork(
             rpn_anchor_generator,
             rpn_head,
-            rpn_pre_nms_top_n_train,
-            rpn_pre_nms_top_n_test,
-            rpn_post_nms_top_n_train,
-            rpn_post_nms_top_n_test,
-            rpn_nms_thresh,
             rpn_fg_iou_thresh,
             rpn_bg_iou_thresh,
             rpn_batch_size_per_image,
             rpn_positive_fraction,
-            rpn_score_thresh,
-            # Box parameters
+            rpn_pre_nms_top_n,
+            rpn_post_nms_top_n,
+            rpn_nms_thresh,
+            score_thresh=rpn_score_thresh,
+        )
+
+        if box_roi_pool is None:
+            box_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2)
+
+        if box_head is None:
+            resolution = box_roi_pool.output_size[0]
+            representation_size = 1024
+            box_head = TwoMLPHead(out_channels * resolution**2, representation_size)
+
+        if box_predictor is None:
+            representation_size = 1024
+            box_predictor = FastRCNNPredictor(representation_size, num_classes)
+
+        roi_heads = RoIHeads(
+            # Box
             box_roi_pool,
             box_head,
             box_predictor,
-            box_score_thresh,
-            box_nms_thresh,
-            box_detections_per_img,
             box_fg_iou_thresh,
             box_bg_iou_thresh,
             box_batch_size_per_image,
             box_positive_fraction,
             bbox_reg_weights,
-            **kwargs,
+            box_score_thresh,
+            box_nms_thresh,
+            box_detections_per_img,
         )
 
-        self.neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=4)
+        super().__init__(neck, rpn, roi_heads)
 
-    def forward(self, features: FXTensorListType, targets) -> DetectionModelOutput:
-        assert targets is not None
-        features = self.neck(features)
-        features = {str(k): v for k, v in enumerate(features)}
-        rpn_features = self.rpn(features)
-        roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0), targets=targets)
 
-        out_features = DetectionModelOutput()
-        out_features.update(rpn_features)
-        out_features.update(roi_features)
 
-        return out_features
+class TwoMLPHead(nn.Module):
+    """
+    Standard heads for FPN-based models
+
+    Args:
+        in_channels (int): number of input channels
+        representation_size (int): size of the intermediate representation
+    """
+
+    def __init__(self, in_channels, representation_size):
+        super().__init__()
+
+        self.fc6 = nn.Linear(in_channels, representation_size)
+        self.fc7 = nn.Linear(representation_size, representation_size)
+
+    def forward(self, x):
+        x = x.flatten(start_dim=1)
+
+        x = F.relu(self.fc6(x))
+        x = F.relu(self.fc7(x))
+
+        return x
+
+
+class FastRCNNPredictor(nn.Module):
+    """
+    Standard classification + bounding box regression layers
+    for Fast R-CNN.
+
+    Args:
+        in_channels (int): number of input channels
+        num_classes (int): number of output classes (including background)
+    """
+
+    def __init__(self, in_channels, num_classes):
+        super().__init__()
+        self.cls_score = nn.Linear(in_channels, num_classes)
+        self.bbox_pred = nn.Linear(in_channels, num_classes * 4)
+
+    def forward(self, x):
+        if x.dim() == 4:
+            torch._assert(
+                list(x.shape[2:]) == [1, 1],
+                f"x has the wrong shape, expecting the last two dimensions to be [1,1] instead of {list(x.shape[2:])}",
+            )
+        x = x.flatten(start_dim=1)
+        scores = self.cls_score(x)
+        bbox_deltas = self.bbox_pred(x)
+
+        return scores, bbox_deltas
 
 
 def faster_rcnn(num_classes, intermediate_features_dim, **kwargs):
-    return DetectionHead(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim)
+    return FasterRCNN(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim)
