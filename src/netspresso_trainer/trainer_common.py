@@ -85,10 +85,7 @@ def trainer():
     conf = set_arguments(args_parsed)
 
     assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
-    if conf.model.fx_model_checkpoint:
-        is_graphmodule_training = True
-    else:
-        is_graphmodule_training = False
+    is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
 
     distributed, world_size, rank, devices = set_device(conf.training.seed)
     logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed)
