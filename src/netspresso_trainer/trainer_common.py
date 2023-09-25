@@ -15,7 +15,7 @@ from .utils.logger import set_logger
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 
-def parse_args_netspresso(is_graphmodule_training):
+def parse_args_netspresso():
 
     parser = argparse.ArgumentParser(description="Parser for NetsPresso configuration")
 
@@ -80,9 +80,15 @@ def set_arguments(args_parsed):
     return conf
 
 
-def trainer(is_graphmodule_training=False):
-    args_parsed = parse_args_netspresso(is_graphmodule_training=is_graphmodule_training)
+def trainer():
+    args_parsed = parse_args_netspresso()
     conf = set_arguments(args_parsed)
+
+    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
+    if conf.model.fx_model_checkpoint:
+        is_graphmodule_training = True
+    else:
+        is_graphmodule_training = False
 
     distributed, world_size, rank, devices = set_device(conf.training.seed)
     logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed)
@@ -117,7 +123,6 @@ def trainer(is_graphmodule_training=False):
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
-    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     if is_graphmodule_training:
         assert conf.model.fx_model_checkpoint is not None
         assert Path(conf.model.fx_model_checkpoint).exists()
