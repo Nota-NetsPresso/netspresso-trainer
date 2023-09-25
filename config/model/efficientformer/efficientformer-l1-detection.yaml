@@ -29,7 +29,7 @@ model:
       down_pad: 1
       vit_num: 1
     head:
-      name: efficientformer_detection_head
+      name: faster_rcnn
   losses:
     - criterion: roi_head_loss
       weight: ~

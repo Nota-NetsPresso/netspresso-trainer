@@ -1,1 +1,1 @@
-from .experimental.basic import efficientformer_detection_head
+from .experimental.faster_rcnn import faster_rcnn
