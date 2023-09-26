@@ -9,7 +9,7 @@ from torchvision.ops import boxes as box_ops
 from ...models.heads.detection.experimental.detection import _utils as det_utils
 
 
-class RPNLoss(nn.Module):
+class RoiHeadLoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
     
@@ -47,7 +47,7 @@ class RPNLoss(nn.Module):
         # TODO: return as dict
         return sum(losses.values())
         
-class RoiHeadLoss(nn.Module):
+class RPNLoss(nn.Module):
     def __init__(self,
                  box_fg_iou_thresh=0.5,
                  box_bg_iou_thresh=0.5,
