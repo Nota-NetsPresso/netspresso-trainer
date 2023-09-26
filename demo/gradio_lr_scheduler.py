@@ -69,7 +69,7 @@ def parse_args():
         help="Whether to run in local environment or not")
 
     parser.add_argument(
-        '--port', type=Path, default=50002,
+        '--port', type=int, default=50002,
         help="Service port (only applicable when running on local server)")
 
     args, _ = parser.parse_known_args()
