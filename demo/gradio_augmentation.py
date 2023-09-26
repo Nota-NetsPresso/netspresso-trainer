@@ -66,6 +66,14 @@ def parse_args():
         '--image', type=Path, default=PATH_EXAMPLE_IMAGE,
         help="Path for an example image")
 
+    parser.add_argument(
+        '--local', action='store_true',
+        help="Whether to run in local environment or not")
+
+    parser.add_argument(
+        '--port', type=Path, default=50003,
+        help="Service port (only applicable when running on local server)")
+
     args, _ = parser.parse_known_args()
 
     return args
@@ -96,7 +104,10 @@ def launch_gradio(args):
         transform_button.click(summary_transform, inputs=transform_compose_inputs, outputs=transform_repr_output)
         run_button.click(get_augmented_images, inputs=run_inputs, outputs=augmented_images)
 
-    demo.launch()
+    if args.local:
+        demo.launch(server_name="0.0.0.0", server_port=args.port)
+    else:
+        demo.launch()
 
 
 if __name__ == "__main__":

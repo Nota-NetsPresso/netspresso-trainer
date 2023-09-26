@@ -64,6 +64,14 @@ def parse_args():
         '--config', type=Path, default=PATH_EXAMPLE_CONFIG,
         help="Config for lr scheduler")
 
+    parser.add_argument(
+        '--local', action='store_true',
+        help="Whether to run in local environment or not")
+
+    parser.add_argument(
+        '--port', type=Path, default=50002,
+        help="Service port (only applicable when running on local server)")
+
     args, _ = parser.parse_known_args()
 
     return args
@@ -82,7 +90,10 @@ def launch_gradio(args):
 
         run_button.click(get_lr_dataframe_from_config, inputs=config_input, outputs=plot_output)
 
-    demo.launch()
+    if args.local:
+        demo.launch(server_name="0.0.0.0", server_port=args.port)
+    else:
+        demo.launch()
 
 
 if __name__ == "__main__":
