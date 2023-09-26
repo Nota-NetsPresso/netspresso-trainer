@@ -1,8 +1,7 @@
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 
 import torch
 from torch import Tensor, nn
-from torch.nn import functional as F
 from torchvision.ops import Conv2dNormActivation
 from torchvision.ops import boxes as box_ops
 
@@ -192,44 +191,6 @@ class RegionProposalNetwork(torch.nn.Module):
             return self._post_nms_top_n["training"]
         return self._post_nms_top_n["testing"]
 
-    def assign_targets_to_anchors(
-        self, anchors: List[Tensor], targets: List[Dict[str, Tensor]]
-    ) -> Tuple[List[Tensor], List[Tensor]]:
-
-        labels = []
-        matched_gt_boxes = []
-        for anchors_per_image, targets_per_image in zip(anchors, targets):
-            gt_boxes = targets_per_image["boxes"]
-
-            if gt_boxes.numel() == 0:
-                # Background image (negative example)
-                device = anchors_per_image.device
-                matched_gt_boxes_per_image = torch.zeros(anchors_per_image.shape, dtype=torch.float32, device=device)
-                labels_per_image = torch.zeros((anchors_per_image.shape[0],), dtype=torch.float32, device=device)
-            else:
-                match_quality_matrix = self.box_similarity(gt_boxes, anchors_per_image)
-                matched_idxs = self.proposal_matcher(match_quality_matrix)
-                # get the targets corresponding GT for each proposal
-                # NB: need to clamp the indices because we can have a single
-                # GT in the image, and matched_idxs can be -2, which goes
-                # out of bounds
-                matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]
-
-                labels_per_image = matched_idxs >= 0
-                labels_per_image = labels_per_image.to(dtype=torch.float32)
-
-                # Background (negative examples)
-                bg_indices = matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD
-                labels_per_image[bg_indices] = 0.0
-
-                # discard indices that are between thresholds
-                inds_to_discard = matched_idxs == self.proposal_matcher.BETWEEN_THRESHOLDS
-                labels_per_image[inds_to_discard] = -1.0
-
-            labels.append(labels_per_image)
-            matched_gt_boxes.append(matched_gt_boxes_per_image)
-        return labels, matched_gt_boxes
-
     def _get_top_n_idx(self, objectness: Tensor, num_anchors_per_level: List[int]) -> Tensor:
         r = []
         offset = 0
@@ -297,43 +258,6 @@ class RegionProposalNetwork(torch.nn.Module):
             final_boxes.append(boxes)
             final_scores.append(scores)
         return final_boxes, final_scores
-
-    def compute_loss(
-        self, objectness: Tensor, pred_bbox_deltas: Tensor, labels: List[Tensor], regression_targets: List[Tensor]
-    ) -> Tuple[Tensor, Tensor]:
-        """
-        Args:
-            objectness (Tensor)
-            pred_bbox_deltas (Tensor)
-            labels (List[Tensor])
-            regression_targets (List[Tensor])
-
-        Returns:
-            objectness_loss (Tensor)
-            box_loss (Tensor)
-        """
-
-        sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
-        sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0]
-        sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0]
-
-        sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
-
-        objectness = objectness.flatten()
-
-        labels = torch.cat(labels, dim=0)
-        regression_targets = torch.cat(regression_targets, dim=0)
-
-        box_loss = F.smooth_l1_loss(
-            pred_bbox_deltas[sampled_pos_inds],
-            regression_targets[sampled_pos_inds],
-            beta=1 / 9,
-            reduction="sum",
-        ) / (sampled_inds.numel())
-
-        objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds])
-
-        return objectness_loss, box_loss
 
     def forward(
         self,
