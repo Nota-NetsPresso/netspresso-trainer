@@ -35,7 +35,7 @@ class GeneralizedRCNN(nn.Module):
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = self.rpn(features)
-        roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0))
+        roi_features = self.roi_heads(features, rpn_features['boxes'], [self.image_size] * features["0"].size(0))
 
         out_features = DetectionModelOutput()
         out_features.update(rpn_features)

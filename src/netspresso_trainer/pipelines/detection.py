@@ -38,7 +38,7 @@ class DetectionPipeline(BasePipeline):
         rpn_features = head.rpn(features)
 
         # generate proposals for training
-        proposals = rpn_features['proposals']
+        proposals = rpn_features['boxes']
         proposals, matched_idxs, labels, regression_targets = head.roi_heads.select_training_samples(proposals, targets)
 
         # forward to roi head
