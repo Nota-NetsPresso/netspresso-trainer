@@ -29,14 +29,13 @@ class GeneralizedRCNN(nn.Module):
 
         self.image_size = IMAGE_SIZE  # TODO: get from configuration
 
-    def forward(self, features: FXTensorListType, targets) -> DetectionModelOutput:
-        assert targets is not None
+    def forward(self, features: FXTensorListType) -> DetectionModelOutput:
         if self.neck:
             features = self.neck(features)
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = self.rpn(features)
-        roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0), targets=targets)
+        roi_features = self.roi_heads(features, rpn_features['proposals'], [self.image_size] * features["0"].size(0))
 
         out_features = DetectionModelOutput()
         out_features.update(rpn_features)
