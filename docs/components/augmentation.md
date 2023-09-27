@@ -70,7 +70,7 @@ Our team hopes that the learning process with NetsPresso Trainer will become a m
 Please run the gradio demo with following command:
 
 ```
-python demo/gradio_augmentation.py
+bash scripts/run_simulator_augmentation.sh
 ```
 
 #### Hugging Face Spaces
