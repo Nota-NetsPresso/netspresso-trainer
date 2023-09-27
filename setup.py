@@ -26,7 +26,6 @@ setup(
     entry_points={
         "console_scripts": [
             "netspresso-train = netspresso_trainer.train:netspresso_train",
-            "netspresso-train-fx = netspresso_trainer.train:netspresso_train_fx",
         ],
     },
     classifiers=[

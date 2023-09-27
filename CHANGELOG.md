@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- No changes to highlight.
 
 ## Bug Fixes:
 
@@ -14,7 +14,28 @@ No changes to highlight.
 
 ## Other Changes:
 
+- No changes to highlight.
+
+# v0.0.8
+
+## New Features:
+
+- Add MobileNetV3 by `@illian01` in [PR 173](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/173)
+- Handling for fp16 fx model by `@illian01` in [PR 175](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/175)
+- Deploy Gradio simulators to Hugging Face Space by `@deepkyu` in [PR 181](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/181)
+
+## Bug Fixes:
+
 No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Removed `model_name` check in `create_transform_segmentation` function by `@illian01` in [Pr 176](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/176)
+- Combine entry point to `train.py` by `@illian01` in [Pr 180](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/180)
 
 # v0.0.7
 

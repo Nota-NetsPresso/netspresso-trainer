@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Type
 
 import torch.nn as nn
 
-from .backbones import efficientformer, mobilevit, resnet50, segformer, vit
+from .backbones import efficientformer, mobilenetv3_small, mobilevit, resnet50, segformer, vit
 from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import efficientformer_detection_head
@@ -11,6 +11,7 @@ from .heads.segmentation import all_mlp_decoder
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet50': resnet50,
+    'mobilenetv3_small': mobilenetv3_small,
     'segformer': segformer,
     'mobilevit': mobilevit,
     'vit': vit,
