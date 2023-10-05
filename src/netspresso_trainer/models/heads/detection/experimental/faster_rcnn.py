@@ -1,16 +1,6 @@
-import copy
-import warnings
-from collections import OrderedDict
-from functools import partial
-from typing import Dict, List, Optional, Tuple, Union, Callable
-
-import numpy as np
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch import Tensor
 
-from ....utils import DetectionModelOutput, FXTensorListType
 from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads, GeneralizedRCNN, MultiScaleRoIAlign
 from .fpn import FPN
 

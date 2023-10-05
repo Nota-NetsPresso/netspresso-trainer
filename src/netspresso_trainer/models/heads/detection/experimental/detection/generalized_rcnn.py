@@ -1,9 +1,7 @@
 """
 Implements the Generalized R-CNN framework
 """
-from typing import Dict, List, Optional, Tuple, Union
-
-from torch import Tensor, nn
+from torch import nn
 
 from .....utils import DetectionModelOutput, FXTensorListType
 

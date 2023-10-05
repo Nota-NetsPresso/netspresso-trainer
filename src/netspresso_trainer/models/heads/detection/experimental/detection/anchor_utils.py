@@ -1,5 +1,4 @@
-import math
-from typing import List, Optional
+from typing import List
 
 import torch
 from torch import Tensor, nn
