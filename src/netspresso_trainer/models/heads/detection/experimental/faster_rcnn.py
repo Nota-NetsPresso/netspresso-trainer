@@ -5,21 +5,15 @@ from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads
 from .fpn import FPN
 
 
-def _default_anchorgen():
-    # anchor_sizes = ((32,), (64,), (128,), (256,), (512,))
-    anchor_sizes = ((64,), (128,), (256,), (512,))
-    aspect_ratios = ((0.5, 1.0, 2.0),) * len(anchor_sizes)
-    return AnchorGenerator(anchor_sizes, aspect_ratios)
-
-
 class FasterRCNN(GeneralizedRCNN):
     def __init__(
         self,
         num_classes,
         intermediate_features_dim,
+        # Anchor parameters
+        anchor_sizes=((64,), (128,), (256,), (512,)),
+        aspect_ratios=(0.5, 1.0, 2.0),
         # RPN parameters
-        rpn_anchor_generator=None,
-        rpn_head=None,
         rpn_pre_nms_top_n_train=2000,
         rpn_pre_nms_top_n_test=1000,
         rpn_post_nms_top_n_train=2000,
@@ -30,10 +24,11 @@ class FasterRCNN(GeneralizedRCNN):
         rpn_batch_size_per_image=256,
         rpn_positive_fraction=0.5,
         rpn_score_thresh=0.0,
+        # RoI parameters
+        roi_output_size=7,
+        roi_sampling_ratio=2,
+        roi_representation_size=1024,
         # Box parameters
-        box_roi_pool=None,
-        box_head=None,
-        box_predictor=None,
         box_score_thresh=0.05,
         box_nms_thresh=0.5,
         box_detections_per_img=100,
@@ -45,37 +40,14 @@ class FasterRCNN(GeneralizedRCNN):
         **kwargs,
     ):
 
-        # if not hasattr(backbone, "out_channels"):
-        #     raise ValueError(
-        #         "backbone should contain an attribute out_channels "
-        #         "specifying the number of output channels (assumed to be the "
-        #         "same for all the levels)"
-        #     )
-
-        if not isinstance(rpn_anchor_generator, (AnchorGenerator, type(None))):
-            raise TypeError(
-                f"rpn_anchor_generator should be of type AnchorGenerator or None instead of {type(rpn_anchor_generator)}"
-            )
-        if not isinstance(box_roi_pool, (MultiScaleRoIAlign, type(None))):
-            raise TypeError(
-                f"box_roi_pool should be of type MultiScaleRoIAlign or None instead of {type(box_roi_pool)}"
-            )
-
-        if num_classes is not None:
-            if box_predictor is not None:
-                raise ValueError("num_classes should be None when box_predictor is specified")
-        else:
-            if box_predictor is None:
-                raise ValueError("num_classes should not be None when box_predictor is not specified")
-
         neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=4)
 
         out_channels = intermediate_features_dim[-1]
 
-        if rpn_anchor_generator is None:
-            rpn_anchor_generator = _default_anchorgen()
-        if rpn_head is None:
-            rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
+        aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
+        rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+
+        rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
 
         rpn_pre_nms_top_n = {"training": rpn_pre_nms_top_n_train, "testing": rpn_pre_nms_top_n_test}
         rpn_post_nms_top_n = {"training": rpn_post_nms_top_n_train, "testing": rpn_post_nms_top_n_test}
@@ -93,17 +65,11 @@ class FasterRCNN(GeneralizedRCNN):
             score_thresh=rpn_score_thresh,
         )
 
-        if box_roi_pool is None:
-            box_roi_pool = MultiScaleRoIAlign(featmap_names=["0", "1", "2", "3"], output_size=7, sampling_ratio=2)
+        featmap_names = [str(i) for i in range(neck.num_outs)]
+        box_roi_pool = MultiScaleRoIAlign(featmap_names=featmap_names, output_size=roi_output_size, sampling_ratio=roi_sampling_ratio)
 
-        if box_head is None:
-            resolution = box_roi_pool.output_size[0]
-            representation_size = 1024
-            box_head = TwoMLPHead(out_channels * resolution**2, representation_size)
-
-        if box_predictor is None:
-            representation_size = 1024
-            box_predictor = FastRCNNPredictor(representation_size, num_classes)
+        box_head = TwoMLPHead(out_channels * roi_output_size**2, roi_representation_size)
+        box_predictor = FastRCNNPredictor(roi_representation_size, num_classes)
 
         roi_heads = RoIHeads(
             num_classes,
@@ -122,7 +88,6 @@ class FasterRCNN(GeneralizedRCNN):
         )
 
         super().__init__(neck, rpn, roi_heads)
-
 
 
 class TwoMLPHead(nn.Module):
@@ -173,4 +138,33 @@ class FastRCNNPredictor(nn.Module):
 
 
 def faster_rcnn(num_classes, intermediate_features_dim, **kwargs):
-    return FasterRCNN(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim)
+    configuration = {
+        # Anchor parameters
+        'anchor_sizes': ((64,), (128,), (256,), (512,)),
+        'aspect_ratios': (0.5, 1.0, 2.0),
+        # RPN parameters
+        'rpn_pre_nms_top_n_train': 2000,
+        'rpn_pre_nms_top_n_test': 1000,
+        'rpn_post_nms_top_n_train': 2000,
+        'rpn_post_nms_top_n_test': 1000,
+        'rpn_nms_thresh': 0.7,
+        'rpn_fg_iou_thresh': 0.7,
+        'rpn_bg_iou_thresh': 0.3,
+        'rpn_batch_size_per_image': 256,
+        'rpn_positive_fraction': 0.5,
+        'rpn_score_thresh': 0.0,
+        # RoI parameters
+        'roi_output_size': 7,
+        'roi_sampling_ratio': 2,
+        'roi_representation_size': 1024,
+        # Box parameters
+        'box_score_thresh': 0.05,
+        'box_nms_thresh': 0.5,
+        'box_detections_per_img': 100,
+        'box_fg_iou_thresh': 0.5,
+        'box_bg_iou_thresh': 0.5,
+        'box_batch_size_per_image': 512,
+        'box_positive_fraction': 0.25,
+        'bbox_reg_weights': None,
+    }
+    return FasterRCNN(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim, **configuration)
