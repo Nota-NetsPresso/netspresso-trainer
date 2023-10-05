@@ -10,6 +10,8 @@ class FasterRCNN(GeneralizedRCNN):
         self,
         num_classes,
         intermediate_features_dim,
+        # FPN parameters
+        fpn_num_outs=4,
         # Anchor parameters
         anchor_sizes=((64,), (128,), (256,), (512,)),
         aspect_ratios=(0.5, 1.0, 2.0),
@@ -37,8 +39,9 @@ class FasterRCNN(GeneralizedRCNN):
         bbox_reg_weights=None,
         **kwargs,
     ):
+        assert fpn_num_outs == len(anchor_sizes)
 
-        neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=4)
+        neck = FPN(in_channels=intermediate_features_dim, out_channels=intermediate_features_dim[-1], num_outs=fpn_num_outs)
 
         out_channels = intermediate_features_dim[-1]
 
@@ -134,6 +137,8 @@ class FastRCNNPredictor(nn.Module):
 
 def faster_rcnn(num_classes, intermediate_features_dim, **kwargs):
     configuration = {
+        # FPN parameters
+        'fpn_num_outs': 4,
         # Anchor parameters
         'anchor_sizes': ((64,), (128,), (256,), (512,)),
         'aspect_ratios': (0.5, 1.0, 2.0),
