@@ -14,10 +14,8 @@ class FasterRCNN(GeneralizedRCNN):
         anchor_sizes=((64,), (128,), (256,), (512,)),
         aspect_ratios=(0.5, 1.0, 2.0),
         # RPN parameters
-        rpn_pre_nms_top_n_train=2000,
-        rpn_pre_nms_top_n_test=1000,
-        rpn_post_nms_top_n_train=2000,
-        rpn_post_nms_top_n_test=1000,
+        rpn_pre_nms_top_n=2000,
+        rpn_post_nms_top_n=2000,
         rpn_nms_thresh=0.7,
         rpn_fg_iou_thresh=0.7,
         rpn_bg_iou_thresh=0.3,
@@ -48,9 +46,6 @@ class FasterRCNN(GeneralizedRCNN):
         rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
 
         rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
-
-        rpn_pre_nms_top_n = {"training": rpn_pre_nms_top_n_train, "testing": rpn_pre_nms_top_n_test}
-        rpn_post_nms_top_n = {"training": rpn_post_nms_top_n_train, "testing": rpn_post_nms_top_n_test}
 
         rpn = RegionProposalNetwork(
             rpn_anchor_generator,
@@ -143,10 +138,8 @@ def faster_rcnn(num_classes, intermediate_features_dim, **kwargs):
         'anchor_sizes': ((64,), (128,), (256,), (512,)),
         'aspect_ratios': (0.5, 1.0, 2.0),
         # RPN parameters
-        'rpn_pre_nms_top_n_train': 2000,
-        'rpn_pre_nms_top_n_test': 1000,
-        'rpn_post_nms_top_n_train': 2000,
-        'rpn_post_nms_top_n_test': 1000,
+        'rpn_pre_nms_top_n': 2000,
+        'rpn_post_nms_top_n': 2000,
         'rpn_nms_thresh': 0.7,
         'rpn_fg_iou_thresh': 0.7,
         'rpn_bg_iou_thresh': 0.3,

@@ -183,14 +183,10 @@ class RegionProposalNetwork(torch.nn.Module):
         self.image_size = IMAGE_SIZE  # TODO: get from configuration
 
     def pre_nms_top_n(self) -> int:
-        if self.training:
-            return self._pre_nms_top_n["training"]
-        return self._pre_nms_top_n["testing"]
+        return self._pre_nms_top_n
 
     def post_nms_top_n(self) -> int:
-        if self.training:
-            return self._post_nms_top_n["training"]
-        return self._post_nms_top_n["testing"]
+        return self._post_nms_top_n
 
     def _get_top_n_idx(self, objectness: Tensor, num_anchors_per_level: List[int]) -> Tensor:
         r = []
