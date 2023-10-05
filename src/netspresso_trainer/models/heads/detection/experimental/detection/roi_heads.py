@@ -17,6 +17,7 @@ class RoIHeads(nn.Module):
 
     def __init__(
         self,
+        num_classes,
         box_roi_pool,
         box_head,
         box_predictor,
@@ -39,6 +40,8 @@ class RoIHeads(nn.Module):
         keypoint_predictor=None,
     ):
         super().__init__()
+
+        self.class_ids = list(range(num_classes))
 
         self.box_similarity = box_ops.box_iou
         # assign ground-truth boxes for each proposal
@@ -195,7 +198,8 @@ class RoIHeads(nn.Module):
         num_classes = class_logits.shape[-1]
 
         boxes_per_image = [boxes_in_image.shape[0] for boxes_in_image in proposals]
-        pred_boxes = self.box_coder.decode(box_regression, proposals)
+        pred_boxes = self.box_coder.decode_single(box_regression, torch.cat(proposals, dim=0))
+        pred_boxes = pred_boxes.reshape(box_regression.shape[0], -1, 4)
 
         pred_scores = F.softmax(class_logits, -1)
 
@@ -205,8 +209,50 @@ class RoIHeads(nn.Module):
         all_boxes = []
         all_scores = []
         all_labels = []
+
+        # Apply Non-maximum suppression
+        # Now, it only implemented on batch size 1
+        boxes, scores, image_shape = pred_boxes_list[0], pred_scores_list[0], image_shapes
+
+        boxes = det_utils.clip_boxes_to_image(boxes, image_shape)
+
+        # create labels for each prediction
+        labels = (torch.ones_like(class_logits[0, :], dtype=torch.int64).cumsum(0) - 1).to(device)
+        labels = labels.view(1, -1).expand_as(scores)
+
+        # remove predictions with the background label
+        boxes = boxes[:, 1:]
+        scores = scores[:, 1:]
+        labels = labels[:, 1:]
+
+        # batch everything, by making every class prediction be a separate instance
+        boxes = boxes.reshape(-1, 4)
+        scores = scores.reshape(-1)
+        labels = labels.reshape(-1)
+
+        # remove low scoring boxes
+        inds = torch.where(scores > self.score_thresh)[0]
+        boxes, scores, labels = boxes[inds], scores[inds], labels[inds]
+
+        # remove empty boxes
+        keep = box_ops.remove_small_boxes(boxes, min_size=1e-2)
+        boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
+
+        # non-maximum suppression, independently done per class
+        keep = det_utils._batched_nms_vanilla(boxes, scores, labels, self.nms_thresh, self.class_ids)
+        # keep only topk scoring predictions
+        keep = keep[: self.detections_per_img]
+        boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
+
+        all_boxes.append(boxes)
+        all_scores.append(scores)
+        all_labels.append(labels)
+
+        # TODO
+        # Apply NMS on various batch
+        '''
         for boxes, scores, image_shape in zip(pred_boxes_list, pred_scores_list, image_shapes):
-            boxes = box_ops.clip_boxes_to_image(boxes, image_shape)
+            boxes = det_utils.clip_boxes_to_image(boxes, image_shape)
 
             # create labels for each prediction
             labels = torch.arange(num_classes, device=device)
@@ -239,6 +285,7 @@ class RoIHeads(nn.Module):
             all_boxes.append(boxes)
             all_scores.append(scores)
             all_labels.append(labels)
+        '''
 
         return all_boxes, all_scores, all_labels
 

@@ -42,7 +42,7 @@ class DetectionPipeline(BasePipeline):
         proposals, matched_idxs, labels, regression_targets = head.roi_heads.select_training_samples(proposals, targets)
 
         # forward to roi head
-        roi_features = head.roi_heads(features, proposals, [head.image_size] * features["0"].size(0))
+        roi_features = head.roi_heads(features, proposals, head.image_size)
 
         # set out
         out = DetectionModelOutput()
@@ -70,7 +70,8 @@ class DetectionPipeline(BasePipeline):
                    for box, label in zip(bboxes, labels)]
 
         out = self.model(images)
-        self.loss_factory.calc(out, target=targets, phase='valid')
+        # TODO: compute loss for validation
+        #self.loss_factory.calc(out, target=targets, phase='valid')
 
         # TODO: metric update
         # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')

@@ -5,7 +5,9 @@ from typing import Dict, List, Optional, Tuple
 import torch
 from torch import Tensor, nn
 from torch.nn import functional as F
-from torchvision.ops import FrozenBatchNorm2d, complete_box_iou_loss, distance_box_iou_loss, generalized_box_iou_loss
+from torchvision.ops import FrozenBatchNorm2d, complete_box_iou_loss, distance_box_iou_loss, generalized_box_iou_loss, nms
+import torchvision
+from torchvision.utils import _log_api_usage_once
 
 
 class BalancedPositiveNegativeSampler:
@@ -213,8 +215,8 @@ class BoxCoder:
         pred_h = torch.exp(dh) * heights[:, None]
 
         # Distance from center to box's corner.
-        c_to_c_h = torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
-        c_to_c_w = torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        c_to_c_h = torch.tensor(0.5).to(pred_ctr_y.dtype).to(pred_h.device) * pred_h
+        c_to_c_w = torch.tensor(0.5).to(pred_ctr_x.dtype).to(pred_w.device) * pred_w
 
         pred_boxes1 = pred_ctr_x - c_to_c_w
         pred_boxes2 = pred_ctr_y - c_to_c_h
@@ -514,7 +516,7 @@ def _topk_min(input: Tensor, orig_kval: int, axis: int) -> int:
         min_kval (int): Appropriately selected k-value.
     """
     if not torch.jit.is_tracing():
-        return min(orig_kval, input.size(axis))
+        return (orig_kval >= input.size(axis)) * input.size(axis) + (orig_kval < input.size(axis)) * orig_kval
     axis_dim_val = torch._shape_as_tensor(input)[axis].unsqueeze(0)
     min_kval = torch.min(torch.cat((torch.tensor([orig_kval], dtype=axis_dim_val.dtype), axis_dim_val), 0))
     return _fake_cast_onnx(min_kval)
@@ -546,3 +548,70 @@ def _box_loss(
             return distance_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
         # otherwise giou
         return generalized_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
+
+
+def clip_boxes_to_image(boxes: Tensor, size: Tuple[int, int]) -> Tensor:
+    """
+    Clip boxes so that they lie inside an image of size `size`.
+
+    Args:
+        boxes (Tensor[N, 4]): boxes in ``(x1, y1, x2, y2)`` format
+            with ``0 <= x1 < x2`` and ``0 <= y1 < y2``.
+        size (Tuple[height, width]): size of the image
+
+    Returns:
+        Tensor[N, 4]: clipped boxes
+    """
+    if not torch.jit.is_scripting() and not torch.jit.is_tracing():
+        _log_api_usage_once(clip_boxes_to_image)
+    dim = boxes.dim()
+    boxes_x = boxes[..., 0::2]
+    boxes_y = boxes[..., 1::2]
+    height, width = size
+
+    if torchvision._is_tracing():
+        boxes_x = torch.max(boxes_x, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
+        boxes_x = torch.min(boxes_x, torch.tensor(width, dtype=boxes.dtype, device=boxes.device))
+        boxes_y = torch.max(boxes_y, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
+        boxes_y = torch.min(boxes_y, torch.tensor(height, dtype=boxes.dtype, device=boxes.device))
+    else:
+        boxes_x = boxes_x.clamp(min=0, max=width)
+        boxes_y = boxes_y.clamp(min=0, max=height)
+
+    clipped_boxes = torch.stack((boxes_x, boxes_y), dim=-1)
+    return clipped_boxes.reshape(boxes.shape)
+
+
+@torch.jit._script_if_tracing
+def _batched_nms_coordinate_trick(
+    boxes: Tensor,
+    scores: Tensor,
+    idxs: Tensor,
+    iou_threshold: float,
+) -> Tensor:
+    # strategy: in order to perform NMS independently per class,
+    # we add an offset to all the boxes. The offset is dependent
+    # only on the class idx, and is large enough so that boxes
+    # from different classes do not overlap
+    max_coordinate = boxes.max()
+    offsets = idxs.to(boxes) * (max_coordinate + torch.tensor(1).to(boxes))
+    boxes_for_nms = boxes + offsets[:, None]
+    keep = nms(boxes_for_nms, scores, iou_threshold)
+    return keep
+
+@torch.jit._script_if_tracing
+def _batched_nms_vanilla(
+    boxes: Tensor,
+    scores: Tensor,
+    idxs: Tensor,
+    iou_threshold: float,
+    class_ids: List[int],
+) -> Tensor:
+    # Based on Detectron2 implementation, just manually call nms() on each class independently
+    keep_indices = list()
+    for class_id in class_ids:
+        curr_indices = torch.where(idxs == class_id)[0]
+        curr_keep_indices = nms(boxes[curr_indices], scores[curr_indices], iou_threshold)
+        keep_indices.append(curr_indices[curr_keep_indices])
+    keep_indices = torch.cat(keep_indices, dim=0)
+    return keep_indices[scores[keep_indices].sort(descending=True)[1]]

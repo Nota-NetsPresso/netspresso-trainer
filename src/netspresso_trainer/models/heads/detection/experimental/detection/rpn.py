@@ -1,3 +1,4 @@
+from itertools import accumulate
 from typing import Dict, List, Tuple
 
 import torch
@@ -194,7 +195,12 @@ class RegionProposalNetwork(torch.nn.Module):
     def _get_top_n_idx(self, objectness: Tensor, num_anchors_per_level: List[int]) -> Tensor:
         r = []
         offset = 0
-        for ob in objectness.split(num_anchors_per_level, 1):
+
+        start = list(accumulate([0] + num_anchors_per_level[:-1]))
+        end = list(accumulate(num_anchors_per_level))
+
+        obs = [objectness[:, s:e] for s, e in zip(start, end)]
+        for ob in obs:
             num_anchors = ob.shape[1]
             pre_nms_top_n = det_utils._topk_min(ob, self.pre_nms_top_n(), 1)
             _, top_n_idx = ob.topk(pre_nms_top_n, dim=1)
@@ -208,6 +214,7 @@ class RegionProposalNetwork(torch.nn.Module):
         objectness: Tensor,
         image_shapes: List[Tuple[int, int]],
         num_anchors_per_level: List[int],
+        levels_template: List[Tensor],
     ) -> Tuple[List[Tensor], List[Tensor]]:
 
         num_images = proposals.shape[0]
@@ -216,16 +223,15 @@ class RegionProposalNetwork(torch.nn.Module):
         objectness = objectness.detach()
         objectness = objectness.reshape(num_images, -1)
 
-        levels = [
-            torch.full((n,), idx, dtype=torch.int64, device=device) for idx, n in enumerate(num_anchors_per_level)
-        ]
+        levels = [torch.zeros_like(template).to(torch.int64).to(device) + idx for idx, template in enumerate(levels_template)]
         levels = torch.cat(levels, 0)
         levels = levels.reshape(1, -1).expand_as(objectness)
 
         # select top_n boxes independently per level before applying nms
         top_n_idx = self._get_top_n_idx(objectness, num_anchors_per_level)
 
-        image_range = torch.arange(num_images, device=device)
+        #image_range = torch.arange(num_images, device=device)
+        image_range = (torch.ones_like(proposals[:, 0, 0]).cumsum(0) - 1).to(torch.int64).to(device)
         batch_idx = image_range[:, None]
 
         objectness = objectness[batch_idx, top_n_idx]
@@ -236,6 +242,34 @@ class RegionProposalNetwork(torch.nn.Module):
 
         final_boxes = []
         final_scores = []
+        
+        # Apply Non-maximum suppression
+        # Now, it only implemented on batch size 1
+        boxes, scores, lvl, img_shape = proposals[0], objectness_prob[0], levels[0], image_shapes[0]
+        boxes = det_utils.clip_boxes_to_image(boxes, img_shape)
+
+        # remove small boxes
+        keep = box_ops.remove_small_boxes(boxes, self.min_size)
+        boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
+
+        # remove low scoring boxes
+        # use >= for Backwards compatibility
+        keep = torch.where(scores >= self.score_thresh)[0]
+        boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
+
+        # non-maximum suppression, independently done per level
+        keep = det_utils._batched_nms_coordinate_trick(boxes, scores, lvl, self.nms_thresh)
+
+        # keep only topk scoring predictions
+        keep = keep[: self.post_nms_top_n()]
+        boxes, scores = boxes[keep], scores[keep]
+
+        final_boxes.append(boxes)
+        final_scores.append(scores)
+
+        # TODO
+        # Apply NMS on various batch
+        '''
         for boxes, scores, lvl, img_shape in zip(proposals, objectness_prob, levels, image_shapes):
             boxes = box_ops.clip_boxes_to_image(boxes, img_shape)
 
@@ -257,6 +291,7 @@ class RegionProposalNetwork(torch.nn.Module):
 
             final_boxes.append(boxes)
             final_scores.append(scores)
+        '''
         return final_boxes, final_scores
 
     def forward(
@@ -286,16 +321,26 @@ class RegionProposalNetwork(torch.nn.Module):
         objectness, pred_bbox_deltas = self.head(features)
         anchors = self.anchor_generator(features)
 
-        num_images = len(anchors)
-        num_anchors_per_level_shape_tensors = [o[0].shape for o in objectness]
-        num_anchors_per_level = [s[0] * s[1] * s[2] for s in num_anchors_per_level_shape_tensors]
+        num_images = features[0].shape[0]
+        num_anchors_per_level = [a.shape[0] for a in anchors]
         objectness, pred_bbox_deltas = concat_box_prediction_layers(objectness, pred_bbox_deltas)
+
+        levels_template = [a.T[0, :] for a in anchors]
+        anchors = torch.cat(anchors, dim=0)
         # apply pred_bbox_deltas to anchors to obtain the decoded proposals
         # note that we detach the deltas because Faster R-CNN do not backprop through
         # the proposals
-        proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
+        
+        # self.box_coder.decode_single(pred_bbox_deltas, torch.cat(anchors, dim=0).unsqueeze(dim=0).tile(8, 1, 1).view(-1, 4)).shape
+        pred_bbox_deltas = pred_bbox_deltas.view(num_images, -1, 4)
+        anchors = anchors.expand_as(pred_bbox_deltas).contiguous()
+
+        proposals = self.box_coder.decode_single(pred_bbox_deltas.view(-1, 4), anchors.view(-1, 4))
+
+        #proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
-        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features[0]), num_anchors_per_level)
+        objectness = objectness.view(num_images, -1, 1)
+        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * features[0].shape[0], num_anchors_per_level, levels_template)
 
         return {
             'boxes': boxes,

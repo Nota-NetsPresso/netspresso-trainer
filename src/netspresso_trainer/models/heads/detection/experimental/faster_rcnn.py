@@ -9,10 +9,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
-from torchvision.ops import MultiScaleRoIAlign
 
 from ....utils import DetectionModelOutput, FXTensorListType
-from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads, GeneralizedRCNN
+from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads, GeneralizedRCNN, MultiScaleRoIAlign
 from .fpn import FPN
 
 
@@ -117,6 +116,7 @@ class FasterRCNN(GeneralizedRCNN):
             box_predictor = FastRCNNPredictor(representation_size, num_classes)
 
         roi_heads = RoIHeads(
+            num_classes,
             # Box
             box_roi_pool,
             box_head,
@@ -175,11 +175,6 @@ class FastRCNNPredictor(nn.Module):
         self.bbox_pred = nn.Linear(in_channels, num_classes * 4)
 
     def forward(self, x):
-        if x.dim() == 4:
-            torch._assert(
-                list(x.shape[2:]) == [1, 1],
-                f"x has the wrong shape, expecting the last two dimensions to be [1,1] instead of {list(x.shape[2:])}",
-            )
         x = x.flatten(start_dim=1)
         scores = self.cls_score(x)
         bbox_deltas = self.bbox_pred(x)
