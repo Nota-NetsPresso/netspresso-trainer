@@ -11,7 +11,6 @@ from . import _utils as det_utils
 # Import AnchorGenerator to keep compatibility.
 from .anchor_utils import AnchorGenerator  # noqa: 401
 
-IMAGE_SIZE = (512, 512)
 
 class RPNHead(nn.Module):
     """
@@ -179,8 +178,6 @@ class RegionProposalNetwork(torch.nn.Module):
         self.nms_thresh = nms_thresh
         self.score_thresh = score_thresh
         self.min_size = 1e-3
-        
-        self.image_size = IMAGE_SIZE  # TODO: get from configuration
 
     def pre_nms_top_n(self) -> int:
         return self._pre_nms_top_n
@@ -294,6 +291,7 @@ class RegionProposalNetwork(torch.nn.Module):
         self,
         # images: ImageList,
         features: Dict[str, Tensor],
+        image_size: Tuple[int, int]
     ) -> Tuple[List[Tensor], Dict[str, Tensor]]:
 
         """
@@ -336,7 +334,7 @@ class RegionProposalNetwork(torch.nn.Module):
         #proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
         objectness = objectness.view(num_images, -1, 1)
-        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * features[0].shape[0], num_anchors_per_level, levels_template)
+        boxes, scores = self.filter_proposals(proposals, objectness, [image_size] * features[0].shape[0], num_anchors_per_level, levels_template)
 
         return {
             'boxes': boxes,

@@ -293,7 +293,7 @@ class RoIHeads(nn.Module):
         self,
         features,  # type: Dict[str, Tensor]
         proposals,  # type: List[Tensor]
-        image_shapes,  # type: List[Tuple[int, int]]
+        image_shapes,  # type: Tuple[int, int]
     ):
         # type: (...) -> Tuple[List[Dict[str, Tensor]], Dict[str, Tensor]]
         """

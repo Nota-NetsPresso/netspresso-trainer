@@ -4,6 +4,8 @@ import torch.nn.functional as F
 from .detection import AnchorGenerator, RPNHead, RegionProposalNetwork, RoIHeads, GeneralizedRCNN, MultiScaleRoIAlign
 from .fpn import FPN
 
+IMAGE_SIZE = (512, 512) # TODO: Get from configuration
+
 
 class FasterRCNN(GeneralizedRCNN):
     def __init__(
@@ -46,7 +48,7 @@ class FasterRCNN(GeneralizedRCNN):
         out_channels = intermediate_features_dim[-1]
 
         aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
-        rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios)
+        rpn_anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios, IMAGE_SIZE)
 
         rpn_head = RPNHead(out_channels, rpn_anchor_generator.num_anchors_per_location()[0])
 
@@ -85,7 +87,7 @@ class FasterRCNN(GeneralizedRCNN):
             box_detections_per_img,
         )
 
-        super().__init__(neck, rpn, roi_heads)
+        super().__init__(neck, rpn, roi_heads, IMAGE_SIZE)
 
 
 class TwoMLPHead(nn.Module):

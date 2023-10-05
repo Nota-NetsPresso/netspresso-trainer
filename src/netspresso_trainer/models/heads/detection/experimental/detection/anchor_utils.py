@@ -3,7 +3,6 @@ from typing import List
 import torch
 from torch import Tensor, nn
 
-IMAGE_SIZE = (512, 512)
 
 class AnchorGenerator(nn.Module):
     """
@@ -34,6 +33,7 @@ class AnchorGenerator(nn.Module):
         self,
         sizes=((128, 256, 512),),
         aspect_ratios=((0.5, 1.0, 2.0),),
+        image_size=(512, 512),
     ):
         super().__init__()
 
@@ -49,7 +49,7 @@ class AnchorGenerator(nn.Module):
             self.generate_anchors(size, aspect_ratio) for size, aspect_ratio in zip(sizes, aspect_ratios)
         ]
         
-        self.image_size = IMAGE_SIZE # TODO: get from configuration
+        self.image_size = image_size
 
     # TODO: https://github.com/pytorch/pytorch/issues/26792
     # For every (aspect_ratios, scales) combination, output a zero-centered anchor with those values.

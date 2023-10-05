@@ -35,7 +35,7 @@ class DetectionPipeline(BasePipeline):
             features = head.neck(features)
 
         features = {str(k): v for k, v in enumerate(features)}
-        rpn_features = head.rpn(features)
+        rpn_features = head.rpn(features, head.image_size)
 
         # generate proposals for training
         proposals = rpn_features['boxes']
