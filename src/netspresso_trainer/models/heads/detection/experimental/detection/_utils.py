@@ -402,29 +402,12 @@ def clip_boxes_to_image(boxes: Tensor, size: Tuple[int, int]) -> Tensor:
 
 
 @torch.jit._script_if_tracing
-def _batched_nms_coordinate_trick(
-    boxes: Tensor,
-    scores: Tensor,
-    idxs: Tensor,
-    iou_threshold: float,
-) -> Tensor:
-    # strategy: in order to perform NMS independently per class,
-    # we add an offset to all the boxes. The offset is dependent
-    # only on the class idx, and is large enough so that boxes
-    # from different classes do not overlap
-    max_coordinate = boxes.max()
-    offsets = idxs.to(boxes) * (max_coordinate + torch.tensor(1).to(boxes))
-    boxes_for_nms = boxes + offsets[:, None]
-    keep = nms(boxes_for_nms, scores, iou_threshold)
-    return keep
-
-@torch.jit._script_if_tracing
 def _batched_nms_vanilla(
     boxes: Tensor,
     scores: Tensor,
     idxs: Tensor,
     iou_threshold: float,
-    class_ids: List[int],
+    class_ids: List[int], # class_ids is unique of idxs
 ) -> Tensor:
     # Based on Detectron2 implementation, just manually call nms() on each class independently
     keep_indices = list()

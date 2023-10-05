@@ -205,7 +205,7 @@ class RegionProposalNetwork(torch.nn.Module):
         self,
         proposals: Tensor,
         objectness: Tensor,
-        image_shapes: List[Tuple[int, int]],
+        image_shapes: Tuple[int, int],
         num_anchors_per_level: List[int],
         levels_template: List[Tensor],
     ) -> Tuple[List[Tensor], List[Tensor]]:
@@ -238,7 +238,7 @@ class RegionProposalNetwork(torch.nn.Module):
         
         # Apply Non-maximum suppression
         # Now, it only implemented on batch size 1
-        boxes, scores, lvl, img_shape = proposals[0], objectness_prob[0], levels[0], image_shapes[0]
+        boxes, scores, lvl, img_shape = proposals[0], objectness_prob[0], levels[0], image_shapes
         boxes = det_utils.clip_boxes_to_image(boxes, img_shape)
 
         # remove small boxes
@@ -251,7 +251,7 @@ class RegionProposalNetwork(torch.nn.Module):
         boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
 
         # non-maximum suppression, independently done per level
-        keep = det_utils._batched_nms_coordinate_trick(boxes, scores, lvl, self.nms_thresh)
+        keep = det_utils._batched_nms_vanilla(boxes, scores, lvl, self.nms_thresh, list(range(len(num_anchors_per_level))))
 
         # keep only topk scoring predictions
         keep = keep[: self.post_nms_top_n()]
@@ -334,7 +334,7 @@ class RegionProposalNetwork(torch.nn.Module):
         #proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
         objectness = objectness.view(num_images, -1, 1)
-        boxes, scores = self.filter_proposals(proposals, objectness, [image_size] * features[0].shape[0], num_anchors_per_level, levels_template)
+        boxes, scores = self.filter_proposals(proposals, objectness, image_size, num_anchors_per_level, levels_template)
 
         return {
             'boxes': boxes,
