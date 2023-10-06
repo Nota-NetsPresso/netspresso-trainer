@@ -46,7 +46,7 @@ By copying the training configuration into the simulator, users can see how the 
 Please run the gradio demo with following command:
 
 ```
-python demo/gradio_lr_scheduler.py
+bash scripts/run_simulator_lr_scheduler.sh
 ```
 
 #### Hugging Face Spaces
