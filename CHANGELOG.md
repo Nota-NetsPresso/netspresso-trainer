@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-- No changes to highlight.
+- Refactoring models/op module by `@illian01` in [PR 189](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/189)
 
 # v0.0.8
 
