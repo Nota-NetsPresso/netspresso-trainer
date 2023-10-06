@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
-from .base import BasePipeline
 from ..models.utils import DetectionModelOutput
+from .base import BasePipeline
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -66,8 +66,8 @@ class DetectionPipeline(BasePipeline):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
-                   for box, label in zip(bboxes, labels)]
+        #targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+        #           for box, label in zip(bboxes, labels)]
 
         out = self.model(images)
         # TODO: compute loss for validation
