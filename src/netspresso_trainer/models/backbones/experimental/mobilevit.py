@@ -13,8 +13,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
-from ...op.ml_cvnets import InvertedResidual
-from ...op.custom import ConvLayer, GlobalPool
+from ...op.custom import ConvLayer, GlobalPool, InvertedResidual
 from ...utils import BackboneOutput, FXTensorType
 
 __all__ = ['mobilevit']
@@ -293,12 +292,13 @@ class MobileViTEncoder(MetaFormerEncoder):
     def _make_inverted_residual_blocks(self, num_blocks, in_channels, out_channels, stride, expand_ratio):
         blocks = [
             InvertedResidual(
-                opts=None,
                 in_channels=in_channels if block_idx == 0 else out_channels,
+                hidden_channels=in_channels*expand_ratio,
                 out_channels=out_channels,
+                kernel_size=3,
                 stride=stride if block_idx == 0 else 1,
-                expand_ratio=expand_ratio,
-                dilation=1
+                dilation=1,
+                act_type='silu',
             ) for block_idx in range(num_blocks)
         ]
         return nn.Sequential(*blocks)
@@ -310,12 +310,13 @@ class MobileViTEncoder(MetaFormerEncoder):
         if stride == 2:
             blocks.append(
                 InvertedResidual(
-                    opts=None,
                     in_channels=in_channels,
+                    hidden_channels=in_channels*expand_ratio,
                     out_channels=out_channels,
+                    kernel_size=3,
                     stride=stride if not dilate else 1,
-                    expand_ratio=expand_ratio,
-                    dilation=self.dilation
+                    dilation=self.dilation,
+                    act_type='silu',
                 )
             )
             if dilate:
