@@ -16,8 +16,7 @@ from ...op.base_metaformer import (
     MetaFormerEncoder,
     MultiHeadAttention,
 )
-from ...op.ml_cvnets import SinusoidalPositionalEncoding
-from ...op.custom import ConvLayer
+from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
