@@ -14,29 +14,8 @@ from torch import Size, Tensor
 # from .base_layer import BaseLayer
 # from .normalization_layers import get_normalization_layer
 # from .non_linear_layers import get_activation_fn
+from .custom import make_divisible
 
-def make_divisible(
-    v: Union[float, int],
-    divisor: Optional[int] = 8,
-    min_value: Optional[Union[float, int]] = None,
-) -> Union[float, int]:
-    """
-    This function is taken from the original tf repo.
-    It ensures that all layers have a channel number that is divisible by 8
-    It can be seen here:
-    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
-    :param v:
-    :param divisor:
-    :param min_value:
-    :return:
-    """
-    if min_value is None:
-        min_value = divisor
-    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
-    # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
 
 @torch.fx.wrap
 def tensor_slice(tensor: Tensor, dim, index):
