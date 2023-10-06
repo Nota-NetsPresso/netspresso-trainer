@@ -13,8 +13,8 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
-from ...op.ml_cvnets import GlobalPool, InvertedResidual
-from ...op.custom import ConvLayer
+from ...op.ml_cvnets import InvertedResidual
+from ...op.custom import ConvLayer, GlobalPool
 from ...utils import BackboneOutput, FXTensorType
 
 __all__ = ['mobilevit']
