@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-- No changes to highlight.
+- Fix Faster R-CNN detection head by `@illian01` in [PR 184](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/184)
 
 # v0.0.8
 
