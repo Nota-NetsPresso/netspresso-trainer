@@ -13,7 +13,7 @@ import torch.nn.functional as F
 from torch import Tensor
 
 from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
-from ...op.ml_cvnets import ConvLayer, GlobalPool, InvertedResidual
+from ...op.custom import ConvLayer, GlobalPool, InvertedResidual
 from ...utils import BackboneOutput, FXTensorType
 
 __all__ = ['mobilevit']
@@ -25,13 +25,13 @@ class MobileViTEmbeddings(nn.Module):
         
         image_channels = 3  # {RGB}
         self.conv = ConvLayer(
-            opts=None,
             in_channels=image_channels,
             out_channels=hidden_size,
             kernel_size=3,
             stride=2,
             use_norm=True,
             use_act=True,
+            act_type='silu',
         )
     
     def forward(self, x):
@@ -62,10 +62,10 @@ class MobileViTBlock(nn.Module):
         self.patch_area = self.patch_h * self.patch_w
         
         self.local_rep = nn.Sequential(*[
-            ConvLayer(opts=None, in_channels=in_channels, out_channels=in_channels,
+            ConvLayer(in_channels=in_channels, out_channels=in_channels,
                       kernel_size=local_kernel_size, stride=1, 
-                      use_norm=True, use_act=True),
-            ConvLayer(opts=None, in_channels=in_channels, out_channels=hidden_size,
+                      use_norm=True, use_act=True, act_type='silu'),
+            ConvLayer(in_channels=in_channels, out_channels=hidden_size,
                       kernel_size=1, stride=1,
                       use_norm=False, use_act=False)
         ])
@@ -84,15 +84,15 @@ class MobileViTBlock(nn.Module):
         global_rep_blocks.append(nn.LayerNorm(normalized_shape=hidden_size))
         self.global_rep = nn.Sequential(*global_rep_blocks)
         
-        self.proj = ConvLayer(opts=None, in_channels=hidden_size, out_channels=in_channels,
+        self.proj = ConvLayer(in_channels=hidden_size, out_channels=in_channels,
                               kernel_size=1, stride=1,
-                              use_norm=True, use_act=True)
+                              use_norm=True, use_act=True, act_type='silu')
         
         self.use_fusion_layer = use_fusion_layer
         if self.use_fusion_layer:
-            self.fusion = ConvLayer(opts=None, in_channels=in_channels * 2, out_channels=in_channels,
+            self.fusion = ConvLayer(in_channels=in_channels * 2, out_channels=in_channels,
                                     kernel_size=local_kernel_size, stride=1,
-                                    use_norm=True, use_act=True)
+                                    use_norm=True, use_act=True, act_type='silu')
         
     def unfolding(self, feature_map: Tensor) -> Tuple[Tensor, Dict]:
         batch_size, in_channels, orig_h, orig_w = feature_map.size()
@@ -292,12 +292,13 @@ class MobileViTEncoder(MetaFormerEncoder):
     def _make_inverted_residual_blocks(self, num_blocks, in_channels, out_channels, stride, expand_ratio):
         blocks = [
             InvertedResidual(
-                opts=None,
                 in_channels=in_channels if block_idx == 0 else out_channels,
+                hidden_channels=in_channels*expand_ratio,
                 out_channels=out_channels,
+                kernel_size=3,
                 stride=stride if block_idx == 0 else 1,
-                expand_ratio=expand_ratio,
-                dilation=1
+                dilation=1,
+                act_type='silu',
             ) for block_idx in range(num_blocks)
         ]
         return nn.Sequential(*blocks)
@@ -309,12 +310,13 @@ class MobileViTEncoder(MetaFormerEncoder):
         if stride == 2:
             blocks.append(
                 InvertedResidual(
-                    opts=None,
                     in_channels=in_channels,
+                    hidden_channels=in_channels*expand_ratio,
                     out_channels=out_channels,
+                    kernel_size=3,
                     stride=stride if not dilate else 1,
-                    expand_ratio=expand_ratio,
-                    dilation=self.dilation
+                    dilation=self.dilation,
+                    act_type='silu',
                 )
             )
             if dilate:
@@ -363,9 +365,9 @@ class MobileViT(MetaFormer):
         self.encoder = MobileViTEncoder(out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
                                         patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
         
-        self.conv_1x1_exp = ConvLayer(opts=None, in_channels=out_channels[-1], out_channels=exp_channels,
+        self.conv_1x1_exp = ConvLayer(in_channels=out_channels[-1], out_channels=exp_channels,
                                       kernel_size=1, stride=1,
-                                      use_act=True, use_norm=True)
+                                      use_act=True, use_norm=True, act_type='silu')
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
         
         self._feature_dim = exp_channels
