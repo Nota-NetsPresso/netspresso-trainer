@@ -1,11 +1,11 @@
 import math
-from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
-from torch import Tensor, nn
-from torch.nn import functional as F
-from torchvision.ops import FrozenBatchNorm2d, complete_box_iou_loss, distance_box_iou_loss, generalized_box_iou_loss
+from torch import Tensor
+from torchvision.ops import nms
+import torchvision
+from torchvision.utils import _log_api_usage_once
 
 
 class BalancedPositiveNegativeSampler:
@@ -213,101 +213,14 @@ class BoxCoder:
         pred_h = torch.exp(dh) * heights[:, None]
 
         # Distance from center to box's corner.
-        c_to_c_h = torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
-        c_to_c_w = torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        c_to_c_h = torch.tensor(0.5).to(pred_ctr_y.dtype).to(pred_h.device) * pred_h
+        c_to_c_w = torch.tensor(0.5).to(pred_ctr_x.dtype).to(pred_w.device) * pred_w
 
         pred_boxes1 = pred_ctr_x - c_to_c_w
         pred_boxes2 = pred_ctr_y - c_to_c_h
         pred_boxes3 = pred_ctr_x + c_to_c_w
         pred_boxes4 = pred_ctr_y + c_to_c_h
         pred_boxes = torch.stack((pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=2).flatten(1)
-        return pred_boxes
-
-
-class BoxLinearCoder:
-    """
-    The linear box-to-box transform defined in FCOS. The transformation is parameterized
-    by the distance from the center of (square) src box to 4 edges of the target box.
-    """
-
-    def __init__(self, normalize_by_size: bool = True) -> None:
-        """
-        Args:
-            normalize_by_size (bool): normalize deltas by the size of src (anchor) boxes.
-        """
-        self.normalize_by_size = normalize_by_size
-
-    def encode(self, reference_boxes: Tensor, proposals: Tensor) -> Tensor:
-        """
-        Encode a set of proposals with respect to some reference boxes
-
-        Args:
-            reference_boxes (Tensor): reference boxes
-            proposals (Tensor): boxes to be encoded
-
-        Returns:
-            Tensor: the encoded relative box offsets that can be used to
-            decode the boxes.
-
-        """
-
-        # get the center of reference_boxes
-        reference_boxes_ctr_x = 0.5 * (reference_boxes[..., 0] + reference_boxes[..., 2])
-        reference_boxes_ctr_y = 0.5 * (reference_boxes[..., 1] + reference_boxes[..., 3])
-
-        # get box regression transformation deltas
-        target_l = reference_boxes_ctr_x - proposals[..., 0]
-        target_t = reference_boxes_ctr_y - proposals[..., 1]
-        target_r = proposals[..., 2] - reference_boxes_ctr_x
-        target_b = proposals[..., 3] - reference_boxes_ctr_y
-
-        targets = torch.stack((target_l, target_t, target_r, target_b), dim=-1)
-
-        if self.normalize_by_size:
-            reference_boxes_w = reference_boxes[..., 2] - reference_boxes[..., 0]
-            reference_boxes_h = reference_boxes[..., 3] - reference_boxes[..., 1]
-            reference_boxes_size = torch.stack(
-                (reference_boxes_w, reference_boxes_h, reference_boxes_w, reference_boxes_h), dim=-1
-            )
-            targets = targets / reference_boxes_size
-        return targets
-
-    def decode(self, rel_codes: Tensor, boxes: Tensor) -> Tensor:
-
-        """
-        From a set of original boxes and encoded relative box offsets,
-        get the decoded boxes.
-
-        Args:
-            rel_codes (Tensor): encoded boxes
-            boxes (Tensor): reference boxes.
-
-        Returns:
-            Tensor: the predicted boxes with the encoded relative box offsets.
-
-        .. note::
-            This method assumes that ``rel_codes`` and ``boxes`` have same size for 0th dimension. i.e. ``len(rel_codes) == len(boxes)``.
-
-        """
-
-        boxes = boxes.to(dtype=rel_codes.dtype)
-
-        ctr_x = 0.5 * (boxes[..., 0] + boxes[..., 2])
-        ctr_y = 0.5 * (boxes[..., 1] + boxes[..., 3])
-
-        if self.normalize_by_size:
-            boxes_w = boxes[..., 2] - boxes[..., 0]
-            boxes_h = boxes[..., 3] - boxes[..., 1]
-
-            list_box_size = torch.stack((boxes_w, boxes_h, boxes_w, boxes_h), dim=-1)
-            rel_codes = rel_codes * list_box_size
-
-        pred_boxes1 = ctr_x - rel_codes[..., 0]
-        pred_boxes2 = ctr_y - rel_codes[..., 1]
-        pred_boxes3 = ctr_x + rel_codes[..., 2]
-        pred_boxes4 = ctr_y + rel_codes[..., 3]
-
-        pred_boxes = torch.stack((pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=-1)
         return pred_boxes
 
 
@@ -425,70 +338,6 @@ class Matcher:
         matches[pred_inds_to_update] = all_matches[pred_inds_to_update]
 
 
-class SSDMatcher(Matcher):
-    def __init__(self, threshold: float) -> None:
-        super().__init__(threshold, threshold, allow_low_quality_matches=False)
-
-    def __call__(self, match_quality_matrix: Tensor) -> Tensor:
-        matches = super().__call__(match_quality_matrix)
-
-        # For each gt, find the prediction with which it has the highest quality
-        _, highest_quality_pred_foreach_gt = match_quality_matrix.max(dim=1)
-        matches[highest_quality_pred_foreach_gt] = torch.arange(
-            highest_quality_pred_foreach_gt.size(0), dtype=torch.int64, device=highest_quality_pred_foreach_gt.device
-        )
-
-        return matches
-
-
-def overwrite_eps(model: nn.Module, eps: float) -> None:
-    """
-    This method overwrites the default eps values of all the
-    FrozenBatchNorm2d layers of the model with the provided value.
-    This is necessary to address the BC-breaking change introduced
-    by the bug-fix at pytorch/vision#2933. The overwrite is applied
-    only when the pretrained weights are loaded to maintain compatibility
-    with previous versions.
-
-    Args:
-        model (nn.Module): The model on which we perform the overwrite.
-        eps (float): The new value of eps.
-    """
-    for module in model.modules():
-        if isinstance(module, FrozenBatchNorm2d):
-            module.eps = eps
-
-
-def retrieve_out_channels(model: nn.Module, size: Tuple[int, int]) -> List[int]:
-    """
-    This method retrieves the number of output channels of a specific model.
-
-    Args:
-        model (nn.Module): The model for which we estimate the out_channels.
-            It should return a single Tensor or an OrderedDict[Tensor].
-        size (Tuple[int, int]): The size (wxh) of the input.
-
-    Returns:
-        out_channels (List[int]): A list of the output channels of the model.
-    """
-    in_training = model.training
-    model.eval()
-
-    with torch.no_grad():
-        # Use dummy data to retrieve the feature map sizes to avoid hard-coding their values
-        device = next(model.parameters()).device
-        tmp_img = torch.zeros((1, 3, size[1], size[0]), device=device)
-        features = model(tmp_img)
-        if isinstance(features, torch.Tensor):
-            features = OrderedDict([("0", features)])
-        out_channels = [x.size(1) for x in features.values()]
-
-    if in_training:
-        model.train()
-
-    return out_channels
-
-
 @torch.jit.unused
 def _fake_cast_onnx(v: Tensor) -> int:
     return v  # type: ignore[return-value]
@@ -514,35 +363,57 @@ def _topk_min(input: Tensor, orig_kval: int, axis: int) -> int:
         min_kval (int): Appropriately selected k-value.
     """
     if not torch.jit.is_tracing():
-        return min(orig_kval, input.size(axis))
+        return (orig_kval >= input.size(axis)) * input.size(axis) + (orig_kval < input.size(axis)) * orig_kval
     axis_dim_val = torch._shape_as_tensor(input)[axis].unsqueeze(0)
     min_kval = torch.min(torch.cat((torch.tensor([orig_kval], dtype=axis_dim_val.dtype), axis_dim_val), 0))
     return _fake_cast_onnx(min_kval)
 
 
-def _box_loss(
-    type: str,
-    box_coder: BoxCoder,
-    anchors_per_image: Tensor,
-    matched_gt_boxes_per_image: Tensor,
-    bbox_regression_per_image: Tensor,
-    cnf: Optional[Dict[str, float]] = None,
-) -> Tensor:
-    torch._assert(type in ["l1", "smooth_l1", "ciou", "diou", "giou"], f"Unsupported loss: {type}")
+def clip_boxes_to_image(boxes: Tensor, size: Tuple[int, int]) -> Tensor:
+    """
+    Clip boxes so that they lie inside an image of size `size`.
 
-    if type == "l1":
-        target_regression = box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
-        return F.l1_loss(bbox_regression_per_image, target_regression, reduction="sum")
-    elif type == "smooth_l1":
-        target_regression = box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
-        beta = cnf["beta"] if cnf is not None and "beta" in cnf else 1.0
-        return F.smooth_l1_loss(bbox_regression_per_image, target_regression, reduction="sum", beta=beta)
+    Args:
+        boxes (Tensor[N, 4]): boxes in ``(x1, y1, x2, y2)`` format
+            with ``0 <= x1 < x2`` and ``0 <= y1 < y2``.
+        size (Tuple[height, width]): size of the image
+
+    Returns:
+        Tensor[N, 4]: clipped boxes
+    """
+    if not torch.jit.is_scripting() and not torch.jit.is_tracing():
+        _log_api_usage_once(clip_boxes_to_image)
+    dim = boxes.dim()
+    boxes_x = boxes[..., 0::2]
+    boxes_y = boxes[..., 1::2]
+    height, width = size
+
+    if torchvision._is_tracing():
+        boxes_x = torch.max(boxes_x, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
+        boxes_x = torch.min(boxes_x, torch.tensor(width, dtype=boxes.dtype, device=boxes.device))
+        boxes_y = torch.max(boxes_y, torch.tensor(0, dtype=boxes.dtype, device=boxes.device))
+        boxes_y = torch.min(boxes_y, torch.tensor(height, dtype=boxes.dtype, device=boxes.device))
     else:
-        bbox_per_image = box_coder.decode_single(bbox_regression_per_image, anchors_per_image)
-        eps = cnf["eps"] if cnf is not None and "eps" in cnf else 1e-7
-        if type == "ciou":
-            return complete_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
-        if type == "diou":
-            return distance_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
-        # otherwise giou
-        return generalized_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
+        boxes_x = boxes_x.clamp(min=0, max=width)
+        boxes_y = boxes_y.clamp(min=0, max=height)
+
+    clipped_boxes = torch.stack((boxes_x, boxes_y), dim=-1)
+    return clipped_boxes.reshape(boxes.shape)
+
+
+@torch.jit._script_if_tracing
+def _batched_nms_vanilla(
+    boxes: Tensor,
+    scores: Tensor,
+    idxs: Tensor,
+    iou_threshold: float,
+    class_ids: List[int], # class_ids is unique of idxs
+) -> Tensor:
+    # Based on Detectron2 implementation, just manually call nms() on each class independently
+    keep_indices = list()
+    for class_id in class_ids:
+        curr_indices = torch.where(idxs == class_id)[0]
+        curr_keep_indices = nms(boxes[curr_indices], scores[curr_indices], iou_threshold)
+        keep_indices.append(curr_indices[curr_keep_indices])
+    keep_indices = torch.cat(keep_indices, dim=0)
+    return keep_indices[scores[keep_indices].sort(descending=True)[1]]
