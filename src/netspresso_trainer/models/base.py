@@ -85,5 +85,5 @@ class DetectionModel(TaskModel):
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
-        out: DetectionModelOutput = self.head(features['intermediate_features'], targets=targets)
+        out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out

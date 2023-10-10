@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
+from ..models.utils import DetectionModelOutput
 from .base import BasePipeline
 
 logger = logging.getLogger("netspresso_trainer")
@@ -24,7 +25,31 @@ class DetectionPipeline(BasePipeline):
                    for box, label in zip(bboxes, labels)]
 
         self.optimizer.zero_grad()
-        out = self.model(images, targets=targets)
+
+        # forward to rpn
+        backbone = self.model.backbone
+        head = self.model.head
+
+        features = backbone(images)['intermediate_features']
+        if head.neck:
+            features = head.neck(features)
+
+        features = {str(k): v for k, v in enumerate(features)}
+        rpn_features = head.rpn(features, head.image_size)
+
+        # generate proposals for training
+        proposals = rpn_features['boxes']
+        proposals, matched_idxs, labels, regression_targets = head.roi_heads.select_training_samples(proposals, targets)
+
+        # forward to roi head
+        roi_features = head.roi_heads(features, proposals, head.image_size)
+
+        # set out
+        out = DetectionModelOutput()
+        out.update(rpn_features)
+        out.update(roi_features)
+        out.update({'labels': labels, 'regression_targets': regression_targets})
+
         self.loss_factory.calc(out, target=targets, phase='train')
 
         self.loss_factory.backward()
@@ -41,11 +66,12 @@ class DetectionPipeline(BasePipeline):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
-                   for box, label in zip(bboxes, labels)]
+        #targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+        #           for box, label in zip(bboxes, labels)]
 
-        out = self.model(images, targets=targets)
-        self.loss_factory.calc(out, target=targets, phase='valid')
+        out = self.model(images)
+        # TODO: compute loss for validation
+        #self.loss_factory.calc(out, target=targets, phase='valid')
 
         # TODO: metric update
         # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')

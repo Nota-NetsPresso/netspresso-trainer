@@ -1,8 +1,8 @@
-from typing import Dict, List, Optional, Tuple
+from itertools import accumulate
+from typing import Dict, List, Tuple
 
 import torch
 from torch import Tensor, nn
-from torch.nn import functional as F
 from torchvision.ops import Conv2dNormActivation
 from torchvision.ops import boxes as box_ops
 
@@ -10,9 +10,7 @@ from . import _utils as det_utils
 
 # Import AnchorGenerator to keep compatibility.
 from .anchor_utils import AnchorGenerator  # noqa: 401
-from .image_list import ImageList
 
-IMAGE_SIZE = (512, 512)
 
 class RPNHead(nn.Module):
     """
@@ -180,61 +178,22 @@ class RegionProposalNetwork(torch.nn.Module):
         self.nms_thresh = nms_thresh
         self.score_thresh = score_thresh
         self.min_size = 1e-3
-        
-        self.image_size = IMAGE_SIZE  # TODO: get from configuration
 
     def pre_nms_top_n(self) -> int:
-        if self.training:
-            return self._pre_nms_top_n["training"]
-        return self._pre_nms_top_n["testing"]
+        return self._pre_nms_top_n
 
     def post_nms_top_n(self) -> int:
-        if self.training:
-            return self._post_nms_top_n["training"]
-        return self._post_nms_top_n["testing"]
-
-    def assign_targets_to_anchors(
-        self, anchors: List[Tensor], targets: List[Dict[str, Tensor]]
-    ) -> Tuple[List[Tensor], List[Tensor]]:
-
-        labels = []
-        matched_gt_boxes = []
-        for anchors_per_image, targets_per_image in zip(anchors, targets):
-            gt_boxes = targets_per_image["boxes"]
-
-            if gt_boxes.numel() == 0:
-                # Background image (negative example)
-                device = anchors_per_image.device
-                matched_gt_boxes_per_image = torch.zeros(anchors_per_image.shape, dtype=torch.float32, device=device)
-                labels_per_image = torch.zeros((anchors_per_image.shape[0],), dtype=torch.float32, device=device)
-            else:
-                match_quality_matrix = self.box_similarity(gt_boxes, anchors_per_image)
-                matched_idxs = self.proposal_matcher(match_quality_matrix)
-                # get the targets corresponding GT for each proposal
-                # NB: need to clamp the indices because we can have a single
-                # GT in the image, and matched_idxs can be -2, which goes
-                # out of bounds
-                matched_gt_boxes_per_image = gt_boxes[matched_idxs.clamp(min=0)]
-
-                labels_per_image = matched_idxs >= 0
-                labels_per_image = labels_per_image.to(dtype=torch.float32)
-
-                # Background (negative examples)
-                bg_indices = matched_idxs == self.proposal_matcher.BELOW_LOW_THRESHOLD
-                labels_per_image[bg_indices] = 0.0
-
-                # discard indices that are between thresholds
-                inds_to_discard = matched_idxs == self.proposal_matcher.BETWEEN_THRESHOLDS
-                labels_per_image[inds_to_discard] = -1.0
-
-            labels.append(labels_per_image)
-            matched_gt_boxes.append(matched_gt_boxes_per_image)
-        return labels, matched_gt_boxes
+        return self._post_nms_top_n
 
     def _get_top_n_idx(self, objectness: Tensor, num_anchors_per_level: List[int]) -> Tensor:
         r = []
         offset = 0
-        for ob in objectness.split(num_anchors_per_level, 1):
+
+        start = list(accumulate([0] + num_anchors_per_level[:-1]))
+        end = list(accumulate(num_anchors_per_level))
+
+        obs = [objectness[:, s:e] for s, e in zip(start, end)]
+        for ob in obs:
             num_anchors = ob.shape[1]
             pre_nms_top_n = det_utils._topk_min(ob, self.pre_nms_top_n(), 1)
             _, top_n_idx = ob.topk(pre_nms_top_n, dim=1)
@@ -246,8 +205,9 @@ class RegionProposalNetwork(torch.nn.Module):
         self,
         proposals: Tensor,
         objectness: Tensor,
-        image_shapes: List[Tuple[int, int]],
+        image_shapes: Tuple[int, int],
         num_anchors_per_level: List[int],
+        levels_template: List[Tensor],
     ) -> Tuple[List[Tensor], List[Tensor]]:
 
         num_images = proposals.shape[0]
@@ -256,16 +216,15 @@ class RegionProposalNetwork(torch.nn.Module):
         objectness = objectness.detach()
         objectness = objectness.reshape(num_images, -1)
 
-        levels = [
-            torch.full((n,), idx, dtype=torch.int64, device=device) for idx, n in enumerate(num_anchors_per_level)
-        ]
+        levels = [torch.zeros_like(template).to(torch.int64).to(device) + idx for idx, template in enumerate(levels_template)]
         levels = torch.cat(levels, 0)
         levels = levels.reshape(1, -1).expand_as(objectness)
 
         # select top_n boxes independently per level before applying nms
         top_n_idx = self._get_top_n_idx(objectness, num_anchors_per_level)
 
-        image_range = torch.arange(num_images, device=device)
+        #image_range = torch.arange(num_images, device=device)
+        image_range = (torch.ones_like(proposals[:, 0, 0]).cumsum(0) - 1).to(torch.int64).to(device)
         batch_idx = image_range[:, None]
 
         objectness = objectness[batch_idx, top_n_idx]
@@ -276,6 +235,34 @@ class RegionProposalNetwork(torch.nn.Module):
 
         final_boxes = []
         final_scores = []
+        
+        # Apply Non-maximum suppression
+        # Now, it only implemented on batch size 1
+        boxes, scores, lvl, img_shape = proposals[0], objectness_prob[0], levels[0], image_shapes
+        boxes = det_utils.clip_boxes_to_image(boxes, img_shape)
+
+        # remove small boxes
+        keep = box_ops.remove_small_boxes(boxes, self.min_size)
+        boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
+
+        # remove low scoring boxes
+        # use >= for Backwards compatibility
+        keep = torch.where(scores >= self.score_thresh)[0]
+        boxes, scores, lvl = boxes[keep], scores[keep], lvl[keep]
+
+        # non-maximum suppression, independently done per level
+        keep = det_utils._batched_nms_vanilla(boxes, scores, lvl, self.nms_thresh, list(range(len(num_anchors_per_level))))
+
+        # keep only topk scoring predictions
+        keep = keep[: self.post_nms_top_n()]
+        boxes, scores = boxes[keep], scores[keep]
+
+        final_boxes.append(boxes)
+        final_scores.append(scores)
+
+        # TODO
+        # Apply NMS on various batch
+        '''
         for boxes, scores, lvl, img_shape in zip(proposals, objectness_prob, levels, image_shapes):
             boxes = box_ops.clip_boxes_to_image(boxes, img_shape)
 
@@ -297,49 +284,14 @@ class RegionProposalNetwork(torch.nn.Module):
 
             final_boxes.append(boxes)
             final_scores.append(scores)
+        '''
         return final_boxes, final_scores
-
-    def compute_loss(
-        self, objectness: Tensor, pred_bbox_deltas: Tensor, labels: List[Tensor], regression_targets: List[Tensor]
-    ) -> Tuple[Tensor, Tensor]:
-        """
-        Args:
-            objectness (Tensor)
-            pred_bbox_deltas (Tensor)
-            labels (List[Tensor])
-            regression_targets (List[Tensor])
-
-        Returns:
-            objectness_loss (Tensor)
-            box_loss (Tensor)
-        """
-
-        sampled_pos_inds, sampled_neg_inds = self.fg_bg_sampler(labels)
-        sampled_pos_inds = torch.where(torch.cat(sampled_pos_inds, dim=0))[0]
-        sampled_neg_inds = torch.where(torch.cat(sampled_neg_inds, dim=0))[0]
-
-        sampled_inds = torch.cat([sampled_pos_inds, sampled_neg_inds], dim=0)
-
-        objectness = objectness.flatten()
-
-        labels = torch.cat(labels, dim=0)
-        regression_targets = torch.cat(regression_targets, dim=0)
-
-        box_loss = F.smooth_l1_loss(
-            pred_bbox_deltas[sampled_pos_inds],
-            regression_targets[sampled_pos_inds],
-            beta=1 / 9,
-            reduction="sum",
-        ) / (sampled_inds.numel())
-
-        objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds])
-
-        return objectness_loss, box_loss
 
     def forward(
         self,
         # images: ImageList,
         features: Dict[str, Tensor],
+        image_size: Tuple[int, int]
     ) -> Tuple[List[Tensor], Dict[str, Tensor]]:
 
         """
@@ -363,16 +315,26 @@ class RegionProposalNetwork(torch.nn.Module):
         objectness, pred_bbox_deltas = self.head(features)
         anchors = self.anchor_generator(features)
 
-        num_images = len(anchors)
-        num_anchors_per_level_shape_tensors = [o[0].shape for o in objectness]
-        num_anchors_per_level = [s[0] * s[1] * s[2] for s in num_anchors_per_level_shape_tensors]
+        num_images = features[0].shape[0]
+        num_anchors_per_level = [a.shape[0] for a in anchors]
         objectness, pred_bbox_deltas = concat_box_prediction_layers(objectness, pred_bbox_deltas)
+
+        levels_template = [a.T[0, :] for a in anchors]
+        anchors = torch.cat(anchors, dim=0)
         # apply pred_bbox_deltas to anchors to obtain the decoded proposals
         # note that we detach the deltas because Faster R-CNN do not backprop through
         # the proposals
-        proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
+        
+        # self.box_coder.decode_single(pred_bbox_deltas, torch.cat(anchors, dim=0).unsqueeze(dim=0).tile(8, 1, 1).view(-1, 4)).shape
+        pred_bbox_deltas = pred_bbox_deltas.view(num_images, -1, 4)
+        anchors = anchors.expand_as(pred_bbox_deltas).contiguous()
+
+        proposals = self.box_coder.decode_single(pred_bbox_deltas.view(-1, 4), anchors.view(-1, 4))
+
+        #proposals = self.box_coder.decode(pred_bbox_deltas.detach(), anchors)
         proposals = proposals.view(num_images, -1, 4)
-        boxes, scores = self.filter_proposals(proposals, objectness, [self.image_size] * len(features[0]), num_anchors_per_level)
+        objectness = objectness.view(num_images, -1, 1)
+        boxes, scores = self.filter_proposals(proposals, objectness, image_size, num_anchors_per_level, levels_template)
 
         return {
             'boxes': boxes,

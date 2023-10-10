@@ -1,12 +1,8 @@
-import math
-from typing import List, Optional
+from typing import List
 
 import torch
 from torch import Tensor, nn
 
-from .image_list import ImageList
-
-IMAGE_SIZE = (512, 512)
 
 class AnchorGenerator(nn.Module):
     """
@@ -37,6 +33,7 @@ class AnchorGenerator(nn.Module):
         self,
         sizes=((128, 256, 512),),
         aspect_ratios=((0.5, 1.0, 2.0),),
+        image_size=(512, 512),
     ):
         super().__init__()
 
@@ -52,7 +49,7 @@ class AnchorGenerator(nn.Module):
             self.generate_anchors(size, aspect_ratio) for size, aspect_ratio in zip(sizes, aspect_ratios)
         ]
         
-        self.image_size = IMAGE_SIZE # TODO: get from configuration
+        self.image_size = image_size
 
     # TODO: https://github.com/pytorch/pytorch/issues/26792
     # For every (aspect_ratios, scales) combination, output a zero-centered anchor with those values.
@@ -77,16 +74,16 @@ class AnchorGenerator(nn.Module):
         return base_anchors.round()
 
     def set_cell_anchors(self, dtype: torch.dtype, device: torch.device):
-        self.cell_anchors = [cell_anchor.to(dtype=dtype, device=device) for cell_anchor in self.cell_anchors]
+        return [cell_anchor.to(dtype).to(device) for cell_anchor in self.cell_anchors]
 
     def num_anchors_per_location(self) -> List[int]:
         return [len(s) * len(a) for s, a in zip(self.sizes, self.aspect_ratios)]
 
     # For every combination of (a, (g, s), i) in (self.cell_anchors, zip(grid_sizes, strides), 0:2),
     # output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.
-    def grid_anchors(self, grid_sizes: List[List[int]], strides: List[List[Tensor]]) -> List[Tensor]:
+    def grid_anchors(self, cell_anchors, grid_templates, grid_sizes: List[List[int]], strides: List[List[Tensor]]) -> List[Tensor]:
         anchors = []
-        cell_anchors = self.cell_anchors        
+        cell_anchors = cell_anchors
         torch._assert(cell_anchors is not None, "cell_anchors should not be None")
         torch._assert(
             len(grid_sizes) == len(strides) == len(cell_anchors),
@@ -96,14 +93,17 @@ class AnchorGenerator(nn.Module):
             "feature maps passed and the number of sizes / aspect ratios specified.",
         )
 
-        for size, stride, base_anchors in zip(grid_sizes, strides, cell_anchors):
+        for grid_template, size, stride, base_anchors in zip(grid_templates, grid_sizes, strides, cell_anchors):
+            grid_height_template, grid_width_template = grid_template
             grid_height, grid_width = size
             stride_height, stride_width = stride
             device = base_anchors.device
 
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            shifts_x = torch.arange(0, grid_width, dtype=torch.int32, device=device) * stride_width
-            shifts_y = torch.arange(0, grid_height, dtype=torch.int32, device=device) * stride_height
+            #shifts_x = torch.arange(0, grid_width, dtype=torch.int32).to(device) * stride_width
+            #shifts_y = torch.arange(0, grid_height, dtype=torch.int32).to(device) * stride_height
+            shifts_x = (torch.ones_like(grid_width_template, dtype=torch.int32).cumsum(0) - 1).to(device) * stride_width
+            shifts_y = (torch.ones_like(grid_height_template, dtype=torch.int32).cumsum(0) - 1).to(device) * stride_height
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x, indexing="ij")
             shift_x = shift_x.reshape(-1)
             shift_y = shift_y.reshape(-1)
@@ -117,19 +117,17 @@ class AnchorGenerator(nn.Module):
 
     def forward(self, feature_maps: List[Tensor]) -> List[Tensor]:
         grid_sizes = [feature_map.shape[-2:] for feature_map in feature_maps]
+        # each feature_map has (b, c, h, w) shape
+        grid_templates = [(feature_map[0, 0, :, 0], feature_map[0, 0, 0, :]) for feature_map in feature_maps]
         dtype, device = feature_maps[0].dtype, feature_maps[0].device
         strides = [
             [
-                torch.empty((), dtype=torch.int64, device=device).fill_(self.image_size[0] // g[0]),
-                torch.empty((), dtype=torch.int64, device=device).fill_(self.image_size[1] // g[1]),
+                torch.empty(1, dtype=torch.int64).fill_(self.image_size[0] // g[0]).to(device),
+                torch.empty(1, dtype=torch.int64).fill_(self.image_size[1] // g[1]).to(device),
             ]
             for g in grid_sizes
         ]
-        self.set_cell_anchors(dtype, device)
-        anchors_over_all_feature_maps = self.grid_anchors(grid_sizes, strides)
-        anchors: List[List[torch.Tensor]] = []
-        for _ in range(len(feature_maps[0])):
-            anchors_in_image = list(anchors_over_all_feature_maps)
-            anchors.append(anchors_in_image)
-        anchors = [torch.cat(anchors_per_image) for anchors_per_image in anchors]
-        return anchors
+        cell_anchors = self.set_cell_anchors(dtype, device)
+        anchors_over_all_feature_maps = self.grid_anchors(cell_anchors, grid_templates, grid_sizes, strides)
+
+        return anchors_over_all_feature_maps
