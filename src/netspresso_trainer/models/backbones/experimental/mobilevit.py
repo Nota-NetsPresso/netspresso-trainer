@@ -293,7 +293,7 @@ class MobileViTEncoder(MetaFormerEncoder):
         blocks = [
             InvertedResidual(
                 in_channels=in_channels if block_idx == 0 else out_channels,
-                hidden_channels=in_channels*expand_ratio,
+                hidden_channels=in_channels*expand_ratio if block_idx == 0 else out_channels*expand_ratio,
                 out_channels=out_channels,
                 kernel_size=3,
                 stride=stride if block_idx == 0 else 1,
