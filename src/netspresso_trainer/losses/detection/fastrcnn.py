@@ -9,7 +9,7 @@ from torchvision.ops import boxes as box_ops
 from ...models.heads.detection.experimental.detection import _utils as det_utils
 
 
-class RPNLoss(nn.Module):
+class RoiHeadLoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
     
@@ -47,7 +47,7 @@ class RPNLoss(nn.Module):
         # TODO: return as dict
         return sum(losses.values())
         
-class RoiHeadLoss(nn.Module):
+class RPNLoss(nn.Module):
     def __init__(self,
                  box_fg_iou_thresh=0.5,
                  box_bg_iou_thresh=0.5,
@@ -126,6 +126,7 @@ class RoiHeadLoss(nn.Module):
         labels = torch.cat(labels, dim=0)
         regression_targets = torch.cat(regression_targets, dim=0)
 
+        pred_bbox_deltas = pred_bbox_deltas.view(-1, 4)
         box_loss = F.smooth_l1_loss(
             pred_bbox_deltas[sampled_pos_inds],
             regression_targets[sampled_pos_inds],
@@ -140,7 +141,7 @@ class RoiHeadLoss(nn.Module):
     def forward(self, out: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         anchors, objectness, pred_bbox_deltas = out['anchors'], out['objectness'], out['pred_bbox_deltas']
         labels, matched_gt_boxes = self._assign_targets_to_anchors(anchors, target)
-        regression_targets = self.box_coder.encode(matched_gt_boxes, anchors)
+        regression_targets = self.box_coder.encode(matched_gt_boxes, list(anchors))
         loss_objectness, loss_rpn_box_reg = self._compute_loss(
             objectness, pred_bbox_deltas, labels, regression_targets
         )
