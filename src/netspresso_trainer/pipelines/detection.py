@@ -1,5 +1,7 @@
+import copy
 import logging
 import os
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -7,6 +9,8 @@ from omegaconf import OmegaConf
 
 from ..models.utils import DetectionModelOutput
 from .base import BasePipeline
+from ..utils.fx import save_graphmodule
+from ..utils.onnx import save_onnx
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -117,3 +121,55 @@ class DetectionPipeline(BasePipeline):
 
         pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
         self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), phase='valid')
+
+    def save_checkpoint(self, epoch: int):
+
+        # Check whether the valid loss is minimum at this epoch
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                        if 'valid_losses' in record}
+        best_epoch = min(valid_losses, key=valid_losses.get)
+        save_best_model = best_epoch == epoch
+
+        model = self.model.module if hasattr(self.model, 'module') else self.model
+        if self.save_dtype == torch.float16:
+            model = copy.deepcopy(model).type(self.save_dtype)
+        result_dir = self.train_logger.result_dir
+        model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
+        optimizer_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
+
+        if self.save_optimizer_state:
+            optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
+            save_dict = {'optimizer': optimizer.state_dict(), 'start_epoch_at_one': self.start_epoch_at_one, 'last_epoch': epoch}
+            torch.save(save_dict, optimizer_path)
+            logger.debug(f"Optimizer state saved at {str(optimizer_path)}")
+
+        if self.is_graphmodule_training:
+            # Just save graphmodule checkpoint
+            torch.save(model, model_path.with_suffix(".pt"))
+            logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
+            if save_best_model:
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
+                torch.save(model, best_model_path.with_suffix(".pt"))
+                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
+            return
+        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
+        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        if save_best_model:
+            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
+            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
+
+            try:
+                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
+
+                # fx backbone
+                save_graphmodule(model.backbone, (model_path.parent / f"{best_model_path.stem}_backbone_fx").with_suffix(".pt"))
+                logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
+                # save head separately
+                torch.save(model.head.state_dict(), (model_path.parent / f"{best_model_path.stem}_head").with_suffix(".pth"))
+                logger.info(f"Detection head saved at {str(best_model_path.with_suffix('.pth'))}")
+            except Exception as e:
+                logger.error(e)
+                pass
