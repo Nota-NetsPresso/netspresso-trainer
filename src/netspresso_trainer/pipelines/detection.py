@@ -7,10 +7,11 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
-from ..models.utils import DetectionModelOutput
+from ..models.utils import DetectionModelOutput, load_from_checkpoint
 from .base import BasePipeline
 from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
+from ..models import build_model
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -21,8 +22,14 @@ class DetectionPipeline(BasePipeline):
                                                 train_dataloader, eval_dataloader, class_map, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
+        # Re-compose torch.fx backbone and nn.Module head
+        # To load head weights, config should have head_checkpoint value.
         if kwargs['is_graphmodule_training']:
-            pass
+            model = build_model(conf.model, task, self.num_classes, None, conf.augmentation.img_size)
+            model.backbone = self.model
+            model.head = load_from_checkpoint(model.head, conf.model.head_checkpoint)
+            model = model.to(device=devices)
+            self.model = model
 
     def train_step(self, batch):
         self.model.train()
@@ -146,8 +153,12 @@ class DetectionPipeline(BasePipeline):
             if save_best_model:
                 save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
                 logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
-                torch.save(model, best_model_path.with_suffix(".pt"))
+
+                torch.save(model.backbone, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
+                # save head separately
+                torch.save(model.head.state_dict(), (model_path.parent / f"{best_model_path.stem}_head").with_suffix(".pth"))
+                logger.info(f"Detection head saved at {str(best_model_path.with_suffix('.pth'))}")
             return
         torch.save(model.state_dict(), model_path.with_suffix(".pth"))
         logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
