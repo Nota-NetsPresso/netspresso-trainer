@@ -21,6 +21,9 @@ class DetectionPipeline(BasePipeline):
                                                 train_dataloader, eval_dataloader, class_map, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
+        if kwargs['is_graphmodule_training']:
+            pass
+
     def train_step(self, batch):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
@@ -59,9 +62,11 @@ class DetectionPipeline(BasePipeline):
         self.loss_factory.backward()
         self.optimizer.step()
 
-        # TODO: metric update
-        # out = {k: v.detach() for k, v in out.items()}
-        # self.metric_factory(out['pred'], target=targets, mode='train')
+        pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
+                for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
+        targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
+                   for target in targets]
+        self.metric_factory(pred, target=targets, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -70,15 +75,19 @@ class DetectionPipeline(BasePipeline):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        #targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
-        #           for box, label in zip(bboxes, labels)]
+        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+                   for box, label in zip(bboxes, labels)]
 
         out = self.model(images)
+
+        pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
+                for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
+        targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
+                   for target in targets]
+        self.metric_factory(pred, target=targets, phase='valid')
+
         # TODO: compute loss for validation
         #self.loss_factory.calc(out, target=targets, phase='valid')
-
-        # TODO: metric update
-        # self.metric_factory(out['pred'], (labels, bboxes), mode='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -106,21 +115,7 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs):
-        targets = np.empty((0, 4))
-        preds = np.empty((0, 5))  # with confidence score
-        targets_indices = np.empty(0)
-        preds_indices = np.empty(0)
-        for output_batch in outputs:
-            for detection, class_idx in output_batch['target']:
-                targets = np.vstack([targets, detection])
-                targets_indices = np.append(targets_indices, class_idx)
-
-            for detection, class_idx in output_batch['pred']:
-                preds = np.vstack([preds, detection])
-                preds_indices = np.append(preds_indices, class_idx)
-
-        pred_bbox, pred_confidence = preds[..., :4], preds[..., -1]  # (N x 4), (N,)
-        self.metric_factory.calc((pred_bbox, preds_indices, pred_confidence), (targets, targets_indices), phase='valid')
+        pass
 
     def save_checkpoint(self, epoch: int):
 
