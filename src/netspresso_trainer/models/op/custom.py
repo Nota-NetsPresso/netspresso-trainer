@@ -1,14 +1,40 @@
+import argparse
+import math
 import warnings
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import torch
 import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 from torchvision.ops.misc import SqueezeExcitation as SElayer
 
-from ..op.ml_cvnets import make_divisible
 from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+
+
+def make_divisible(
+    v: Union[float, int],
+    divisor: Optional[int] = 8,
+    min_value: Optional[Union[float, int]] = None,
+) -> Union[float, int]:
+    """
+    This function is taken from the original tf repo.
+    It ensures that all layers have a channel number that is divisible by 8
+    It can be seen here:
+    https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
+    :param v:
+    :param divisor:
+    :param min_value:
+    :return:
+    """
+    if min_value is None:
+        min_value = divisor
+    new_v = max(min_value, int(v + divisor / 2) // divisor * divisor)
+    # Make sure that round down does not go down by more than 10%.
+    if new_v < 0.9 * v:
+        new_v += divisor
+    return new_v
 
 
 class ConvLayer(nn.Module):
@@ -93,6 +119,11 @@ class ConvLayer(nn.Module):
 
     def __repr__(self):
         return f"{self.block}"
+
+
+@torch.fx.wrap
+def tensor_slice(tensor: Tensor, dim, index):
+    return tensor.select(dim, index)
 
 
 class BasicBlock(nn.Module):
@@ -276,3 +307,179 @@ class InvertedResidual(nn.Module):
         if self.use_res_connect:
             result = result + input
         return result
+
+
+class SinusoidalPositionalEncoding(nn.Module):
+    """
+    This layer adds sinusoidal positional embeddings to a 3D input tensor. The code has been adapted from
+    `Pytorch tutorial <https://pytorch.org/tutorials/beginner/transformer_tutorial.html>`_
+
+    Args:
+        d_model (int): dimension of the input tensor
+        dropout (Optional[float]): Dropout rate. Default: 0.0
+        max_len (Optional[int]): Max. number of patches (or seq. length). Default: 5000
+        channels_last (Optional[bool]): Channels dimension is the last in the input tensor
+
+    Shape:
+        - Input: :math:`(N, C, P)` or :math:`(N, P, C)` where :math:`N` is the batch size, :math:`C` is the embedding dimension,
+            :math:`P` is the number of patches
+        - Output: same shape as the input
+
+    """
+
+    def __init__(
+        self,
+        d_model: int,
+        max_len: Optional[int] = 5000,
+        channels_last: Optional[bool] = True,
+        *args,
+        **kwargs
+    ) -> None:
+
+        position_last = not channels_last
+
+        pos_encoding = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(
+            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
+        )
+        pos_encoding[:, 0::2] = torch.sin(position * div_term)
+        pos_encoding[:, 1::2] = torch.cos(position * div_term)
+        # add dummy batch dimension
+        pos_encoding = pos_encoding.unsqueeze(0)  # [1 x C x P_max)
+
+        patch_dim = -2  # patch dimension is second last (N, P, C)
+        if position_last:
+            pos_encoding = pos_encoding.transpose(
+                1, 2
+            )  # patch dimension is last (N, C, P)
+            patch_dim = -1  # patch dimension is last (N, C, P)
+
+        super().__init__()
+
+        self.patch_dim = patch_dim
+        self.register_buffer("pe", pos_encoding)
+        
+    def forward_patch_last(
+        self, x, indices: Optional[Tensor] = None, *args, **kwargs
+    ) -> Tensor:
+        # seq_length should be the last dim
+        if indices is None:
+            x = x + self.pe[..., : x.shape[-1]]
+        else:
+            ndim = x.ndim
+            repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
+
+            pe = self.pe.expand(repeat_size)
+            selected_pe = torch.gather(pe, index=indices, dim=-1)
+            x = x + selected_pe
+        return x
+
+    def forward_others(
+        self, x, indices: Optional[Tensor] = None, *args, **kwargs
+    ) -> Tensor:
+        # seq_length should be the second last dim
+        
+        # @deepkyu: [fx tracing] Always `indices` is None 
+        # if indices is None:
+        #     x = x + self.pe[..., : x.shape[-2], :]
+        # else:
+        #     ndim = x.ndim
+        #     repeat_size = [x.shape[0]] + [-1] * (ndim - 1)
+
+        #     pe = self.pe.expand(repeat_size)
+        #     selected_pe = torch.gather(pe, index=indices, dim=-2)
+        #     x = x + selected_pe
+        
+        # x = x + self.pe[..., :seq_index, :]
+        x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
+        
+        return x
+
+    def forward(self, x, indices: Optional[Tensor] = None, *args, **kwargs) -> Tensor:
+        if self.patch_dim == -1:
+            return self.forward_patch_last(x, indices=indices)
+        else:
+            return self.forward_others(x, indices=indices)
+
+    # def profile_module(self, input: Tensor) -> Tuple[Tensor, float, float]:
+    #     return input, 0.0, 0.0
+
+    # def __repr__(self):
+    #     return "{}(dropout={})".format(self.__class__.__name__, self.dropout.p)
+
+
+class GlobalPool(nn.Module):
+    """
+    This layers applies global pooling over a 4D or 5D input tensor
+
+    Args:
+        pool_type (Optional[str]): Pooling type. It can be mean, rms, or abs. Default: `mean`
+        keep_dim (Optional[bool]): Do not squeeze the dimensions of a tensor. Default: `False`
+
+    Shape:
+        - Input: :math:`(N, C, H, W)` or :math:`(N, C, D, H, W)`
+        - Output: :math:`(N, C, 1, 1)` or :math:`(N, C, 1, 1, 1)` if keep_dim else :math:`(N, C)`
+    """
+
+    pool_types = ["mean", "rms", "abs"]
+
+    def __init__(
+        self,
+        pool_type: Optional[str] = "mean",
+        keep_dim: Optional[bool] = False,
+        *args,
+        **kwargs
+    ) -> None:
+        super().__init__()
+        # if pool_type not in self.pool_types:
+        #     logger.error(
+        #         "Supported pool types are: {}. Got {}".format(
+        #             self.pool_types, pool_type
+        #         )
+        #     )
+        self.pool_type = pool_type
+        self.keep_dim = keep_dim
+
+    @classmethod
+    def add_arguments(cls, parser: argparse.ArgumentParser):
+        cls_name = "{} arguments".format(cls.__name__)
+        group = parser.add_argument_group(title=cls_name, description=cls_name)
+        group.add_argument(
+            "--model.layer.global-pool",
+            type=str,
+            default="mean",
+            help="Which global pooling?",
+        )
+        return parser
+
+    def _global_pool(self, x: Tensor, dims: List):
+        if self.pool_type == "rms":  # root mean square
+            x = x**2
+            x = torch.mean(x, dim=dims, keepdim=self.keep_dim)
+            x = x**-0.5
+        elif self.pool_type == "abs":  # absolute
+            x = torch.mean(torch.abs(x), dim=dims, keepdim=self.keep_dim)
+        else:
+            # default is mean
+            # same as AdaptiveAvgPool
+            x = torch.mean(x, dim=dims, keepdim=self.keep_dim)
+        return x
+
+    def forward(self, x: Tensor) -> Tensor:
+        # @deepkyu: [fx tracing] Always x.dim() == 4
+        # if x.dim() == 4:
+        #     dims = [-2, -1]
+        # elif x.dim() == 5:
+        #     dims = [-3, -2, -1]
+        # else:
+        #     raise NotImplementedError("Currently 2D and 3D global pooling supported")
+        
+        return self._global_pool(x, dims=(-2, -1))
+
+    # def profile_module(self, input: Tensor) -> Tuple[Tensor, float, float]:
+    #     input = self.forward(input)
+    #     return input, 0.0, 0.0
+
+    # def __repr__(self):
+    #     return "{}(type={})".format(self.__class__.__name__, self.pool_type)
