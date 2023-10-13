@@ -7,11 +7,11 @@ import numpy as np
 import torch
 from omegaconf import OmegaConf
 
+from ..models import build_model
 from ..models.utils import DetectionModelOutput, load_from_checkpoint
-from .base import BasePipeline
 from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
-from ..models import build_model
+from .base import BasePipeline
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -76,8 +76,8 @@ class DetectionPipeline(BasePipeline):
     def valid_step(self, batch):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
-        bboxes = [b.to(self.devices) for b in bboxes]
-        labels = [l.to(self.devices) for l in labels]
+        bboxes = [bbox.to(self.devices) for bbox in bboxes]
+        labels = [label.to(self.devices) for label in labels]
         images = images.to(self.devices)
         targets = [{"boxes": box, "labels": label} for box, label in zip(bboxes, labels)]
 
@@ -117,17 +117,17 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs):
-        pred = list()
-        targets = list()
+        pred = []
+        targets = []
         for output_batch in outputs:
             for detection, class_idx in output_batch['target']:
-                target_on_image = dict()
+                target_on_image = {}
                 target_on_image['boxes'] = detection
                 target_on_image['labels'] = class_idx
                 targets.append(target_on_image)
 
             for detection, class_idx in output_batch['pred']:
-                pred_on_image = dict()
+                pred_on_image = {}
                 pred_on_image['post_boxes'] = detection[..., :4]
                 pred_on_image['post_scores'] = detection[..., -1]
                 pred_on_image['post_labels'] = class_idx
