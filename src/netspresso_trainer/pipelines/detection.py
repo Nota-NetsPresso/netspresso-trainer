@@ -158,17 +158,19 @@ class DetectionPipeline(BasePipeline):
 
         if self.is_graphmodule_training:
             # Just save graphmodule checkpoint
-            torch.save(model, model_path.with_suffix(".pt"))
-            logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
+            torch.save(model, (model_path.parent / f"{model_path.stem}_backbone").with_suffix(".pth"))
+            logger.debug(f"PyTorch FX model saved at {(model_path.parent / f'{model_path.stem}_backbone').with_suffix('.pth')}")
+            torch.save(model.head.state_dict(), (model_path.parent / f"{model_path.stem}_head").with_suffix(".pth"))
+            logger.info(f"Detection head saved at {(model_path.parent / f'{model_path.stem}_head').with_suffix('.pth')}")
             if save_best_model:
                 save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
                 logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
 
-                torch.save(model.backbone, best_model_path.with_suffix(".pt"))
-                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
+                torch.save(model.backbone, (model_path.parent / f"{best_model_path.stem}_backbone").with_suffix(".pt"))
+                logger.info(f"Best model saved at {(model_path.parent / f'{best_model_path.stem}_backbone').with_suffix('.pt')}")
                 # save head separately
                 torch.save(model.head.state_dict(), (model_path.parent / f"{best_model_path.stem}_head").with_suffix(".pth"))
-                logger.info(f"Detection head saved at {str(best_model_path.with_suffix('.pth'))}")
+                logger.info(f"Detection head saved at {(model_path.parent / f'{best_model_path.stem}_head').with_suffix('.pth')}")
             return
         torch.save(model.state_dict(), model_path.with_suffix(".pth"))
         logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
@@ -182,10 +184,10 @@ class DetectionPipeline(BasePipeline):
 
                 # fx backbone
                 save_graphmodule(model.backbone, (model_path.parent / f"{best_model_path.stem}_backbone_fx").with_suffix(".pt"))
-                logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
+                logger.info(f"PyTorch FX model tracing and saved at {(model_path.parent / f'{best_model_path.stem}_backbone_fx').with_suffix('.pt')}")
                 # save head separately
                 torch.save(model.head.state_dict(), (model_path.parent / f"{best_model_path.stem}_head").with_suffix(".pth"))
-                logger.info(f"Detection head saved at {str(best_model_path.with_suffix('.pth'))}")
+                logger.info(f"Detection head saved at {(model_path.parent / f'{best_model_path.stem}_head').with_suffix('.pth')}")
             except Exception as e:
                 logger.error(e)
                 pass
