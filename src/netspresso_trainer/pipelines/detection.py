@@ -64,11 +64,13 @@ class DetectionPipeline(BasePipeline):
         out.update(roi_features)
         out.update({'labels': labels, 'regression_targets': regression_targets})
 
+        # Compute loss
         self.loss_factory.calc(out, target=targets, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
 
+        # Update metrics
         pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
                 for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
         targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
@@ -81,20 +83,27 @@ class DetectionPipeline(BasePipeline):
     def valid_step(self, batch):
         self.model.eval()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
+        bboxes = [b.to(self.devices) for b in bboxes]
+        labels = [l.to(self.devices) for l in labels]
         images = images.to(self.devices)
-        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
-                   for box, label in zip(bboxes, labels)]
+        targets = [{"boxes": box, "labels": label} for box, label in zip(bboxes, labels)]
 
         out = self.model(images)
 
+        # Compute loss
+        head = self.model.head
+        matched_idxs, labels = head.roi_heads.assign_targets_to_proposals(out['boxes'], bboxes, labels)
+        matched_gt_boxes = [bbox[idx] for idx, bbox in zip(matched_idxs, bboxes)]
+        regression_targets = head.roi_heads.box_coder.encode(matched_gt_boxes, out['boxes'])
+        out.update({'labels': labels, 'regression_targets': regression_targets})
+        self.loss_factory.calc(out, target=targets, phase='valid')
+
+        # Update metrics
         pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
                 for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
         targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
                    for target in targets]
         self.metric_factory(pred, target=targets, phase='valid')
-
-        # TODO: compute loss for validation
-        #self.loss_factory.calc(out, target=targets, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
