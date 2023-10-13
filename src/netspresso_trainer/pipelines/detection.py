@@ -53,7 +53,7 @@ class DetectionPipeline(BasePipeline):
 
         # generate proposals for training
         proposals = rpn_features['boxes']
-        proposals, matched_idxs, labels, regression_targets = head.roi_heads.select_training_samples(proposals, targets)
+        proposals, matched_idxs, roi_head_labels, regression_targets = head.roi_heads.select_training_samples(proposals, targets)
 
         # forward to roi head
         roi_features = head.roi_heads(features, proposals, head.image_size)
@@ -62,20 +62,13 @@ class DetectionPipeline(BasePipeline):
         out = DetectionModelOutput()
         out.update(rpn_features)
         out.update(roi_features)
-        out.update({'labels': labels, 'regression_targets': regression_targets})
+        out.update({'labels': roi_head_labels, 'regression_targets': regression_targets})
 
         # Compute loss
         self.loss_factory.calc(out, target=targets, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
-
-        # Update metrics
-        pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
-                for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
-        targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
-                   for target in targets]
-        self.metric_factory(pred, target=targets, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -92,18 +85,11 @@ class DetectionPipeline(BasePipeline):
 
         # Compute loss
         head = self.model.head
-        matched_idxs, labels = head.roi_heads.assign_targets_to_proposals(out['boxes'], bboxes, labels)
+        matched_idxs, roi_head_labels = head.roi_heads.assign_targets_to_proposals(out['boxes'], bboxes, labels)
         matched_gt_boxes = [bbox[idx] for idx, bbox in zip(matched_idxs, bboxes)]
         regression_targets = head.roi_heads.box_coder.encode(matched_gt_boxes, out['boxes'])
-        out.update({'labels': labels, 'regression_targets': regression_targets})
+        out.update({'labels': roi_head_labels, 'regression_targets': regression_targets})
         self.loss_factory.calc(out, target=targets, phase='valid')
-
-        # Update metrics
-        pred = [{'post_boxes': b.detach().cpu().numpy(), 'post_labels': l.detach().cpu().numpy(), 'post_scores': c.detach().cpu().numpy()} 
-                for b, l, c in zip(out['post_boxes'], out['post_labels'], out['post_scores'])]
-        targets = [{'boxes': target['boxes'].detach().cpu().numpy(), 'labels': target['labels'].detach().cpu().numpy()} 
-                   for target in targets]
-        self.metric_factory(pred, target=targets, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -131,8 +117,23 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs):
-        pass
+        pred = list()
+        targets = list()
+        for output_batch in outputs:
+            for detection, class_idx in output_batch['target']:
+                target_on_image = dict()
+                target_on_image['boxes'] = detection
+                target_on_image['labels'] = class_idx
+                targets.append(target_on_image)
 
+            for detection, class_idx in output_batch['pred']:
+                pred_on_image = dict()
+                pred_on_image['post_boxes'] = detection[..., :4]
+                pred_on_image['post_scores'] = detection[..., -1]
+                pred_on_image['post_labels'] = class_idx
+                pred.append(pred_on_image)
+        self.metric_factory(pred, target=targets, phase='valid')
+        
     def save_checkpoint(self, epoch: int):
 
         # Check whether the valid loss is minimum at this epoch
