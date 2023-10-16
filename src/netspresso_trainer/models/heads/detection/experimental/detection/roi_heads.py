@@ -211,48 +211,8 @@ class RoIHeads(nn.Module):
         all_labels = []
 
         # Apply Non-maximum suppression
-        # Now, it only implemented on batch size 1
-        boxes, scores, image_shape = pred_boxes_list[0], pred_scores_list[0], image_shapes
-
-        boxes = det_utils.clip_boxes_to_image(boxes, image_shape)
-
-        # create labels for each prediction
-        labels = (torch.ones_like(class_logits[0, :], dtype=torch.int64).cumsum(0) - 1).to(device)
-        labels = labels.view(1, -1).expand_as(scores)
-
-        # remove predictions with the background label
-        boxes = boxes[:, 1:]
-        scores = scores[:, 1:]
-        labels = labels[:, 1:]
-
-        # batch everything, by making every class prediction be a separate instance
-        boxes = boxes.reshape(-1, 4)
-        scores = scores.reshape(-1)
-        labels = labels.reshape(-1)
-
-        # remove low scoring boxes
-        inds = torch.where(scores > self.score_thresh)[0]
-        boxes, scores, labels = boxes[inds], scores[inds], labels[inds]
-
-        # remove empty boxes
-        keep = box_ops.remove_small_boxes(boxes, min_size=1e-2)
-        boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
-
-        # non-maximum suppression, independently done per class
-        keep = det_utils._batched_nms_vanilla(boxes, scores, labels, self.nms_thresh, self.class_ids)
-        # keep only topk scoring predictions
-        keep = keep[: self.detections_per_img]
-        boxes, scores, labels = boxes[keep], scores[keep], labels[keep]
-
-        all_boxes.append(boxes)
-        all_scores.append(scores)
-        all_labels.append(labels)
-
-        # TODO
-        # Apply NMS on various batch
-        '''
-        for boxes, scores, image_shape in zip(pred_boxes_list, pred_scores_list, image_shapes):
-            boxes = det_utils.clip_boxes_to_image(boxes, image_shape)
+        for boxes, scores in zip(pred_boxes_list, pred_scores_list):
+            boxes = det_utils.clip_boxes_to_image(boxes, image_shapes)
 
             # create labels for each prediction
             labels = torch.arange(num_classes, device=device)
@@ -285,7 +245,6 @@ class RoIHeads(nn.Module):
             all_boxes.append(boxes)
             all_scores.append(scores)
             all_labels.append(labels)
-        '''
 
         return all_boxes, all_scores, all_labels
 
