@@ -140,11 +140,14 @@ class BasicBlock(nn.Module):
         dilation: int = 1,
         norm_layer: Optional[str] = None,
         expansion: Optional[int] = None,
-        no_relu: bool = False
+        act_type: Optional[str] = None,
+        no_out_act: bool = False
     ) -> None:
         super(BasicBlock, self).__init__()
         if norm_layer is None:
             norm_layer = 'batch_norm'
+        if act_type is None:
+            act_type = 'relu'
         if groups != 1 or base_width != 64:
             raise ValueError('BasicBlock only supports groups=1 and base_width=64')
         if dilation > 1:
@@ -155,14 +158,14 @@ class BasicBlock(nn.Module):
 
         self.conv1 = ConvLayer(in_channels=inplanes, out_channels=planes,
                                kernel_size=3, stride=stride, dilation=1, padding=1, groups=1,
-                               norm_type=norm_layer, act_type='relu')
+                               norm_type=norm_layer, act_type=act_type)
 
         self.conv2 = ConvLayer(in_channels=planes, out_channels=planes,
                                kernel_size=3, stride=1, dilation=1, padding=1, groups=1,
                                norm_type=norm_layer, use_act=False)
 
         self.downsample = downsample
-        self.final_act = nn.Identity() if no_relu else nn.ReLU()
+        self.final_act = nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]()
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
@@ -193,11 +196,14 @@ class Bottleneck(nn.Module):
         dilation: int = 1,
         norm_layer: Optional[str] = None,
         expansion: Optional[int] = None,
-        no_relu: bool = False
+        act_type: Optional[str] = None,
+        no_out_act: bool = False
     ) -> None:
         super(Bottleneck, self).__init__()
         if norm_layer is None:
             norm_layer = 'batch_norm'
+        if act_type is None:
+            act_type = 'relu'
         width = int(planes * (base_width / 64.)) * groups
         if expansion is not None:
             self.expansion = expansion
@@ -205,18 +211,18 @@ class Bottleneck(nn.Module):
 
         self.conv1 = ConvLayer(in_channels=inplanes, out_channels=width,
                                kernel_size=1, stride=1,
-                               norm_type=norm_layer, act_type='relu')
+                               norm_type=norm_layer, act_type=act_type)
 
         self.conv2 = ConvLayer(in_channels=width, out_channels=width,
                                kernel_size=3, stride=stride, dilation=dilation, padding=dilation, groups=groups,
-                               norm_type=norm_layer, act_type='relu')
+                               norm_type=norm_layer, act_type=act_type)
 
         self.conv3 = ConvLayer(in_channels=width, out_channels=planes * self.expansion,
                                kernel_size=1, stride=1,
                                norm_type=norm_layer, use_act=False)
 
         self.downsample = downsample
-        self.final_act = nn.Identity() if no_relu else nn.ReLU()
+        self.final_act = nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]()
 
     def forward(self, x: Tensor) -> Tensor:
         identity = x
