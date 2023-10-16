@@ -132,7 +132,7 @@ class DetectionPipeline(BasePipeline):
                 pred_on_image['post_scores'] = detection[..., -1]
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
-        self.metric_factory(pred, target=targets, phase='valid')
+        self.metric_factory.calc(pred, target=targets, phase='valid')
         
     def save_checkpoint(self, epoch: int):
 
