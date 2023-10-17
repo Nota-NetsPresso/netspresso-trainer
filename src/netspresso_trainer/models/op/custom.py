@@ -555,32 +555,6 @@ class CSPLayer(nn.Module):
                                kernel_size=1, 
                                stride=1, act_type=act_type)
         
-        # Newly define because of slight difference with Bottleneck of custom.py
-        class DarknetBlock(nn.Module):
-            # Standard bottleneck
-            def __init__(
-                self,
-                in_channels,
-                out_channels,
-                shortcut=True,
-                expansion=0.5,
-                #depthwise=False,
-                act_type="silu",
-            ):
-                super().__init__()
-                hidden_channels = int(out_channels * expansion)
-                self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels, 
-                                       kernel_size=1, stride=1, act_type=act_type)
-                self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels, 
-                                       kernel_size=3, stride=1, act_type=act_type)
-                self.use_add = shortcut and in_channels == out_channels
-
-            def forward(self, x):
-                y = self.conv2(self.conv1(x))
-                if self.use_add:
-                    y = y + x
-                return y
-            
         block = DarknetBlock
 
         module_list = [
@@ -628,3 +602,30 @@ class SPPBottleneck(nn.Module):
         x = torch.cat([x] + [m(x) for m in self.m], dim=1)
         x = self.conv2(x)
         return x
+
+
+# Newly defined because of slight difference with Bottleneck of custom.py
+class DarknetBlock(nn.Module):
+    # Standard bottleneck
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        shortcut=True,
+        expansion=0.5,
+        #depthwise=False,
+        act_type="silu",
+    ):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)
+        self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels, 
+                                kernel_size=1, stride=1, act_type=act_type)
+        self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels, 
+                                kernel_size=3, stride=1, act_type=act_type)
+        self.use_add = shortcut and in_channels == out_channels
+
+    def forward(self, x):
+        y = self.conv2(self.conv1(x))
+        if self.use_add:
+            y = y + x
+        return y
