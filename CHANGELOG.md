@@ -2,7 +2,7 @@
 
 ## New Features:
 
-- No changes to highlight.
+- Add CSPDarknet by `@illian01` in [PR 195](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/195)
 
 ## Bug Fixes:
 
