@@ -12,4 +12,4 @@ from .custom import (
     Resize,
     ToTensor,
 )
-from .registry import CUSTOM_TRANSFORM
+from .registry import TRANSFORM_DICT
