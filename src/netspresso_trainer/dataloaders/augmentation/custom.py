@@ -7,6 +7,7 @@ import PIL.Image as Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from torchvision.transforms.functional import InterpolationMode
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -274,6 +275,21 @@ class RandomCrop:
 
 class RandomResizedCrop(T.RandomResizedCrop):
     visualize = True
+
+    def __init__(self, 
+                 size,
+                 scale=(0.08, 1.0),
+                 ratio=(3.0 / 4.0, 4.0 / 3.0),
+                 interpolation='bilinear', 
+                 antialias: Optional[bool]=None):
+        
+        inverse_modes_mapping = {
+            'nearest': InterpolationMode.NEAREST,
+            'bilinear': InterpolationMode.BILINEAR,
+            'bicubic': InterpolationMode.BICUBIC,
+        }
+        interpolation = inverse_modes_mapping[interpolation]
+        super().__init__(size, scale, ratio, interpolation, antialias)
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
