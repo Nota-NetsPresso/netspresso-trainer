@@ -1,21 +1,29 @@
+import inspect
 from typing import Optional
 
 from torchvision.transforms.functional import InterpolationMode
 
 from ..augmentation import custom as TC
+from ..augmentation.registry import TRANSFORM_DICT
 from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 def transforms_custom_train(conf_augmentation):
     assert conf_augmentation.img_size > 32
-    primary_tfl = [TC.RandomResizedCrop(conf_augmentation.img_size, interpolation=InterpolationMode.BILINEAR),
-                   TC.RandomHorizontalFlip(p=conf_augmentation.fliplr)
-                   ]
-    preprocess = [
+    preprocess = []
+    for augment in conf_augmentation.augment_info:
+        name = augment.name.lower()
+        transform_args = list(inspect.signature(TRANSFORM_DICT[name]).parameters)
+        transform_kwargs = {key:augment[key] for key in transform_args if hasattr(augment, key)}
+
+        transform = TRANSFORM_DICT[name](**transform_kwargs)
+        preprocess.append(transform)
+
+    preprocess = preprocess + [
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ]
-    return TC.Compose(primary_tfl + preprocess)
+    return TC.Compose(preprocess)
 
 
 def transforms_custom_eval(conf_augmentation):
