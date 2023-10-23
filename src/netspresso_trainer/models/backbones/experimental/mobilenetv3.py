@@ -28,7 +28,7 @@ class MobileNetV3(nn.Module):
     def __init__(
         self,
         task: str,
-        stages_info, # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
+        block_info, # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
         **kwargs
     ) -> None:
         super(MobileNetV3, self).__init__()
@@ -39,7 +39,7 @@ class MobileNetV3(nn.Module):
         act_type = 'hard_swish'
 
         # building first layer
-        firstconv_output_channels = stages_info[0][0][0]
+        firstconv_output_channels = block_info[0][0][0]
         self.conv_first = ConvLayer(
             in_channels=3,
             out_channels=firstconv_output_channels,
@@ -52,9 +52,9 @@ class MobileNetV3(nn.Module):
         # building inverted residual blocks
         stages: List[nn.Module] = []
 
-        lastconv_input_channels = stages_info[-1][-1][3]
+        lastconv_input_channels = block_info[-1][-1][3]
         lastconv_output_channels = 6 * lastconv_input_channels
-        for stg_idx, stage_info in enumerate(stages_info):
+        for stg_idx, stage_info in enumerate(block_info):
             stage: List[nn.Module] = []
 
             for block in stage_info:
@@ -79,7 +79,7 @@ class MobileNetV3(nn.Module):
                 )
             
             # add last conv
-            if stg_idx == len(stages_info) - 1:
+            if stg_idx == len(block_info) - 1:
                 stage.append(
                     ConvLayer(in_channels=lastconv_input_channels,
                               out_channels=lastconv_output_channels,
