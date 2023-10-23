@@ -12,3 +12,4 @@ from .custom import (
     Resize,
     ToTensor,
 )
+from .registry import CUSTOM_TRANSFORM
