@@ -5,11 +5,9 @@ import torch
 from torch import Tensor, nn
 from torchvision.ops import Conv2dNormActivation
 from torchvision.ops import boxes as box_ops
+from torchvision.models.detection._utils import _topk_min
 
 from . import _utils as det_utils
-
-# Import AnchorGenerator to keep compatibility.
-from .anchor_utils import AnchorGenerator  # noqa: 401
 
 
 class RPNHead(nn.Module):
@@ -105,7 +103,7 @@ def concat_box_prediction_layers(box_cls: List[Tensor], box_regression: List[Ten
     # concatenate on the first dimension (representing the feature levels), to
     # take into account the way the labels were generated (with all feature maps
     # being concatenated as well)
-    box_cls = torch.cat(box_cls_flattened, dim=1).flatten(0, -2)
+    box_cls = torch.cat(box_cls_flattened, dim=1).flatten(0, 1)
     box_regression = torch.cat(box_regression_flattened, dim=1).reshape(-1, 4)
     return box_cls, box_regression
 
@@ -144,7 +142,7 @@ class RegionProposalNetwork(torch.nn.Module):
 
     def __init__(
         self,
-        anchor_generator: AnchorGenerator,
+        anchor_generator: det_utils.AnchorGenerator,
         head: nn.Module,
         # Faster-RCNN Training
         fg_iou_thresh: float,
@@ -195,7 +193,7 @@ class RegionProposalNetwork(torch.nn.Module):
         obs = [objectness[:, s:e] for s, e in zip(start, end)]
         for ob in obs:
             num_anchors = ob.shape[1]
-            pre_nms_top_n = det_utils._topk_min(ob, self.pre_nms_top_n(), 1)
+            pre_nms_top_n = _topk_min(ob, self.pre_nms_top_n(), 1)
             _, top_n_idx = ob.topk(pre_nms_top_n, dim=1)
             r.append(top_n_idx + offset)
             offset += num_anchors
