@@ -23,3 +23,27 @@ class TrainerConfig:
     training: TrainingConfig = field(default_factory=lambda: TrainingConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
     logging: LoggingConfig = field(default_factory=lambda: LoggingConfig())
+    
+    @property
+    def epochs(self) -> int:
+        return self.training.epochs
+    
+    @property
+    def batch_size(self) -> int:
+        return self.training.batch_size
+    
+    @property
+    def num_workers(self) -> int:
+        return self.environment.num_workers
+    
+    @epochs.setter
+    def epochs(self, v: int) -> None:
+        self.training.epochs = v
+
+    @batch_size.setter
+    def batch_size(self, v: int) -> None:
+        self.training.batch_size = v
+    
+    @num_workers.setter
+    def num_workers(self, v: int) -> None:
+        self.environment.num_workers = v
