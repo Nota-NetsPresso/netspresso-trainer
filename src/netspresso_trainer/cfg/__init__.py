@@ -8,19 +8,21 @@ from .augmentation import (
     DetectionAugmentationConfig,
     ColorJitter
 )
+from .data import *
+from .model import *
 from .training import (
     TrainingConfig,
     ClassificationTrainingConfig,
     SegmentationTrainingConfig,
     DetectionTrainingConfig
 )
-from .model import *
 from .environment import EnvironmentConfig
 from .logging import LoggingConfig
 
 @dataclass
 class TrainerConfig:
     augmentation: AugmentationConfig = field(default_factory=lambda: AugmentationConfig())
+    data: DatasetConfig = field(default_factory=lambda: DatasetConfig())
     model: ModelConfig = field(default_factory=lambda: ModelConfig())
     training: TrainingConfig = field(default_factory=lambda: TrainingConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
