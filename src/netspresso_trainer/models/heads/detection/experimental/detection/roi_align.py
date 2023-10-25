@@ -37,7 +37,7 @@ class MultiScaleRoIAlign(nn.Module):
         self,
         x: Dict[str, Tensor],
         boxes: List[Tensor],
-        image_shapes: List[Tuple[int, int]],
+        image_shapes: Tuple[int, int],
     ) -> Tensor:
         """
         Args:
@@ -54,6 +54,7 @@ class MultiScaleRoIAlign(nn.Module):
         """
         x_filtered = _filter_input(x, self.featmap_names)
         if self.scales is None or self.map_levels is None:
+            image_shapes = [image_shapes for _ in range(len(x_filtered[0]))]
             self.scales, self.map_levels = _setup_scales(
                 x_filtered, image_shapes, self.canonical_scale, self.canonical_level
             )
