@@ -1,6 +1,7 @@
 import math
 from typing import List, Tuple
 
+import numpy as np
 import torch
 from torch import Tensor
 from torchvision.ops import nms
@@ -399,21 +400,3 @@ def clip_boxes_to_image(boxes: Tensor, size: Tuple[int, int]) -> Tensor:
 
     clipped_boxes = torch.stack((boxes_x, boxes_y), dim=-1)
     return clipped_boxes.reshape(boxes.shape)
-
-
-@torch.jit._script_if_tracing
-def _batched_nms_vanilla(
-    boxes: Tensor,
-    scores: Tensor,
-    idxs: Tensor,
-    iou_threshold: float,
-    class_ids: List[int], # class_ids is unique of idxs
-) -> Tensor:
-    # Based on Detectron2 implementation, just manually call nms() on each class independently
-    keep_indices = list()
-    for class_id in class_ids:
-        curr_indices = torch.where(idxs == class_id)[0]
-        curr_keep_indices = nms(boxes[curr_indices], scores[curr_indices], iou_threshold)
-        keep_indices.append(curr_indices[curr_keep_indices])
-    keep_indices = torch.cat(keep_indices, dim=0)
-    return keep_indices[scores[keep_indices].sort(descending=True)[1]]
