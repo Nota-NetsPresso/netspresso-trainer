@@ -16,9 +16,9 @@ from .base import BasePipeline
 logger = logging.getLogger("netspresso_trainer")
 
 
-class DetectionPipeline(BasePipeline):
+class TwoStageDetectionPipeline(BasePipeline):
     def __init__(self, conf, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
-        super(DetectionPipeline, self).__init__(conf, task, model_name, model, devices,
+        super(TwoStageDetectionPipeline, self).__init__(conf, task, model_name, model, devices,
                                                 train_dataloader, eval_dataloader, class_map, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
