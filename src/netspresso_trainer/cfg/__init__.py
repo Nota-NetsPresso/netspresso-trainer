@@ -14,12 +14,14 @@ from .training import (
     SegmentationTrainingConfig,
     DetectionTrainingConfig
 )
+from .model import *
 from .environment import EnvironmentConfig
 from .logging import LoggingConfig
 
 @dataclass
 class TrainerConfig:
     augmentation: AugmentationConfig = field(default_factory=lambda: AugmentationConfig())
+    model: ModelConfig = field(default_factory=lambda: ModelConfig())
     training: TrainingConfig = field(default_factory=lambda: TrainingConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
     logging: LoggingConfig = field(default_factory=lambda: LoggingConfig())
