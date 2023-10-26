@@ -137,7 +137,7 @@ class PIDNetArchitectureConfig(ArchitectureConfig):
 @dataclass
 class ResNetArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "resnet",
+        "name": "resnet50",
         "block": "bottleneck",
         "layers": [3, 4, 6, 3],
     })
@@ -179,7 +179,7 @@ class ViTArchitectureConfig(ArchitectureConfig):
 @dataclass
 class ClassificationEfficientFormerModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={"name": "fc"}
     ))
@@ -191,7 +191,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
 @dataclass
 class SegmentationEfficientFormerModelConfig(ModelConfig):
     task: str = "segmentation"
-    checkpoint: str = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={"name": "all_mlp_decoder"}
     ))
@@ -203,7 +203,7 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
 @dataclass
 class DetectionEfficientFormerModelConfig(ModelConfig):
     task: str = "detection"
-    checkpoint: str = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={"name": "faster_rcnn"}
     ))
@@ -216,7 +216,7 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
 @dataclass
 class ClassificationMobileNetV3ModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={"name": "fc"}
     ))
@@ -228,7 +228,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
 @dataclass
 class SegmentationMobileNetV3ModelConfig(ModelConfig):
     task: str = "segmentation"
-    checkpoint: str = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={"name": "all_mlp_decoder"}
     ))
@@ -240,7 +240,7 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
 @dataclass
 class ClassificationMobileViTModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/mobilevit/mobilevit_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilevit/mobilevit_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileViTArchitectureConfig(
         head={"name": "fc"}
     ))
@@ -252,7 +252,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
 @dataclass
 class PIDNetModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/pidnet/pidnet_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "pidnet_cross_entropy", "ignore_index": 255, "weight": None},
@@ -264,7 +264,7 @@ class PIDNetModelConfig(ModelConfig):
 @dataclass
 class ClassificationResNetModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/resnet/resnet50.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={"name": "fc"}
     ))
@@ -276,7 +276,7 @@ class ClassificationResNetModelConfig(ModelConfig):
 @dataclass
 class SegmentationResNetModelConfig(ModelConfig):
     task: str = "segmentation"
-    checkpoint: str = "./weights/resnet/resnet50.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={"name": "all_mlp_decoder"}
     ))
@@ -288,7 +288,7 @@ class SegmentationResNetModelConfig(ModelConfig):
 @dataclass
 class ClassificationSegFormerModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/segformer/segformer.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={"name": "fc"}
     ))
@@ -300,7 +300,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
 @dataclass
 class SegmentationSegFormerModelConfig(ModelConfig):
     task: str = "segmentation"
-    checkpoint: str = "./weights/segformer/segformer.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={"name": "all_mlp_decoder"}
     ))
@@ -312,7 +312,7 @@ class SegmentationSegFormerModelConfig(ModelConfig):
 @dataclass
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
-    checkpoint: str = "./weights/vit/vit-tiny.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
         head={"name": "fc"}
     ))
