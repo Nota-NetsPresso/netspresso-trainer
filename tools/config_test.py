@@ -9,18 +9,19 @@ if __name__ == "__main__":
     
     from netspresso_trainer.cfg import (
         ClassificationAugmentationConfig,
-        ClassificationSegFormerModelConfig,
+        ClassificationResNetModelConfig,
         ExampleBeansDataset,
         ColorJitter
     )
     
     augmentation_config = ClassificationAugmentationConfig(color_jitter=ColorJitter(colorjitter_p=0.9))
     example_dataset = ExampleBeansDataset
+    example_model = ClassificationResNetModelConfig()
     cfg = TrainerConfig(
+        task='classification',
+        auto=True,
         data=ExampleBeansDataset,
-        model=ClassificationSegFormerModelConfig(
-            checkpoint="./test/path/to/segformer.pth"
-        ),
+        model=example_model,
         augmentation=augmentation_config
     )
     
