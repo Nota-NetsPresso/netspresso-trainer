@@ -3,14 +3,12 @@
 import argparse
 import os
 
+import numpy as np
 import torch
 import torch.nn as nn
-import numpy as np
-from omegaconf import OmegaConf
-
 from netspresso_trainer.optimizers import build_optimizer
 from netspresso_trainer.schedulers import build_scheduler
-
+from omegaconf import OmegaConf
 
 IN_FEATURES = 10
 OUT_FEATURES = 4

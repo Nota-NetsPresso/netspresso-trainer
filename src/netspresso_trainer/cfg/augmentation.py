@@ -1,8 +1,9 @@
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
-from dataclasses import dataclass, field
 
 from omegaconf import MISSING, MissingMandatoryValue
+
 
 @dataclass
 class ColorJitter:

@@ -1,6 +1,6 @@
-from pathlib import Path
-from typing import Optional, Union, Dict, List, Any
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
 from omegaconf import MISSING, MissingMandatoryValue
 
@@ -27,7 +27,7 @@ class ArchitectureConfig:
     head: Optional[Dict[str, Any]] = None
     
     def __post_init__(self):
-        assert bool(self.full) != bool(self.backbone), f"Only one of full or backbone should be given."
+        assert bool(self.full) != bool(self.backbone), "Only one of full or backbone should be given."
     
 @dataclass
 class ModelConfig:

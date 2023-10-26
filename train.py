@@ -1,11 +1,7 @@
-from netspresso_trainer import train, TrainerConfig
-
+from netspresso_trainer import TrainerConfig, train
 
 if __name__ == '__main__':
-    from netspresso_trainer.cfg import (
-        ClassificationResNetModelConfig,
-        ExampleBeansDataset
-    )
+    from netspresso_trainer.cfg import ClassificationResNetModelConfig, ExampleBeansDataset
     
     """
     Declare dataset config (Use an example dataset provided from the module)

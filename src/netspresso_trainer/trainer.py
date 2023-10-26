@@ -1,8 +1,8 @@
-import os
 import argparse
+import os
 from typing import Literal
 
-from omegaconf import OmegaConf, DictConfig
+from omegaconf import DictConfig, OmegaConf
 
 from .cfg import TrainerConfig
 from .trainer_common import train_common

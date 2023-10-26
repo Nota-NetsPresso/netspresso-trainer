@@ -1,17 +1,17 @@
-import omegaconf
-from omegaconf import OmegaConf
 from copy import deepcopy
-from pytest import raises
 
+import omegaconf
 from netspresso_trainer.cfg import TrainerConfig
+from omegaconf import OmegaConf
+from pytest import raises
 
 if __name__ == "__main__":
     
     from netspresso_trainer.cfg import (
         ClassificationAugmentationConfig,
         ClassificationResNetModelConfig,
+        ColorJitter,
         ExampleBeansDataset,
-        ColorJitter
     )
     
     augmentation_config = ClassificationAugmentationConfig(color_jitter=ColorJitter(colorjitter_p=0.9))
