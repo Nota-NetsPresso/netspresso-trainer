@@ -72,6 +72,13 @@ def set_arguments(args_parsed):
     conf.merge_with(conf_environment)
     return conf
 
+def set_struct_recursive(conf: DictConfig, value: bool):
+    OmegaConf.set_struct(conf, value)
+    
+    for _, conf_value in conf.items():
+        if isinstance(conf_value, DictConfig):
+            set_struct_recursive(conf_value, value)
+
 def train_with_yaml():
     args_parsed = parse_args_netspresso()
     conf = set_arguments(args_parsed)
@@ -79,7 +86,7 @@ def train_with_yaml():
 
 def train_with_config(config: TrainerConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'):
     conf: DictConfig = OmegaConf.create(config)
-    OmegaConf.set_struct(conf, False)
+    set_struct_recursive(conf, False)
     train_common(conf, log_level=log_level)
 
 
