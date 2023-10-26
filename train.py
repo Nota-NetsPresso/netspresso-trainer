@@ -1,4 +1,4 @@
-from netspresso_trainer import train_with_config, TrainerConfig
+from netspresso_trainer import train, TrainerConfig
 
 
 if __name__ == '__main__':
@@ -39,4 +39,4 @@ if __name__ == '__main__':
     cfg.batch_size = 64
     cfg.epochs = 5
     
-    train_with_config(cfg, log_level='INFO')
+    train(cfg, log_level='INFO')

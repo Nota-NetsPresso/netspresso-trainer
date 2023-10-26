@@ -5,7 +5,7 @@ from typing import Literal
 from omegaconf import OmegaConf, DictConfig
 
 from .cfg import TrainerConfig
-from .train_common import train_common
+from .trainer_common import train_common
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
