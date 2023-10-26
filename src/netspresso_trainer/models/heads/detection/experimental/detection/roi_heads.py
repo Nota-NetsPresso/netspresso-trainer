@@ -212,7 +212,7 @@ class RoIHeads(nn.Module):
 
         # Apply Non-maximum suppression
         for boxes, scores in zip(pred_boxes_list, pred_scores_list):
-            boxes = det_utils.clip_boxes_to_image(boxes, image_shapes)
+            boxes = box_ops.clip_boxes_to_image(boxes, image_shapes)
 
             # create labels for each prediction
             labels = torch.arange(num_classes, device=device)
