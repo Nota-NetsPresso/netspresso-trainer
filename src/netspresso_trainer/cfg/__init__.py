@@ -35,14 +35,14 @@ _TRAINING_CONFIG_TYPE_DICT = {
 
 @dataclass
 class TrainerConfig:
-    task: str = MISSING
-    auto: bool = False
-    augmentation: Optional[AugmentationConfig] = None
-    training: Optional[ScheduleConfig] = None
+    task: str = field(default=MISSING, metadata={"omegaconf_ignore": True})
+    auto: bool = field(default=False, metadata={"omegaconf_ignore": True})
     data: DatasetConfig = field(default_factory=lambda: DatasetConfig())
+    augmentation: Optional[AugmentationConfig] = None
     model: ModelConfig = field(default_factory=lambda: ModelConfig())
-    environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
+    training: Optional[ScheduleConfig] = None
     logging: LoggingConfig = field(default_factory=lambda: LoggingConfig())
+    environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
     
     @property
     def epochs(self) -> int:
