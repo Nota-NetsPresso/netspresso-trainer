@@ -1,4 +1,4 @@
-from .registry import TASK_PIPELINE, SUPPORTING_TASK_LIST
+from .registry import SUPPORTING_TASK_LIST, TASK_PIPELINE
 
 
 def build_pipeline(conf, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, is_graphmodule_training, profile=False):
@@ -6,10 +6,7 @@ def build_pipeline(conf, task, model_name, model, devices, train_dataloader, eva
 
     task_ = task
     if task == 'detection':
-        if conf.model.architecture.head.name in ['faster_rcnn']:
-            task_ = 'detection-two-stage'
-        else:
-            task_ = 'detection-one-stage'
+        task_ = "detection-two-stage" if conf.model.architecture.head.name in ["faster_rcnn"] else "detection-one-stage"
 
     task_pipeline = TASK_PIPELINE[task_]
     
