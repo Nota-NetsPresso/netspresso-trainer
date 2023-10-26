@@ -432,10 +432,8 @@ class AnchorGenerator(nn.Module):
             device = base_anchors.device
 
             # For output anchor, compute [x_center, y_center, x_center, y_center]
-            #shifts_x = torch.arange(0, grid_width, dtype=torch.int32).to(device) * stride_width
-            #shifts_y = torch.arange(0, grid_height, dtype=torch.int32).to(device) * stride_height
-            shifts_x = (torch.ones_like(grid_width_template, dtype=torch.int32).cumsum(0) - 1).to(device) * stride_width
-            shifts_y = (torch.ones_like(grid_height_template, dtype=torch.int32).cumsum(0) - 1).to(device) * stride_height
+            shifts_x = torch.arange(0, grid_width, dtype=torch.int32).to(device) * stride_width
+            shifts_y = torch.arange(0, grid_height, dtype=torch.int32).to(device) * stride_height
             shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x, indexing="ij")
             shift_x = shift_x.reshape(-1)
             shift_y = shift_y.reshape(-1)
