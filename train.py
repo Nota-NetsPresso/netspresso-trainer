@@ -11,7 +11,7 @@ if __name__ == '__main__':
     Declare dataset config (Use an example dataset provided from the module)
     """
     example_dataset = ExampleBeansDataset
-    
+    example_dataset.metadata.custom_cache_dir = "./data/huggingface"
     """
     Declare model config
     """
