@@ -203,8 +203,13 @@ class OneStageDetectionPipeline(BasePipeline):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
-        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
+        targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices),}
                    for box, label in zip(bboxes, labels)]
+        
+        targets = {'gt': targets, 
+                   'img_size': images.size(-1), 
+                   'intermediate_features_dim': self.model.backbone.intermediate_features_dim,
+                   'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
 

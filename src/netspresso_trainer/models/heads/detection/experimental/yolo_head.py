@@ -116,8 +116,6 @@ class YOLOXHead(nn.Module):
                     padding=0,
                 )
             )
-        
-        self.grids = [torch.zeros(1)] * len(intermediate_features_dim)
 
     def forward(self, xin):
         outputs = []
@@ -134,17 +132,15 @@ class YOLOXHead(nn.Module):
             reg_output = self.reg_preds[k](reg_feat)
             obj_output = self.obj_preds[k](reg_feat)
 
-            output = torch.cat(
-                [reg_output, obj_output.sigmoid(), cls_output.sigmoid()], 1
-            )
+            output = torch.cat([reg_output, obj_output, cls_output], 1)
 
             outputs.append(output)
 
         #self.hw = [x.shape[-2:] for x in outputs]
         # [batch, n_anchors_all, 85]
-        outputs = torch.cat(
-            [x.flatten(start_dim=2) for x in outputs], dim=2
-        ).permute(0, 2, 1)
+        #outputs = torch.cat(
+        #    [x.flatten(start_dim=2) for x in outputs], dim=2
+        #).permute(0, 2, 1)
 
         # decode
         #return self.decode_outputs(outputs, dtype=xin[0].type())
