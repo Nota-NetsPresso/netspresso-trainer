@@ -116,7 +116,7 @@ class HuggingFaceSegmentationDatasetConfig(DatasetConfig):
 ExampleBeansDataset = HuggingFaceClassificationDatasetConfig(
     name="beans",
     metadata=HuggingFaceConfig(
-        custom_cache_dir="./data/huggingface",
+        custom_cache_dir=None,
         repo="beans",
         features={"image": "image", "label": "labels"}
     )
@@ -134,7 +134,7 @@ ExampleChessDataset = LocalClassificationDatasetConfig(
 ExampleXrayDataset = HuggingFaceClassificationDatasetConfig(
     name="chest_xray_classification",
     metadata=HuggingFaceConfig(
-        custom_cache_dir="./data/huggingface",
+        custom_cache_dir=None,
         repo="keremberke/chest-xray-classification",
         subset="full",
         features={"image": "image", "label": "labels"}
@@ -165,7 +165,7 @@ ExampleCocoyoloDataset = LocalDetectionDatasetConfig(
 ExampleSidewalkDataset = HuggingFaceSegmentationDatasetConfig(
     name="sidewalk_semantic",
     metadata=HuggingFaceConfig(
-        custom_cache_dir="./data/huggingface",
+        custom_cache_dir=None,
         repo="segments/sidewalk-semantic",
         features={"image": "pixel_values", "label": "label"}
     ),
@@ -184,7 +184,7 @@ ExampleSidewalkDataset = HuggingFaceSegmentationDatasetConfig(
 ExampleSkincancerDataset = HuggingFaceClassificationDatasetConfig(
     name="skin_cancer",
     metadata=HuggingFaceConfig(
-        custom_cache_dir="./data/huggingface",
+        custom_cache_dir=None,
         repo="marmal88/skin_cancer",
         features={"image": "image", "label": "dx"}
     )
@@ -258,7 +258,7 @@ ExampleVoc12CustomDataset = LocalSegmentationDatasetConfig(
 ExampleWikiartDataset = HuggingFaceClassificationDatasetConfig(
     name="wikiart_artist",
     metadata=HuggingFaceConfig(
-        custom_cache_dir="./data/huggingface",
+        custom_cache_dir=None,
         repo="huggan/wikiart",
         subset="full",
         features={"image": "image", "label": "artist"}
