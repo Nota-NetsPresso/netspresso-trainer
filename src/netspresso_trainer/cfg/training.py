@@ -1,12 +1,10 @@
-from pathlib import Path
-from typing import Optional, Union
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from omegaconf import MISSING, MissingMandatoryValue
 
 
 @dataclass
-class TrainingConfig:
+class ScheduleConfig:
     seed: int = 1
     opt: str = "adamw"
     lr: float = 6e-5
@@ -23,15 +21,15 @@ class TrainingConfig:
 
 
 @dataclass
-class ClassificationTrainingConfig(TrainingConfig):
+class ClassificationScheduleConfig(ScheduleConfig):
     batch_size: int = 32
 
 
 @dataclass
-class SegmentationTrainingConfig(TrainingConfig):
+class SegmentationScheduleConfig(ScheduleConfig):
     pass
 
 
 @dataclass
-class DetectionTrainingConfig(TrainingConfig):
+class DetectionScheduleConfig(ScheduleConfig):
     pass

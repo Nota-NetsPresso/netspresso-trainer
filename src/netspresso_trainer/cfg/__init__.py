@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Optional, Union
+from typing import Optional, Dict, Any
 
 from .augmentation import (
     AugmentationConfig,
@@ -11,26 +11,26 @@ from .augmentation import (
 from .data import *
 from .model import *
 from .training import (
-    TrainingConfig,
-    ClassificationTrainingConfig,
-    SegmentationTrainingConfig,
-    DetectionTrainingConfig
+    ScheduleConfig,
+    ClassificationScheduleConfig,
+    SegmentationScheduleConfig,
+    DetectionScheduleConfig
 )
 from .environment import EnvironmentConfig
 from .logging import LoggingConfig
 
 from omegaconf import MISSING, MissingMandatoryValue
 
-AUGMENTATION_CONFIG_TYPE_DICT = {
+_AUGMENTATION_CONFIG_TYPE_DICT = {
     'classification': ClassificationAugmentationConfig,
     'segmentation': SegmentationAugmentationConfig,
     'detection': DetectionAugmentationConfig
 }
 
-TRAINING_CONFIG_TYPE_DICT = {
-    'classification': ClassificationTrainingConfig,
-    'segmentation': SegmentationTrainingConfig,
-    'detection': DetectionTrainingConfig
+_TRAINING_CONFIG_TYPE_DICT = {
+    'classification': ClassificationScheduleConfig,
+    'segmentation': SegmentationScheduleConfig,
+    'detection': DetectionScheduleConfig
 }
 
 @dataclass
@@ -38,7 +38,7 @@ class TrainerConfig:
     task: str = MISSING
     auto: bool = False
     augmentation: Optional[AugmentationConfig] = None
-    training: Optional[TrainingConfig] = None
+    training: Optional[ScheduleConfig] = None
     data: DatasetConfig = field(default_factory=lambda: DatasetConfig())
     model: ModelConfig = field(default_factory=lambda: ModelConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
@@ -75,6 +75,6 @@ class TrainerConfig:
         
         if self.auto:
             if self.augmentation is None:
-                self.augmentation = AUGMENTATION_CONFIG_TYPE_DICT[self.task]()
+                self.augmentation = _AUGMENTATION_CONFIG_TYPE_DICT[self.task]()
             if self.training is None:
-                self.training = TRAINING_CONFIG_TYPE_DICT[self.task]()
+                self.training = _TRAINING_CONFIG_TYPE_DICT[self.task]()
