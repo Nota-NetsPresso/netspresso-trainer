@@ -25,7 +25,7 @@ if __name__ == '__main__':
     cfg = TrainerConfig(
         task='classification',
         auto=True,
-        data=ExampleBeansDataset,
+        data=example_dataset,
         model=example_model
     )
     
