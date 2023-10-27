@@ -21,4 +21,6 @@ python train.py\
   --environment config/environment.yaml
 ```
 
-Please refer to [`example_train.sh`](./example_train.sh) and [`example_train_fx.sh`](./example_train_fx.sh).
+Please refer to [`scripts/example_train.sh`](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/scripts/example_train.sh).
+
+NetsPresso Trainer is compatible with [NetsPresso](https://netspresso.ai/) service. We provide NetsPresso Trainer tutorial that contains whole procedure from model train to model compression and benchmark. Please refer to our [colab tutorial](https://colab.research.google.com/drive/1RBKMCPEa4x-4X31zqzTS8WgQI9TQt3e-?usp=sharing).

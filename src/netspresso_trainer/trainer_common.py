@@ -1,9 +1,8 @@
-import argparse
-import os
 from pathlib import Path
+from typing import Literal
 
 import torch
-from omegaconf import OmegaConf
+from omegaconf import DictConfig
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from .dataloaders import build_dataloader, build_dataset
@@ -12,83 +11,14 @@ from .pipelines import build_pipeline
 from .utils.environment import set_device
 from .utils.logger import set_logger
 
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
-
-def parse_args_netspresso():
-
-    parser = argparse.ArgumentParser(description="Parser for NetsPresso configuration")
-
-    # -------- User arguments ----------------------------------------
-
-    parser.add_argument(
-        '--data', type=str, required=True,
-        dest='data',
-        help="Config for dataset information")
-
-    parser.add_argument(
-        '--augmentation', type=str, required=True,
-        dest='augmentation',
-        help="Config for data augmentation")
-
-    parser.add_argument(
-        '--model', type=str, required=True,
-        dest='model',
-        help="Config for the model architecture")
-
-    parser.add_argument(
-        '--training', type=str, required=True,
-        dest='training',
-        help="Config for training options")
-
-    parser.add_argument(
-        '--logging', type=str, default='config/logging.yaml',
-        dest='logging',
-        help="Config for logging options")
-
-    parser.add_argument(
-        '--environment', type=str, default='config/environment.yaml',
-        dest='environment',
-        help="Config for training environment (# workers, etc.)")
-
-    parser.add_argument(
-        '--log-level', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default=LOG_LEVEL,
-        dest='log_level',
-        help="Config for training environment (# workers, etc.)")
-
-    args_parsed, _ = parser.parse_known_args()
-
-    return args_parsed
-
-
-def set_arguments(args_parsed):
-    conf_data = OmegaConf.load(args_parsed.data)
-    conf_augmentation = OmegaConf.load(args_parsed.augmentation)
-    conf_model = OmegaConf.load(args_parsed.model)
-    conf_training = OmegaConf.load(args_parsed.training)
-    conf_logging = OmegaConf.load(args_parsed.logging)
-    conf_environment = OmegaConf.load(args_parsed.environment)
-
-    conf = OmegaConf.create()
-    conf.merge_with(conf_data)
-    conf.merge_with(conf_augmentation)
-    conf.merge_with(conf_model)
-    conf.merge_with(conf_training)
-    conf.merge_with(conf_logging)
-    conf.merge_with(conf_environment)
-
-    return conf
-
-
-def trainer():
-    args_parsed = parse_args_netspresso()
-    conf = set_arguments(args_parsed)
+def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'):
 
     assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
 
     distributed, world_size, rank, devices = set_device(conf.training.seed)
-    logger = set_logger(logger_name="netspresso_trainer", level=args_parsed.log_level, distributed=distributed)
+    logger = set_logger(logger_name="netspresso_trainer", level=log_level, distributed=distributed)
 
     conf.distributed = distributed
     conf.world_size = world_size

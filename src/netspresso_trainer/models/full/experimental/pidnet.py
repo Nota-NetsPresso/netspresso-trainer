@@ -111,9 +111,9 @@ class PIDNet(nn.Module):
         inplanes = planes * expansion
         for i in range(1, blocks):
             if i == (blocks-1):
-                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_relu=True))
+                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_out_act=True))
             else:
-                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_relu=False))
+                layers.append(block(inplanes, planes, stride=1, expansion=expansion, no_out_act=False))
 
         return nn.Sequential(*layers)
 
@@ -126,7 +126,7 @@ class PIDNet(nn.Module):
                                    kernel_size=1, stride=stride,
                                    norm_type='batch_norm', use_act=False)
 
-        layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_relu=True)
+        layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_out_act=True)
 
         return layer
 

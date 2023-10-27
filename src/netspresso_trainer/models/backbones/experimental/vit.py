@@ -16,7 +16,7 @@ from ...op.base_metaformer import (
     MetaFormerEncoder,
     MultiHeadAttention,
 )
-from ...op.ml_cvnets import ConvLayer, SinusoidalPositionalEncoding
+from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -32,7 +32,6 @@ class ViTEmbeddings(nn.Module):
             kernel_size += 1
         
         self.patch_emb = ConvLayer(
-            opts=None,
             in_channels=image_channels,
             out_channels=hidden_size,
             kernel_size=kernel_size,

@@ -1,11 +1,9 @@
 import math
-from collections import OrderedDict
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import torch
-from torch import Tensor, nn
-from torch.nn import functional as F
-from torchvision.ops import FrozenBatchNorm2d, complete_box_iou_loss, distance_box_iou_loss, generalized_box_iou_loss
+import torch.nn as nn
+from torch import Tensor
 
 
 class BalancedPositiveNegativeSampler:
@@ -213,101 +211,14 @@ class BoxCoder:
         pred_h = torch.exp(dh) * heights[:, None]
 
         # Distance from center to box's corner.
-        c_to_c_h = torch.tensor(0.5, dtype=pred_ctr_y.dtype, device=pred_h.device) * pred_h
-        c_to_c_w = torch.tensor(0.5, dtype=pred_ctr_x.dtype, device=pred_w.device) * pred_w
+        c_to_c_h = 0.5 * pred_h
+        c_to_c_w = 0.5 * pred_w
 
         pred_boxes1 = pred_ctr_x - c_to_c_w
         pred_boxes2 = pred_ctr_y - c_to_c_h
         pred_boxes3 = pred_ctr_x + c_to_c_w
         pred_boxes4 = pred_ctr_y + c_to_c_h
         pred_boxes = torch.stack((pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=2).flatten(1)
-        return pred_boxes
-
-
-class BoxLinearCoder:
-    """
-    The linear box-to-box transform defined in FCOS. The transformation is parameterized
-    by the distance from the center of (square) src box to 4 edges of the target box.
-    """
-
-    def __init__(self, normalize_by_size: bool = True) -> None:
-        """
-        Args:
-            normalize_by_size (bool): normalize deltas by the size of src (anchor) boxes.
-        """
-        self.normalize_by_size = normalize_by_size
-
-    def encode(self, reference_boxes: Tensor, proposals: Tensor) -> Tensor:
-        """
-        Encode a set of proposals with respect to some reference boxes
-
-        Args:
-            reference_boxes (Tensor): reference boxes
-            proposals (Tensor): boxes to be encoded
-
-        Returns:
-            Tensor: the encoded relative box offsets that can be used to
-            decode the boxes.
-
-        """
-
-        # get the center of reference_boxes
-        reference_boxes_ctr_x = 0.5 * (reference_boxes[..., 0] + reference_boxes[..., 2])
-        reference_boxes_ctr_y = 0.5 * (reference_boxes[..., 1] + reference_boxes[..., 3])
-
-        # get box regression transformation deltas
-        target_l = reference_boxes_ctr_x - proposals[..., 0]
-        target_t = reference_boxes_ctr_y - proposals[..., 1]
-        target_r = proposals[..., 2] - reference_boxes_ctr_x
-        target_b = proposals[..., 3] - reference_boxes_ctr_y
-
-        targets = torch.stack((target_l, target_t, target_r, target_b), dim=-1)
-
-        if self.normalize_by_size:
-            reference_boxes_w = reference_boxes[..., 2] - reference_boxes[..., 0]
-            reference_boxes_h = reference_boxes[..., 3] - reference_boxes[..., 1]
-            reference_boxes_size = torch.stack(
-                (reference_boxes_w, reference_boxes_h, reference_boxes_w, reference_boxes_h), dim=-1
-            )
-            targets = targets / reference_boxes_size
-        return targets
-
-    def decode(self, rel_codes: Tensor, boxes: Tensor) -> Tensor:
-
-        """
-        From a set of original boxes and encoded relative box offsets,
-        get the decoded boxes.
-
-        Args:
-            rel_codes (Tensor): encoded boxes
-            boxes (Tensor): reference boxes.
-
-        Returns:
-            Tensor: the predicted boxes with the encoded relative box offsets.
-
-        .. note::
-            This method assumes that ``rel_codes`` and ``boxes`` have same size for 0th dimension. i.e. ``len(rel_codes) == len(boxes)``.
-
-        """
-
-        boxes = boxes.to(dtype=rel_codes.dtype)
-
-        ctr_x = 0.5 * (boxes[..., 0] + boxes[..., 2])
-        ctr_y = 0.5 * (boxes[..., 1] + boxes[..., 3])
-
-        if self.normalize_by_size:
-            boxes_w = boxes[..., 2] - boxes[..., 0]
-            boxes_h = boxes[..., 3] - boxes[..., 1]
-
-            list_box_size = torch.stack((boxes_w, boxes_h, boxes_w, boxes_h), dim=-1)
-            rel_codes = rel_codes * list_box_size
-
-        pred_boxes1 = ctr_x - rel_codes[..., 0]
-        pred_boxes2 = ctr_y - rel_codes[..., 1]
-        pred_boxes3 = ctr_x + rel_codes[..., 2]
-        pred_boxes4 = ctr_y + rel_codes[..., 3]
-
-        pred_boxes = torch.stack((pred_boxes1, pred_boxes2, pred_boxes3, pred_boxes4), dim=-1)
         return pred_boxes
 
 
@@ -425,124 +336,128 @@ class Matcher:
         matches[pred_inds_to_update] = all_matches[pred_inds_to_update]
 
 
-class SSDMatcher(Matcher):
-    def __init__(self, threshold: float) -> None:
-        super().__init__(threshold, threshold, allow_low_quality_matches=False)
+class AnchorGenerator(nn.Module):
+    """
+    Module that generates anchors for a set of feature maps and
+    image sizes.
 
-    def __call__(self, match_quality_matrix: Tensor) -> Tensor:
-        matches = super().__call__(match_quality_matrix)
+    The module support computing anchors at multiple sizes and aspect ratios
+    per feature map. This module assumes aspect ratio = height / width for
+    each anchor.
 
-        # For each gt, find the prediction with which it has the highest quality
-        _, highest_quality_pred_foreach_gt = match_quality_matrix.max(dim=1)
-        matches[highest_quality_pred_foreach_gt] = torch.arange(
-            highest_quality_pred_foreach_gt.size(0), dtype=torch.int64, device=highest_quality_pred_foreach_gt.device
+    sizes and aspect_ratios should have the same number of elements, and it should
+    correspond to the number of feature maps.
+
+    sizes[i] and aspect_ratios[i] can have an arbitrary number of elements,
+    and AnchorGenerator will output a set of sizes[i] * aspect_ratios[i] anchors
+    per spatial location for feature map i.
+
+    Args:
+        sizes (Tuple[Tuple[int]]):
+        aspect_ratios (Tuple[Tuple[float]]):
+    """
+
+    __annotations__ = {
+        "cell_anchors": List[torch.Tensor],
+    }
+
+    def __init__(
+        self,
+        sizes=((128, 256, 512),),
+        aspect_ratios=((0.5, 1.0, 2.0),),
+        image_size=(512, 512),
+    ):
+        super().__init__()
+
+        if not isinstance(sizes[0], (list, tuple)):
+            # TODO change this
+            sizes = tuple((s,) for s in sizes)
+        if not isinstance(aspect_ratios[0], (list, tuple)):
+            aspect_ratios = (aspect_ratios,) * len(sizes)
+
+        self.sizes = sizes
+        self.aspect_ratios = aspect_ratios
+        self.cell_anchors = [
+            self.generate_anchors(size, aspect_ratio) for size, aspect_ratio in zip(sizes, aspect_ratios)
+        ]
+        
+        self.image_size = image_size
+
+    # TODO: https://github.com/pytorch/pytorch/issues/26792
+    # For every (aspect_ratios, scales) combination, output a zero-centered anchor with those values.
+    # (scales, aspect_ratios) are usually an element of zip(self.scales, self.aspect_ratios)
+    # This method assumes aspect ratio = height / width for an anchor.
+    def generate_anchors(
+        self,
+        scales: List[int],
+        aspect_ratios: List[float],
+        dtype: torch.dtype = torch.float32,
+        device: torch.device = torch.device("cpu"),
+    ) -> Tensor:
+        scales = torch.as_tensor(scales, dtype=dtype, device=device)
+        aspect_ratios = torch.as_tensor(aspect_ratios, dtype=dtype, device=device)
+        h_ratios = torch.sqrt(aspect_ratios)
+        w_ratios = 1 / h_ratios
+
+        ws = (w_ratios[:, None] * scales[None, :]).view(-1)
+        hs = (h_ratios[:, None] * scales[None, :]).view(-1)
+
+        base_anchors = torch.stack([-ws, -hs, ws, hs], dim=1) / 2
+        return base_anchors.round()
+
+    def set_cell_anchors(self, dtype: torch.dtype, device: torch.device):
+        return [cell_anchor.to(dtype).to(device) for cell_anchor in self.cell_anchors]
+
+    def num_anchors_per_location(self) -> List[int]:
+        return [len(s) * len(a) for s, a in zip(self.sizes, self.aspect_ratios)]
+
+    # For every combination of (a, (g, s), i) in (self.cell_anchors, zip(grid_sizes, strides), 0:2),
+    # output g[i] anchors that are s[i] distance apart in direction i, with the same dimensions as a.
+    def grid_anchors(self, cell_anchors, grid_templates, grid_sizes: List[List[int]], strides: List[List[Tensor]]) -> List[Tensor]:
+        anchors = []
+        cell_anchors = cell_anchors
+        torch._assert(cell_anchors is not None, "cell_anchors should not be None")
+        torch._assert(
+            len(grid_sizes) == len(strides) == len(cell_anchors),
+            "Anchors should be Tuple[Tuple[int]] because each feature "
+            "map could potentially have different sizes and aspect ratios. "
+            "There needs to be a match between the number of "
+            "feature maps passed and the number of sizes / aspect ratios specified.",
         )
 
-        return matches
+        for grid_template, size, stride, base_anchors in zip(grid_templates, grid_sizes, strides, cell_anchors):
+            grid_height_template, grid_width_template = grid_template
+            grid_height, grid_width = size
+            stride_height, stride_width = stride
+            device = base_anchors.device
 
+            # For output anchor, compute [x_center, y_center, x_center, y_center]
+            shifts_x = torch.arange(0, grid_width, dtype=torch.int32).to(device) * stride_width
+            shifts_y = torch.arange(0, grid_height, dtype=torch.int32).to(device) * stride_height
+            shift_y, shift_x = torch.meshgrid(shifts_y, shifts_x, indexing="ij")
+            shift_x = shift_x.reshape(-1)
+            shift_y = shift_y.reshape(-1)
+            shifts = torch.stack((shift_x, shift_y, shift_x, shift_y), dim=1)
 
-def overwrite_eps(model: nn.Module, eps: float) -> None:
-    """
-    This method overwrites the default eps values of all the
-    FrozenBatchNorm2d layers of the model with the provided value.
-    This is necessary to address the BC-breaking change introduced
-    by the bug-fix at pytorch/vision#2933. The overwrite is applied
-    only when the pretrained weights are loaded to maintain compatibility
-    with previous versions.
+            # For every (base anchor, output anchor) pair,
+            # offset each zero-centered base anchor by the center of the output anchor.
+            anchors.append((shifts.view(-1, 1, 4) + base_anchors.view(1, -1, 4)).reshape(-1, 4))
 
-    Args:
-        model (nn.Module): The model on which we perform the overwrite.
-        eps (float): The new value of eps.
-    """
-    for module in model.modules():
-        if isinstance(module, FrozenBatchNorm2d):
-            module.eps = eps
+        return anchors
 
+    def forward(self, feature_maps: List[Tensor]) -> List[Tensor]:
+        grid_sizes = [feature_map.shape[-2:] for feature_map in feature_maps]
+        # each feature_map has (b, c, h, w) shape
+        grid_templates = [(feature_map[0, 0, :, 0], feature_map[0, 0, 0, :]) for feature_map in feature_maps]
+        dtype, device = feature_maps[0].dtype, feature_maps[0].device
+        strides = [
+            [
+                torch.empty(1, dtype=torch.int64).fill_(self.image_size[0] // g[0]).to(device),
+                torch.empty(1, dtype=torch.int64).fill_(self.image_size[1] // g[1]).to(device),
+            ]
+            for g in grid_sizes
+        ]
+        cell_anchors = self.set_cell_anchors(dtype, device)
+        anchors_over_all_feature_maps = self.grid_anchors(cell_anchors, grid_templates, grid_sizes, strides)
 
-def retrieve_out_channels(model: nn.Module, size: Tuple[int, int]) -> List[int]:
-    """
-    This method retrieves the number of output channels of a specific model.
-
-    Args:
-        model (nn.Module): The model for which we estimate the out_channels.
-            It should return a single Tensor or an OrderedDict[Tensor].
-        size (Tuple[int, int]): The size (wxh) of the input.
-
-    Returns:
-        out_channels (List[int]): A list of the output channels of the model.
-    """
-    in_training = model.training
-    model.eval()
-
-    with torch.no_grad():
-        # Use dummy data to retrieve the feature map sizes to avoid hard-coding their values
-        device = next(model.parameters()).device
-        tmp_img = torch.zeros((1, 3, size[1], size[0]), device=device)
-        features = model(tmp_img)
-        if isinstance(features, torch.Tensor):
-            features = OrderedDict([("0", features)])
-        out_channels = [x.size(1) for x in features.values()]
-
-    if in_training:
-        model.train()
-
-    return out_channels
-
-
-@torch.jit.unused
-def _fake_cast_onnx(v: Tensor) -> int:
-    return v  # type: ignore[return-value]
-
-
-def _topk_min(input: Tensor, orig_kval: int, axis: int) -> int:
-    """
-    ONNX spec requires the k-value to be less than or equal to the number of inputs along
-    provided dim. Certain models use the number of elements along a particular axis instead of K
-    if K exceeds the number of elements along that axis. Previously, python's min() function was
-    used to determine whether to use the provided k-value or the specified dim axis value.
-
-    However, in cases where the model is being exported in tracing mode, python min() is
-    static causing the model to be traced incorrectly and eventually fail at the topk node.
-    In order to avoid this situation, in tracing mode, torch.min() is used instead.
-
-    Args:
-        input (Tensor): The original input tensor.
-        orig_kval (int): The provided k-value.
-        axis(int): Axis along which we retrieve the input size.
-
-    Returns:
-        min_kval (int): Appropriately selected k-value.
-    """
-    if not torch.jit.is_tracing():
-        return min(orig_kval, input.size(axis))
-    axis_dim_val = torch._shape_as_tensor(input)[axis].unsqueeze(0)
-    min_kval = torch.min(torch.cat((torch.tensor([orig_kval], dtype=axis_dim_val.dtype), axis_dim_val), 0))
-    return _fake_cast_onnx(min_kval)
-
-
-def _box_loss(
-    type: str,
-    box_coder: BoxCoder,
-    anchors_per_image: Tensor,
-    matched_gt_boxes_per_image: Tensor,
-    bbox_regression_per_image: Tensor,
-    cnf: Optional[Dict[str, float]] = None,
-) -> Tensor:
-    torch._assert(type in ["l1", "smooth_l1", "ciou", "diou", "giou"], f"Unsupported loss: {type}")
-
-    if type == "l1":
-        target_regression = box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
-        return F.l1_loss(bbox_regression_per_image, target_regression, reduction="sum")
-    elif type == "smooth_l1":
-        target_regression = box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
-        beta = cnf["beta"] if cnf is not None and "beta" in cnf else 1.0
-        return F.smooth_l1_loss(bbox_regression_per_image, target_regression, reduction="sum", beta=beta)
-    else:
-        bbox_per_image = box_coder.decode_single(bbox_regression_per_image, anchors_per_image)
-        eps = cnf["eps"] if cnf is not None and "eps" in cnf else 1e-7
-        if type == "ciou":
-            return complete_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
-        if type == "diou":
-            return distance_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
-        # otherwise giou
-        return generalized_box_iou_loss(bbox_per_image, matched_gt_boxes_per_image, reduction="sum", eps=eps)
+        return anchors_over_all_feature_maps

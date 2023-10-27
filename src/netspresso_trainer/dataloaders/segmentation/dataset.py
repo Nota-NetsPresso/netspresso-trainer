@@ -107,10 +107,11 @@ class SegmentationDataSampler(BaseDataSampler):
     def load_huggingface_samples(self):
         from datasets import load_dataset
 
-        cache_dir = Path(self.conf_data.metadata.custom_cache_dir)
+        cache_dir = self.conf_data.metadata.custom_cache_dir
         root = self.conf_data.metadata.repo
         subset_name = self.conf_data.metadata.subset
         if cache_dir is not None:
+            cache_dir = Path(cache_dir)
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
 
