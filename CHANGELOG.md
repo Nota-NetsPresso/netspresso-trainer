@@ -1,6 +1,6 @@
 # Upcoming Release
 
-(This section will include changlogs for both `v0.0.8.b0` and `v0.0.9`.)
+(The updated changelog in pre-release will be included in stable release, `v0.0.9`)
 
 ## New Features:
 
