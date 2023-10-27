@@ -1,9 +1,8 @@
 from pathlib import Path
+from typing import Dict, List
 
-from typing import List, Dict
-
-from omegaconf import OmegaConf, ListConfig
 import torch
+from omegaconf import ListConfig, OmegaConf
 
 
 def split_qkv(dest_layer_list: List[str], model_state_dict: Dict[str, torch.Tensor], layer_value: torch.Tensor, layer_name: str):
@@ -63,7 +62,7 @@ def convert_state_dict_to_model(yaml_path, model, state_dict):
         extracted_state_dict[dest_layer_name] = value
 
     no_match_layers = set(model_state_dict).difference(set(extracted_state_dict))
-    no_match_layers = sorted(list(no_match_layers))
+    no_match_layers = sorted(no_match_layers)
 
     print(f"no_match_layers: \n{no_match_layers[:]}")
     print(f"NO MATCH COUNT: {len(no_match_layers)}")

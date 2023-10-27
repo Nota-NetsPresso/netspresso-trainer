@@ -1,14 +1,13 @@
 import argparse
 from itertools import chain
-from typing import List, Dict, Union, Optional
 from pathlib import Path
+from typing import Dict, List, Optional, Union
 
-from omegaconf import OmegaConf
-import torch.nn as nn
 import torch.fx as fx
-
-from netspresso_trainer.utils.fx import convert_graphmodule
+import torch.nn as nn
 from netspresso_trainer.models import build_model
+from netspresso_trainer.utils.fx import convert_graphmodule
+from omegaconf import OmegaConf
 
 TEMP_NUM_CLASSES = 80
 
@@ -29,7 +28,7 @@ def parse_args():
 def get_model_config_path_list(config_path_or_dir: Path) -> List[Path]:
     if config_path_or_dir.is_dir():
         config_dir = config_path_or_dir
-        return sorted(list(chain(config_dir.glob("*.yaml"), config_dir.glob("*.yml"))))
+        return sorted(chain(config_dir.glob("*.yaml"), config_dir.glob("*.yml")))
     config_path = config_path_or_dir
     return [config_path]
 
@@ -45,7 +44,7 @@ if __name__ == '__main__':
             torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES, model_checkpoint=None)
             fx_model: fx.graph_module.GraphModule = convert_graphmodule(torch_model)
             print("Success!")
-        except KeyboardInterrupt as e:
+        except KeyboardInterrupt:
             print("")
             break
         except Exception as e:
