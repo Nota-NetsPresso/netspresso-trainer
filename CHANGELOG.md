@@ -1,5 +1,7 @@
 # Upcoming Release
 
+(This section will include changlogs for both `v0.0.8.b0` and `v0.0.9`.)
+
 ## New Features:
 
 - Add CSPDarknet by `@illian01` in [PR 195](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/195)
