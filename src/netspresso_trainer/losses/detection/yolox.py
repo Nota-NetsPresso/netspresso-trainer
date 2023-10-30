@@ -7,15 +7,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-_TORCH_VER = [int(x) for x in torch.__version__.split(".")[:2]]
-
-
-def meshgrid(*tensors):
-    if _TORCH_VER >= [1, 10]:
-        return torch.meshgrid(*tensors, indexing="ij")
-    else:
-        return torch.meshgrid(*tensors)
-
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
@@ -436,7 +427,7 @@ class YOLOXLoss(nn.Module):
         n_ch = 5 + self.num_classes
         hsize, wsize = output.shape[-2:]
         if grid.shape[2:4] != output.shape[2:4]:
-            yv, xv = meshgrid([torch.arange(hsize), torch.arange(wsize)])
+            yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing="ij")
             grid = torch.stack((xv, yv), 2).view(1, 1, hsize, wsize, 2).type(dtype)
             self.grids[k] = grid
 
