@@ -247,16 +247,8 @@ class OneStageDetectionPipeline(BasePipeline):
         out_for_pred = copy.deepcopy(out)
         self.loss_factory.calc(out, targets, phase='valid')
 
-        # postprocess
-        self.hw = [x.shape[-2:] for x in out_for_pred]
-        self.strides = [8, 16, 32]
-        # [batch, n_anchors_all, 85]
-        out_for_pred = torch.cat(
-            [x.flatten(start_dim=2) for x in out_for_pred], dim=2
-        ).permute(0, 2, 1)
-        out_for_pred[..., 4:] = out_for_pred[..., 4:].sigmoid()
-
-        pred = self.decode_outputs(out_for_pred, dtype=out[0].type())
+        # TODO: This step will be moved to postprocessor module
+        pred = self.decode_outputs(out_for_pred, dtype=out[0].type(), stage_strides=[8, 16, 32])
         pred = self.postprocess(pred, self.num_classes)
 
         if self.conf.distributed:
@@ -312,10 +304,15 @@ class OneStageDetectionPipeline(BasePipeline):
         self.metric_factory.calc(pred, target=targets, phase='valid')
 
     # TODO: Temporary defined in pipeline, it will be moved to postprocessor module.
-    def decode_outputs(self, outputs, dtype):
+    def decode_outputs(self, outputs, dtype, stage_strides):
+        hw = [x.shape[-2:] for x in outputs]
+        # [batch, n_anchors_all, num_classes + 5]
+        outputs = torch.cat([x.flatten(start_dim=2) for x in outputs], dim=2).permute(0, 2, 1)
+        outputs[..., 4:] = outputs[..., 4:].sigmoid()
+
         grids = []
         strides = []
-        for (hsize, wsize), stride in zip(self.hw, self.strides):
+        for (hsize, wsize), stride in zip(hw, stage_strides):
             yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing='ij')
             grid = torch.stack((xv, yv), 2).view(1, -1, 2)
             grids.append(grid)
