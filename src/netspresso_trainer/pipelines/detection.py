@@ -209,7 +209,6 @@ class OneStageDetectionPipeline(BasePipeline):
         
         targets = {'gt': targets, 
                    'img_size': images.size(-1), 
-                   'intermediate_features_dim': self.model.backbone.intermediate_features_dim,
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -233,7 +232,6 @@ class OneStageDetectionPipeline(BasePipeline):
         
         targets = {'gt': targets, 
                    'img_size': images.size(-1), 
-                   'intermediate_features_dim': self.model.backbone.intermediate_features_dim,
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -244,7 +242,7 @@ class OneStageDetectionPipeline(BasePipeline):
         self.loss_factory.calc(out, targets, phase='valid')
 
         # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out_for_pred, dtype=out[0].type(), stage_strides=[8, 16, 32])
+        pred = self.decode_outputs(out_for_pred, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
         pred = self.postprocess(pred, self.num_classes)
 
         if self.conf.distributed:

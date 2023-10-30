@@ -54,7 +54,7 @@ class YOLOXLoss(nn.Module):
         y_shifts = []
         expanded_strides = []
 
-        self.grids = [torch.zeros(1)] * len(target['intermediate_features_dim'])
+        self.grids = [torch.zeros(1)] * len(out)
         self.num_classes = target['num_classes']
         img_size = target['img_size']
 
