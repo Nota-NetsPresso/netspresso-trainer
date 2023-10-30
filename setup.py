@@ -26,7 +26,7 @@ setup(
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
-            "netspresso-train = netspresso_trainer.trainer:train_with_yaml",
+            "netspresso-train = netspresso_trainer.trainer_cli:train_with_yaml",
         ],
     },
     classifiers=[
