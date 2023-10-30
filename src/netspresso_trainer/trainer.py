@@ -23,14 +23,12 @@ def run_distributed_training_script(gpu_ids, command):
     ]
     print(command)
 
-    # subprocess 실행
+    # Run subprocess
     process = subprocess.Popen(command)
 
     try:
-        # Ctrl+C로 종료되기 전까지 대기
         process.wait()
     except KeyboardInterrupt:
-        # Ctrl+C로 인터럽트 발생 시 graceful shutdown을 위해 프로세스 종료
         print("Interrupted. Terminating the training process...")
         process.terminate()
         process.wait()
