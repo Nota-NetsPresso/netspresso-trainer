@@ -129,14 +129,10 @@ class TwoStageDetectionPipeline(BasePipeline):
 
             for detection, class_idx in output_batch['pred']:
                 pred_on_image = {}
-                if detection.size == 0:
-                    pred_on_image['post_boxes'] = np.zeros((0, 4))
-                    pred_on_image['post_scores'] = np.zeros((0))
-                    pred_on_image['post_labels'] = np.zeros((0))
-                else:
-                    pred_on_image['post_boxes'] = detection[..., :4]
-                    pred_on_image['post_scores'] = detection[..., -1]
-                    pred_on_image['post_labels'] = class_idx
+                pred_on_image['post_boxes'] = detection[..., :4]
+                pred_on_image['post_scores'] = detection[..., -1]
+                pred_on_image['post_labels'] = class_idx
+                pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase='valid')
         
     def save_checkpoint(self, epoch: int):
@@ -292,14 +288,9 @@ class OneStageDetectionPipeline(BasePipeline):
 
             for detection, class_idx in output_batch['pred']:
                 pred_on_image = {}
-                if detection.size == 0:
-                    pred_on_image['post_boxes'] = np.zeros((0, 4))
-                    pred_on_image['post_scores'] = np.zeros((0))
-                    pred_on_image['post_labels'] = np.zeros((0))
-                else:
-                    pred_on_image['post_boxes'] = detection[..., :4]
-                    pred_on_image['post_scores'] = detection[..., -1]
-                    pred_on_image['post_labels'] = class_idx
+                pred_on_image['post_boxes'] = detection[..., :4]
+                pred_on_image['post_scores'] = detection[..., -1]
+                pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase='valid')
 
@@ -338,7 +329,7 @@ class OneStageDetectionPipeline(BasePipeline):
         box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
         prediction[:, :, :4] = box_corner[:, :, :4]
 
-        output = [None for _ in range(len(prediction))]
+        output = [torch.zeros(0, 7).to(prediction.device) for i in range(len(prediction))]
         for i, image_pred in enumerate(prediction):
 
             # If none are remaining => process next image
@@ -369,9 +360,6 @@ class OneStageDetectionPipeline(BasePipeline):
                 )
 
             detections = detections[nms_out_index]
-            if output[i] is None:
-                output[i] = detections
-            else:
-                output[i] = torch.cat((output[i], detections))
+            output[i] = torch.cat((output[i], detections))
 
         return output
