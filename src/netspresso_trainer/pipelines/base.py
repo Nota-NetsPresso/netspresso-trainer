@@ -130,7 +130,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase):
         raise NotImplementedError
 
     @property
@@ -205,8 +205,11 @@ class BasePipeline(ABC):
             raise e
 
     def train_one_epoch(self):
+        outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
-            self.train_step(batch)
+            out = self.train_step(batch)
+            outputs.append(out)
+        self.get_metric_with_all_outputs(outputs, phase='train')
 
     @torch.no_grad()
     def validate(self, num_samples=NUM_SAMPLES):
@@ -220,7 +223,7 @@ class BasePipeline(ABC):
                 if num_returning_samples < num_samples:
                     returning_samples.append(out)
                     num_returning_samples += len(out['pred'])
-        self.get_metric_with_all_outputs(outputs)
+        self.get_metric_with_all_outputs(outputs, phase='valid')
         return returning_samples
 
     @torch.no_grad()

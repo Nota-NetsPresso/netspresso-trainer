@@ -116,7 +116,11 @@ class TwoStageDetectionPipeline(BasePipeline):
 
         return results
 
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase):
+        # TODO: Compute metrics for train phase
+        if phase == 'train':
+            return
+
         pred = []
         targets = []
         for output_batch in outputs:
@@ -132,7 +136,7 @@ class TwoStageDetectionPipeline(BasePipeline):
                 pred_on_image['post_scores'] = detection[..., -1]
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
-        self.metric_factory.calc(pred, target=targets, phase='valid')
+        self.metric_factory.calc(pred, target=targets, phase=phase)
         
     def save_checkpoint(self, epoch: int):
 

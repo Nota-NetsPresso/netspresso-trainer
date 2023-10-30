@@ -61,5 +61,5 @@ class ClassificationPipeline(BasePipeline):
 
         return pred
 
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase):
         pass

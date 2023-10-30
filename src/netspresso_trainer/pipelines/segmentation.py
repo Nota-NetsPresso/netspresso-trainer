@@ -90,5 +90,5 @@ class SegmentationPipeline(BasePipeline):
 
         return output_seg
 
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase):
         pass
