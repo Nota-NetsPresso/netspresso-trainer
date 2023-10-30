@@ -237,12 +237,10 @@ class OneStageDetectionPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         out = self.model(images)
-        # TODO: deep copy output of model for postprocess, since loss module modify output values.
-        out_for_pred = copy.deepcopy(out)
         self.loss_factory.calc(out, targets, phase='valid')
 
         # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out_for_pred, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
+        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
         pred = self.postprocess(pred, self.num_classes)
 
         if self.conf.distributed:

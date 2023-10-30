@@ -436,8 +436,13 @@ class YOLOXLoss(nn.Module):
             batch_size, hsize * wsize, -1
         )
         grid = grid.view(1, -1, 2)
-        output[..., :2] = (output[..., :2] + grid) * stride
-        output[..., 2:4] = torch.exp(output[..., 2:4]) * stride
+        #output[..., :2] = (output[..., :2] + grid) * stride
+        #output[..., 2:4] = torch.exp(output[..., 2:4]) * stride
+        output = torch.cat([
+            (output[..., :2] + grid) * stride,
+            torch.exp(output[..., 2:4]) * stride,
+            output[..., 4:]
+        ], dim=-1)
         return output, grid
 
 
