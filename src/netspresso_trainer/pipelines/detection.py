@@ -129,10 +129,14 @@ class TwoStageDetectionPipeline(BasePipeline):
 
             for detection, class_idx in output_batch['pred']:
                 pred_on_image = {}
-                pred_on_image['post_boxes'] = detection[..., :4]
-                pred_on_image['post_scores'] = detection[..., -1]
-                pred_on_image['post_labels'] = class_idx
-                pred.append(pred_on_image)
+                if detection.size == 0:
+                    pred_on_image['post_boxes'] = np.zeros((0, 4))
+                    pred_on_image['post_scores'] = np.zeros((0))
+                    pred_on_image['post_labels'] = np.zeros((0))
+                else:
+                    pred_on_image['post_boxes'] = detection[..., :4]
+                    pred_on_image['post_scores'] = detection[..., -1]
+                    pred_on_image['post_labels'] = class_idx
         self.metric_factory.calc(pred, target=targets, phase='valid')
         
     def save_checkpoint(self, epoch: int):
@@ -239,19 +243,21 @@ class OneStageDetectionPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         out = self.model(images)
+        # TODO: deep copy output of model for postprocess, since loss module modify output values.
+        out_for_pred = copy.deepcopy(out)
         self.loss_factory.calc(out, targets, phase='valid')
 
         # postprocess
-        self.hw = [x.shape[-2:] for x in out]
+        self.hw = [x.shape[-2:] for x in out_for_pred]
         self.strides = [8, 16, 32]
         # [batch, n_anchors_all, 85]
-        out = torch.cat(
-            [x.flatten(start_dim=2) for x in out], dim=2
+        out_for_pred = torch.cat(
+            [x.flatten(start_dim=2) for x in out_for_pred], dim=2
         ).permute(0, 2, 1)
-        out[..., 4:] = out[..., 4:].sigmoid()
+        out_for_pred[..., 4:] = out_for_pred[..., 4:].sigmoid()
 
-        #pred = self.decode_outputs(out, dtype=out[0].type())
-        pred = self.postprocess(out, self.num_classes)
+        pred = self.decode_outputs(out_for_pred, dtype=out[0].type())
+        pred = self.postprocess(pred, self.num_classes)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -293,12 +299,15 @@ class OneStageDetectionPipeline(BasePipeline):
                 targets.append(target_on_image)
 
             for detection, class_idx in output_batch['pred']:
-                if detection.size == 0:
-                    continue
                 pred_on_image = {}
-                pred_on_image['post_boxes'] = detection[..., :4]
-                pred_on_image['post_scores'] = detection[..., -1]
-                pred_on_image['post_labels'] = class_idx
+                if detection.size == 0:
+                    pred_on_image['post_boxes'] = np.zeros((0, 4))
+                    pred_on_image['post_scores'] = np.zeros((0))
+                    pred_on_image['post_labels'] = np.zeros((0))
+                else:
+                    pred_on_image['post_boxes'] = detection[..., :4]
+                    pred_on_image['post_scores'] = detection[..., -1]
+                    pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase='valid')
 
