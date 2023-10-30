@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 
 from ....op.custom import ConvLayer
-from .fpn import FPN
+from .fpn import FPN, PAFPN
 
 
 class YOLOXHead(nn.Module):
@@ -29,6 +29,8 @@ class YOLOXHead(nn.Module):
         super().__init__()
 
         self.num_classes = num_classes
+
+        self.neck = PAFPN(in_channels=intermediate_features_dim, act_type=act_type)
 
         self.cls_convs = nn.ModuleList()
         self.reg_convs = nn.ModuleList()
@@ -119,6 +121,7 @@ class YOLOXHead(nn.Module):
 
     def forward(self, xin):
         outputs = []
+        xin = self.neck(xin)
 
         for k, (cls_conv, reg_conv, x) in enumerate(zip(self.cls_convs, self.reg_convs, xin)):
             x = self.stems[k](x)
