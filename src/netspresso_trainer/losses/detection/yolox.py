@@ -43,6 +43,14 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     return area_i / (area_a[:, None] + area_b - area_i)
 
 
+def xyxy2cxcywh(bboxes):
+    bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
+    bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
+    bboxes[:, 0] = bboxes[:, 0] + bboxes[:, 2] * 0.5
+    bboxes[:, 1] = bboxes[:, 1] + bboxes[:, 3] * 0.5
+    return bboxes
+
+
 class YOLOXLoss(nn.Module):
     def __init__(self, **kwargs) -> None:
         super(YOLOXLoss, self).__init__()
@@ -77,6 +85,10 @@ class YOLOXLoss(nn.Module):
             )
             out_for_loss.append(o)
 
+        # YOLOX model learns box cxcywh format directly,
+        # but our detection dataloader gives xyxy format.
+        for i in range(len(target)):
+            target[i]['boxes'] = xyxy2cxcywh(target[i]['boxes'])
         total_loss, iou_loss, conf_loss, cls_loss, num_fg = self.get_losses(
                     None,
                     x_shifts,
