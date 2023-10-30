@@ -120,23 +120,23 @@ class TwoStageDetectionPipeline(BasePipeline):
         # TODO: Compute metrics for train phase
         if phase == 'train':
             return
+        else:
+            pred = []
+            targets = []
+            for output_batch in outputs:
+                for detection, class_idx in output_batch['target']:
+                    target_on_image = {}
+                    target_on_image['boxes'] = detection
+                    target_on_image['labels'] = class_idx
+                    targets.append(target_on_image)
 
-        pred = []
-        targets = []
-        for output_batch in outputs:
-            for detection, class_idx in output_batch['target']:
-                target_on_image = {}
-                target_on_image['boxes'] = detection
-                target_on_image['labels'] = class_idx
-                targets.append(target_on_image)
-
-            for detection, class_idx in output_batch['pred']:
-                pred_on_image = {}
-                pred_on_image['post_boxes'] = detection[..., :4]
-                pred_on_image['post_scores'] = detection[..., -1]
-                pred_on_image['post_labels'] = class_idx
-                pred.append(pred_on_image)
-        self.metric_factory.calc(pred, target=targets, phase=phase)
+                for detection, class_idx in output_batch['pred']:
+                    pred_on_image = {}
+                    pred_on_image['post_boxes'] = detection[..., :4]
+                    pred_on_image['post_scores'] = detection[..., -1]
+                    pred_on_image['post_labels'] = class_idx
+                    pred.append(pred_on_image)
+            self.metric_factory.calc(pred, target=targets, phase=phase)
         
     def save_checkpoint(self, epoch: int):
 
