@@ -1,5 +1,7 @@
 # Upcoming Release
 
+(The updated changelog in pre-release will be included in stable release, `v0.0.9`)
+
 ## New Features:
 
 - Add CSPDarknet by `@illian01` in [PR 195](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/195)
@@ -12,6 +14,7 @@
 ## Breaking Changes:
 
 - Release NetsPresso Trainer colab tutorial `@illian01` in [PR 191](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/191)
+- Support training with python-level config by `@deepkyu` in [PR 205](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/205)
 
 ## Other Changes:
 

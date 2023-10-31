@@ -1,5 +1,6 @@
 from pathlib import Path
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
 
 version = (Path("src/netspresso_trainer") / "VERSION").read_text().strip()
 
@@ -25,7 +26,7 @@ setup(
     python_requires=">=3.8",
     entry_points={
         "console_scripts": [
-            "netspresso-train = netspresso_trainer.train:netspresso_train",
+            "netspresso-train = netspresso_trainer.train:train_with_yaml",
         ],
     },
     classifiers=[
