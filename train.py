@@ -1,7 +1,7 @@
-
+from netspresso_trainer import train_cli
 
 def train_with_inline_cfg():
-    from netspresso_trainer import TrainerConfig, train, export_config_as_yaml    
+    from netspresso_trainer import TrainerConfig, train, export_config_as_yaml  
     from netspresso_trainer.cfg import ClassificationResNetModelConfig, ExampleBeansDataset
     
     """
@@ -52,5 +52,10 @@ def train_with_inline_yaml():
 
 
 if __name__ == '__main__':
-    train_with_inline_yaml()
+    train_cli()
+
+    # With inline yaml
+    # train_with_inline_yaml()
+    
+    # With inline pythonic config
     # train_with_inline_cfg()
