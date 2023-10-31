@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Literal
 
 import numpy as np
 import torch
@@ -90,5 +91,5 @@ class SegmentationPipeline(BasePipeline):
 
         return output_seg
 
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass
