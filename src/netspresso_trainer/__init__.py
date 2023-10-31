@@ -1,8 +1,8 @@
 from pathlib import Path
 
 from .cfg import TrainerConfig
-from .trainer import export_config_as_yaml, train_with_config
-from .trainer_cli import parse_args_netspresso, set_arguments, train_with_yaml
+from .trainer_cli import parse_args_netspresso, set_arguments, train_cli
+from .trainer_inline import export_config_as_yaml, train_with_config
 
 train = train_with_config
 
