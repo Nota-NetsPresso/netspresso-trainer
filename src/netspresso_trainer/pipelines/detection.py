@@ -220,13 +220,26 @@ class OneStageDetectionPipeline(BasePipeline):
 
         out = self.model(images)
         self.loss_factory.calc(out, targets, phase='train')
-        #self.metric_factory.calc(out['pred'], targets, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
 
+        # TODO: This step will be moved to postprocessor module
+        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
+        pred = self.postprocess(pred, self.num_classes)
+
         if self.conf.distributed:
             torch.distributed.barrier()
+
+        logs = {
+            'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                       for bbox, label in zip(bboxes, labels)],
+            'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
+                      p[:, 6].to(torch.int).detach().cpu().numpy()) 
+                      if p is not None else (np.array([[]]), np.array([]))
+                      for p in pred]
+        }
+        return dict(logs.items())
 
     def valid_step(self, batch):
         self.model.eval()
@@ -279,7 +292,7 @@ class OneStageDetectionPipeline(BasePipeline):
 
         return results
 
-    def get_metric_with_all_outputs(self, outputs):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pred = []
         targets = []
         for output_batch in outputs:
@@ -295,7 +308,7 @@ class OneStageDetectionPipeline(BasePipeline):
                 pred_on_image['post_scores'] = detection[..., -1]
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
-        self.metric_factory.calc(pred, target=targets, phase='valid')
+        self.metric_factory.calc(pred, target=targets, phase=phase)
 
     # TODO: Temporary defined in pipeline, it will be moved to postprocessor module.
     def decode_outputs(self, outputs, dtype, stage_strides):
