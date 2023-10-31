@@ -264,8 +264,13 @@ class OneStageDetectionPipeline(BasePipeline):
 
         out = self.model(images.unsqueeze(0))
 
-        results = [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                   for bbox, label in zip(out['post_boxes'], out['post_labels'])],
+        # TODO: This step will be moved to postprocessor module
+        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
+        pred = self.postprocess(pred, self.num_classes)
+
+        results = [(p[:, :4].detach().cpu().numpy(), p[:, 6].to(torch.int).detach().cpu().numpy())
+                   if p is not None else (np.array([[]]), np.array([]))
+                   for p in pred]
 
         return results
 
