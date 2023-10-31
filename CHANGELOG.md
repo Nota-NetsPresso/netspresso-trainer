@@ -10,6 +10,7 @@
 ## Bug Fixes:
 
 - Remove fx training flag in entry point by `@illian01` in [PR 188](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/188)
+- Fix bounding box coordinates computing error on random flip augmentation by `@illian01` in [PR 211](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/211)
 
 ## Breaking Changes:
 
