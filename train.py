@@ -1,6 +1,7 @@
-from netspresso_trainer import TrainerConfig, train, export_config_as_yaml
 
-if __name__ == '__main__':
+
+def train_with_inline_cfg():
+    from netspresso_trainer import TrainerConfig, train, export_config_as_yaml    
     from netspresso_trainer.cfg import ClassificationResNetModelConfig, ExampleBeansDataset
     
     """
@@ -38,3 +39,18 @@ if __name__ == '__main__':
     print(export_config_as_yaml(cfg))
     
     train(cfg, log_level='INFO')
+
+def train_with_inline_yaml():
+    from netspresso_trainer import train_with_yaml
+    train_with_yaml(gpus="0,1",
+                    data="config/data/beans.yaml",
+                    augmentation="config/augmentation/classification.yaml",
+                    model="config/model/resnet/resnet50-classification.yaml",
+                    training="config/training/classification.yaml",
+                    logging="config/logging.yaml",
+                    environment="config/environment.yaml")
+
+
+if __name__ == '__main__':
+    train_with_inline_yaml()
+    # train_with_inline_cfg()

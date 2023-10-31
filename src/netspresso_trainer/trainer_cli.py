@@ -41,7 +41,7 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
         process.wait()
 
 
-def parse_gpu_ids(gpu_arg):
+def parse_gpu_ids(gpu_arg: str):
     """Parse comma-separated GPU IDs and return as a list of integers."""
     try:
         gpu_ids = [int(id) for id in gpu_arg.split(',')]
@@ -129,9 +129,9 @@ def set_arguments(data: Union[Path, str], augmentation: Union[Path, str],
     return conf
 
 
-def _train_with_yaml(gpus: Union[list, int], data: Union[Path, str], augmentation: Union[Path, str],
-                     model: Union[Path, str], training: Union[Path, str],
-                     logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
+def train_with_yaml_impl(gpus: Union[list, int], data: Union[Path, str], augmentation: Union[Path, str],
+                         model: Union[Path, str], training: Union[Path, str],
+                         logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
     
     assert isinstance(gpus, (list, int))
     gpu_ids_str = ','.join(map(str, gpus)) if isinstance(gpus, list) else str(gpus)
@@ -142,22 +142,6 @@ def _train_with_yaml(gpus: Union[list, int], data: Union[Path, str], augmentatio
         train_common(conf, log_level=log_level)
     else:
         run_distributed_training_script(gpus, data, augmentation, model, training, logging, environment, log_level)
-
-
-def train_with_yaml(gpus: str, data: Union[Path, str], augmentation: Union[Path, str],
-                    model: Union[Path, str], training: Union[Path, str],
-                    logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
-    
-    _train_with_yaml(
-        gpus=gpus,
-        data=data,
-        augmentation=augmentation,
-        model=model,
-        training=training,
-        logging=logging,
-        environment=environment,
-        log_level=log_level
-    )
 
 
 def train_cli() -> None:
