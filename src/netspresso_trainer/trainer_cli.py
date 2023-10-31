@@ -147,7 +147,7 @@ def train_with_yaml_impl(gpus: Union[list, int], data: Union[Path, str], augment
 def train_cli() -> None:
     args_parsed = parse_args_netspresso(with_gpus=True)
     
-    _train_with_yaml(
+    train_with_yaml_impl(
         gpus=args_parsed.gpus,
         data=args_parsed.data,
         augmentation=args_parsed.augmentation,
