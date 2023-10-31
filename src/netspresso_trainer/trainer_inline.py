@@ -1,13 +1,12 @@
 import os
-from typing import Literal
 from pathlib import Path
-from typing import Union, List
+from typing import List, Literal, Union
 
 from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.cfg import TrainerConfig
+from netspresso_trainer.trainer_cli import parse_gpu_ids, train_with_yaml_impl
 from netspresso_trainer.trainer_common import train_common
-from netspresso_trainer.trainer_cli import train_with_yaml_impl, parse_gpu_ids
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
