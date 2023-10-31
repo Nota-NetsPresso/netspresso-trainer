@@ -10,13 +10,13 @@ cd "$(dirname ${0})/.."
 
 #### Classification
 
-# netspresso-train\
-#   --data config/data/beans.yaml\
-#   --augmentation config/augmentation/classification.yaml\
-#   --model config/model/resnet/resnet50-classification.yaml\
-#   --training config/training/classification.yaml\
-#   --logging config/logging.yaml\
-#   --environment config/environment.yaml
+netspresso-train\
+  --data config/data/beans.yaml\
+  --augmentation config/augmentation/classification.yaml\
+  --model config/model/resnet/resnet50-classification.yaml\
+  --training config/training/classification.yaml\
+  --logging config/logging.yaml\
+  --environment config/environment.yaml
 
 # netspresso-train\
 #   --data config/data/beans.yaml\
