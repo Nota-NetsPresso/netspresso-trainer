@@ -2,14 +2,11 @@
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
 
-import math
-from loguru import logger
-
 import torch
 import torch.nn as nn
 
 from ....op.custom import ConvLayer
-from .fpn import FPN, PAFPN
+from .fpn import PAFPN
 
 
 class YOLOXHead(nn.Module):
@@ -18,8 +15,6 @@ class YOLOXHead(nn.Module):
         num_classes,
         intermediate_features_dim,
         act_type="silu",
-        # FPN parameters
-        fpn_num_outs=3,
     ):
         """
         Args:
@@ -139,21 +134,11 @@ class YOLOXHead(nn.Module):
 
             outputs.append(output)
 
-        #self.hw = [x.shape[-2:] for x in outputs]
-        # [batch, n_anchors_all, 85]
-        #outputs = torch.cat(
-        #    [x.flatten(start_dim=2) for x in outputs], dim=2
-        #).permute(0, 2, 1)
-
-        # decode
-        #return self.decode_outputs(outputs, dtype=xin[0].type())
-        
         return outputs
 
 
 def yolo_head(num_classes, intermediate_features_dim, **kwargs):
     configuration = {
         'act_type': 'silu',
-        'fpn_num_outs': 3,
     }
     return YOLOXHead(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim, **configuration)

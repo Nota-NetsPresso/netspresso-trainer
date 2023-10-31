@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from ....op.custom import ConvLayer, CSPLayer
+
 
 class FPN(nn.Module):
 
@@ -152,18 +154,15 @@ class PAFPN(nn.Module):
 
     def __init__(
         self,
-        #in_features=("dark3", "dark4", "dark5"),
         in_channels,
-        #depthwise=False,
         act_type="silu",
     ):
         super().__init__()
-        from ....op.custom import ConvLayer, CSPLayer
-        #self.in_features = in_features
+        
         self.in_channels = in_channels
         Conv = ConvLayer
 
-        # How do I get this?
+        # TODO: Get from config
         depth = 0.33
 
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
@@ -179,7 +178,6 @@ class PAFPN(nn.Module):
             out_channels=int(in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
-            #depthwise=depthwise,
             act_type=act_type,
         )  # cat
 
@@ -195,7 +193,6 @@ class PAFPN(nn.Module):
             out_channels=int(in_channels[0]),
             n=round(3 * depth),
             shortcut=False,
-            #depthwise=depthwise,
             act_type=act_type,
         )
 
@@ -212,7 +209,6 @@ class PAFPN(nn.Module):
             out_channels=int(in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
-            #depthwise=depthwise,
             act_type=act_type,
         )
 
@@ -229,7 +225,6 @@ class PAFPN(nn.Module):
             out_channels=int(in_channels[2]),
             n=round(3 * depth),
             shortcut=False,
-            #depthwise=depthwise,
             act_type=act_type,
         )
 
@@ -242,10 +237,6 @@ class PAFPN(nn.Module):
             Tuple[Tensor]: FPN feature.
         """
 
-        #  backbone
-        #out_features = self.backbone(input)
-        #features = [out_features[f] for f in self.in_features]
-        #[x2, x1, x0] = features
         [x2, x1, x0] = inputs
 
         fpn_out0 = self.lateral_conv0(x0)  # 1024->512/32
