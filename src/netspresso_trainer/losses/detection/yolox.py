@@ -131,7 +131,6 @@ class YOLOXLoss(nn.Module):
 
         cls_targets = []
         reg_targets = []
-        l1_targets = []
         obj_targets = []
         fg_masks = []
 
@@ -144,7 +143,7 @@ class YOLOXLoss(nn.Module):
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
                 reg_target = outputs.new_zeros((0, 4))
-                l1_target = outputs.new_zeros((0, 4))
+                outputs.new_zeros((0, 4))
                 obj_target = outputs.new_zeros((total_num_anchors, 1))
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
             else:
@@ -175,12 +174,13 @@ class YOLOXLoss(nn.Module):
                     # TODO: the string might change, consider a better way
                     if "CUDA out of memory. " not in str(e):
                         raise  # RuntimeError might not caused by CUDA OOM
-
+                    '''
                     logger.error(
                         "OOM RuntimeError is raised due to the huge memory cost during label assignment. \
                            CPU mode is applied in this batch. If you want to avoid this issue, \
                            try to reduce the batch size or image size."
                     )
+                    '''
                     torch.cuda.empty_cache()
                     (
                         gt_matched_classes,
