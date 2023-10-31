@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 from pathlib import Path
+from typing import Literal
 
 import numpy as np
 import torch
@@ -116,11 +117,11 @@ class TwoStageDetectionPipeline(BasePipeline):
 
         return results
 
-    def get_metric_with_all_outputs(self, outputs, phase):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         # TODO: Compute metrics for train phase
         if phase == 'train':
             return
-        
+
         pred = []
         targets = []
         for output_batch in outputs:

@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Literal
 
 import torch
 from omegaconf import OmegaConf
@@ -61,5 +62,5 @@ class ClassificationPipeline(BasePipeline):
 
         return pred
 
-    def get_metric_with_all_outputs(self, outputs, phase):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass

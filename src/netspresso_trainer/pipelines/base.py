@@ -130,7 +130,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get_metric_with_all_outputs(self, outputs, phase):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         raise NotImplementedError
 
     @property
