@@ -123,7 +123,7 @@ class RandomHorizontalFlip:
             if mask is not None:
                 mask = F.hflip(mask)
             if bbox is not None:
-                bbox[..., 0:4:2] = w - bbox[..., 0:4:2]
+                bbox[..., 2::-2] = w - bbox[..., 0:4:2]
         return image, mask, bbox
 
     def __repr__(self):
@@ -143,7 +143,7 @@ class RandomVerticalFlip:
             if mask is not None:
                 mask = F.vflip(mask)
             if bbox is not None:
-                bbox[..., 1:4:2] = h - bbox[..., 1:4:2]
+                bbox[..., 3::-2] = h - bbox[..., 1:4:2]
         return image, mask, bbox
 
     def __repr__(self):
