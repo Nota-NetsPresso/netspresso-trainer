@@ -1,4 +1,3 @@
-import inspect
 from typing import Optional
 
 from torchvision.transforms.functional import InterpolationMode
@@ -13,10 +12,10 @@ def transforms_custom_train(conf_augmentation):
     preprocess = []
     for augment in conf_augmentation.recipe:
         name = augment.name.lower()
-        transform_args = list(inspect.signature(TRANSFORM_DICT[name]).parameters)
-        transform_kwargs = {key:augment[key] for key in transform_args if hasattr(augment, key)}
-
-        transform = TRANSFORM_DICT[name](**transform_kwargs)
+        augment_kwargs = list(augment.keys())
+        augment_kwargs.remove('name')
+        augment_kwargs = {k:augment[k] for k in augment_kwargs}
+        transform = TRANSFORM_DICT[name](**augment_kwargs)
         preprocess.append(transform)
 
     preprocess = preprocess + [
