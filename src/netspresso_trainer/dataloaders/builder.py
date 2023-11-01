@@ -19,11 +19,10 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     task = conf_data.task
 
-    assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = CREATE_TRANSFORM[task](model_name, is_training=True)
-    target_transform = CREATE_TRANSFORM[task](model_name, is_training=False)
+    train_transform = CREATE_TRANSFORM(is_training=True)
+    target_transform = CREATE_TRANSFORM(is_training=False)
 
     data_format = conf_data.format
 
