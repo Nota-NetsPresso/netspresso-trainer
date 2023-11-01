@@ -6,7 +6,7 @@ import torch.nn as nn
 from .backbones import cspdarknet, efficientformer, mobilenetv3_small, mobilevit, resnet50, segformer, vit
 from .full import pidnet
 from .heads.classification import fc
-from .heads.detection import faster_rcnn
+from .heads.detection import faster_rcnn, yolo_head
 from .heads.segmentation import all_mlp_decoder
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -27,7 +27,8 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
         'all_mlp_decoder': all_mlp_decoder,
     },
     'detection': {
-        'faster_rcnn': faster_rcnn
+        'faster_rcnn': faster_rcnn,
+        'yolo_head': yolo_head
     },
 }
 

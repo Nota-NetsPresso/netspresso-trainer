@@ -1,6 +1,6 @@
 from .classification import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
 from .common import CrossEntropyLoss
-from .detection import RoiHeadLoss, RPNLoss
+from .detection import RoiHeadLoss, RPNLoss, YOLOXLoss
 from .segmentation import BoundaryLoss, PIDNetBoundaryAwareCrossEntropy, PIDNetCrossEntropy
 
 LOSS_DICT = {
@@ -12,6 +12,7 @@ LOSS_DICT = {
     'pidnet_cross_entropy_with_boundary': PIDNetBoundaryAwareCrossEntropy,
     'roi_head_loss': RoiHeadLoss,
     'rpn_loss': RPNLoss,
+    'yolox_loss': YOLOXLoss,
 }
 
 PHASE_LIST = ['train', 'valid', 'test']
