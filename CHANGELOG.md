@@ -1,15 +1,33 @@
 # Upcoming Release
 
-(The updated changelog in pre-release will be included in stable release, `v0.0.9`)
+## New Features:
+
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.0.9
 
 ## New Features:
 
-- Add CSPDarknet by `@illian01` in [PR 195](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/195)
+- Add YOLOX model by `@illian01` in [PR 195](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/195), [PR 212](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/212)
 - Fix Faster R-CNN detection head to compat with PyNP compressor by `@illian01` in [PR 184](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/184), [PR 194](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/194), [PR 204](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/204)
+- Support multi-GPU training with `netspresso-train` entrypoint by `@deepkyu`, `@illian01` and `@Only-bottle` in [PR 213](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/213)
 
 ## Bug Fixes:
 
 - Remove fx training flag in entry point by `@illian01` in [PR 188](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/188)
+- Fix bounding box coordinates computing error on random flip augmentation by `@illian01` in [PR 211](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/211)
 
 ## Breaking Changes:
 
@@ -22,6 +40,7 @@
 - Parameterize activation function of BasicBlock and Bottleneck by `@illian01` in [PR193](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/193)
 - Modify MobileNetV3 to stage format and remove forward hook by `@illian01` in [PR 199](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/199)
 - Substitute MACs counter with `fvcore` library to sync with NetsPresso by `@deepkyu` and `@Only-bottle` in [PR 202](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/202)
+- Enable to compute metric with all training samples by `@illian01` in [PR 210](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/210)
 
 # v0.0.8
 
