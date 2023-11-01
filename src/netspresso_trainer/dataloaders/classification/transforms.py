@@ -11,7 +11,7 @@ from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 def transforms_custom_train(conf_augmentation):
     assert conf_augmentation.img_size > 32
     preprocess = []
-    for augment in conf_augmentation.augment_info:
+    for augment in conf_augmentation.recipe:
         name = augment.name.lower()
         transform_args = list(inspect.signature(TRANSFORM_DICT[name]).parameters)
         transform_kwargs = {key:augment[key] for key in transform_args if hasattr(augment, key)}
