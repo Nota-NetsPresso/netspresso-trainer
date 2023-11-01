@@ -1,6 +1,22 @@
 # Upcoming Release
 
-(The updated changelog in pre-release will be included in stable release, `v0.0.9`)
+## New Features:
+
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.0.9
 
 ## New Features:
 
