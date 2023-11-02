@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Union
 
 from omegaconf import DictConfig, OmegaConf
+import torch
 
 from netspresso_trainer.trainer_common import train_common
 
@@ -136,6 +137,7 @@ def train_with_yaml_impl(gpus: Union[list, int], data: Union[Path, str], augment
     assert isinstance(gpus, (list, int))
     gpu_ids_str = ','.join(map(str, gpus)) if isinstance(gpus, list) else str(gpus)
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
+    torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
     
     if isinstance(gpus, int):
         conf = set_arguments(data, augmentation, model, training, logging, environment)
