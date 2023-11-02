@@ -2,9 +2,9 @@ import cv2
 import numpy as np
 import PIL.Image as Image
 
+from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from . import custom as TC
 from .registry import TRANSFORM_DICT
-from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 EDGE_SIZE = 4
 Y_K_SIZE = 6

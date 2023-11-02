@@ -5,8 +5,8 @@ from typing import Literal
 import numpy as np
 import PIL.Image as Image
 
-from ..base import BaseCustomDataset
 from ..augmentation.transforms import generate_edge, reduce_label
+from ..base import BaseCustomDataset
 
 
 class SegmentationCustomDataset(BaseCustomDataset):

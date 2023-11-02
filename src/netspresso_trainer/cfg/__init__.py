@@ -8,8 +8,8 @@ from .augmentation import (
     ColorJitter,
     Pad,
     RandomCrop,
-    RandomResizedCrop,
     RandomHorizontalFlip,
+    RandomResizedCrop,
     RandomVerticalFlip,
     Resize,
 )
