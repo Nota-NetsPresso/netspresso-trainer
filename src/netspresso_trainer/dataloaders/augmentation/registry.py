@@ -8,6 +8,6 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomcrop': RandomCrop,
     'randomresizedcrop': RandomResizedCrop,
     'randomhorizontalflip': RandomHorizontalFlip,
-    'randomVerticalFlip': RandomVerticalFlip,
+    'randomverticalflip': RandomVerticalFlip,
     'resize': Resize,
 }
