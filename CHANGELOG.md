@@ -10,7 +10,7 @@ No changes to highlight.
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Enable dataset augmentation customizing by `@illian01` in [PR 201](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/201)
 
 ## Other Changes:
 
