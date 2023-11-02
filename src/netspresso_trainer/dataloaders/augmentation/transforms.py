@@ -33,5 +33,5 @@ def transforms_custom_eval(conf_augmentation):
     return TC.Compose(preprocess)
 
 
-def create_transform(is_training=False):
+def create_transform(model_name: str, is_training=False):
     return transforms_custom_train if is_training else transforms_custom_eval
