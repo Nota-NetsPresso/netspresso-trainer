@@ -6,7 +6,7 @@ import numpy as np
 import PIL.Image as Image
 
 from ..base import BaseCustomDataset
-from ..segmentation.transforms import generate_edge, reduce_label
+from ..augmentation.transforms import generate_edge, reduce_label
 
 
 class SegmentationCustomDataset(BaseCustomDataset):
