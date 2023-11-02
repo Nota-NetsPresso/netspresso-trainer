@@ -2,25 +2,25 @@ augmentation:
   img_size: &img_size ~
   recipe:
     - 
-      name: RandomResizedCrop
+      name: randomresizedcrop
       size: ~
       interpolation: bilinear
     -
-      name: RandomHorizontalFlip
+      name: randomhorizontalflip
       p: ~
     -
-      name: RandomVerticalFlip
+      name: randomverticalflip
       p: ~
     -
-      name: ColorJitter
+      name: colorjitter
       brightness: ~
       contrast: ~
       saturation: ~
       hue: ~
       p: ~
     -
-      name: Resize
+      name: resize
       size: ~
     -
-      name: Pad
+      name: pad
       padding: ~

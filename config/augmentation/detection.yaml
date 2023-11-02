@@ -2,6 +2,6 @@ augmentation:
   img_size: &img_size 512
   recipe:
     - 
-      name: Resize
+      name: resize
       size: *img_size
       interpolation: bilinear

@@ -2,14 +2,14 @@ augmentation:
   img_size: &img_size 512
   recipe:
     - 
-      name: RandomResizedCrop
+      name: randomresizedcrop
       size: *img_size
       interpolation: bilinear
     -
-      name: RandomHorizontalFlip
+      name: randomhorizontalflip
       p: 0.5
     -
-      name: ColorJitter
+      name: colorjitter
       brightness: 0.25
       contrast: 0.25
       saturation: 0.25

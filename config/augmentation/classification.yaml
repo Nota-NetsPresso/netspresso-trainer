@@ -2,9 +2,9 @@ augmentation:
   img_size: &img_size 256
   recipe:
     - 
-      name: RandomResizedCrop
+      name: randomresizedcrop
       size: *img_size
       interpolation: bilinear
     - 
-      name: RandomHorizontalFlip
+      name: randomhorizontalflip
       p: 0.5
