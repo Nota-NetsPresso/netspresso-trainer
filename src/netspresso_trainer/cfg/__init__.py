@@ -5,10 +5,13 @@ from omegaconf import MISSING, MissingMandatoryValue
 
 from .augmentation import (
     AugmentationConfig,
-    ClassificationAugmentationConfig,
     ColorJitter,
-    DetectionAugmentationConfig,
-    SegmentationAugmentationConfig,
+    Pad,
+    RandomCrop,
+    RandomResizedCrop,
+    RandomHorizontalFlip,
+    RandomVerticalFlip,
+    Resize,
 )
 from .data import (
     DatasetConfig,
@@ -46,12 +49,6 @@ from .model import (
     SegmentationSegFormerModelConfig,
 )
 from .training import ClassificationScheduleConfig, DetectionScheduleConfig, ScheduleConfig, SegmentationScheduleConfig
-
-_AUGMENTATION_CONFIG_TYPE_DICT = {
-    'classification': ClassificationAugmentationConfig,
-    'segmentation': SegmentationAugmentationConfig,
-    'detection': DetectionAugmentationConfig
-}
 
 _TRAINING_CONFIG_TYPE_DICT = {
     'classification': ClassificationScheduleConfig,
@@ -101,6 +98,6 @@ class TrainerConfig:
         
         if self.auto:
             if self.augmentation is None:
-                self.augmentation = _AUGMENTATION_CONFIG_TYPE_DICT[self.task]()
+                self.augmentation = AugmentationConfig()
             if self.training is None:
                 self.training = _TRAINING_CONFIG_TYPE_DICT[self.task]()

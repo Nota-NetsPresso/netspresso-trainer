@@ -8,13 +8,15 @@ from pytest import raises
 if __name__ == "__main__":
     
     from netspresso_trainer.cfg import (
-        ClassificationAugmentationConfig,
+        AugmentationConfig,
         ClassificationResNetModelConfig,
         ColorJitter,
+        RandomResizedCrop,
+        RandomHorizontalFlip,
         ExampleBeansDataset,
     )
     
-    augmentation_config = ClassificationAugmentationConfig(color_jitter=ColorJitter(colorjitter_p=0.9))
+    augmentation_config = AugmentationConfig(recipe=[RandomResizedCrop(), RandomHorizontalFlip(), ColorJitter()])
     example_dataset = ExampleBeansDataset
     example_model = ClassificationResNetModelConfig()
     cfg = TrainerConfig(
@@ -32,12 +34,12 @@ if __name__ == "__main__":
     
     # OK: update value of subclass in the main dataclass
     cfg_new: TrainerConfig = deepcopy(cfg)
-    cfg_new.augmentation.color_jitter.saturation = 0.0
+    cfg_new.augmentation.recipe[-1].saturation = 0.0
     # print(OmegaConf.to_yaml(OmegaConf.structured(cfg_new)))
     
     # OK: update value from OmegaConf Config
     config_new: TrainerConfig = deepcopy(config)
-    config_new.augmentation.color_jitter.hue = 0.5
+    cfg_new.augmentation.recipe[-1].hue = 0.5
     # print(OmegaConf.to_yaml(config_new))
 
 
