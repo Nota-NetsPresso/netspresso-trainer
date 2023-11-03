@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add a gpu option in `train_with_config` (only single-GPU supported) by `@deepkyu` in [PR 219](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/219)
 
 ## Bug Fixes:
 
