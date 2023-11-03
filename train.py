@@ -38,7 +38,9 @@ def train_with_inline_cfg():
     
     print(export_config_as_yaml(cfg))
     
-    train_with_config(cfg, log_level='INFO')
+    train_with_config(gpus="1",
+                      config=cfg,
+                      log_level='INFO')
 
 def train_with_inline_yaml():
     from netspresso_trainer import train_with_yaml
@@ -52,10 +54,10 @@ def train_with_inline_yaml():
 
 
 if __name__ == '__main__':
-    train_cli()
+    # train_cli()
 
     # With inline yaml
     # train_with_inline_yaml()
     
     # With inline pythonic config
-    # train_with_inline_cfg()
+    train_with_inline_cfg()
