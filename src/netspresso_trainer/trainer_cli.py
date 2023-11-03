@@ -4,8 +4,8 @@ import subprocess
 from pathlib import Path
 from typing import Union
 
-from omegaconf import DictConfig, OmegaConf
 import torch
+from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.trainer_common import train_common
 
