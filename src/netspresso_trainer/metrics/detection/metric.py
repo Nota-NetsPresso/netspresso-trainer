@@ -167,7 +167,7 @@ def average_precisions_per_class(
 class DetectionMetric(BaseMetric):
     metric_names: List[str] = ['map50', 'map75', 'map50_95']
     primary_metric: str = 'map50_95'
-    
+
     def __init__(self, **kwargs):
         super().__init__()
 

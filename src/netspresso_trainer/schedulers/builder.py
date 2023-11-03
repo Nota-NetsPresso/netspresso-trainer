@@ -15,8 +15,8 @@ def build_scheduler(optimizer, conf_training):
         'total_iters': num_epochs,
         'iters_per_phase': conf_training.iters_per_phase,  # TODO: config for StepLR
     })
-    
+
     assert scheduler_name in SCHEDULER_DICT, f"{scheduler_name} not in scheduler dict!"
     lr_scheduler = SCHEDULER_DICT[scheduler_name](optimizer, **conf_sched)
-    
+
     return lr_scheduler, num_epochs

@@ -23,13 +23,13 @@ def exist_name(candidate, folder_iterable):
 
 def get_label(label_file: Path):
     target = Path(label_file).read_text()
-    
+
     try:
         target_array = np.array([list(map(float, box.split(' '))) for box in target.split('\n') if box.strip()])
     except ValueError as e:
         print(target)
         raise e
-        
+
     label, boxes = target_array[:, 0], target_array[:, 1:]
     label = label[..., np.newaxis]
     return label, boxes
@@ -43,7 +43,7 @@ class DetectionCustomDataset(BaseCustomDataset):
             conf_data, conf_augmentation, model_name, idx_to_class,
             split, samples, transform, with_label, **kwargs
         )
-    
+
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
         converted = original.copy()
@@ -67,12 +67,12 @@ class DetectionCustomDataset(BaseCustomDataset):
         if ann_path is None:
             out = self.transform(self.conf_augmentation)(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
-        
+
         outputs = {}
 
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
-        
+
         out = self.transform(self.conf_augmentation)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
         assert out['bbox'].shape[-1] == 5  # ltrb + class_label
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
@@ -83,6 +83,6 @@ class DetectionCustomDataset(BaseCustomDataset):
             return outputs
 
         assert self._split in ['val', 'valid', 'test']
-        # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1 
+        # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs

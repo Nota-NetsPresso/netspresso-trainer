@@ -25,10 +25,10 @@ class ArchitectureConfig:
     full: Optional[Dict[str, Any]] = None
     backbone: Optional[Dict[str, Any]] = None
     head: Optional[Dict[str, Any]] = None
-    
+
     def __post_init__(self):
         assert bool(self.full) != bool(self.backbone), "Only one of full or backbone should be given."
-    
+
 @dataclass
 class ModelConfig:
     task: str = MISSING
@@ -71,7 +71,7 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
 class MobileNetV3ArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mobilenetv3_small",
-        
+
         # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
         "block_info": [
             [
