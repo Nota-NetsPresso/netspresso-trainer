@@ -9,7 +9,7 @@ DEFAULT_IMG_SIZE = 256
 
 @dataclass
 class Transform:
-    name: str = MissingMandatoryValue
+    name: str = MISSING
 
 
 @dataclass
