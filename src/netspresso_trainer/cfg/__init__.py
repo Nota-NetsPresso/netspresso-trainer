@@ -53,6 +53,12 @@ from .model import (
 )
 from .training import ClassificationScheduleConfig, DetectionScheduleConfig, ScheduleConfig, SegmentationScheduleConfig
 
+_AUGMENTATION_CONFIG_TYPE_DICT = {
+    'classification': ClassificationAugmentationConfig,
+    'segmentation': SegmentationAugmentationConfig,
+    'detection': DetectionAugmentationConfig
+}
+
 _TRAINING_CONFIG_TYPE_DICT = {
     'classification': ClassificationScheduleConfig,
     'segmentation': SegmentationScheduleConfig,
@@ -101,6 +107,6 @@ class TrainerConfig:
 
         if self.auto:
             if self.augmentation is None:
-                self.augmentation = AugmentationConfig()
+                self.augmentation = _AUGMENTATION_CONFIG_TYPE_DICT[self.task]()
             if self.training is None:
                 self.training = _TRAINING_CONFIG_TYPE_DICT[self.task]()
