@@ -251,7 +251,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
 
 @dataclass
 class PIDNetModelConfig(ModelConfig):
-    task: str = "classification"
+    task: str = "segmentation"
     checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
