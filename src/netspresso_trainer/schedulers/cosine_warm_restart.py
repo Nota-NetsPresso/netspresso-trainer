@@ -91,7 +91,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             return remain_epochs, remain_epochs
 
         return current_t_i, remain_epochs
-    
+
     def _step_without_given_epoch(self) -> int:
         if self.last_epoch < 0:
             epoch = 0
@@ -105,7 +105,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
             self.T_i = self.T_i * self.T_mult
             self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_i, self.T_i * self.T_mult, self.remain_iters)
         return epoch
-        
+
     def step(self, epoch=None):
         """Step could be called after every batch update
 
@@ -139,7 +139,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
         else:
             if epoch < 0:
                 raise ValueError("Expected non-negative epoch, but got {}".format(epoch))
-            
+
             if epoch >= self.T_0:
                 if self.T_mult == 1:
                     self.T_cur = epoch % self.T_0

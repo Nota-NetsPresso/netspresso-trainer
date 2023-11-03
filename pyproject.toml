@@ -8,6 +8,7 @@ extend-select = [
   "I",
   "SIM",
   "INP001",
+  "W"
 ]
 
 ignore = [

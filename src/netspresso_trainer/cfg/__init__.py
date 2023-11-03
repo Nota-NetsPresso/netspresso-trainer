@@ -69,19 +69,19 @@ class TrainerConfig:
     training: Optional[ScheduleConfig] = None
     logging: LoggingConfig = field(default_factory=lambda: LoggingConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
-    
+
     @property
     def epochs(self) -> int:
         return self.training.epochs
-    
+
     @property
     def batch_size(self) -> int:
         return self.training.batch_size
-    
+
     @property
     def num_workers(self) -> int:
         return self.environment.num_workers
-    
+
     @epochs.setter
     def epochs(self, v: int) -> None:
         self.training.epochs = v
@@ -89,16 +89,16 @@ class TrainerConfig:
     @batch_size.setter
     def batch_size(self, v: int) -> None:
         self.training.batch_size = v
-    
+
     @num_workers.setter
     def num_workers(self, v: int) -> None:
         self.environment.num_workers = v
-        
+
     def __post_init__(self):
         assert self.task in ['classification', 'segmentation', 'detection']
         self.data.task = self.task
         self.model.task = self.task
-        
+
         if self.auto:
             if self.augmentation is None:
                 self.augmentation = AugmentationConfig()

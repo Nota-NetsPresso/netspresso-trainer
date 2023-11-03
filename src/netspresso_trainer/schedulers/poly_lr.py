@@ -34,7 +34,7 @@ class PolynomialLRWithWarmUp(_LRScheduler):
 
         if self.last_epoch > self.total_iters:
             return [group["lr"] for group in self.optimizer.param_groups]
-        
+
         if self.last_epoch >= 0 and self.last_epoch < self.warmup_iters:
             return [self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr)
                     for base_lr in self.base_lrs]
@@ -45,7 +45,7 @@ class PolynomialLRWithWarmUp(_LRScheduler):
         return [self.min_lr + (group["lr"] - self.min_lr) * decay_factor for group in self.optimizer.param_groups]
 
     def _get_closed_form_lr(self):
-        decay_steps = self.total_iters - self.warmup_iters        
+        decay_steps = self.total_iters - self.warmup_iters
         return [
             (
                 min(

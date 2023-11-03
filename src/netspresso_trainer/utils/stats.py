@@ -12,7 +12,7 @@ def get_params_and_macs(model: nn.Module, sample_input: torch.Tensor):
     sample_input = sample_input.to(get_device(model))
     # From v0.0.9
     macs, params = _params_and_macs_fvcore(model, sample_input)
-    
+
     # # Before v0.0.9
     # macs, params = _params_and_macs_thop(model, sample_input)
 

@@ -49,7 +49,7 @@ def detection_collate_fn(original_batch):
 class DetectionDataSampler(BaseDataSampler):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(DetectionDataSampler, self).__init__(conf_data, train_valid_split_ratio)
-    
+
     def load_data(self, split='train'):
         data_root = Path(self.conf_data.path.root)
         split_dir = self.conf_data.path[split]
@@ -71,7 +71,7 @@ class DetectionDataSampler(BaseDataSampler):
             images = sorted(images, key=lambda k: natural_key(k))
             labels = sorted(labels, key=lambda k: natural_key(k))
             images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
-            
+
         elif split == 'test':
             for ext in IMG_EXTENSIONS:
                 images_and_targets.extend([{'image': str(file), 'label': None}
@@ -79,21 +79,21 @@ class DetectionDataSampler(BaseDataSampler):
             images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         else:
             raise AssertionError(f"split should be either {['train', 'valid', 'test']}")
-        
+
         return images_and_targets
-        
+
     def load_samples(self):
         assert self.conf_data.path.train.image is not None
         assert self.conf_data.id_mapping is not None
         id_mapping: Optional[list] = list(self.conf_data.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
-        
+
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
-        
+
         valid_samples = None
         test_samples = None
-        
+
         train_samples = self.load_data(split='train')
         if exists_valid:
             valid_samples = self.load_data(split='valid')
@@ -101,12 +101,12 @@ class DetectionDataSampler(BaseDataSampler):
             test_samples = self.load_data(split='test')
 
         if not exists_valid:
-            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio) 
+            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
             train_samples, valid_samples = \
                 random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
                                 generator=torch.Generator().manual_seed(42))
-        
+
         return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
-    
+
     def load_huggingface_samples(self):
         raise NotImplementedError

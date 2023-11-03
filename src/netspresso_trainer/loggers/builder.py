@@ -62,16 +62,16 @@ class TrainingLogger():
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=conf.training.epochs) if self.use_stdout else None
-            
+
         self.netspresso_api_client = None
         if self.use_netspresso:
             from loggers.netspresso import ModelSearchServerHandler
             self.netspresso_api_client: Optional[ModelSearchServerHandler] = ModelSearchServerHandler(task=task, model=model)
-        
+
         if task in VISUALIZER:
             pallete = conf.data.pallete if 'pallete' in conf.data else None
             self.label_converter = VISUALIZER[task](class_map=class_map, pallete=pallete)
-            
+
     @property
     def result_dir(self):
         return self._result_dir
@@ -117,7 +117,7 @@ class TrainingLogger():
         for k, v in images_dict.items():
             if k == 'images':
                 continue
-            
+
             # target, pred, bg_gt
             v = v[:self.num_sample_images]
             v_new: np.ndarray = magic_image_handler(

@@ -31,10 +31,10 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
         if not self._get_lr_called_within_step:
             warnings.warn("To get the last learning rate computed by the scheduler, "
                           "please use `get_last_lr()`.", UserWarning, stacklevel=2)
-        
+
         if self.last_epoch > self.T_max:
             return [group['lr'] for group in self.optimizer.param_groups]
-        
+
         if self.last_epoch >= 0 and self.last_epoch < self.warmup_iters:
             return [self.warmup_bias_lr + (float(self.last_epoch + 1) / float(max(1, self.warmup_iters))) * (base_lr - self.warmup_bias_lr)
                     for base_lr in self.base_lrs]

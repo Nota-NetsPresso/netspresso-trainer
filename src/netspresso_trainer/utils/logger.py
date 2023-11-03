@@ -24,7 +24,7 @@ def _custom_logger(name: str, level: str, distributed: bool):
     else:
         fmt = '%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     logger = logging.getLogger(name)
-    
+
     if not logger.hasHandlers():
         handler = logging.StreamHandler()
 
@@ -46,7 +46,7 @@ def set_logger(logger_name="netspresso_trainer", level: str = 'INFO', distribute
         print("Skipping timezone setting.")
     _level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = level.upper()
     _custom_logger(logger_name, _level, distributed)
-    
+
     logger = logging.getLogger(logger_name)
     if _level == 'DEBUG':
         logger.setLevel(logging.DEBUG)
