@@ -5,6 +5,7 @@ from typing import Dict, Optional
 import numpy as np
 import PIL.Image as Image
 import torch
+from torch.nn import functional as F_torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from torchvision.transforms.functional import InterpolationMode
@@ -347,6 +348,79 @@ class RandomResizedCrop(T.RandomResizedCrop):
         format_string += ', ratio={0}'.format(tuple(round(r, 4) for r in self.ratio))
         format_string += ', interpolation={0})'.format(interpolate_str)
         return format_string
+
+
+class RandomMixup:
+    """
+    Given a batch of input images and labels, this class randomly applies the
+    `MixUp transformation <https://arxiv.org/abs/1710.09412>`_
+
+    Args:
+        opts (argparse.Namespace): Arguments
+        num_classes (int): Number of classes in the dataset
+    """
+
+    def __init__(self, num_classes: int, alpha, p=1.0, inplace=False):
+        if not (num_classes > 0):
+            raise ValueError("Please provide a valid positive value for the num_classes.")
+        if not (alpha > 0):
+            raise ValueError("Alpha param can't be zero.")
+        if not (0.0 < p <= 1.0):
+            raise ValueError("MixUp probability should be between 0 and 1, where 1 is inclusive")
+        
+        self.num_classes = num_classes
+        self.alpha = alpha
+        self.p = p
+        self.inplace = inplace
+
+    def _apply_mixup_transform(self, image_tensor, target_tensor):
+        if image_tensor.ndim != 4:
+            print(f"Batch ndim should be 4. Got {image_tensor.ndim}")
+        if target_tensor.ndim != 1:
+            print(f"Target ndim should be 1. Got {target_tensor.ndim}")
+        if not image_tensor.is_floating_point():
+            print(f"Batch datatype should be a float tensor. Got {image_tensor.dtype}.")
+        if target_tensor.dtype != torch.int64:
+            print(f"Target datatype should be torch.int64. Got {target_tensor.dtype}")
+
+        if not self.inplace:
+            image_tensor = image_tensor.clone()
+            target_tensor = target_tensor.clone()
+
+        if target_tensor.ndim == 1:
+            target_tensor = F_torch.one_hot(
+                target_tensor, num_classes=self.num_classes
+            ).to(dtype=image_tensor.dtype)
+
+        # It's faster to roll the batch by one instead of shuffling it to create image pairs
+        batch_rolled = image_tensor.roll(1, 0)
+        target_rolled = target_tensor.roll(1, 0)
+
+        # Implemented as on mixup paper, page 3.
+        lambda_param = float(
+            torch._sample_dirichlet(torch.tensor([self.alpha, self.alpha]))[0]
+        )
+        batch_rolled.mul_(1.0 - lambda_param)
+        image_tensor.mul_(lambda_param).add_(batch_rolled)
+
+        target_rolled.mul_(1.0 - lambda_param)
+        target_tensor.mul_(lambda_param).add_(target_rolled)
+        return image_tensor, target_tensor
+
+    def __call__(self, samples, targets):
+        if torch.rand(1).item() >= self.p:
+            return samples, targets
+
+        mixup_samples, mixup_targets = self._apply_mixup_transform(
+            image_tensor=samples, target_tensor=targets
+        )
+
+        return mixup_samples, mixup_targets
+
+    def __repr__(self) -> str:
+        return "{}(num_classes={}, p={}, alpha={}, inplace={})".format(
+            self.__class__.__name__, self.num_classes, self.p, self.alpha, self.inplace
+        )
 
 
 class Normalize:
