@@ -139,7 +139,7 @@ class TwoStageDetectionPipeline(BasePipeline):
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase=phase)
-        
+
     def save_checkpoint(self, epoch: int):
 
         # Check whether the valid loss is minimum at this epoch
@@ -211,9 +211,9 @@ class OneStageDetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices),}
                    for box, label in zip(bboxes, labels)]
-        
-        targets = {'gt': targets, 
-                   'img_size': images.size(-1), 
+
+        targets = {'gt': targets,
+                   'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -235,7 +235,7 @@ class OneStageDetectionPipeline(BasePipeline):
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
             'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy()) 
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
                       if p is not None else (np.array([[]]), np.array([]))
                       for p in pred]
         }
@@ -247,9 +247,9 @@ class OneStageDetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
-        targets = {'gt': targets, 
-                   'img_size': images.size(-1), 
+
+        targets = {'gt': targets,
+                   'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -269,7 +269,7 @@ class OneStageDetectionPipeline(BasePipeline):
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
             'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy()) 
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
                       if p is not None else (np.array([[]]), np.array([]))
                       for p in pred]
         }

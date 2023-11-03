@@ -29,7 +29,7 @@ class Compose:
         for t in self.transforms:
             if visualize_for_debug and not t.visualize:
                 continue
-            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)    
+            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)
         return image, mask, bbox
 
     def __call__(self, image, mask=None, bbox=None, visualize_for_debug=False, **kwargs):
@@ -103,7 +103,7 @@ class Resize(T.Resize):
 
         # TODO: There is logic error in forward. If `size` is int, this specify edge for shorter one.
         # And, this is not match with bbox computing logic.
-        # Thus, automatically transform to sequence format for now, 
+        # Thus, automatically transform to sequence format for now,
         # but this should be specified whether Resize receives sequence or int.
         if isinstance(size, int):
             size = [size, size]
@@ -294,11 +294,11 @@ class RandomCrop:
 class RandomResizedCrop(T.RandomResizedCrop):
     visualize = True
 
-    def __init__(self, 
+    def __init__(self,
                  size,
                  scale=(0.08, 1.0),
                  ratio=(3.0 / 4.0, 4.0 / 3.0),
-                 interpolation='bilinear', 
+                 interpolation='bilinear',
                  antialias: Optional[bool]=None):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
         super().__init__(size, scale, ratio, interpolation, antialias)

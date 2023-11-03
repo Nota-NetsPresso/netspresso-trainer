@@ -15,10 +15,10 @@ class BaseCustomDataset(data.Dataset):
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
         self.model_name = model_name
-        
+
         self.transform = transform
         self.samples = samples
-        
+
         self._root = conf_data.path.root
         self._idx_to_class = idx_to_class
         self._num_classes = len(self._idx_to_class)
@@ -47,12 +47,12 @@ class BaseCustomDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
-    
+
     @property
     def with_label(self):
         return self._with_label
-    
-    
+
+
 class BaseHFDataset(data.Dataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, root, split, with_label):
@@ -64,7 +64,7 @@ class BaseHFDataset(data.Dataset):
         self._split = split
         self._with_label = with_label
 
-    def _load_dataset(self, root, subset_name=None, cache_dir=None):         
+    def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
         if cache_dir is not None:
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
@@ -94,7 +94,7 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
-    
+
     @property
     def with_label(self):
         return self._with_label
@@ -104,15 +104,15 @@ class BaseDataSampler(ABC):
     def __init__(self, conf_data, train_valid_split_ratio):
         self.conf_data = conf_data
         self.train_valid_split_ratio = train_valid_split_ratio
-    
+
     @abstractmethod
     def load_data(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def load_samples(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def load_huggingface_samples(self):
         raise NotImplementedError

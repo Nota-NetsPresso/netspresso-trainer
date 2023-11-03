@@ -47,7 +47,7 @@ class YOLOXLoss(nn.Module):
         super(YOLOXLoss, self).__init__()
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = IOUloss(reduction="none")
-        
+
 
     def forward(self, out: List, target: Dict) -> torch.Tensor:
         x_shifts = []
@@ -90,10 +90,10 @@ class YOLOXLoss(nn.Module):
                     [],
                     dtype=out[0].dtype,
                 )
-        
+
         # TODO: return as dict
         return total_loss
-    
+
     def get_losses(
         self,
         imgs,
@@ -263,7 +263,7 @@ class YOLOXLoss(nn.Module):
             #loss_l1,
             num_fg / max(num_gts, 1),
         )
-    
+
     @torch.no_grad()
     def get_assignments(
         self,
@@ -354,7 +354,7 @@ class YOLOXLoss(nn.Module):
             matched_gt_inds,
             num_fg,
         )
-    
+
     def get_geometry_constraint(
         self, gt_bboxes_per_image, expanded_strides, x_shifts, y_shifts,
     ):
@@ -385,7 +385,7 @@ class YOLOXLoss(nn.Module):
         geometry_relation = is_in_centers[:, anchor_filter]
 
         return anchor_filter, geometry_relation
-    
+
     def simota_matching(self, cost, pair_wise_ious, gt_classes, num_gt, fg_mask):
         matching_matrix = torch.zeros_like(cost, dtype=torch.uint8)
 
@@ -419,7 +419,7 @@ class YOLOXLoss(nn.Module):
             fg_mask_inboxes
         ]
         return num_fg, gt_matched_classes, pred_ious_this_matching, matched_gt_inds
-    
+
     def get_output_and_grid(self, output, k, stride, dtype):
         grid = self.grids[k]
 

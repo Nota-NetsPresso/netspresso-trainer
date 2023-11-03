@@ -6,7 +6,7 @@ class ClassificationCSVLogger(BaseCSVLogger):
     def __init__(self, model, result_dir):
         super(ClassificationCSVLogger, self).__init__(model, result_dir)
         self.update_header(self.csv_header)
-        
+
         self._key_map = {
             'epoch': 'epoch',
             'train/total': 'train_loss',
@@ -14,7 +14,7 @@ class ClassificationCSVLogger(BaseCSVLogger):
             'train/Acc@1': 'train_accuracy',
             'valid/Acc@1': 'valid_accuracy',
         }
-    
+
     @property
     def key_map(self):
         return self._key_map
@@ -24,7 +24,7 @@ class SegmentationCSVLogger(BaseCSVLogger):
     def __init__(self, model, result_dir):
         super(SegmentationCSVLogger, self).__init__(model, result_dir)
         self.update_header(self.csv_header)
-        
+
         self._key_map = {
             'epoch': 'epoch',
             'train/total': 'train_loss',
