@@ -9,6 +9,7 @@ if __name__ == "__main__":
     
     from netspresso_trainer.cfg import (
         AugmentationConfig,
+        ClassificationAugmentationConfig,
         ClassificationResNetModelConfig,
         ColorJitter,
         RandomResizedCrop,
@@ -16,7 +17,7 @@ if __name__ == "__main__":
         ExampleBeansDataset,
     )
     
-    augmentation_config = AugmentationConfig(recipe=[RandomResizedCrop(), RandomHorizontalFlip(), ColorJitter()])
+    augmentation_config = ClassificationAugmentationConfig()
     example_dataset = ExampleBeansDataset
     example_model = ClassificationResNetModelConfig()
     cfg = TrainerConfig(

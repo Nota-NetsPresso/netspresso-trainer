@@ -5,13 +5,16 @@ from omegaconf import MISSING, MissingMandatoryValue
 
 from .augmentation import (
     AugmentationConfig,
+    ClassificationAugmentationConfig,
     ColorJitter,
+    DetectionAugmentationConfig,
     Pad,
     RandomCrop,
     RandomHorizontalFlip,
     RandomResizedCrop,
     RandomVerticalFlip,
     Resize,
+    SegmentationAugmentationConfig,
 )
 from .data import (
     DatasetConfig,
