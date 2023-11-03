@@ -1,8 +1,11 @@
+from functools import partial
 import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Type, Union
 
+from .augmentation.registry import TRANSFORM_DICT
+from .classification import classification_mix_collate_fn
 from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
@@ -100,7 +103,22 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
-        collate_fn = None
+        if hasattr(conf.augmentation, 'mix_transform'):
+            mix_transforms = []
+            for mix_transform_conf in conf.augmentation.mix_transform:
+                name = mix_transform_conf.name.lower()
+
+                mix_kwargs = list(mix_transform_conf.keys())
+                mix_kwargs.remove('name')
+                mix_kwargs = {k:mix_transform_conf[k] for k in mix_kwargs}
+                mix_kwargs['num_classes'] = train_dataset.num_classes
+
+                transform = TRANSFORM_DICT[name](**mix_kwargs)
+                mix_transforms.append(transform)
+
+            collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+        else:
+            collate_fn = None
 
         train_loader = create_loader(
             train_dataset,
