@@ -64,4 +64,4 @@ class Resize(Transform):
 @dataclass
 class AugmentationConfig:
     img_size: int = DEFAULT_IMG_SIZE
-    recipe: List[Transform] = field(default_factory=list)
+    recipe: List[Transform] = field(default_factory=[Transform()])
