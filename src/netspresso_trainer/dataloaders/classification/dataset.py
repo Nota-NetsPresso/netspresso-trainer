@@ -8,6 +8,7 @@ from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 from omegaconf import DictConfig
+from torch.nn import functional as F
 from torch.utils.data import random_split
 
 from ..base import BaseDataSampler
@@ -82,6 +83,21 @@ def classification_mix_collate_fn(original_batch, mix_transforms):
 
     _mix_transform = random.choice(mix_transforms)
     images, target = _mix_transform(images, target)
+
+    outputs = (images, target)
+    return outputs
+
+
+def classification_onehot_collate_fn(original_batch, num_classes):
+    images = []
+    target = []
+    for data_sample in original_batch:
+        images.append(data_sample[0])
+        target.append(data_sample[1])
+
+    images = torch.stack(images, dim=0)
+    target = torch.tensor(target, dtype=torch.long)
+    target = F.one_hot(target, num_classes=num_classes).to(dtype=images.dtype)
 
     outputs = (images, target)
     return outputs

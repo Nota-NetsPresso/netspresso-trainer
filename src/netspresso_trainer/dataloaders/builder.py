@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Type, Union
 
 from .augmentation.registry import TRANSFORM_DICT
-from .classification import classification_mix_collate_fn
+from .classification import classification_mix_collate_fn, classification_onehot_collate_fn
 from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
@@ -116,9 +116,11 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
                 transform = TRANSFORM_DICT[name](**mix_kwargs)
                 mix_transforms.append(transform)
 
-            collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+            train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+            eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
         else:
-            collate_fn = None
+            train_collate_fn = None
+            eval_collate_fn = None
 
         train_loader = create_loader(
             train_dataset,
@@ -129,7 +131,7 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=collate_fn,
+            collate_fn=train_collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
@@ -145,7 +147,7 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             is_training=False,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=None,
+            collate_fn=eval_collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
