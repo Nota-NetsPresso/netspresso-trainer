@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Update ruff rule (`W`) by `@deepkyu` in [PR 218](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/218)
 
 # v0.0.9
 
