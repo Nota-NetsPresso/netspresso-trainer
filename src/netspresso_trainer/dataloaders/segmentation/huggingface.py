@@ -3,8 +3,8 @@ from typing import Literal
 import numpy as np
 import PIL.Image as Image
 
+from ..augmentation.transforms import generate_edge, reduce_label
 from ..base import BaseHFDataset
-from ..segmentation.transforms import generate_edge, reduce_label
 
 
 class SegmentationHFDataset(BaseHFDataset):

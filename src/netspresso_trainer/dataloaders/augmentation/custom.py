@@ -7,9 +7,16 @@ import PIL.Image as Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from torchvision.transforms.functional import InterpolationMode
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
+INVERSE_MODES_MAPPING = {
+    'nearest': InterpolationMode.NEAREST,
+    'bilinear': InterpolationMode.BILINEAR,
+    'bicubic': InterpolationMode.BICUBIC,
+}
+
 
 class Compose:
     def __init__(self, transforms, additional_targets: Dict = None):
@@ -90,6 +97,18 @@ class Pad(T.Pad):
 
 class Resize(T.Resize):
     visualize = True
+
+    def __init__(self, size, interpolation='bilinear', max_size=None, antialias=None):
+        interpolation = INVERSE_MODES_MAPPING[interpolation]
+
+        # TODO: There is logic error in forward. If `size` is int, this specify edge for shorter one.
+        # And, this is not match with bbox computing logic.
+        # Thus, automatically transform to sequence format for now, 
+        # but this should be specified whether Resize receives sequence or int.
+        if isinstance(size, int):
+            size = [size, size]
+
+        super().__init__(size, interpolation, max_size, antialias)
 
     def forward(self, image, mask=None, bbox=None):
         w, h = image.size
@@ -274,6 +293,15 @@ class RandomCrop:
 
 class RandomResizedCrop(T.RandomResizedCrop):
     visualize = True
+
+    def __init__(self, 
+                 size,
+                 scale=(0.08, 1.0),
+                 ratio=(3.0 / 4.0, 4.0 / 3.0),
+                 interpolation='bilinear', 
+                 antialias: Optional[bool]=None):
+        interpolation = INVERSE_MODES_MAPPING[interpolation]
+        super().__init__(size, scale, ratio, interpolation, antialias)
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])

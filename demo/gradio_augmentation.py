@@ -25,7 +25,7 @@ def summary_transform(phase, task, model_name, yaml_str):
     try:
         conf = OmegaConf.create(yaml_str)
         is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
         transform_composed = transform(conf.augmentation)
         return str(transform_composed)
     except Exception as e:
@@ -37,7 +37,7 @@ def get_augmented_images(phase, task, model_name, yaml_str, test_image,
     try:
         conf = OmegaConf.create(yaml_str)
         is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
         transform_composed = transform(conf.augmentation)
 
         transformed_images = [transform_composed(test_image,
