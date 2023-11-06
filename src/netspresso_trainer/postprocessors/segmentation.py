@@ -1,0 +1,15 @@
+from typing import Any, Optional
+
+import torch
+
+from ..models.utils import ModelOutput
+
+
+class SegmentationArgMax:
+    def __init__(self):
+        pass
+
+    def __call__(self, outputs: ModelOutput):
+        pred = outputs['pred']
+        pred = torch.max(pred, dim=1)[1]  # argmax
+        return pred

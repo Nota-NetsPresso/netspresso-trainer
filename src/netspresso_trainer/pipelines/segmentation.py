@@ -41,7 +41,8 @@ class SegmentationPipeline(BasePipeline):
         self.optimizer.step()
 
         out = {k: v.detach() for k, v in out.items()}
-        self.metric_factory.calc(out['pred'], target, phase='train')
+        pred = self.postprocessor(out)
+        self.metric_factory.calc(pred, target, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -62,7 +63,8 @@ class SegmentationPipeline(BasePipeline):
         else:
             self.loss_factory.calc(out, target, phase='valid')
 
-        self.metric_factory.calc(out['pred'], target, phase='valid')
+        pred = self.postprocessor(out)
+        self.metric_factory.calc(pred, target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -87,9 +89,9 @@ class SegmentationPipeline(BasePipeline):
 
         out = self.model(images.unsqueeze(0))
 
-        output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
+        pred = self.postprocessor(out)
 
-        return output_seg
+        return pred
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass
