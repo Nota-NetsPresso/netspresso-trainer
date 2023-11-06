@@ -224,8 +224,7 @@ class OneStageDetectionPipeline(BasePipeline):
         self.loss_factory.backward()
         self.optimizer.step()
 
-        pred = self.postprocessor(out, dtype=out['pred'][0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out['pred']],
-                                  num_classes=self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -256,8 +255,7 @@ class OneStageDetectionPipeline(BasePipeline):
         out = self.model(images)
         self.loss_factory.calc(out, targets, phase='valid')
 
-        pred = self.postprocessor(out, dtype=out['pred'][0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out['pred']],
-                            num_classes=self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -280,9 +278,7 @@ class OneStageDetectionPipeline(BasePipeline):
 
         out = self.model(images.unsqueeze(0))
 
-        # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
-        pred = self.postprocess(pred, self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         results = [(p[:, :4].detach().cpu().numpy(), p[:, 6].to(torch.int).detach().cpu().numpy())
                    if p is not None else (np.array([[]]), np.array([]))

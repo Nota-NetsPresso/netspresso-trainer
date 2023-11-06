@@ -8,9 +8,10 @@ class DetectionPostprocessor:
     def __init__(self):
         pass
 
-    def __call__(self, outputs: ModelOutput, dtype, stage_strides, num_classes, 
-                 conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
+    def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
         pred = outputs['pred']
+        dtype = pred[0].type()
+        stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
         
         pred = self.decode_outputs(pred, dtype=dtype, stage_strides=stage_strides)
         pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
