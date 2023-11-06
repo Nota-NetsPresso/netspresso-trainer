@@ -103,9 +103,9 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
-        if hasattr(conf.augmentation, 'mix_transform'):
+        if hasattr(conf.augmentation, 'mix_transforms'):
             mix_transforms = []
-            for mix_transform_conf in conf.augmentation.mix_transform:
+            for mix_transform_conf in conf.augmentation.mix_transforms:
                 name = mix_transform_conf.name.lower()
 
                 mix_kwargs = list(mix_transform_conf.keys())
