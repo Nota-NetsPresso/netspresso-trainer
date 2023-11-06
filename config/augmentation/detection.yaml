@@ -1,6 +1,6 @@
 augmentation:
   img_size: &img_size 512
-  recipe:
+  transforms:
     - 
       name: resize
       size: *img_size

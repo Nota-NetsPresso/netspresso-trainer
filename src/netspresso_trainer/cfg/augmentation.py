@@ -15,9 +15,10 @@ class Transform:
 @dataclass
 class AugmentationConfig:
     img_size: int = DEFAULT_IMG_SIZE
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         Transform()
     ])
+    mix_transforms: Optional[List[Transform]] = None
 
 
 @dataclass
@@ -70,18 +71,35 @@ class Resize(Transform):
 
 
 @dataclass
+class RandomMixup(Transform):
+    name: str = 'mixup'
+    alpha: float = 0.2
+    p: float = 1.0
+
+
+@dataclass
+class RandomCutmix(Transform):
+    name: str = 'cutmix'
+    alpha: float = 1.0
+    p: float = 1.0
+
+
+@dataclass
 class ClassificationAugmentationConfig(AugmentationConfig):
     img_size: int = 256
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         RandomResizedCrop(size=256),
         RandomHorizontalFlip()
+    ])
+    mix_transforms: List[Transform] = field(default_factory=lambda: [
+        RandomCutmix(),
     ])
 
 
 @dataclass
 class SegmentationAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         RandomResizedCrop(size=512),
         RandomHorizontalFlip(),
         ColorJitter()
@@ -91,6 +109,6 @@ class SegmentationAugmentationConfig(AugmentationConfig):
 @dataclass
 class DetectionAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         Resize(size=512)
     ])
