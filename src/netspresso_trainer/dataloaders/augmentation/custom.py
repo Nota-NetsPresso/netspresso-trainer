@@ -353,7 +353,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
 
 class RandomMixup:
     """
-    Based on the RandomCutmix implementation of ml_cvnets.
+    Based on the RandomMixup implementation of ml_cvnets.
     https://github.com/apple/ml-cvnets/blob/77717569ab4a852614dae01f010b32b820cb33bb/data/transforms/image_torch.py
 
     Given a batch of input images and labels, this class randomly applies the
