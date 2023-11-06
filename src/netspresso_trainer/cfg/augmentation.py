@@ -18,6 +18,7 @@ class AugmentationConfig:
     transforms: List[Transform] = field(default_factory=lambda: [
         Transform()
     ])
+    mix_transforms: Optional[List[Transform]] = None
 
 
 @dataclass
@@ -70,11 +71,28 @@ class Resize(Transform):
 
 
 @dataclass
+class RandomMixup(Transform):
+    name: str = 'mixup'
+    alpha: float = 0.2
+    p: float = 1.0
+
+
+@dataclass
+class RandomCutmix(Transform):
+    name: str = 'cutmix'
+    alpha: float = 1.0
+    p: float = 1.0
+
+
+@dataclass
 class ClassificationAugmentationConfig(AugmentationConfig):
     img_size: int = 256
     transforms: List[Transform] = field(default_factory=lambda: [
         RandomResizedCrop(size=256),
         RandomHorizontalFlip()
+    ])
+    mix_transforms: List[Transform] = field(default_factory=lambda: [
+        RandomCutmix(),
     ])
 
 
