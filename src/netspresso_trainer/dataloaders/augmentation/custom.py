@@ -376,13 +376,13 @@ class RandomMixup:
 
     def _apply_mixup_transform(self, image_tensor, target_tensor):
         if image_tensor.ndim != 4:
-            print(f"Batch ndim should be 4. Got {image_tensor.ndim}")
+            raise ValueError(f"Batch ndim should be 4. Got {image_tensor.ndim}")
         if target_tensor.ndim != 1:
-            print(f"Target ndim should be 1. Got {target_tensor.ndim}")
+            raise ValueError(f"Target ndim should be 1. Got {target_tensor.ndim}")
         if not image_tensor.is_floating_point():
-            print(f"Batch datatype should be a float tensor. Got {image_tensor.dtype}.")
+            raise ValueError(f"Batch datatype should be a float tensor. Got {image_tensor.dtype}.")
         if target_tensor.dtype != torch.int64:
-            print(f"Target datatype should be torch.int64. Got {target_tensor.dtype}")
+            raise ValueError(f"Target datatype should be torch.int64. Got {target_tensor.dtype}")
 
         if not self.inplace:
             image_tensor = image_tensor.clone()
@@ -449,13 +449,13 @@ class RandomCutmix:
 
     def _apply_cutmix_transform(self, image_tensor, target_tensor):
         if image_tensor.ndim != 4:
-            print(f"Batch ndim should be 4. Got {image_tensor.ndim}")
+            raise ValueError(f"Batch ndim should be 4. Got {image_tensor.ndim}")
         if target_tensor.ndim != 1:
-            print(f"Target ndim should be 1. Got {target_tensor.ndim}")
+            raise ValueError(f"Target ndim should be 1. Got {target_tensor.ndim}")
         if not image_tensor.is_floating_point():
-            print(f"Batch dtype should be a float tensor. Got {image_tensor.dtype}.")
+            raise ValueError(f"Batch dtype should be a float tensor. Got {image_tensor.dtype}.")
         if target_tensor.dtype != torch.int64:
-            print(f"Target dtype should be torch.int64. Got {target_tensor.dtype}")
+            raise ValueError(f"Target dtype should be torch.int64. Got {target_tensor.dtype}")
 
         if not self.inplace:
             image_tensor = image_tensor.clone()
