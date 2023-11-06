@@ -1,6 +1,6 @@
 augmentation:
   img_size: &img_size ~
-  recipe:
+  transforms:
     - 
       name: randomresizedcrop
       size: ~
