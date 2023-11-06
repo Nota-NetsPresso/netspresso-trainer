@@ -15,7 +15,7 @@ class Transform:
 @dataclass
 class AugmentationConfig:
     img_size: int = DEFAULT_IMG_SIZE
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         Transform()
     ])
 
@@ -72,7 +72,7 @@ class Resize(Transform):
 @dataclass
 class ClassificationAugmentationConfig(AugmentationConfig):
     img_size: int = 256
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         RandomResizedCrop(size=256),
         RandomHorizontalFlip()
     ])
@@ -81,7 +81,7 @@ class ClassificationAugmentationConfig(AugmentationConfig):
 @dataclass
 class SegmentationAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         RandomResizedCrop(size=512),
         RandomHorizontalFlip(),
         ColorJitter()
@@ -91,6 +91,6 @@ class SegmentationAugmentationConfig(AugmentationConfig):
 @dataclass
 class DetectionAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    recipe: List[Transform] = field(default_factory=lambda: [
+    transforms: List[Transform] = field(default_factory=lambda: [
         Resize(size=512)
     ])
