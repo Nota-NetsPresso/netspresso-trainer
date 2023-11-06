@@ -57,7 +57,7 @@ class ClassificationPipeline(BasePipeline):
         images = images.to(self.devices)
 
         out = self.model(images.unsqueeze(0))
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, k=1)
 
         if self.conf.distributed:
             torch.distributed.barrier()
