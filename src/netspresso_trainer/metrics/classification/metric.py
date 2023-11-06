@@ -8,11 +8,10 @@ TOPK_MAX = 20
 
 
 @torch.no_grad()
-def accuracy_topk(output, target):
+def accuracy_topk(pred, target):
     """Computes the accuracy over the k top predictions for the specified values of k"""
-    maxk = min(TOPK_MAX, output.size()[1])
     batch_size = target.size(0)
-    _, pred = output.topk(maxk, 1, True, True)
+    maxk = pred.size(-1)
     pred = pred.t()
     correct = pred.eq(target.reshape(1, -1).expand_as(pred))
     return lambda topk: correct[:min(topk, maxk)].reshape(-1).float().sum(0) * 100. / batch_size

@@ -21,6 +21,7 @@ from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
+from ..postprocessors import build_postprocessor
 
 logger = logging.getLogger("netspresso_trainer")
 
@@ -87,6 +88,7 @@ class BasePipeline(ABC):
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+        self.postprocessor = build_postprocessor(self.task, self.conf.model)
         resume_optimizer_checkpoint = self.conf.model.resume_optimizer_checkpoint
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)

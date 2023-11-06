@@ -28,7 +28,8 @@ class ClassificationPipeline(BasePipeline):
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='train')
-        self.metric_factory.calc(out['pred'], target, phase='train')
+        pred = self.postprocessor(out)
+        self.metric_factory.calc(pred, target, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -44,7 +45,8 @@ class ClassificationPipeline(BasePipeline):
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='valid')
-        self.metric_factory.calc(out['pred'], target, phase='valid')
+        pred = self.postprocessor(out)
+        self.metric_factory.calc(pred, target, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -55,7 +57,7 @@ class ClassificationPipeline(BasePipeline):
         images = images.to(self.devices)
 
         out = self.model(images.unsqueeze(0))
-        _, pred = out['pred'].topk(1, 1, True, True)
+        pred = self.postprocessor(out)
 
         if self.conf.distributed:
             torch.distributed.barrier()
