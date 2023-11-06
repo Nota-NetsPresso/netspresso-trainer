@@ -5,7 +5,7 @@ from ..models.utils import ModelOutput
 TOPK_MAX = 20
 
 
-class TopK():
+class ClassificationPostprocessor():
     def __init__(self):
         pass
 

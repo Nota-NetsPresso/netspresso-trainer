@@ -1,9 +1,9 @@
 from typing import Dict, Type
 
-from .classification import TopK
-from .segmentation import SegmentationArgMax
+from .classification import ClassificationPostprocessor
+from .segmentation import SegmentationPostprocessor
 
 POSTPROCESSOR_DICT = {
-    'fc': TopK,
-    'all_mlp_decoder': SegmentationArgMax
+    'fc': ClassificationPostprocessor,
+    'all_mlp_decoder': SegmentationPostprocessor
 }

@@ -5,7 +5,7 @@ import torch
 from ..models.utils import ModelOutput
 
 
-class SegmentationArgMax:
+class SegmentationPostprocessor:
     def __init__(self):
         pass
 
