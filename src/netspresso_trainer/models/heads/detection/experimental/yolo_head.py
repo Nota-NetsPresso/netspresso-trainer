@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 
 from ....op.custom import ConvLayer
+from ....utils import ModelOutput
 from .fpn import PAFPN
 
 
@@ -134,7 +135,7 @@ class YOLOXHead(nn.Module):
 
             outputs.append(output)
 
-        return outputs
+        return ModelOutput(pred=outputs)
 
 
 def yolo_head(num_classes, intermediate_features_dim, **kwargs):
