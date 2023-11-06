@@ -363,6 +363,7 @@ class RandomMixup:
         opts (argparse.Namespace): Arguments
         num_classes (int): Number of classes in the dataset
     """
+    visualize = False
 
     def __init__(self, num_classes: int, alpha, p=1.0, inplace=False):
         if not (num_classes > 0):
@@ -439,6 +440,7 @@ class RandomCutmix:
         opts (argparse.Namespace): Arguments
         num_classes (int): Number of classes in the dataset
     """
+    visualize = False
 
     def __init__(self, num_classes, alpha, p=1.0, inplace=False):
         if not (num_classes > 0):
