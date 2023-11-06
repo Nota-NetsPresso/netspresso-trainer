@@ -1,14 +1,14 @@
+import math
 import random
 from collections.abc import Sequence
-import math
 from typing import Dict, Optional
 
 import numpy as np
 import PIL.Image as Image
 import torch
-from torch.nn import functional as F_torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from torch.nn import functional as F_torch
 from torchvision.transforms.functional import InterpolationMode
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
@@ -368,7 +368,7 @@ class RandomMixup:
             raise ValueError("Alpha param can't be zero.")
         if not (0.0 < p <= 1.0):
             raise ValueError("MixUp probability should be between 0 and 1, where 1 is inclusive")
-        
+
         self.num_classes = num_classes
         self.alpha = alpha
         self.p = p
@@ -441,7 +441,7 @@ class RandomCutmix:
             raise ValueError("Alpha param can't be zero.")
         if not (0.0 < p <= 1.0):
             raise ValueError("CutMix probability should be between 0 and 1, where 1 is inclusive")
-        
+
         self.num_classes = num_classes
         self.alpha = alpha
         self.p = p

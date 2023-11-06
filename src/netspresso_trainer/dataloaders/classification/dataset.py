@@ -1,9 +1,9 @@
 import csv
 import logging
+import random
 from collections import Counter
 from itertools import chain
 from pathlib import Path
-import random
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
