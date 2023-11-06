@@ -1,5 +1,6 @@
 import random
 from collections.abc import Sequence
+import math
 from typing import Dict, Optional
 
 import numpy as np
@@ -412,6 +413,93 @@ class RandomMixup:
             return samples, targets
 
         mixup_samples, mixup_targets = self._apply_mixup_transform(
+            image_tensor=samples, target_tensor=targets
+        )
+
+        return mixup_samples, mixup_targets
+
+    def __repr__(self) -> str:
+        return "{}(num_classes={}, p={}, alpha={}, inplace={})".format(
+            self.__class__.__name__, self.num_classes, self.p, self.alpha, self.inplace
+        )
+
+
+class RandomCutmix:
+    """
+    Given a batch of input images and labels, this class randomly applies the
+    `CutMix transformation <https://arxiv.org/abs/1905.04899>`_
+
+    Args:
+        opts (argparse.Namespace): Arguments
+        num_classes (int): Number of classes in the dataset
+    """
+
+    def __init__(self, num_classes, alpha, p=1.0, inplace=False):
+        if not (num_classes > 0):
+            raise ValueError("Please provide a valid positive value for the num_classes.")
+        if not (alpha > 0):
+            raise ValueError("Alpha param can't be zero.")
+        if not (0.0 < p <= 1.0):
+            raise ValueError("CutMix probability should be between 0 and 1, where 1 is inclusive")
+        
+        self.num_classes = num_classes
+        self.alpha = alpha
+        self.p = p
+        self.inplace = inplace
+
+    def _apply_cutmix_transform(self, image_tensor, target_tensor):
+        if image_tensor.ndim != 4:
+            print(f"Batch ndim should be 4. Got {image_tensor.ndim}")
+        if target_tensor.ndim != 1:
+            print(f"Target ndim should be 1. Got {target_tensor.ndim}")
+        if not image_tensor.is_floating_point():
+            print(f"Batch dtype should be a float tensor. Got {image_tensor.dtype}.")
+        if target_tensor.dtype != torch.int64:
+            print(f"Target dtype should be torch.int64. Got {target_tensor.dtype}")
+
+        if not self.inplace:
+            image_tensor = image_tensor.clone()
+            target_tensor = target_tensor.clone()
+
+        if target_tensor.ndim == 1:
+            target_tensor = F_torch.one_hot(
+                target_tensor, num_classes=self.num_classes
+            ).to(dtype=image_tensor.dtype)
+
+        # It's faster to roll the batch by one instead of shuffling it to create image pairs
+        batch_rolled = image_tensor.roll(1, 0)
+        target_rolled = target_tensor.roll(1, 0)
+
+        # Implemented as on cutmix paper, page 12 (with minor corrections on typos).
+        lambda_param = float(
+            torch._sample_dirichlet(torch.tensor([self.alpha, self.alpha]))[0]
+        )
+        W, H = F.get_image_size(image_tensor)
+
+        r_x = torch.randint(W, (1,))
+        r_y = torch.randint(H, (1,))
+
+        r = 0.5 * math.sqrt(1.0 - lambda_param)
+        r_w_half = int(r * W)
+        r_h_half = int(r * H)
+
+        x1 = int(torch.clamp(r_x - r_w_half, min=0))
+        y1 = int(torch.clamp(r_y - r_h_half, min=0))
+        x2 = int(torch.clamp(r_x + r_w_half, max=W))
+        y2 = int(torch.clamp(r_y + r_h_half, max=H))
+
+        image_tensor[:, :, y1:y2, x1:x2] = batch_rolled[:, :, y1:y2, x1:x2]
+        lambda_param = float(1.0 - (x2 - x1) * (y2 - y1) / (W * H))
+
+        target_rolled.mul_(1.0 - lambda_param)
+        target_tensor.mul_(lambda_param).add_(target_rolled)
+        return image_tensor, target_tensor
+
+    def __call__(self, samples, targets) -> Dict:
+        if torch.rand(1).item() >= self.p:
+            return samples, targets
+
+        mixup_samples, mixup_targets = self._apply_cutmix_transform(
             image_tensor=samples, target_tensor=targets
         )
 

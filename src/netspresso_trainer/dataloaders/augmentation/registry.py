@@ -1,6 +1,6 @@
 from typing import Callable, Dict
 
-from .custom import ColorJitter, Pad, RandomCrop, RandomHorizontalFlip, RandomResizedCrop, RandomVerticalFlip, Resize, RandomMixup
+from .custom import ColorJitter, Pad, RandomCrop, RandomHorizontalFlip, RandomResizedCrop, RandomVerticalFlip, Resize, RandomMixup, RandomCutmix
 TRANSFORM_DICT: Dict[str, Callable] = {
     'colorjitter': ColorJitter,
     'pad': Pad,
@@ -10,4 +10,5 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomverticalflip': RandomVerticalFlip,
     'resize': Resize,
     'mixup': RandomMixup,
+    'cutmix': RandomCutmix
 }
