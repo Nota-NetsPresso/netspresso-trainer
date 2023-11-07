@@ -1,6 +1,6 @@
 augmentation:
   img_size: &img_size 256
-  recipe:
+  transforms:
     - 
       name: randomresizedcrop
       size: *img_size
@@ -8,3 +8,7 @@ augmentation:
     - 
       name: randomhorizontalflip
       p: 0.5
+  mix_transforms:
+    -
+      name: cutmix
+      alpha: 1.0

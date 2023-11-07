@@ -28,6 +28,8 @@ class ClassificationPipeline(BasePipeline):
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='train')
+        if target.dim() > 1: # Soft label to label number
+            target = torch.argmax(target, dim=-1)
         pred = self.postprocessor(out)
         self.metric_factory.calc(pred, target, phase='train')
 
@@ -45,6 +47,8 @@ class ClassificationPipeline(BasePipeline):
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='valid')
+        if target.dim() > 1: # Soft label to label number
+            target = torch.argmax(target, dim=-1)
         pred = self.postprocessor(out)
         self.metric_factory.calc(pred, target, phase='valid')
 

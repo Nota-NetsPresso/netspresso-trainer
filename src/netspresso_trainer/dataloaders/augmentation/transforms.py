@@ -31,7 +31,7 @@ def generate_edge(label: np.ndarray) -> Image.Image:
 def transforms_custom_train(conf_augmentation):
     assert conf_augmentation.img_size > 32
     preprocess = []
-    for augment in conf_augmentation.recipe:
+    for augment in conf_augmentation.transforms:
         name = augment.name.lower()
         augment_kwargs = list(augment.keys())
         augment_kwargs.remove('name')
@@ -58,7 +58,7 @@ def transforms_custom_eval(conf_augmentation):
 
 def train_transforms_pidnet(conf_augmentation):
     preprocess = []
-    for augment in conf_augmentation.recipe:
+    for augment in conf_augmentation.transforms:
         name = augment.name.lower()
         augment_kwargs = list(augment.keys())
         augment_kwargs.remove('name')
