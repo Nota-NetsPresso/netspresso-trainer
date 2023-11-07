@@ -103,7 +103,8 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
-        if hasattr(conf.augmentation, 'mix_transforms'):
+        conf_mix_transform = getattr(conf.augmentation, 'mix_transforms', None)
+        if conf_mix_transform:
             mix_transforms = []
             for mix_transform_conf in conf.augmentation.mix_transforms:
                 name = mix_transform_conf.name.lower()
