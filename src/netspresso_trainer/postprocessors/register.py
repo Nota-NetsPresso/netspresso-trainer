@@ -1,8 +1,8 @@
 from typing import Dict, Type
 
 from .classification import ClassificationPostprocessor
-from .segmentation import SegmentationPostprocessor
 from .detection import YOLOXPostprocessor
+from .segmentation import SegmentationPostprocessor
 
 POSTPROCESSOR_DICT = {
     'fc': ClassificationPostprocessor,

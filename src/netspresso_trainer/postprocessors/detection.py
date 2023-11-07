@@ -12,7 +12,7 @@ class YOLOXPostprocessor:
         pred = outputs['pred']
         dtype = pred[0].type()
         stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
-        
+
         pred = self.decode_outputs(pred, dtype=dtype, stage_strides=stage_strides)
         pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
         return pred

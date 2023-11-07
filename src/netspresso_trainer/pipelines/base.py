@@ -15,13 +15,13 @@ from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..optimizers import build_optimizer
+from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
-from ..postprocessors import build_postprocessor
 
 logger = logging.getLogger("netspresso_trainer")
 
