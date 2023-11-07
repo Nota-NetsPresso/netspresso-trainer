@@ -37,7 +37,7 @@ class YOLOXPostprocessor:
 
         outputs = torch.cat([
             (outputs[..., 0:2] + grids) * strides,
-            torch.exp(outputs[..., 2:4]) * strides,
+            torch.clamp(torch.exp(outputs[..., 2:4]) * strides, min=torch.iinfo(torch.int32).min, max=torch.iinfo(torch.int32).max),
             outputs[..., 4:]
         ], dim=-1)
         return outputs
