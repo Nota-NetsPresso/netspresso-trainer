@@ -4,7 +4,7 @@ import torchvision
 from ..models.utils import ModelOutput
 
 
-class DetectionPostprocessor:
+class YOLOXPostprocessor:
     def __init__(self):
         pass
 
