@@ -6,7 +6,7 @@ TOPK_MAX = 20
 
 
 class ClassificationPostprocessor():
-    def __init__(self):
+    def __init__(self, conf_model):
         pass
 
     def __call__(self, outputs: ModelOutput, k: Optional[int]=None):

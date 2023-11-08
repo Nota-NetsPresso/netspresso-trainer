@@ -5,7 +5,7 @@ from ..models.utils import ModelOutput
 
 
 class DetectionPostprocessor:
-    def __init__(self):
+    def __init__(self, conf_model):
         pass
 
     def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):

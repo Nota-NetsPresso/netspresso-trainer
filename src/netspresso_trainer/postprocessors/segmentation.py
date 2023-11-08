@@ -6,7 +6,7 @@ from ..models.utils import ModelOutput
 
 
 class SegmentationPostprocessor:
-    def __init__(self):
+    def __init__(self, conf_model):
         pass
 
     def __call__(self, outputs: ModelOutput):
