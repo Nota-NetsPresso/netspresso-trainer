@@ -89,6 +89,8 @@ class DetectionPostprocessor:
     def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
         pred = outputs['pred']
 
-        pred = self.decode_outputs(pred, original_shape)
-        pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
+        if self.decode_outputs:
+            pred = self.decode_outputs(pred, original_shape)
+        if self.postprocess:
+            pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
         return pred
