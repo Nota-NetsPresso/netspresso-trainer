@@ -138,7 +138,7 @@ class YOLOXHead(nn.Module):
         return ModelOutput(pred=outputs)
 
 
-def yolo_head(num_classes, intermediate_features_dim, **kwargs):
+def yolox_head(num_classes, intermediate_features_dim, **kwargs):
     configuration = {
         'act_type': 'silu',
     }

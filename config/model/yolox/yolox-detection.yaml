@@ -11,7 +11,7 @@ model:
       dep_mul: 0.33
       wid_mul: 0.5
     head:
-      name: yolo_head
+      name: yolox_head
   losses:
     - criterion: yolox_loss
       weight: ~
