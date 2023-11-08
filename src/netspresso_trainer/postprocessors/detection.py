@@ -27,17 +27,17 @@ def decode_outputs(outputs, dtype, stage_strides):
         torch.clamp(torch.exp(outputs[..., 2:4]) * strides, min=torch.iinfo(torch.int32).min, max=torch.iinfo(torch.int32).max),
         outputs[..., 4:]
     ], dim=-1)
+
+    box_corner = outputs.new(outputs.shape)
+    box_corner[:, :, 0] = outputs[:, :, 0] - outputs[:, :, 2] / 2
+    box_corner[:, :, 1] = outputs[:, :, 1] - outputs[:, :, 3] / 2
+    box_corner[:, :, 2] = outputs[:, :, 0] + outputs[:, :, 2] / 2
+    box_corner[:, :, 3] = outputs[:, :, 1] + outputs[:, :, 3] / 2
+    outputs[:, :, :4] = box_corner[:, :, :4]
     return outputs
 
 
 def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
-    box_corner = prediction.new(prediction.shape)
-    box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
-    box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
-    box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
-    box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
-    prediction[:, :, :4] = box_corner[:, :, :4]
-
     output = [torch.zeros(0, 7).to(prediction.device) for i in range(len(prediction))]
     for i, image_pred in enumerate(prediction):
 
