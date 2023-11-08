@@ -40,7 +40,7 @@ def yolox_decode_outputs(pred, original_shape):
     return pred
 
 
-def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
+def nms(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
     output = [torch.zeros(0, 7).to(prediction.device) for i in range(len(prediction))]
     for i, image_pred in enumerate(prediction):
 
@@ -80,7 +80,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
 class DetectionPostprocessor:
     def __init__(self, conf_model):
         HEAD_POSTPROCESS_MAPPING = {
-            'yolo_head': [yolox_decode_outputs, postprocess]
+            'yolo_head': [yolox_decode_outputs, nms]
         }
 
         head_name = conf_model.architecture.head.name
