@@ -4,11 +4,14 @@ import torchvision
 from ..models.utils import ModelOutput
 
 
-def yolox_decode_outputs(outputs, dtype, stage_strides):
-    hw = [x.shape[-2:] for x in outputs]
+def yolox_decode_outputs(pred, original_shape):
+    dtype = pred[0].type()
+    stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
+
+    hw = [x.shape[-2:] for x in pred]
     # [batch, n_anchors_all, num_classes + 5]
-    outputs = torch.cat([x.flatten(start_dim=2) for x in outputs], dim=2).permute(0, 2, 1)
-    outputs[..., 4:] = outputs[..., 4:].sigmoid()
+    pred = torch.cat([x.flatten(start_dim=2) for x in pred], dim=2).permute(0, 2, 1)
+    pred[..., 4:] = pred[..., 4:].sigmoid()
 
     grids = []
     strides = []
@@ -22,19 +25,19 @@ def yolox_decode_outputs(outputs, dtype, stage_strides):
     grids = torch.cat(grids, dim=1).type(dtype)
     strides = torch.cat(strides, dim=1).type(dtype)
 
-    outputs = torch.cat([
-        (outputs[..., 0:2] + grids) * strides,
-        torch.clamp(torch.exp(outputs[..., 2:4]) * strides, min=torch.iinfo(torch.int32).min, max=torch.iinfo(torch.int32).max),
-        outputs[..., 4:]
+    pred = torch.cat([
+        (pred[..., 0:2] + grids) * strides,
+        torch.clamp(torch.exp(pred[..., 2:4]) * strides, min=torch.iinfo(torch.int32).min, max=torch.iinfo(torch.int32).max),
+        pred[..., 4:]
     ], dim=-1)
 
-    box_corner = outputs.new(outputs.shape)
-    box_corner[:, :, 0] = outputs[:, :, 0] - outputs[:, :, 2] / 2
-    box_corner[:, :, 1] = outputs[:, :, 1] - outputs[:, :, 3] / 2
-    box_corner[:, :, 2] = outputs[:, :, 0] + outputs[:, :, 2] / 2
-    box_corner[:, :, 3] = outputs[:, :, 1] + outputs[:, :, 3] / 2
-    outputs[:, :, :4] = box_corner[:, :, :4]
-    return outputs
+    box_corner = pred.new(pred.shape)
+    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
+    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
+    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
+    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    pred[:, :, :4] = box_corner[:, :, :4]
+    return pred
 
 
 def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
@@ -85,9 +88,7 @@ class DetectionPostprocessor:
 
     def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
         pred = outputs['pred']
-        dtype = pred[0].type()
-        stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
 
-        pred = self.decode_outputs(pred, dtype=dtype, stage_strides=stage_strides)
+        pred = self.decode_outputs(pred, original_shape)
         pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
         return pred
