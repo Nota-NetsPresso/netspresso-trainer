@@ -4,7 +4,7 @@ import torchvision
 from ..models.utils import ModelOutput
 
 
-def decode_outputs(outputs, dtype, stage_strides):
+def yolox_decode_outputs(outputs, dtype, stage_strides):
     hw = [x.shape[-2:] for x in outputs]
     # [batch, n_anchors_all, num_classes + 5]
     outputs = torch.cat([x.flatten(start_dim=2) for x in outputs], dim=2).permute(0, 2, 1)
@@ -77,7 +77,7 @@ def postprocess(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agn
 class DetectionPostprocessor:
     def __init__(self, conf_model):
         HEAD_POSTPROCESS_MAPPING = {
-            'yolo_head': [decode_outputs, postprocess]
+            'yolo_head': [yolox_decode_outputs, postprocess]
         }
 
         head_name = conf_model.architecture.head.name
