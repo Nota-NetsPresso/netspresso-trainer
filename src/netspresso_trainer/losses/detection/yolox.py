@@ -50,6 +50,7 @@ class YOLOXLoss(nn.Module):
 
 
     def forward(self, out: List, target: Dict) -> torch.Tensor:
+        out = out['pred']
         x_shifts = []
         y_shifts = []
         expanded_strides = []

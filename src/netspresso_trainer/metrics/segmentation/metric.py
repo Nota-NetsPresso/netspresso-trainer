@@ -47,8 +47,7 @@ class SegmentationMetric(BaseMetric):
         result_dict = {k: AverageMeter(k) for k in self.metric_names}
         B = pred.size(0)
 
-        output_seg = torch.max(pred, dim=1)[1]  # argmax
-        metrics = self.intersection_and_union_gpu(output_seg, target)
+        metrics = self.intersection_and_union_gpu(pred, target)
         result_dict['iou'].update(sum(metrics['intersection']) / (sum(metrics['union']) + 1e-10), n=B)
         result_dict['pixel_acc'].update(sum(metrics['intersection']) / (sum(metrics['target']) + 1e-10), n=B)
 
