@@ -26,16 +26,19 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        block: Literal['basicblock', 'bottleneck'],
+        general_info: List[Dict],
         stages_info: List[Dict],
-        zero_init_residual: bool = False,
-        groups: int = 1,
-        width_per_group: int = 64,
-        norm_layer: Optional[str] = None,
-        expansion: Optional[int] = None,
         **kwargs
     ) -> None:
         super(ResNet, self).__init__()
+        # Mandatory fields
+        block: Literal['basicblock', 'bottleneck'] = general_info['block']
+        # Fields with defaults
+        zero_init_residual: bool = general_info['zero_init_residual'] if 'zero_init_residual' in general_info else False
+        groups: int = general_info['groups'] if 'groups' in general_info else 1
+        width_per_group: int = general_info['width_per_group'] if 'width_per_group' in general_info else 64
+        norm_layer: Optional[str] = general_info['norm_layer'] if 'norm_layer' in general_info else None
+        expansion: Optional[int] = general_info['expansion'] if 'expansion' in general_info else None
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
