@@ -9,10 +9,11 @@ model:
       name: ~ # auto
     backbone:
       name: resnet50
-      block: bottleneck
-      norm_layer: batch_norm
-      groups: 1
-      width_per_group: 64
+      general_info:
+        block: bottleneck
+        norm_layer: batch_norm
+        groups: 1
+        width_per_group: 64
       stages_info:
         - plane: 64
           layers: 3
