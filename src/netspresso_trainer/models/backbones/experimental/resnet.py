@@ -26,19 +26,19 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        general_info: List[Dict],
-        stages_info: List[Dict],
+        params: List[Dict],
+        stage_params: List[Dict],
         **kwargs
     ) -> None:
         super(ResNet, self).__init__()
         # Mandatory fields
-        block: Literal['basicblock', 'bottleneck'] = general_info['block']
+        block: Literal['basicblock', 'bottleneck'] = params['block']
         # Fields with defaults
-        zero_init_residual: bool = general_info['zero_init_residual'] if 'zero_init_residual' in general_info else False
-        groups: int = general_info['groups'] if 'groups' in general_info else 1
-        width_per_group: int = general_info['width_per_group'] if 'width_per_group' in general_info else 64
-        norm_layer: Optional[str] = general_info['norm_layer'] if 'norm_layer' in general_info else None
-        expansion: Optional[int] = general_info['expansion'] if 'expansion' in general_info else None
+        zero_init_residual: bool = params['zero_init_residual'] if 'zero_init_residual' in params else False
+        groups: int = params['groups'] if 'groups' in params else 1
+        width_per_group: int = params['width_per_group'] if 'width_per_group' in params else 64
+        norm_layer: Optional[str] = params['norm_layer'] if 'norm_layer' in params else None
+        expansion: Optional[int] = params['expansion'] if 'expansion' in params else None
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
@@ -50,9 +50,9 @@ class ResNet(nn.Module):
 
         self.inplanes = 64
         self.dilation = 1
-        for i in range(1, len(stages_info)):
-            if 'replace_stride_with_dilation' not in stages_info[i]:
-                stages_info[i]['replace_stride_with_dilation'] = False
+        for i in range(1, len(stage_params)):
+            if 'replace_stride_with_dilation' not in stage_params[i]:
+                stage_params[i]['replace_stride_with_dilation'] = False
         self.groups = groups
         self.base_width = width_per_group
 
@@ -66,10 +66,10 @@ class ResNet(nn.Module):
 
         stages: List[nn.Module] = []
 
-        first_stage = stages_info[0]
+        first_stage = stage_params[0]
         layer = self._make_layer(block, first_stage['plane'], first_stage['layers'], expansion=expansion)
         stages.append(layer)
-        for stage in stages_info[1:]:
+        for stage in stage_params[1:]:
             layer = self._make_layer(block, stage['plane'], stage['layers'], stride=2,
                                      dilate=stage['replace_stride_with_dilation'],
                                      expansion=expansion)
@@ -78,7 +78,7 @@ class ResNet(nn.Module):
         self.stages = nn.ModuleList(stages)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        hidden_sizes = [stage['plane'] * expansion for stage in stages_info]
+        hidden_sizes = [stage['plane'] * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 

@@ -8,12 +8,12 @@ model:
     full: ~ # auto
     backbone:
       name: resnet50
-      general_info:
+      params:
         block: bottleneck
         norm_layer: batch_norm
         groups: 1
         width_per_group: 64
-      stages_info:
+      stage_params:
         - plane: 64
           layers: 3
         - plane: 128
