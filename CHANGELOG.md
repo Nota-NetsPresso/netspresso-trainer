@@ -17,6 +17,7 @@
 ## Other Changes:
 
 - Update ruff rule (`W`) by `@deepkyu` in [PR 218](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/218)
+- Integrate classification loss modules by `@illian01` in [PR 226](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/226)
 
 # v0.0.9
 
