@@ -27,6 +27,6 @@ model:
     head:
       name: fc
   losses:
-    - criterion: label_smoothing_cross_entropy
-      smoothing: 0.1
+    - criterion: cross_entropy
+      label_smoothing: 0.1
       weight: ~
