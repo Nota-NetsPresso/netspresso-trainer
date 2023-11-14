@@ -5,7 +5,7 @@ https://github.com/apple/ml-cvnets/blob/6acab5e446357cc25842a90e0a109d5aeeda002f
 
 import argparse
 import math
-from typing import Any, Dict, Literal, Optional, Tuple, Union
+from typing import Any, Dict, Literal, Optional, Tuple, Union, List
 
 import torch
 import torch.nn as nn
@@ -252,27 +252,38 @@ class MobileViTBlock(nn.Module):
         return out
 
 class MobileViTEncoder(MetaFormerEncoder):
-    def __init__(self, out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
-                 patch_embedding_out_channels, local_kernel_size, patch_size,
-                 num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer) -> None:
+    def __init__(
+            self, 
+            params: Optional[List[Dict]],
+            stage_params: Optional[List[Dict]],
+    ) -> None:
         super().__init__()
         stages = []
         
         self.dilation = 1
-        self.local_kernel_size = local_kernel_size
-        self.patch_size = patch_size
-        self.num_attention_heads = num_attention_heads
-        self.attention_dropout_prob = attention_dropout_prob
-        self.hidden_dropout_prob = hidden_dropout_prob
-        self.layer_norm_eps = layer_norm_eps
-        self.use_fusion_layer = use_fusion_layer
+        self.local_kernel_size = params['local_kernel_size']
+        self.patch_size = params['patch_size']
+        self.num_attention_heads = params['num_attention_heads']
+        self.attention_dropout_prob = params['attention_dropout_prob']
+        self.hidden_dropout_prob = params['hidden_dropout_prob']
+        self.layer_norm_eps = params['layer_norm_eps']
+        self.use_fusion_layer = params['use_fusion_layer']
         
-        in_channels = patch_embedding_out_channels
-        for idx in range(len(out_channels)):
-            stages.append(self._make_block(out_channels[idx], block_type[idx], num_blocks[idx], stride[idx], hidden_size[idx],
-                                           intermediate_size[idx], num_transformer_blocks[idx], dilate[idx], expand_ratio[idx],
+        in_channels = params['patch_embedding_out_channels']
+        for stage in stage_params:
+            out_channels = stage['out_channels']
+            block_type = stage['block_type']
+            num_blocks = stage['num_blocks']
+            stride = stage['stride']
+            hidden_size = stage['hidden_size']
+            intermediate_size = stage['intermediate_size'] 
+            num_transformer_blocks = stage['num_transformer_blocks']
+            dilate = stage['dilate']
+            expand_ratio = stage['expand_ratio']
+            stages.append(self._make_block(out_channels, block_type, num_blocks, stride, hidden_size,
+                                           intermediate_size, num_transformer_blocks, dilate, expand_ratio,
                                            in_channels))
-            in_channels = out_channels[idx]
+            in_channels = out_channels
         self.blocks = nn.Sequential(*stages)
     
     def _make_block(self, out_channels, block_type: Literal['mv2', 'mobilevit'], num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio, in_channels):
@@ -346,26 +357,24 @@ class MobileViTEncoder(MetaFormerEncoder):
 
 class MobileViT(MetaFormer):
     def __init__(
-        self, task,
-        out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
-        patch_embedding_out_channels, local_kernel_size, patch_size,
-        num_attention_heads, attention_dropout_prob, hidden_dropout_prob,
-        exp_factor, layer_norm_eps=1e-6, use_fusion_layer = True,
-        **kwargs
+        self,
+        task: str,
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
+        **kwargs,
     ) -> None:
-        exp_channels = min(exp_factor * out_channels[-1], 960)
-        hidden_sizes = out_channels + [exp_channels]
+        exp_channels = min(params['exp_factor'] * stage_params[-1]['out_channels'], 960)
+        hidden_sizes = [stage['out_channels'] for stage in stage_params] + [exp_channels]
         super().__init__(hidden_sizes)
         
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         
         image_channels = 3
-        self.patch_embed = MobileViTEmbeddings(image_channels, patch_embedding_out_channels)
-        self.encoder = MobileViTEncoder(out_channels, block_type, num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio,
-                                        patch_embedding_out_channels, local_kernel_size, patch_size, num_attention_heads, attention_dropout_prob, hidden_dropout_prob, layer_norm_eps, use_fusion_layer)
+        self.patch_embed = MobileViTEmbeddings(image_channels, params['patch_embedding_out_channels'])
+        self.encoder = MobileViTEncoder(params=params, stage_params=stage_params)
         
-        self.conv_1x1_exp = ConvLayer(in_channels=out_channels[-1], out_channels=exp_channels,
+        self.conv_1x1_exp = ConvLayer(in_channels=stage_params[-1]['out_channels'], out_channels=exp_channels,
                                       kernel_size=1, stride=1,
                                       use_act=True, use_norm=True, act_type='silu')
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
