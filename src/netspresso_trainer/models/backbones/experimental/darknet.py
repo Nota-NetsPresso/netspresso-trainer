@@ -2,6 +2,7 @@
 Based on the Darknet implementation of Megvii.
 https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/darknet.py
 """
+from typing import Dict, Optional, List
 
 import torch
 from torch import nn
@@ -14,21 +15,25 @@ SUPPORTING_TASK = ['detection']
 
 
 class CSPDarknet(nn.Module):
+
     def __init__(
         self,
-        task,
-        dep_mul,
-        wid_mul,
-        out_features=("dark3", "dark4", "dark5"),
+        task: str,
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
         #depthwise=False,
-        act_type="silu",
-        **kwargs
-    ):
+        **kwargs,
+    ) -> None:
         super().__init__()
+        out_features=("dark3", "dark4", "dark5")
         assert out_features, "please provide output features of Darknet"
 
         self.task = task.lower()
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
+
+        dep_mul = params['dep_mul']
+        wid_mul = params['wid_mul']
+        act_type = params['act_type']
 
         self.out_features = out_features
         Conv = ConvLayer
