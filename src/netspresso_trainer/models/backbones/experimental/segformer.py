@@ -1,5 +1,5 @@
 import math
-from typing import Optional
+from typing import Optional, List, Dict
 
 import torch
 import torch.nn as nn
@@ -135,41 +135,59 @@ class SegformerEncoder(MetaFormerEncoder):
 
 
 class SegFormer(MetaFormer):
-    def __init__(self, task, num_modules, num_blocks, embedding_patch_sizes, embedding_strides, hidden_sizes,
-                 num_attention_heads, attention_dropout_prob, sr_ratios,
-                 intermediate_ratio, hidden_dropout_prob, hidden_activation_type, layer_norm_eps,
-                 **kwargs):
-        super().__init__(hidden_sizes)
+    def __init__(
+        self,
+        task: str,
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
+        **kwargs,
+    ) -> None:
+        super().__init__([stage['hidden_sizes'] for stage in stage_params])
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
-        image_channels = 3
+        intermediate_ratio = params['intermediate_ratio']
+        hidden_activation_type = params['hidden_activation_type']
+        hidden_dropout_prob = params['hidden_dropout_prob']
+        attention_dropout_prob = params['attention_dropout_prob']
+        layer_norm_eps = params['layer_norm_eps']
+
+        in_channels = 3
         
         self.encoder_modules = nn.ModuleList()
-        for i in range(num_modules):
+        for blocks in stage_params:
+            num_blocks = blocks['num_blocks']
+            sr_ratios = blocks['sr_ratios']
+            hidden_sizes = blocks['hidden_sizes']
+            embedding_patch_sizes = blocks['embedding_patch_sizes']
+            embedding_strides = blocks['embedding_strides']
+            num_attention_heads = blocks['num_attention_heads']
+
             module = nn.ModuleDict(
                 {
                     'patch_embed': SegformerOverlapPatchEmbeddings(
-                        embedding_patch_sizes[i],
-                        embedding_strides[i],
-                        image_channels if i == 0 else hidden_sizes[i - 1],
-                        hidden_sizes[i]
+                        embedding_patch_sizes,
+                        embedding_strides,
+                        in_channels,
+                        hidden_sizes
                     ),
                     'encoder': SegformerEncoder(
-                        num_blocks[i],
-                        hidden_sizes[i],
-                        num_attention_heads[i],
+                        num_blocks,
+                        hidden_sizes,
+                        num_attention_heads,
                         attention_dropout_prob,
-                        sr_ratios[i],
+                        sr_ratios,
                         intermediate_ratio,
                         hidden_dropout_prob,
                         hidden_activation_type,
                         layer_norm_eps
                     ),
-                    'norm': nn.LayerNorm(hidden_sizes[i])
+                    'norm': nn.LayerNorm(hidden_sizes)
                 }
             )
             self.encoder_modules.append(module)
+
+            in_channels = hidden_sizes
 
     def forward(self, x):
         B = x.size(0)
