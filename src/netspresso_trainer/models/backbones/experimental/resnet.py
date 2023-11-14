@@ -31,14 +31,13 @@ class ResNet(nn.Module):
         **kwargs,
     ) -> None:
         super(ResNet, self).__init__()
-        # Mandatory fields
+
         block: Literal['basicblock', 'bottleneck'] = params['block']
-        # Fields with defaults
-        zero_init_residual: bool = params['zero_init_residual'] if 'zero_init_residual' in params else False
-        groups: int = params['groups'] if 'groups' in params else 1
-        width_per_group: int = params['width_per_group'] if 'width_per_group' in params else 64
-        norm_layer: Optional[str] = params['norm_layer'] if 'norm_layer' in params else None
-        expansion: Optional[int] = params['expansion'] if 'expansion' in params else None
+        zero_init_residual: bool = params['zero_init_residual']
+        groups: int = params['groups']
+        width_per_group: int = params['width_per_group']
+        norm_layer: Optional[str] = params['norm_layer']
+        expansion: Optional[int] = params['expansion']
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
