@@ -26,9 +26,8 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]],
-        stage_params: Optional[List[Dict]],
-        **kwargs
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
     ) -> None:
         super(ResNet, self).__init__()
         # Mandatory fields

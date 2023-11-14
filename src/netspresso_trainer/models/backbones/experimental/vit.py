@@ -94,8 +94,8 @@ class VisionTransformer(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]],
-        stage_params: Optional[List[Dict]],
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
     ) -> None:
         patch_size = params['patch_size']
         hidden_size = params['hidden_size']

@@ -21,9 +21,8 @@ class MobileNetV3(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]],
-        stage_params: Optional[List[Dict]],
-        **kwargs
+        params: Optional[List[Dict]] = None,
+        stage_params: Optional[List[Dict]] = None,
     ) -> None:
         super(MobileNetV3, self).__init__()
 
