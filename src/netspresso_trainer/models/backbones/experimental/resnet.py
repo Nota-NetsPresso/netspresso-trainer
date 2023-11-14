@@ -26,8 +26,8 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: List[Dict],
-        stage_params: List[Dict],
+        params: Optional[List[Dict]],
+        stage_params: Optional[List[Dict]],
         **kwargs
     ) -> None:
         super(ResNet, self).__init__()
