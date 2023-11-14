@@ -3,7 +3,7 @@ Based on the vit implementation of apple/ml-cvnets.
 https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 import argparse
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union, List
 
 import torch
 import torch.nn as nn
@@ -93,19 +93,22 @@ class ViTEncoder(MetaFormerEncoder):
 class VisionTransformer(MetaFormer):
     def __init__(
         self,
-        task,
-        patch_size,
-        hidden_size,
-        num_blocks,
-        num_attention_heads,
-        attention_dropout_prob,
-        intermediate_size,
-        hidden_dropout_prob,
-        layer_norm_eps=1e-6,
-        use_cls_token=True,
-        vocab_size=1000,
-        **kwargs
+        task: str,
+        params: Optional[List[Dict]],
+        stage_params: Optional[List[Dict]],
     ) -> None:
+        patch_size = params['patch_size']
+        hidden_size = params['hidden_size']
+        num_blocks = params['num_blocks']
+        num_attention_heads = params['num_attention_heads']
+        attention_dropout_prob = params['attention_dropout_prob']
+        intermediate_size = params['intermediate_size']
+        hidden_dropout_prob = params['hidden_dropout_prob']
+
+        layer_norm_eps = params['layer_norm_eps'] if 'layer_norm_eps' in params else 1e-6
+        use_cls_token = params['use_cls_token'] if 'use_cls_token' in params else True
+        vocab_size = params['vocab_size'] if 'vocab_size' in params else 1000
+
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)
         self.task = task
