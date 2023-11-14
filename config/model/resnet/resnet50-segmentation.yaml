@@ -15,15 +15,19 @@ model:
         groups: 1
         width_per_group: 64
       stage_params:
-        - plane: 64
+        - 
+          plane: 64
           layers: 3
-        - plane: 128
+        - 
+          plane: 128
           layers: 4
           replace_stride_with_dilation: False
-        - plane: 256
+        - 
+          plane: 256
           layers: 6
           replace_stride_with_dilation: False
-        - plane: 512
+        - 
+          plane: 512
           layers: 3
           replace_stride_with_dilation: False
     head:
