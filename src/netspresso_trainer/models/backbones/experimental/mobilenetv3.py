@@ -23,6 +23,7 @@ class MobileNetV3(nn.Module):
         task: str,
         params: Optional[List[Dict]] = None,
         stage_params: Optional[List[Dict]] = None,
+        **kwargs,
     ) -> None:
         super(MobileNetV3, self).__init__()
 

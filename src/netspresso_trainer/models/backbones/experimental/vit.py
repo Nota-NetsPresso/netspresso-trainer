@@ -96,6 +96,7 @@ class VisionTransformer(MetaFormer):
         task: str,
         params: Optional[List[Dict]] = None,
         stage_params: Optional[List[Dict]] = None,
+        **kwargs,
     ) -> None:
         patch_size = params['patch_size']
         hidden_size = params['hidden_size']
