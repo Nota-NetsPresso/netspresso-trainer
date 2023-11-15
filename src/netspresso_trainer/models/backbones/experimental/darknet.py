@@ -19,10 +19,9 @@ class CSPDarknet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]] = None,
+        params: Optional[Dict] = None,
         stage_params: Optional[List[Dict]] = None,
         #depthwise=False,
-        **kwargs,
     ) -> None:
         super().__init__()
         out_features=("dark3", "dark4", "dark5")
@@ -31,9 +30,9 @@ class CSPDarknet(nn.Module):
         self.task = task.lower()
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
-        dep_mul = params['dep_mul']
-        wid_mul = params['wid_mul']
-        act_type = params['act_type']
+        dep_mul = params.dep_mul
+        wid_mul = params.wid_mul
+        act_type = params.act_type
 
         self.out_features = out_features
         Conv = ConvLayer
@@ -152,4 +151,4 @@ class CSPDarknet(nn.Module):
 
 
 def cspdarknet(task, conf_model_backbone) -> CSPDarknet:
-    return CSPDarknet(task, **conf_model_backbone)
+    return CSPDarknet(task, conf_model_backbone.params, conf_model_backbone.stage_params)
