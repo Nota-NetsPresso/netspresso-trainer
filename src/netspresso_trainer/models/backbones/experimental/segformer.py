@@ -138,30 +138,29 @@ class SegFormer(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]] = None,
+        params: Optional[Dict] = None,
         stage_params: Optional[List[Dict]] = None,
-        **kwargs,
     ) -> None:
-        super().__init__([stage['hidden_sizes'] for stage in stage_params])
+        super().__init__([stage.hidden_sizes for stage in stage_params])
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
-        intermediate_ratio = params['intermediate_ratio']
-        hidden_activation_type = params['hidden_activation_type']
-        hidden_dropout_prob = params['hidden_dropout_prob']
-        attention_dropout_prob = params['attention_dropout_prob']
-        layer_norm_eps = params['layer_norm_eps']
+        intermediate_ratio = params.intermediate_ratio
+        hidden_activation_type = params.hidden_activation_type
+        hidden_dropout_prob = params.hidden_dropout_prob
+        attention_dropout_prob = params.attention_dropout_prob
+        layer_norm_eps = params.layer_norm_eps
 
         in_channels = 3
         
         self.encoder_modules = nn.ModuleList()
         for blocks in stage_params:
-            num_blocks = blocks['num_blocks']
-            sr_ratios = blocks['sr_ratios']
-            hidden_sizes = blocks['hidden_sizes']
-            embedding_patch_sizes = blocks['embedding_patch_sizes']
-            embedding_strides = blocks['embedding_strides']
-            num_attention_heads = blocks['num_attention_heads']
+            num_blocks = blocks.num_blocks
+            sr_ratios = blocks.sr_ratios
+            hidden_sizes = blocks.hidden_sizes
+            embedding_patch_sizes = blocks.embedding_patch_sizes
+            embedding_strides = blocks.embedding_strides
+            num_attention_heads = blocks.num_attention_heads
 
             module = nn.ModuleDict(
                 {
@@ -212,4 +211,4 @@ class SegFormer(MetaFormer):
 
 
 def segformer(task, conf_model_backbone) -> SegformerEncoder:
-    return SegFormer(task, **conf_model_backbone)
+    return SegFormer(task, conf_model_backbone.params, conf_model_backbone.stage_params)
