@@ -22,8 +22,7 @@ class TaskModel(nn.Module):
         self.head_name = head_name
 
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        conf_model_backbone = OmegaConf.to_object(conf_model.architecture.backbone)
-        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model_backbone)
+        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model.architecture.backbone)
 
         self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
 
