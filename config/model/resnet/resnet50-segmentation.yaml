@@ -14,6 +14,8 @@ model:
         norm_layer: batch_norm
         groups: 1
         width_per_group: 64
+        zero_init_residual: False
+        expansion: ~
       stage_params:
         - 
           plane: 64
