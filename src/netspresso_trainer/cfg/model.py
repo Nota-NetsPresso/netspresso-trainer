@@ -68,7 +68,7 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
             {"num_blocks": 2, "hidden_sizes": 96, "downsamples": True},
             {"num_blocks": 6, "hidden_sizes": 224, "downsamples": True},
             {"num_blocks": 4, "hidden_sizes": 448, "downsamples": True},
-        ], 
+        ],
     })
 
 
@@ -79,11 +79,11 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
         "params": None,
         "stage_params": [
             {
-                "in_channels": [16], 
-                "kernel": [3], 
-                "expanded_channels": [16], 
-                "out_channels": [16], 
-                "use_se": [True], 
+                "in_channels": [16],
+                "kernel": [3],
+                "expanded_channels": [16],
+                "out_channels": [16],
+                "use_se": [True],
                 "activation": ["relu"],
                 "stride": [2],
                 "dilation": [1],
