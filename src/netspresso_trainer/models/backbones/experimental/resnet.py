@@ -26,18 +26,17 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]] = None,
+        params: Optional[Dict] = None,
         stage_params: Optional[List[Dict]] = None,
-        **kwargs,
     ) -> None:
         super(ResNet, self).__init__()
 
-        block: Literal['basicblock', 'bottleneck'] = params['block']
-        zero_init_residual: bool = params['zero_init_residual']
-        groups: int = params['groups']
-        width_per_group: int = params['width_per_group']
-        norm_layer: Optional[str] = params['norm_layer']
-        expansion: Optional[int] = params['expansion']
+        block: Literal['basicblock', 'bottleneck'] = params.block
+        zero_init_residual: bool = params.zero_init_residual
+        groups: int = params.groups
+        width_per_group: int = params.width_per_group
+        norm_layer: Optional[str] = params.norm_layer
+        expansion: Optional[int] = params.expansion
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
@@ -162,4 +161,4 @@ def resnet50(task, conf_model_backbone) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(task, **conf_model_backbone)
+    return ResNet(task, conf_model_backbone.params, conf_model_backbone.stage_params)
