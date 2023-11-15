@@ -254,32 +254,32 @@ class MobileViTBlock(nn.Module):
 class MobileViTEncoder(MetaFormerEncoder):
     def __init__(
             self, 
-            params: Optional[List[Dict]],
+            params: Optional[Dict],
             stage_params: Optional[List[Dict]],
     ) -> None:
         super().__init__()
         stages = []
         
         self.dilation = 1
-        self.local_kernel_size = params['local_kernel_size']
-        self.patch_size = params['patch_size']
-        self.num_attention_heads = params['num_attention_heads']
-        self.attention_dropout_prob = params['attention_dropout_prob']
-        self.hidden_dropout_prob = params['hidden_dropout_prob']
-        self.layer_norm_eps = params['layer_norm_eps']
-        self.use_fusion_layer = params['use_fusion_layer']
+        self.local_kernel_size = params.local_kernel_size
+        self.patch_size = params.patch_size
+        self.num_attention_heads = params.num_attention_heads
+        self.attention_dropout_prob = params.attention_dropout_prob
+        self.hidden_dropout_prob = params.hidden_dropout_prob
+        self.layer_norm_eps = params.layer_norm_eps
+        self.use_fusion_layer = params.use_fusion_layer
         
-        in_channels = params['patch_embedding_out_channels']
+        in_channels = params.patch_embedding_out_channels
         for stage in stage_params:
-            out_channels = stage['out_channels']
-            block_type = stage['block_type']
-            num_blocks = stage['num_blocks']
-            stride = stage['stride']
-            hidden_size = stage['hidden_size']
-            intermediate_size = stage['intermediate_size'] 
-            num_transformer_blocks = stage['num_transformer_blocks']
-            dilate = stage['dilate']
-            expand_ratio = stage['expand_ratio']
+            out_channels = stage.out_channels
+            block_type = stage.block_type
+            num_blocks = stage.num_blocks
+            stride = stage.stride
+            hidden_size = stage.hidden_size
+            intermediate_size = stage.intermediate_size
+            num_transformer_blocks = stage.num_transformer_blocks
+            dilate = stage.dilate
+            expand_ratio = stage.expand_ratio
             stages.append(self._make_block(out_channels, block_type, num_blocks, stride, hidden_size,
                                            intermediate_size, num_transformer_blocks, dilate, expand_ratio,
                                            in_channels))
@@ -359,22 +359,21 @@ class MobileViT(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]] = None,
+        params: Optional[Dict] = None,
         stage_params: Optional[List[Dict]] = None,
-        **kwargs,
     ) -> None:
-        exp_channels = min(params['exp_factor'] * stage_params[-1]['out_channels'], 960)
-        hidden_sizes = [stage['out_channels'] for stage in stage_params] + [exp_channels]
+        exp_channels = min(params.exp_factor * stage_params[-1].out_channels, 960)
+        hidden_sizes = [stage.out_channels for stage in stage_params] + [exp_channels]
         super().__init__(hidden_sizes)
         
         self.task = task
         self.intermediate_features = self.task in ['segmentation', 'detection']
         
         image_channels = 3
-        self.patch_embed = MobileViTEmbeddings(image_channels, params['patch_embedding_out_channels'])
+        self.patch_embed = MobileViTEmbeddings(image_channels, params.patch_embedding_out_channels)
         self.encoder = MobileViTEncoder(params=params, stage_params=stage_params)
         
-        self.conv_1x1_exp = ConvLayer(in_channels=stage_params[-1]['out_channels'], out_channels=exp_channels,
+        self.conv_1x1_exp = ConvLayer(in_channels=stage_params[-1].out_channels, out_channels=exp_channels,
                                       kernel_size=1, stride=1,
                                       use_act=True, use_norm=True, act_type='silu')
         self.pool = GlobalPool(pool_type="mean", keep_dim=False)
@@ -389,4 +388,4 @@ class MobileViT(MetaFormer):
         return BackboneOutput(last_feature=feat)
     
 def mobilevit(task, conf_model_backbone):
-    return MobileViT(task, **conf_model_backbone)
+    return MobileViT(task, conf_model_backbone.params, conf_model_backbone.stage_params)
