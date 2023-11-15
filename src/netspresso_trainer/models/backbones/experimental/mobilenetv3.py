@@ -21,9 +21,8 @@ class MobileNetV3(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[List[Dict]] = None,
+        params: Optional[Dict] = None,
         stage_params: Optional[List[Dict]] = None,
-        **kwargs,
     ) -> None:
         super(MobileNetV3, self).__init__()
 
@@ -33,7 +32,7 @@ class MobileNetV3(nn.Module):
         act_type = 'hard_swish'
 
         # building first layer
-        firstconv_output_channels = stage_params[0]['in_channels'][0]
+        firstconv_output_channels = stage_params[0].in_channels[0]
         self.conv_first = ConvLayer(
             in_channels=3,
             out_channels=firstconv_output_channels,
@@ -46,14 +45,14 @@ class MobileNetV3(nn.Module):
         # building inverted residual blocks
         stages: List[nn.Module] = []
 
-        lastconv_input_channels = stage_params[-1]['out_channels'][-1]
+        lastconv_input_channels = stage_params[-1].out_channels[-1]
         lastconv_output_channels = 6 * lastconv_input_channels
         for stg_idx, stage_info in enumerate(stage_params):
             stage: List[nn.Module] = []
 
-            for block in zip(stage_info['in_channels'], stage_info['kernel'], stage_info['expanded_channels'],
-                             stage_info['out_channels'], stage_info['use_se'], stage_info['activation'],
-                             stage_info['stride'], stage_info['dilation']):
+            for block in zip(stage_info.in_channels, stage_info.kernel, stage_info.expanded_channels,
+                             stage_info.out_channels, stage_info.use_se, stage_info.activation,
+                             stage_info.stride, stage_info.dilation):
                 in_channels, kernel_size, hidden_channels, out_channels, use_se, act_type_b, stride, dilation = block
                 act_type_b = act_type_b.lower()
                 stage.append(
@@ -131,4 +130,4 @@ class MobileNetV3(nn.Module):
 
 
 def mobilenetv3_small(task, conf_model_backbone) -> MobileNetV3:
-    return MobileNetV3(task, **conf_model_backbone)
+    return MobileNetV3(task, conf_model_backbone.params, conf_model_backbone.stage_params)
