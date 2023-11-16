@@ -1,8 +1,5 @@
-name: Sync to HF Space - LR Simulator
+name: [WIP] Sync to HF Space
 on:
-  push:
-    tags:
-     - 'v*.*.*'
 
   # to run this workflow manually from the Actions tab
   workflow_dispatch:
