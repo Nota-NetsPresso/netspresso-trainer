@@ -1,25 +1,16 @@
 import argparse
 import os
 from pathlib import Path
-from typing import List, Dict, Union, Optional, Tuple, TypedDict
 
 import netspresso
 import netspresso_trainer
-import torch
 import gradio as gr
-import numpy as np
-import pandas as pd
-import PIL.Image as Image
-from omegaconf import OmegaConf
 
-from netspresso_trainer.dataloaders import CREATE_TRANSFORM
-from netspresso_trainer.loggers import VISUALIZER, START_EPOCH_ZERO_OR_ONE
 from netspresso_trainer.models import SUPPORTING_MODEL_LIST, SUPPORTING_TASK_LIST
-from netspresso_trainer.optimizers import build_optimizer
-from netspresso_trainer.schedulers import build_scheduler
 
-from netspresso.client import SessionClient
-from netspresso.compressor import ModelCompressor, Task, Framework
+from func.augmentation import summary_transform, get_augmented_images
+from func.scheduler import get_lr_dataframe_from_config
+from func.pynetspresso import NetsPressoSession, login_with_session, compress_with_session
 
 __version__netspresso_trainer = netspresso_trainer.__version__
 __version__netspresso = netspresso.__version__
@@ -38,68 +29,6 @@ PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
     "PATH_SCHEDULER_EXAMPLE_CONFIG", default="config/training_template_common.yaml")
 PATH_EXAMPLE_IMAGE = os.getenv(
     "PATH_EXAMPLE_IMAGE", default="assets/kyunghwan_cat.jpg")
-
-NUM_AUGMENTATION_SAMPLES = 5
-
-
-def summary_transform(phase, task, model_name, yaml_str):
-    try:
-        conf = OmegaConf.create(yaml_str)
-        is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
-        transform_composed = transform(conf.augmentation)
-        return str(transform_composed)
-    except Exception as e:
-        raise gr.Error(str(e))
-
-
-def get_augmented_images(phase, task, model_name, yaml_str, test_image,
-                         num_samples=NUM_AUGMENTATION_SAMPLES):
-    try:
-        conf = OmegaConf.create(yaml_str)
-        is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
-        transform_composed = transform(conf.augmentation)
-
-        transformed_images = [transform_composed(test_image,
-                                                 visualize_for_debug=True)['image']
-                              for _ in range(num_samples)]
-        return transformed_images
-    except Exception as e:
-        raise gr.Error(str(e))
-
-
-def get_lr_list(
-        optimizer: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[
-        float]:
-    lr_list = []
-    for _epoch in range(total_epochs):
-        lr = scheduler.get_last_lr()[0]
-        lr_list.append(lr)
-        optimizer.step()
-        scheduler.step()
-    return lr_list
-
-
-def get_lr_dataframe_from_config(yaml_str: str):
-    try:
-        conf = OmegaConf.create(yaml_str)
-        model_mock = torch.nn.Linear(1, 1)
-        optimizer = build_optimizer(model_mock,
-                                    opt=conf.training.opt,
-                                    lr=conf.training.lr,
-                                    wd=conf.training.weight_decay,
-                                    momentum=conf.training.momentum)
-        scheduler, total_epochs = build_scheduler(optimizer, conf.training)
-        lr_list = get_lr_list(optimizer, scheduler, total_epochs)
-
-        df = pd.DataFrame({
-            "lr": lr_list,
-            "epochs": list(range(START_EPOCH_ZERO_OR_ONE, total_epochs + START_EPOCH_ZERO_OR_ONE))
-        })
-        return gr.LinePlot.update(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
-    except Exception as e:
-        raise gr.Error(str(e))
 
 
 def parse_args():
@@ -125,105 +54,6 @@ def parse_args():
 
     return args
 
-
-class InputShapes(TypedDict):
-    batch: int
-    channel: int
-    dimension: List[int]  # Height, Width
-
-
-class NetsPressoSession:
-    task_dict = {
-        'classification': Task.IMAGE_CLASSIFICATION,
-        'segmentation': Task.SEMANTIC_SEGMENTATION
-    }
-
-    def __init__(self) -> None:
-        self.compressor = None
-        self._is_verified = False
-
-    @property
-    def is_verified(self) -> bool:
-        return self._is_verified
-
-    def login(self, email: str, password: str) -> bool:
-        try:
-            session = SessionClient(email=email, password=password)
-            self.compressor = ModelCompressor(user_session=session)
-            self._is_verified = True
-        except Exception as e:
-            self._is_verified = False
-            raise e
-        finally:
-            return self._is_verified
-
-    def compress(self, model_name: str, task: str, model_path: Union[Path, str],
-                 batch_size: int, channels: int, height: int, width: int,
-                 compression_ratio: float,
-                 compressed_model_path: Optional[Union[Path, str]]) -> Path:
-
-        if not self._is_verified:
-            raise gr.Error(f"Please log in first at the console on the left side.")
-
-        if self.compressor is None:
-            self._is_verified = False
-            raise gr.Error(f"The session is expired! Please log in again.")
-
-        if task not in self.task_dict:
-            raise gr.Error(f"Selected task is not supported in web UI version.")
-
-        model = self.compressor.upload_model(
-            model_name=model_name,
-            task=self.task_dict[task],
-            # file_path: e.g. ./model.pt
-            file_path=str(model_path),
-            # input_shapes: e.g. [{"batch": 1, "channel": 3, "dimension": [32, 32]}]
-            input_shapes=[InputShapes(batch=batch_size, channel=channels, dimension=[height, width])],
-            framework=Framework.PYTORCH
-        )
-
-        _ = self.compressor.automatic_compression(
-            model_id=model.model_id,
-            model_name=model_name,
-            # output_path: e.g. ./compressed_model.pt
-            output_path=str(compressed_model_path),
-            compression_ratio=compression_ratio,
-        )
-
-        return Path(compressed_model_path)
-
-
-def login_with_session(session: NetsPressoSession, email: str, password: str) -> NetsPressoSession:
-    try:
-        success = session.login(email, password)
-        if success:
-            gr.Info("Login success!")
-            return session
-    except Exception as e:
-        raise gr.Error(
-            f"We're sorry, but login failed with an error: {str(e)}"
-        )
-
-
-def compress_with_session(
-    session: NetsPressoSession,
-    model_name: str, task: Task, model_path: Union[Path, str],
-    batch_size: int, channels: int, height: int, width: int,
-    compression_ratio: float,
-    compressed_model_path: Optional[Union[Path, str]]
-) -> List[Union[NetsPressoSession, str]]:
-    try:
-        output_path = session.compress(
-            model_name=model_name, task=task, model_path=model_path,
-            batch_size=batch_size, channels=channels, height=height, width=width,
-            compression_ratio=compression_ratio,
-            compressed_model_path=compressed_model_path
-        )
-        return [session, output_path]
-    except Exception as e:
-        raise gr.Error(
-            f"Error while compressing the model with NetsPresso: {str(e)}"
-        )
 
 
 def launch_gradio(args):
