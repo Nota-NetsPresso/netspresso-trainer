@@ -1,9 +1,9 @@
 import argparse
 import os
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Dict, Union, Optional, Tuple, TypedDict
 
-
+import netspresso
 import netspresso_trainer
 import torch
 import gradio as gr
@@ -18,7 +18,15 @@ from netspresso_trainer.models import SUPPORTING_MODEL_LIST, SUPPORTING_TASK_LIS
 from netspresso_trainer.optimizers import build_optimizer
 from netspresso_trainer.schedulers import build_scheduler
 
-__version__ = netspresso_trainer.__version__
+from netspresso.client import SessionClient
+from netspresso.compressor import ModelCompressor, Task, Framework
+
+__version__netspresso_trainer = netspresso_trainer.__version__
+__version__netspresso = netspresso.__version__
+
+
+# TODO: directly import from netspresso_trainer.models
+SUPPORTING_TASK_LIST = ['classification', 'segmentation']
 
 PATH_AUG_DOCS = os.getenv(
     "PATH_AUG_DOCS", default="docs/description_augmentation.md")
@@ -61,7 +69,9 @@ def get_augmented_images(phase, task, model_name, yaml_str, test_image,
         raise gr.Error(str(e))
 
 
-def get_lr_list(optimizer: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[float]:
+def get_lr_list(
+        optimizer: torch.optim.Optimizer, scheduler: torch.optim.lr_scheduler._LRScheduler, total_epochs: int) -> List[
+        float]:
     lr_list = []
     for _epoch in range(total_epochs):
         lr = scheduler.get_last_lr()[0]
@@ -116,13 +126,121 @@ def parse_args():
     return args
 
 
+class InputShapes(TypedDict):
+    batch: int
+    channel: int
+    dimension: List[int]  # Height, Width
+
+
+class NetsPressoSession:
+    task_dict = {
+        'classification': Task.IMAGE_CLASSIFICATION,
+        'segmentation': Task.SEMANTIC_SEGMENTATION
+    }
+
+    def __init__(self) -> None:
+        self.compressor = None
+        self._is_verified = False
+
+    @property
+    def is_verified(self) -> bool:
+        return self._is_verified
+
+    def login(self, email: str, password: str) -> bool:
+        try:
+            session = SessionClient(email=email, password=password)
+            self.compressor = ModelCompressor(user_session=session)
+            self._is_verified = True
+        except Exception as e:
+            self._is_verified = False
+            raise e
+        finally:
+            return self._is_verified
+
+    def compress(self, model_name: str, task: str, model_path: Union[Path, str],
+                 batch_size: int, channels: int, height: int, width: int,
+                 compression_ratio: float,
+                 compressed_model_path: Optional[Union[Path, str]]) -> Path:
+
+        if not self._is_verified:
+            raise gr.Error(f"Please log in first at the console on the left side.")
+
+        if self.compressor is None:
+            self._is_verified = False
+            raise gr.Error(f"The session is expired! Please log in again.")
+
+        if task not in self.task_dict:
+            raise gr.Error(f"Selected task is not supported in web UI version.")
+
+        model = self.compressor.upload_model(
+            model_name=model_name,
+            task=self.task_dict[task],
+            # file_path: e.g. ./model.pt
+            file_path=str(model_path),
+            # input_shapes: e.g. [{"batch": 1, "channel": 3, "dimension": [32, 32]}]
+            input_shapes=[InputShapes(batch=batch_size, channel=channels, dimension=[height, width])],
+            framework=Framework.PYTORCH
+        )
+
+        _ = self.compressor.automatic_compression(
+            model_id=model.model_id,
+            model_name=model_name,
+            # output_path: e.g. ./compressed_model.pt
+            output_path=str(compressed_model_path),
+            compression_ratio=compression_ratio,
+        )
+
+        return Path(compressed_model_path)
+
+
+def login_with_session(session: NetsPressoSession, email: str, password: str) -> NetsPressoSession:
+    try:
+        success = session.login(email, password)
+        if success:
+            gr.Info("Login success!")
+            return session
+    except Exception as e:
+        raise gr.Error(
+            f"We're sorry, but login failed with an error: {str(e)}"
+        )
+
+
+def compress_with_session(
+    session: NetsPressoSession,
+    model_name: str, task: Task, model_path: Union[Path, str],
+    batch_size: int, channels: int, height: int, width: int,
+    compression_ratio: float,
+    compressed_model_path: Optional[Union[Path, str]]
+) -> List[Union[NetsPressoSession, str]]:
+    try:
+        output_path = session.compress(
+            model_name=model_name, task=task, model_path=model_path,
+            batch_size=batch_size, channels=channels, height=height, width=width,
+            compression_ratio=compression_ratio,
+            compressed_model_path=compressed_model_path
+        )
+        return [session, output_path]
+    except Exception as e:
+        raise gr.Error(
+            f"Error while compressing the model with NetsPresso: {str(e)}"
+        )
+
+
 def launch_gradio(args):
     with gr.Blocks(theme='nota-ai/theme', title="NetsPresso Trainer") as demo:
         gr.Markdown("\n\n# <center>Welcome to NetsPresso Trainer!</center>\n\n")
+        gr.Markdown(
+            "<center>Package version: "
+            f"<code>netspresso-trainer=={__version__netspresso_trainer}</code> "
+            f"<code>netspresso=={__version__netspresso}</code></center>"
+        )
+
+        with gr.Tab("Train"):
+            gr.Markdown("\n\n### <center>TBD</center>\n\n")
+
         with gr.Tab("Augmentation"):
             gr.Markdown(Path(PATH_AUG_DOCS).read_text())
-            gr.Markdown(
-                f"<center>Package version: <code>netspresso-trainer=={__version__}</code></center>")
+
             with gr.Row(equal_height=True):
                 with gr.Column(scale=2):
                     task_choices = gr.Radio(
@@ -135,7 +253,8 @@ def launch_gradio(args):
             with gr.Row(equal_height=True):
                 with gr.Column(scale=1):
                     config_input = gr.Code(label="Augmentation configuration",
-                                           value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(), language='yaml', lines=30)
+                                           value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
+                                           language='yaml', lines=30)
                 with gr.Column(scale=2):
                     transform_repr_output = gr.Code(
                         label="Data transform", lines=10)
@@ -157,18 +276,79 @@ def launch_gradio(args):
 
         with gr.Tab("Scheduler"):
             gr.Markdown(Path(PATH_SCHEDULER_DOCS).read_text())
-            gr.Markdown(
-                f"<center>Package version: <code>netspresso-trainer-{__version__}</code></center>")
             with gr.Row(equal_height=True):
                 with gr.Column():
-                    config_input = gr.Code(
-                        label="Training configuration", value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(), language='yaml', lines=30)
+                    config_input = gr.Code(label="Training configuration",
+                                           value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
+                                           language='yaml', lines=30)
                     run_button = gr.Button(value="Run", variant='primary')
                 with gr.Column():
                     plot_output = gr.LinePlot()
 
             run_button.click(get_lr_dataframe_from_config,
                              inputs=config_input, outputs=plot_output)
+
+        with gr.Tab("PyNetsPresso"):
+
+            session = gr.State(NetsPressoSession())
+
+            gr.Markdown(
+                "\n\n### <center>NOTE: This feature needs an internet connection</center>\n\n")
+
+            with gr.Row(equal_height=True):
+                with gr.Column():
+                    gr.Markdown(
+                        "If you have not signed up at NetsPresso, please sign up frist: [netspresso.ai](https://netspresso.ai/signup)")
+                    email_input = gr.Textbox(
+                        label="Email", type="email"
+                    )
+                    password_input = gr.Textbox(
+                        label="Password", type="password"
+                    )
+                    with gr.Row(equal_height=True):
+                        gr.ClearButton([email_input, password_input])
+                        login_button = gr.Button(
+                            value="Login", variant='primary'
+                        )
+
+                with gr.Column():
+                    with gr.Group():
+                        with gr.Row():
+                            model_name = gr.Textbox(label="Model name")
+                            model_task = gr.Dropdown(label="Task", value='classification', multiselect=False,
+                                                     choices=SUPPORTING_TASK_LIST)
+                        model_path = gr.Textbox(label="Model path")
+                        with gr.Row():
+                            compress_input_batch_size = gr.Number(label="Batch size", value=1, minimum=1, maximum=1)
+                            compress_input_channels = gr.Number(label="Channels", value=3, minimum=1)
+                            compress_input_height = gr.Number(label="Height", value=256, minimum=32, maximum=512)
+                            compress_input_width = gr.Number(label="Width", value=256, minimum=32, maximum=512)
+                        compression_ratio = gr.Slider(
+                            minimum=0, maximum=1, value=0.5, step=0.1,
+                            info="The removal ratio of the filters (e.g. 0.2 removes 20% of the filters in the model)"
+                        )
+                        compressed_model_path = gr.Textbox(label="Output model path")
+
+                    compress_button = gr.Button(
+                        value="Compress", variant='primary'
+                    )
+                    result_compressed_model_path = gr.Textbox(label="Result")
+
+            login_button.click(
+                login_with_session, inputs=[session, email_input, password_input], outputs=[session]
+            )
+            password_input.submit(
+                login_with_session, inputs=[session, email_input, password_input], outputs=[session]
+            )
+
+            compress_button.click(
+                compress_with_session,
+                inputs=[session, model_name, model_task, model_path,
+                        compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width,
+                        compression_ratio, compressed_model_path],
+                outputs=[session, result_compressed_model_path])
+
+    demo.queue()
 
     if args.local:
         demo.launch(server_name="0.0.0.0", server_port=args.port)
