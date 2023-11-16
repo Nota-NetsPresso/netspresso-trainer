@@ -4,6 +4,7 @@ https://pytorch.org/vision/main/_modules/torchvision/models/mobilenetv3.html
 """
 from typing import List, Dict, Optional
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -21,8 +22,8 @@ class MobileNetV3(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         super(MobileNetV3, self).__init__()
 

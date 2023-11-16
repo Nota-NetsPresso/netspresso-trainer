@@ -4,6 +4,7 @@ https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/darknet.py
 """
 from typing import Dict, Optional, List
 
+from omegaconf import DictConfig
 import torch
 from torch import nn
 
@@ -19,8 +20,8 @@ class CSPDarknet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
         #depthwise=False,
     ) -> None:
         super().__init__()

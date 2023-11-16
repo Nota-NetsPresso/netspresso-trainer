@@ -7,6 +7,7 @@ import argparse
 import math
 from typing import Any, Dict, Literal, Optional, Tuple, Union, List
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -253,9 +254,9 @@ class MobileViTBlock(nn.Module):
 
 class MobileViTEncoder(MetaFormerEncoder):
     def __init__(
-            self, 
-            params: Optional[Dict],
-            stage_params: Optional[List[Dict]],
+        self,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         super().__init__()
         stages = []
@@ -359,8 +360,8 @@ class MobileViT(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         exp_channels = min(params.exp_factor * stage_params[-1].out_channels, 960)
         hidden_sizes = [stage.out_channels for stage in stage_params] + [exp_channels]

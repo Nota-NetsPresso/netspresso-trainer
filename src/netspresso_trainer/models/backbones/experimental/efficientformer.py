@@ -7,6 +7,7 @@ import math
 import os
 from typing import Dict, Optional, List
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -331,8 +332,8 @@ class EfficientFormer(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         
         num_blocks = [stage.num_blocks for stage in stage_params]

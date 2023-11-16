@@ -5,6 +5,7 @@ https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f
 import argparse
 from typing import Any, Dict, Optional, Tuple, Union, List
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -94,8 +95,8 @@ class VisionTransformer(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         patch_size = params.patch_size
         hidden_size = params.hidden_size

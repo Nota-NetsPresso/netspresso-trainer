@@ -1,6 +1,7 @@
 import math
 from typing import Optional, List, Dict
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -138,8 +139,8 @@ class SegFormer(MetaFormer):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         super().__init__([stage.hidden_sizes for stage in stage_params])
         self.task = task

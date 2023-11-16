@@ -4,6 +4,7 @@ https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
 from typing import Dict, List, Literal, Optional, Type, Union
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -26,8 +27,8 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        params: Optional[Dict] = None,
-        stage_params: Optional[List[Dict]] = None,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         super(ResNet, self).__init__()
 
