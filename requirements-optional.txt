@@ -1,5 +1,5 @@
 datasets
-gradio
+gradio==3.39.0
 pandas
 requests
 albumentations
