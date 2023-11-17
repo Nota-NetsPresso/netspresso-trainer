@@ -2,21 +2,21 @@
 Based on the publicly available MixNet-PyTorch repository.
 https://github.com/romulus0914/MixNet-PyTorch/blob/master/mixnet.py
 """
-from typing import List, Dict, Optional
+from collections import OrderedDict
+import math
+from typing import Dict, List, Optional
 
 from omegaconf import DictConfig
+import torch
+from torch import nn
 from torch.nn import functional as F
 from torchvision.ops.misc import SqueezeExcitation as SEBlock
-from collections import OrderedDict
+
 from ...op.registry import ACTIVATION_REGISTRY
 from ...op.custom import ConvLayer
-Swish = ACTIVATION_REGISTRY['swish']
 from ...utils import BackboneOutput
 
-from torch import nn
-import torch
-import math
-
+Swish = ACTIVATION_REGISTRY['swish']
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # GPConv: Grouped Point-wise Convolution for MixDepthBlock
