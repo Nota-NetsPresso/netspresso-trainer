@@ -16,7 +16,6 @@ from ...op.registry import ACTIVATION_REGISTRY
 from ...op.custom import ConvLayer
 from ...utils import BackboneOutput
 
-Swish = ACTIVATION_REGISTRY['swish']
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # GPConv: Grouped Point-wise Convolution for MixDepthBlock
@@ -97,14 +96,14 @@ class MixDepthBlock(nn.Module):
             self.expansion = nn.Sequential(OrderedDict([
                 ("conv", GPConv(in_planes, hidden_dim, kernel_sizes=exp_kernel_sizes)),
                 ("norm", nn.BatchNorm2d(hidden_dim, eps=1e-3, momentum=0.01)),
-                ("act", Swish() if act_type == "swish" else nn.ReLU())
+                ("act", ACTIVATION_REGISTRY[act_type]())
             ]))
 
         # step 2. Depth-wise convolution phase
         self.depth_wise = nn.Sequential(OrderedDict([
             ("conv", MDConv(hidden_dim, kernel_sizes=kernel_sizes, stride=stride, dilate=dilate)),
             ("norm", nn.BatchNorm2d(hidden_dim, eps=1e-3, momentum=0.01)),
-            ("act", Swish() if act_type == "swish" else nn.ReLU())
+            ("act", ACTIVATION_REGISTRY[act_type]())
         ]))
 
         # step 3. Squeeze and Excitation
