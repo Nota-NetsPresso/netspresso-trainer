@@ -6,6 +6,7 @@ from typing import List, Dict, Optional
 
 from omegaconf import DictConfig
 from torch.nn import functional as F
+from torchvision.ops.misc import SqueezeExcitation as SEBlock
 from collections import OrderedDict
 from ...op.registry import ACTIVATION_REGISTRY
 from ...op.custom import ConvLayer
@@ -16,23 +17,6 @@ from torch import nn
 import torch
 import math
 
-
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-# SEBlock: Squeeze & Excitation (SCSE)
-#          namely, Channel-wise Attention
-# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
-class SEBlock(nn.Module):
-    def __init__(self, in_planes, reduced_dim, act_type="swish"):
-        super(SEBlock, self).__init__()
-        self.channel_se = nn.Sequential(OrderedDict([
-            ("linear1", nn.Conv2d(in_planes, reduced_dim, kernel_size=1, stride=1, padding=0, bias=True)),
-            ("act", Swish() if act_type == "swish" else nn.ReLU()),
-            ("linear2", nn.Conv2d(reduced_dim, in_planes, kernel_size=1, stride=1, padding=0, bias=True))
-        ]))
-
-    def forward(self, x):
-        x_se = torch.sigmoid(self.channel_se(F.adaptive_avg_pool2d(x, output_size=(1, 1))))
-        return torch.mul(x, x_se)
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 # GPConv: Grouped Point-wise Convolution for MixDepthBlock
@@ -126,7 +110,7 @@ class MixDepthBlock(nn.Module):
         # step 3. Squeeze and Excitation
         if self.use_se:
             reduced_dim = max(1, int(in_planes / reduction_ratio))
-            self.se_block = SEBlock(hidden_dim, reduced_dim, act_type=act_type)
+            self.se_block = SEBlock(input_channels=hidden_dim, squeeze_channels=reduced_dim, activation=ACTIVATION_REGISTRY[act_type])
 
         # step 4. Point-wise convolution phase
         self.point_wise = nn.Sequential(OrderedDict([
