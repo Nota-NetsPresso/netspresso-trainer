@@ -68,14 +68,17 @@ def launch_gradio(args):
             transform_button.click(
                 summary_transform, inputs=transform_compose_inputs, outputs=transform_repr_output)
             run_button.click(get_augmented_images,
-                             inputs=run_inputs, outputs=augmented_images)
+                            inputs=run_inputs, outputs=augmented_images)
 
         with gr.Tab("Scheduler"):
             config_input, plot_output, run_button = tab_scheduler(args)
 
             run_button.click(get_lr_dataframe_from_config,
-                             inputs=config_input, outputs=plot_output)
+                            inputs=config_input, outputs=plot_output)
 
+        with gr.Tab("Experiments"):
+            gr.Markdown("\n\n### <center>TBD</center>\n\n")
+        
         with gr.Tab("PyNetsPresso"):
             session, email_input, password_input, model_name, model_task, model_path, \
             compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
@@ -96,6 +99,9 @@ def launch_gradio(args):
                         compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width,
                         compression_ratio, compressed_model_path],
                 outputs=[session, result_compressed_model_path])
+                
+
+                
 
     demo.queue()
 
