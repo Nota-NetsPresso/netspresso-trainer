@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 import gradio as gr
-from func.pynetspresso import NetsPressoSession
+from func.pynetspresso import NetsPressoSession, login_with_session, compress_with_session
+
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']
@@ -65,6 +66,20 @@ def tab_pynetspresso(args):
                 show_copy_button=True,
                 interactive=False
             )
+
+    login_button.click(
+        login_with_session, inputs=[session, email_input, password_input], outputs=[session]
+    )
+    password_input.submit(
+        login_with_session, inputs=[session, email_input, password_input], outputs=[session]
+    )
+
+    compress_button.click(
+        compress_with_session,
+        inputs=[session, model_name, model_task, model_path,
+                compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width,
+                compression_ratio, compressed_model_path],
+        outputs=[session, result_compressed_model_path])
 
     return session, email_input, password_input, model_name, model_task, model_path, \
         compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \

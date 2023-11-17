@@ -6,11 +6,17 @@ from func.experiments import ExperimentDataFrame, COLUMN_NAME_AS
 
 
 def tab_experiments(args):
-    experiment_df = ExperimentDataFrame(experiment_dir="./outputs")
+    experiment_df = ExperimentDataFrame(
+        headers=[
+            "is_fx_retrain", "id", "model", "task", "data",
+            "primary_metric", "performance", "macs", "params",
+        ],
+        experiment_dir="./outputs"
+    )
 
-    experiment_select_task_choices = sorted(list(set(experiment_df.dataframe['task'])))
-    experiment_select_data_choices = sorted(list(set(experiment_df.dataframe['data'])))
-    experiment_select_model_choices = sorted(list(set(experiment_df.dataframe['model'])))
+    experiment_select_task_choices = sorted(list(set(experiment_df.default_no_render['task'])))
+    experiment_select_data_choices = sorted(list(set(experiment_df.default_no_render['data'])))
+    experiment_select_model_choices = sorted(list(set(experiment_df.default_no_render['model'])))
 
     with gr.Row():
         with gr.Column():
@@ -36,14 +42,27 @@ def tab_experiments(args):
                                 label="Model",
                                 choices=experiment_select_model_choices,
                             )
-                        experiment_threshold_macs = gr.Slider(label="MACs (smaller than)")
-                        experiment_threshold_params = gr.Slider(label="# Params (smaller than)")
-                        experiment_select_compressed_only = gr.Checkbox(
-                            value=True, label="Show compressed models", interactive=True
+                        experiment_threshold_macs = gr.Slider(
+                            label="MACs (G, smaller than or equal to)",
+                            minimum=0, maximum=10, step=0.1, value=-1
+                        )
+                        experiment_threshold_params = gr.Slider(
+                            label="# Params (M, smaller than or equal to)",
+                            minimum=0, maximum=1000, step=1, value=-1
+                        )
+                        experiment_select_compressed_ignore = gr.Checkbox(
+                            value=False, label="Ignore compressed models", interactive=True
                         )
             with gr.Row():
-                experiment_select_clear = gr.Button(value="Clear")
-                experiment_select_search = gr.Button(value="Search", variant='primary')
+                gr.ClearButton([
+                    experiment_select_task,
+                    experiment_select_data,
+                    experiment_select_model,
+                    experiment_threshold_macs,
+                    experiment_threshold_params,
+                    experiment_select_compressed_ignore
+                ])
+                experiment_button_search = gr.Button(value="Search", variant='primary')
     with gr.Row(equal_height=True):
         with gr.Column(scale=4):
             experiment_selected_experiment = gr.Textbox(label="Selected checkpoint")
@@ -52,16 +71,24 @@ def tab_experiments(args):
             experiment_goto_compressor = gr.Button(value="Compress", variant='primary')
     with gr.Row(equal_height=True):
         experiment_table = gr.Dataframe(
-            value=experiment_df.filtered_with_headers([
-                "is_fx_retrain", "id", "model", "task", "data",
-                "primary_metric", "performance", "macs", "params",
-            ]),
+            value=experiment_df.default,
             interactive=False,
             height=600,
             overflow_row_behaviour='paginate',
             column_widths=[f"{x}%" for x in [5, 20]]
         )
 
+    experiment_button_search.click(
+        fn=experiment_df.filter_with,
+        inputs=[
+            experiment_select_task,
+            experiment_select_data,
+            experiment_select_model,
+            experiment_threshold_macs,
+            experiment_threshold_params,
+            experiment_select_compressed_ignore
+        ],
+        outputs=[experiment_table])
     experiment_table.change(
         lambda x: x, inputs=[experiment_table], outputs=[experiment_summary_plot]
     )

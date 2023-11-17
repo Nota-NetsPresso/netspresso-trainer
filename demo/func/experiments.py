@@ -112,28 +112,69 @@ def get_dataframe(experiment_dir=OUTPUT_DIR) -> pd.DataFrame:
 class ExperimentDataFrame:
     column_name_as = COLUMN_NAME_AS
 
-    def __init__(self, experiment_dir=OUTPUT_DIR) -> None:
-        self.experiment_dir = experiment_dir
-        self._df = get_dataframe(self.experiment_dir)
+    def __init__(self, headers, experiment_dir=OUTPUT_DIR) -> None:
+        self.headers = headers
+
+        self._raw_df: pd.DataFrame = get_dataframe(experiment_dir)
+        self._df: pd.DataFrame = self._raw_df[self.headers]
 
     def _render(self, df: Optional[pd.DataFrame] = None):
 
         if df is None:
-            df = self._df.copy()
+            df = self._df
 
+        df = df.copy()
         df.is_fx_retrain.replace(to_replace={True: "⭕️", False: "-"}, inplace=True)
         df.rename(columns=self.column_name_as, inplace=True)
         return df
 
     @property
-    def dataframe(self):
-        return self._df
-
-    @property
-    def dataframe_rendered(self):
+    def default(self):
         # To force copying df, you don't have to put `self._df` itself as target df
         return self._render()
 
-    def filtered_with_headers(self, headers: List[str]) -> pd.DataFrame:
-        filtered_df = self._df[headers].copy()
+    @property
+    def default_no_render(self):
+        return self._df
+
+    def select_with_headers(self, headers: List[str]) -> pd.DataFrame:
+        filtered_df = self._raw_df[headers]
+        return self._render(filtered_df)
+
+    @staticmethod
+    def dropdown_selected(dropdown_input):
+        return dropdown_input is not None and len(dropdown_input) > 0
+
+    @staticmethod
+    def slider_selected(slider_input):
+        return slider_input is not None and slider_input > 0
+
+    def filter_with(self, task, data, model, macs, params, ignore_compressed_model):
+        queries = []
+
+        if self.dropdown_selected(task):
+            queries.append(f'`task` == "{task}"')
+
+        if self.dropdown_selected(data):
+            queries.append(f'`data` == "{data}"')
+
+        if self.dropdown_selected(model):
+            queries.append(f'`model` == "{model}"')
+
+        if self.slider_selected(macs):
+            queries.append(f'`macs` <= {macs * (10 ** 9)}')
+
+        if self.slider_selected(params):
+            queries.append(f'`params` <= {params * (10 ** 6)}')
+
+        if ignore_compressed_model:
+            queries.append(f'`is_fx_retrain` == False')
+
+        if len(queries) == 0:
+            return self.default
+
+        query_str = " & ".join(queries)
+        print(query_str)
+        filtered_df = self._df.query(query_str)
+
         return self._render(filtered_df)

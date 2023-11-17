@@ -11,10 +11,6 @@ from tab.scheduler import tab_scheduler
 from tab.experiments import tab_experiments
 from tab.pynetspresso import tab_pynetspresso
 
-from func.augmentation import summary_transform, get_augmented_images
-from func.scheduler import get_lr_dataframe_from_config
-from func.pynetspresso import login_with_session, compress_with_session
-
 __version__netspresso_trainer = netspresso_trainer.__version__
 __version__netspresso = netspresso.__version__
 
@@ -55,30 +51,20 @@ def launch_gradio(args):
             f"<code>netspresso=={__version__netspresso}</code></center>"
         )
 
+        with gr.Tab("Experiments"):
+            tab_experiments(args)
+
         with gr.Tab("Home"):
             with gr.Tab("Train"):
                 gr.Markdown("\n\n### <center>TBD</center>\n\n")
 
             with gr.Tab("Augmentation"):
-                task_choices, phase_choices, model_choices, config_input, transform_repr_output, test_image, augmented_images, transform_button, run_button = tab_augmentation(
-                    args)
-
-                transform_compose_inputs = [phase_choices,
-                                            task_choices, model_choices, config_input]
-                run_inputs = transform_compose_inputs + [test_image]
-                transform_button.click(
-                    summary_transform, inputs=transform_compose_inputs, outputs=transform_repr_output)
-                run_button.click(get_augmented_images,
-                                 inputs=run_inputs, outputs=augmented_images)
+                task_choices, phase_choices, model_choices, config_input, \
+                    transform_repr_output, test_image, augmented_images, transform_button, run_button = \
+                    tab_augmentation(args)
 
             with gr.Tab("Scheduler"):
                 config_input, plot_output, run_button = tab_scheduler(args)
-
-                run_button.click(get_lr_dataframe_from_config,
-                                 inputs=config_input, outputs=plot_output)
-
-        with gr.Tab("Experiments"):
-            tab_experiments(args)
 
         with gr.Tab("PyNetsPresso"):
             session, email_input, password_input, model_name, model_task, model_path, \
@@ -86,20 +72,6 @@ def launch_gradio(args):
                 compression_ratio, compressed_model_path, result_compressed_model_path, \
                 login_button, compress_button = \
                 tab_pynetspresso(args)
-
-            login_button.click(
-                login_with_session, inputs=[session, email_input, password_input], outputs=[session]
-            )
-            password_input.submit(
-                login_with_session, inputs=[session, email_input, password_input], outputs=[session]
-            )
-
-            compress_button.click(
-                compress_with_session,
-                inputs=[session, model_name, model_task, model_path,
-                        compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width,
-                        compression_ratio, compressed_model_path],
-                outputs=[session, result_compressed_model_path])
 
     demo.queue()
 

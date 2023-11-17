@@ -2,12 +2,10 @@ import argparse
 import os
 from pathlib import Path
 
-import netspresso
-import netspresso_trainer
 import gradio as gr
-
 from netspresso_trainer.models import SUPPORTING_MODEL_LIST, SUPPORTING_TASK_LIST
 
+from func.augmentation import summary_transform, get_augmented_images
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']
@@ -32,8 +30,8 @@ def tab_augmentation(args):
     with gr.Row(equal_height=True):
         with gr.Column(scale=1):
             config_input = gr.Code(label="Augmentation configuration",
-                                value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
-                                language='yaml', lines=30)
+                                   value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
+                                   language='yaml', lines=30)
         with gr.Column(scale=2):
             transform_repr_output = gr.Code(
                 label="Data transform", lines=10)
@@ -44,6 +42,19 @@ def tab_augmentation(args):
     run_button = gr.Button(
         value="Get augmented samples", variant='primary')
     augmented_images = gr.Gallery(label="Results", columns=5)
-    
+
+    transform_compose_inputs = [phase_choices, task_choices, model_choices, config_input]
+    run_inputs = transform_compose_inputs + [test_image]
+    transform_button.click(
+        summary_transform,
+        inputs=transform_compose_inputs,
+        outputs=transform_repr_output
+    )
+    run_button.click(
+        get_augmented_images,
+        inputs=run_inputs,
+        outputs=augmented_images
+    )
+
     return task_choices, phase_choices, model_choices, config_input, transform_repr_output, test_image, augmented_images, \
         transform_button, run_button
