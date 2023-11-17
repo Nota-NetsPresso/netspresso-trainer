@@ -4,6 +4,7 @@ https://pytorch.org/vision/stable/_modules/torchvision/models/resnet.html
 """
 from typing import Dict, List, Literal, Optional, Type, Union
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -26,17 +27,17 @@ class ResNet(nn.Module):
     def __init__(
         self,
         task: str,
-        block: Literal['basicblock', 'bottleneck'],
-        layers: List[int],
-        zero_init_residual: bool = False,
-        groups: int = 1,
-        width_per_group: int = 64,
-        replace_stride_with_dilation: Optional[List[bool]] = None,
-        norm_layer: Optional[str] = None,
-        expansion: Optional[int] = None,
-        **kwargs
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
         super(ResNet, self).__init__()
+
+        block: Literal['basicblock', 'bottleneck'] = params.block
+        zero_init_residual: bool = params.zero_init_residual
+        groups: int = params.groups
+        width_per_group: int = params.width_per_group
+        norm_layer: Optional[str] = params.norm_layer
+        expansion: Optional[int] = params.expansion
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
@@ -48,13 +49,9 @@ class ResNet(nn.Module):
 
         self.inplanes = 64
         self.dilation = 1
-        if replace_stride_with_dilation is None:
-            # each element in the tuple indicates if we should replace
-            # the 2x2 stride with a dilated convolution instead
-            replace_stride_with_dilation = [False, False, False]
-        if len(replace_stride_with_dilation) != 3:
-            raise ValueError("replace_stride_with_dilation should be None "
-                             "or a 3-element tuple, got {}".format(replace_stride_with_dilation))
+        for i in range(1, len(stage_params)):
+            if 'replace_stride_with_dilation' not in stage_params[i]:
+                stage_params[i]['replace_stride_with_dilation'] = False
         self.groups = groups
         self.base_width = width_per_group
 
@@ -64,22 +61,23 @@ class ResNet(nn.Module):
         self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
                                kernel_size=7, stride=2, padding=3,
                                bias=False, norm_type='batch_norm', act_type='relu')
-
-        planes = [64, 128, 256, 512]
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-        self.layer1 = self._make_layer(block, planes[0], layers[0], expansion=expansion)
-        self.layer2 = self._make_layer(block, planes[1], layers[1], stride=2,
-                                       dilate=replace_stride_with_dilation[0],
-                                       expansion=expansion)
-        self.layer3 = self._make_layer(block, planes[2], layers[2], stride=2,
-                                       dilate=replace_stride_with_dilation[1],
-                                       expansion=expansion)
-        self.layer4 = self._make_layer(block, planes[3], layers[3], stride=2,
-                                       dilate=replace_stride_with_dilation[2],
-                                       expansion=expansion)
+
+        stages: List[nn.Module] = []
+
+        first_stage = stage_params[0]
+        layer = self._make_layer(block, first_stage['plane'], first_stage['layers'], expansion=expansion)
+        stages.append(layer)
+        for stage in stage_params[1:]:
+            layer = self._make_layer(block, stage['plane'], stage['layers'], stride=2,
+                                     dilate=stage['replace_stride_with_dilation'],
+                                     expansion=expansion)
+            stages.append(layer)
+
+        self.stages = nn.ModuleList(stages)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        hidden_sizes = [h * 4 for h in planes]
+        hidden_sizes = [stage['plane'] * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 
@@ -134,8 +132,8 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
 
         all_hidden_states = () if self.use_intermediate_features else None
-        for layer in [self.layer1, self.layer2, self.layer3, self.layer4]:
-            x = layer(x)
+        for stage in self.stages:
+            x = stage(x)
             if self.use_intermediate_features:
                 all_hidden_states = all_hidden_states + (x,)
 
@@ -164,4 +162,4 @@ def resnet50(task, conf_model_backbone) -> ResNet:
     """
         ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
-    return ResNet(task, **conf_model_backbone)
+    return ResNet(task, conf_model_backbone.params, conf_model_backbone.stage_params)

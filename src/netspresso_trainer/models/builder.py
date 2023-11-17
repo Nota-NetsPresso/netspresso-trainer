@@ -16,8 +16,7 @@ logger = logging.getLogger("netspresso_trainer")
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
-    conf_model_full = OmegaConf.to_object(conf_model.architecture.full)
-    model: nn.Module = model_fn(num_classes=num_classes, conf_model_full=conf_model_full)
+    model: nn.Module = model_fn(num_classes=num_classes, conf_model_full=conf_model.architecture.full)
     model = load_from_checkpoint(model, model_checkpoint)
 
     return model

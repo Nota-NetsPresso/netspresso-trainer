@@ -3,8 +3,9 @@ Based on the vit implementation of apple/ml-cvnets.
 https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
 """
 import argparse
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Optional, Tuple, Union, List
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -93,19 +94,21 @@ class ViTEncoder(MetaFormerEncoder):
 class VisionTransformer(MetaFormer):
     def __init__(
         self,
-        task,
-        patch_size,
-        hidden_size,
-        num_blocks,
-        num_attention_heads,
-        attention_dropout_prob,
-        intermediate_size,
-        hidden_dropout_prob,
-        layer_norm_eps=1e-6,
-        use_cls_token=True,
-        vocab_size=1000,
-        **kwargs
+        task: str,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
     ) -> None:
+        patch_size = params.patch_size
+        hidden_size = params.hidden_size
+        num_blocks = params.num_blocks
+        num_attention_heads = params.num_attention_heads
+        attention_dropout_prob = params.attention_dropout_prob
+        intermediate_size = params.intermediate_size
+        hidden_dropout_prob = params.hidden_dropout_prob
+        layer_norm_eps = params.layer_norm_eps
+        use_cls_token = params.use_cls_token
+        vocab_size = params.vocab_size
+
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)
         self.task = task
@@ -119,4 +122,4 @@ class VisionTransformer(MetaFormer):
 
 def vit(task, conf_model_backbone):
     # ViT tiny
-    return VisionTransformer(task, **conf_model_backbone)
+    return VisionTransformer(task, conf_model_backbone.params, conf_model_backbone.stage_params)

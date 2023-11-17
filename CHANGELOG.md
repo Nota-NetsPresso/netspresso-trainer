@@ -13,6 +13,7 @@
 
 - Enable dataset augmentation customizing by `@illian01` in [PR 201](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/201)
 - Add postprocessor module by `@illian01` in [PR 223](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/223)
+- Equalize the model backbone configuration format by `@illian01` in [PR 228](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/228)
 
 ## Other Changes:
 
