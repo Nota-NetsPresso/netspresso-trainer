@@ -159,8 +159,6 @@ class MixNet(nn.Module):
         depth_multi = params.depth_multi
         self.dropout_rate = params.dropout_rate
 
-        settings = stage_params
-        
         out_channels = self._round_filters(stem_planes, width_multi)
         self.mod1 = ConvLayer(in_channels=3, out_channels=out_channels, kernel_size=3,
                               stride=2, groups=1, dilation=1, act_type="relu")
@@ -168,15 +166,16 @@ class MixNet(nn.Module):
         in_channels = out_channels
         drop_rate = self.dropout_rate
         stages: List[nn.Module] = []
-        for stg_idx, blocks in enumerate(stage_params):
+        for stg_idx, stage_info in enumerate(stage_params):
             
             stage: List[nn.Module] = []
-            for block in blocks:
+            for block in zip(stage_info.expand_ratio, stage_info.out_channels, stage_info.num_blocks,
+                             stage_info.kernel_sizes, stage_info.exp_kernel_sizes, stage_info.poi_kernel_sizes,
+                             stage_info.stride, stage_info.dilation, stage_info.act_type, stage_info.se_reduction_ratio):
                 t, c, n, k, ek, pk, s, d, a, se = block
                 out_channels = self._round_filters(c, width_multi)
                 repeats = self._round_repeats(n, depth_multi)
-                # Create blocks for module
-                blocks = []
+
                 for block_id in range(repeats):
                     stride = s if block_id == 0 else 1
                     dilate = d if stride == 1 else 1
