@@ -10,6 +10,7 @@ SUPPORTING_TASK_LIST = ['classification', 'segmentation']
 PATH_PYNETSPRESSO_DOCS = os.getenv(
     "PATH_PYNETSPRESSO_DOCS", default="docs/description_pynetspresso.md")
 
+
 def tab_pynetspresso(args):
 
     session = gr.State(NetsPressoSession())
@@ -17,7 +18,7 @@ def tab_pynetspresso(args):
     gr.Markdown(Path(PATH_PYNETSPRESSO_DOCS).read_text())
 
     with gr.Row(equal_height=True):
-        with gr.Column():
+        with gr.Column(scale=1):
             gr.Markdown(
                 "If you have not signed up at NetsPresso, please sign up frist: [netspresso.ai](https://netspresso.ai/signup)")
             email_input = gr.Textbox(
@@ -32,7 +33,7 @@ def tab_pynetspresso(args):
                     value="Login", variant='primary'
                 )
 
-        with gr.Column():
+        with gr.Column(scale=2):
             with gr.Group():
                 with gr.Row():
                     model_name = gr.Textbox(
@@ -40,7 +41,7 @@ def tab_pynetspresso(args):
                         info="Leave empty to use same as the model filename."
                     )
                     model_task = gr.Dropdown(label="Task", value='classification', multiselect=False,
-                                                choices=SUPPORTING_TASK_LIST)
+                                             choices=SUPPORTING_TASK_LIST)
                 model_path = gr.Textbox(label="Model path")
                 with gr.Row():
                     compress_input_batch_size = gr.Number(label="Batch size", value=1, minimum=1, maximum=1)
@@ -53,14 +54,18 @@ def tab_pynetspresso(args):
                 )
                 compressed_model_path = gr.Textbox(
                     label="Output model path",
-                    info="Leave empty to use the same model directory. The compressed model is named with the postfix (_compressed)."    
+                    info="Leave empty to use the same model directory. The compressed model is named with the postfix (_compressed)."
                 )
 
             compress_button = gr.Button(
                 value="Compress", variant='primary'
             )
-            result_compressed_model_path = gr.Textbox(label="Result")
-            
+            result_compressed_model_path = gr.Textbox(
+                label="Result",
+                show_copy_button=True,
+                interactive=False
+            )
+
     return session, email_input, password_input, model_name, model_task, model_path, \
         compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
         compression_ratio, compressed_model_path, result_compressed_model_path, \

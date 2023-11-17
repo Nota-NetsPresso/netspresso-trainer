@@ -8,6 +8,18 @@ from omegaconf import OmegaConf, DictConfig
 
 OUTPUT_DIR = Path("./outputs")
 
+COLUMN_NAME_AS = {
+    "is_fx_retrain": "🦴",
+    "id": "Name",
+    "model": "Model",
+    "task": "Task",
+    "data": "Dataset",
+    "performance": "Perf",
+    "primary_metric": "Metric",
+    "macs": "MACs",
+    "params": "# Params",
+}
+
 
 def _is_single_task_model(conf_model: DictConfig):
     conf_model_architecture_full = conf_model.architecture.full
@@ -98,19 +110,30 @@ def get_dataframe(experiment_dir=OUTPUT_DIR) -> pd.DataFrame:
 
 
 class ExperimentDataFrame:
-    column_vis_map = {
-        ""
-    }
+    column_name_as = COLUMN_NAME_AS
 
     def __init__(self, experiment_dir=OUTPUT_DIR) -> None:
         self.experiment_dir = experiment_dir
         self._df = get_dataframe(self.experiment_dir)
 
+    def _render(self, df: Optional[pd.DataFrame] = None):
+
+        if df is None:
+            df = self._df.copy()
+
+        df.is_fx_retrain.replace(to_replace={True: "⭕️", False: "-"}, inplace=True)
+        df.rename(columns=self.column_name_as, inplace=True)
+        return df
+
     @property
     def dataframe(self):
         return self._df
 
-    def filtered_with_headers(self, headers: List[str]) -> pd.DataFrame:
-        return self._df[headers]
+    @property
+    def dataframe_rendered(self):
+        # To force copying df, you don't have to put `self._df` itself as target df
+        return self._render()
 
-    # def _render(self,)
+    def filtered_with_headers(self, headers: List[str]) -> pd.DataFrame:
+        filtered_df = self._df[headers].copy()
+        return self._render(filtered_df)
