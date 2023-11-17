@@ -17,6 +17,16 @@ __version__netspresso = netspresso.__version__
 
 PATH_EXAMPLE_IMAGE = os.getenv("PATH_EXAMPLE_IMAGE", default="assets/kyunghwan_cat.jpg")
 
+custom_css = \
+"""
+/* Hide sort buttons at gr.DataFrame */
+.sort-button {
+    display: none !important;
+}
+"""
+
+def change_tab_to_pynetspresso():
+    return gr.Tabs.update(selected='pynetspresso')
 
 def parse_args():
 
@@ -41,9 +51,8 @@ def parse_args():
 
     return args
 
-
 def launch_gradio(args):
-    with gr.Blocks(theme='nota-ai/theme', title="NetsPresso Trainer") as demo:
+    with gr.Blocks(theme='nota-ai/theme', title="NetsPresso Trainer", css=custom_css) as demo:
         gr.Markdown("\n\n# <center>Welcome to NetsPresso Trainer!</center>\n\n")
         gr.Markdown(
             "<center>Package version: "
@@ -51,27 +60,36 @@ def launch_gradio(args):
             f"<code>netspresso=={__version__netspresso}</code></center>"
         )
 
-        with gr.Tab("Experiments"):
-            tab_experiments(args)
+        with gr.Tabs() as tabs:
+            with gr.TabItem("Experiments", id='experiments'):
+                experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor = tab_experiments(args)
 
-        with gr.Tab("Home"):
-            with gr.Tab("Train"):
-                gr.Markdown("\n\n### <center>TBD</center>\n\n")
+            with gr.TabItem("Home", id='home'):
+                with gr.TabItem("Train"):
+                    gr.Markdown("\n\n### <center>TBD</center>\n\n")
 
-            with gr.Tab("Augmentation"):
-                task_choices, phase_choices, model_choices, config_input, \
-                    transform_repr_output, test_image, augmented_images, transform_button, run_button = \
-                    tab_augmentation(args)
+                with gr.TabItem("Augmentation"):
+                    task_choices, phase_choices, model_choices, config_input, \
+                        transform_repr_output, test_image, augmented_images, transform_button, run_button = \
+                        tab_augmentation(args)
 
-            with gr.Tab("Scheduler"):
-                config_input, plot_output, run_button = tab_scheduler(args)
+                with gr.Tab("Scheduler"):
+                    config_input, plot_output, run_button = tab_scheduler(args)
 
-        with gr.Tab("PyNetsPresso"):
-            session, email_input, password_input, model_name, model_task, model_path, \
-                compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
-                compression_ratio, compressed_model_path, result_compressed_model_path, \
-                login_button, compress_button = \
-                tab_pynetspresso(args)
+            with gr.TabItem("PyNetsPresso", id='pynetspresso'):
+                session, email_input, password_input, model_name, model_task, model_path, \
+                    compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
+                    compression_ratio, compressed_model_path, result_compressed_model_path, \
+                    login_button, compress_button = \
+                    tab_pynetspresso(args)
+                    
+            experiment_button_compressor.click(
+                fn=experiment_df.find_compression_info_with_id,
+                inputs=[experiment_selected],
+                outputs=[model_name, model_task, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width]
+            ).success(
+                fn=change_tab_to_pynetspresso, inputs=None, outputs=[tabs]
+            )
 
     demo.queue()
 

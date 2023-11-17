@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import gradio as gr
+import pandas as pd
 from func.experiments import ExperimentDataFrame, COLUMN_NAME_AS
 
 
@@ -17,13 +18,18 @@ def tab_experiments(args):
     experiment_select_task_choices = sorted(list(set(experiment_df.default_no_render['task'])))
     experiment_select_data_choices = sorted(list(set(experiment_df.default_no_render['data'])))
     experiment_select_model_choices = sorted(list(set(experiment_df.default_no_render['model'])))
+    
+        
+    def id_from_dataframe_select(df: pd.DataFrame, evt: gr.SelectData):
+        return df.at[evt.index[0], COLUMN_NAME_AS["id"]]
 
     with gr.Row():
         with gr.Column():
             experiment_summary_plot = gr.ScatterPlot(
                 value=None,
-                x=COLUMN_NAME_AS["macs"],
-                y=COLUMN_NAME_AS["performance"]
+                x=COLUMN_NAME_AS['macs'],
+                y=COLUMN_NAME_AS['performance'],
+                tooltip=COLUMN_NAME_AS['id'],
             )
         with gr.Column():
             with gr.Row(equal_height=True):
@@ -65,10 +71,10 @@ def tab_experiments(args):
                 experiment_button_search = gr.Button(value="Search", variant='primary')
     with gr.Row(equal_height=True):
         with gr.Column(scale=4):
-            experiment_selected_experiment = gr.Textbox(label="Selected checkpoint")
+            experiment_selected = gr.Textbox(label="Selected checkpoint")
         with gr.Column(scale=1):
-            experiment_goto_launcher = gr.Button(value="Benchmark", variant='primary')
-            experiment_goto_compressor = gr.Button(value="Compress", variant='primary')
+            experiment_button_launcher = gr.Button(value="Benchmark")
+            experiment_button_compressor = gr.Button(value="Compress", variant='primary')
     with gr.Row(equal_height=True):
         experiment_table = gr.Dataframe(
             value=experiment_df.default,
@@ -92,5 +98,11 @@ def tab_experiments(args):
     experiment_table.change(
         lambda x: x, inputs=[experiment_table], outputs=[experiment_summary_plot]
     )
+    experiment_table.select(
+        fn=id_from_dataframe_select,
+        inputs=[experiment_table],
+        outputs=[experiment_selected],
+        show_progress="hidden"
+    )
 
-    return experiment_table
+    return experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor

@@ -178,3 +178,21 @@ class ExperimentDataFrame:
         filtered_df = self._df.query(query_str)
 
         return self._render(filtered_df)
+    
+    def find_compression_info_with_id(self, id: str):
+        filtered_df = self._raw_df.loc[self._raw_df['id'] == id]
+        
+        assert filtered_df.shape[0] == 1, f"No unique experiment found with the given id: {id}"
+        
+        model_name = filtered_df['id'].values[0]
+        model_task = filtered_df['task'].values[0]
+        model_path = filtered_df['checkpoint_path'].values[0]
+        
+        input_image_size: Tuple[int, int] = filtered_df['input_image_size'].values[0]
+        image_height, image_width = input_image_size
+        compress_input_batch_size = 1
+        compress_input_channels = 3
+        compress_input_height = image_height
+        compress_input_width = image_width
+        
+        return model_name, model_task, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width
