@@ -82,6 +82,7 @@ class MixDepthBlock(nn.Module):
         super(MixDepthBlock, self).__init__()
         self.dropout_rate = dropout_rate
         self.expand_ratio = expand_ratio
+        self.out_channels = out_planes
 
         self.groups = len(kernel_sizes)
         self.use_se = (reduction_ratio is not None) and (reduction_ratio > 1)
@@ -152,6 +153,8 @@ class MixNet(nn.Module):
         stage_params: Optional[List] = None,
     ):
         super(MixNet, self).__init__()
+        self.task = task.lower()
+        self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         stem_planes = params.stem_planes
         width_multi = params.width_multi
@@ -209,7 +212,8 @@ class MixNet(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d(1)
 
         self._feature_dim = self.last_channels
-        self.use_intermediate_features = False
+        self._intermediate_features_dim = [s[-1].out_channels for s in self.stages[:-1]]
+        self._intermediate_features_dim += [self.last_channels]
 
         self._initialize_weights()
 
