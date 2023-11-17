@@ -4,7 +4,7 @@ from pathlib import Path
 import gradio as gr
 
 PATH_SCHEDULER_DOCS = os.getenv(
-    "PATH_SCHEDULER_DOCS", default="docs/description_lr_scheduler.md")
+    "PATH_SCHEDULER_DOCS", default="docs/description_scheduler.md")
 PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
     "PATH_SCHEDULER_EXAMPLE_CONFIG", default="config/training_template_common.yaml")
 

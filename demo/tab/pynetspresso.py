@@ -1,16 +1,20 @@
 import os
+from pathlib import Path
+
 import gradio as gr
-from func.pynetspresso import NetsPressoSession, login_with_session, compress_with_session
+from func.pynetspresso import NetsPressoSession
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']
+
+PATH_PYNETSPRESSO_DOCS = os.getenv(
+    "PATH_PYNETSPRESSO_DOCS", default="docs/description_pynetspresso.md")
 
 def tab_pynetspresso(args):
 
     session = gr.State(NetsPressoSession())
 
-    gr.Markdown(
-        "\n\n### <center>NOTE: This feature needs an internet connection</center>\n\n")
+    gr.Markdown(Path(PATH_PYNETSPRESSO_DOCS).read_text())
 
     with gr.Row(equal_height=True):
         with gr.Column():
@@ -31,7 +35,10 @@ def tab_pynetspresso(args):
         with gr.Column():
             with gr.Group():
                 with gr.Row():
-                    model_name = gr.Textbox(label="Model name")
+                    model_name = gr.Textbox(
+                        label="Model name",
+                        info="Leave empty to use same as the model filename."
+                    )
                     model_task = gr.Dropdown(label="Task", value='classification', multiselect=False,
                                                 choices=SUPPORTING_TASK_LIST)
                 model_path = gr.Textbox(label="Model path")
@@ -44,7 +51,10 @@ def tab_pynetspresso(args):
                     minimum=0, maximum=1, value=0.5, step=0.1,
                     info="The removal ratio of the filters (e.g. 0.2 removes 20% of the filters in the model)"
                 )
-                compressed_model_path = gr.Textbox(label="Output model path")
+                compressed_model_path = gr.Textbox(
+                    label="Output model path",
+                    info="Leave empty to use the same model directory. The compressed model is named with the postfix (_compressed)."    
+                )
 
             compress_button = gr.Button(
                 value="Compress", variant='primary'

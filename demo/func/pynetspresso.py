@@ -40,7 +40,7 @@ class NetsPressoSession:
     def compress(self, model_name: str, task: str, model_path: Union[Path, str],
                  batch_size: int, channels: int, height: int, width: int,
                  compression_ratio: float,
-                 compressed_model_path: Optional[Union[Path, str]]) -> Path:
+                 compressed_model_path: Union[Path, str]) -> Path:
 
         if not self._is_verified:
             raise gr.Error(f"Please log in first at the console on the left side.")
@@ -51,6 +51,16 @@ class NetsPressoSession:
 
         if task not in self.task_dict:
             raise gr.Error(f"Selected task is not supported in web UI version.")
+        
+        model_path = Path(model_path)
+        if not model_path.exists():
+            raise gr.Error(f"Model path {str(model_path)} not found!")
+        
+        if compressed_model_path is None or compressed_model_path == "":
+            compressed_model_path = model_path.with_name(f"{model_path.stem}_compressed{model_path.suffix}")
+        
+        if model_name is None or model_name == "":
+            model_name = model_path.stem
 
         model = self.compressor.upload_model(
             model_name=model_name,
@@ -99,6 +109,7 @@ def compress_with_session(
             compression_ratio=compression_ratio,
             compressed_model_path=compressed_model_path
         )
+        gr.Info("Compress success!")
         return [session, output_path]
     except Exception as e:
         raise gr.Error(
