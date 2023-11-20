@@ -19,19 +19,15 @@ class GeneralizedRCNN(nn.Module):
             detections / masks from it.
     """
 
-    def __init__(self, neck:nn.Module, rpn: nn.Module, roi_heads: nn.Module, image_size: Tuple[int, int]) -> None:
+    def __init__(self, rpn: nn.Module, roi_heads: nn.Module, image_size: Tuple[int, int]) -> None:
         super().__init__()
         # _log_api_usage_once(self)
-        self.neck = neck
         self.rpn = rpn
         self.roi_heads = roi_heads
 
         self.image_size = image_size
 
     def forward(self, features: FXTensorListType) -> DetectionModelOutput:
-        if self.neck:
-            features = self.neck(features)
-
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = self.rpn(features, self.image_size)
         roi_features = self.roi_heads(features, rpn_features['boxes'], self.image_size)
