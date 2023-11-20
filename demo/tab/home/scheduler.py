@@ -14,7 +14,7 @@ PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
 def tab_scheduler(args):
     gr.Markdown(Path(PATH_SCHEDULER_DOCS).read_text())
     with gr.Row(equal_height=True):
-        with gr.Column():
+        with gr.Column(scale=1):
             with gr.Group():
                 config_input = gr.Code(label="Training configuration",
                                     value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
@@ -22,9 +22,9 @@ def tab_scheduler(args):
                 with gr.Row():
                     go_back_button = gr.Button(value="Back to Train", variant='secondary')
                     config_copy_button = gr.Button(value="Copy to Train", variant='secondary')
-        with gr.Column():
-            plot_output = gr.LinePlot()
             run_button = gr.Button(value="Run", variant='primary')
+        with gr.Column(scale=2):
+            plot_output = gr.LinePlot()
 
         run_button.click(get_lr_dataframe_from_config, inputs=config_input, outputs=plot_output)
 

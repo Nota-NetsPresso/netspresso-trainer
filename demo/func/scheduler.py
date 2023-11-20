@@ -39,6 +39,6 @@ def get_lr_dataframe_from_config(yaml_str: str):
             "lr": lr_list,
             "epochs": list(range(START_EPOCH_ZERO_OR_ONE, total_epochs + START_EPOCH_ZERO_OR_ONE))
         })
-        return gr.LinePlot.update(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
+        return gr.LinePlot(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
     except Exception as e:
         raise gr.Error(str(e))
