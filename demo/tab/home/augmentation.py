@@ -16,7 +16,7 @@ PATH_AUG_EXAMPLE_CONFIG = os.getenv(
     "PATH_AUG_EXAMPLE_CONFIG", default="config/augmentation_template_common.yaml")
 
 
-def tab_augmentation(args, tabs_home):
+def tab_augmentation(args):
     gr.Markdown(Path(PATH_AUG_DOCS).read_text())
     with gr.Row(equal_height=True):
         with gr.Column(scale=2):
@@ -29,9 +29,13 @@ def tab_augmentation(args, tabs_home):
         label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
     with gr.Row(equal_height=True):
         with gr.Column(scale=1):
-            config_input = gr.Code(label="Augmentation configuration",
-                                   value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
-                                   language='yaml', lines=30)
+            with gr.Group():
+                config_input = gr.Code(label="Augmentation configuration",
+                                    value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
+                                    language='yaml', lines=30)
+                with gr.Row():
+                    go_back_button = gr.Button(value="Back to Train", variant='secondary')
+                    config_copy_button = gr.Button(value="Copy to Train", variant='secondary')
         with gr.Column(scale=2):
             transform_repr_output = gr.Code(
                 label="Data transform", lines=10)
@@ -56,5 +60,4 @@ def tab_augmentation(args, tabs_home):
         outputs=augmented_images
     )
 
-    return task_choices, phase_choices, model_choices, config_input, transform_repr_output, test_image, augmented_images, \
-        transform_button, run_button
+    return config_input, config_copy_button, go_back_button

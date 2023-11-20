@@ -6,13 +6,9 @@ import netspresso
 import netspresso_trainer
 import gradio as gr
 
-from tab.dataset import tab_dataset
-from tab.augmentation import tab_augmentation
-from tab.scheduler import tab_scheduler
-from tab.model import tab_model
 from tab.experiments import tab_experiments
 from tab.pynetspresso import tab_pynetspresso
-from tab.train import tab_train
+from tab.home.main import tab_home
 
 __version__netspresso_trainer = netspresso_trainer.__version__
 __version__netspresso = netspresso.__version__
@@ -66,26 +62,7 @@ def launch_gradio(args):
         with gr.Tabs() as tabs:
 
             with gr.Tab("Home", id='home'):
-                with gr.Tabs() as tabs_home:
-                    with gr.Tab("Train", id='home-train'):
-                        gr.Markdown("\n\n### <center>TBD</center>\n\n")
-                        tab_train(args, tabs_home)
-                        
-                    with gr.Tab("Dataset", id='home-dataset'):
-                        gr.Markdown("\n\n### <center>TBD</center>\n\n")
-                        tab_dataset(args, tabs_home)
-
-                    with gr.Tab("Augmentation", id='home-augmentation'):
-                        task_choices, phase_choices, model_choices, config_input, \
-                            transform_repr_output, test_image, augmented_images, transform_button, run_button = \
-                            tab_augmentation(args, tabs_home)
-
-                    with gr.Tab("Scheduler", id='home-scheduler'):
-                        config_input, plot_output, run_button = tab_scheduler(args, tabs_home)
-                        
-                    with gr.Tab("Model", id='home-model'):
-                        gr.Markdown("\n\n### <center>TBD</center>\n\n")
-                        tab_model(args, tabs_home)
+                tab_home(args)
                     
             with gr.Tab("Experiments", id='experiments'):
                 experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor = tab_experiments(args)
