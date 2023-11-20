@@ -35,12 +35,13 @@ class TaskModel(nn.Module):
 
         head_module = MODEL_HEAD_DICT[self.task][head_name]
         if task == 'classification':
-            self.head = head_module(num_classes=num_classes, feature_dim=self.backbone.feature_dim)
+            self.head = head_module(num_classes=num_classes, feature_dim=self.backbone.feature_dim, conf_model_head=conf_model.architecture.head)
         elif task in ['segmentation', 'detection']:
             img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
             self.head = head_module(num_classes=num_classes,
                                     intermediate_features_dim=intermediate_features_dim,
-                                    label_size=img_size)
+                                    label_size=img_size,
+                                    conf_model_head=conf_model.architecture.head)
 
         if freeze_backbone:
             self._freeze_backbone()
