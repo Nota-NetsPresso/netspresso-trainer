@@ -3,7 +3,7 @@ from functools import partial
 from pathlib import Path
 
 import gradio as gr
-from netspresso_trainer.models import SUPPORTING_MODEL_LIST
+from func.main import CONFIG_MODEL_DICT, DEFAULT_MODEL_DICT, load_augmentation_config, load_model_config
 
 from tab.home.augmentation import tab_augmentation
 from tab.home.dataset import tab_dataset
@@ -13,6 +13,7 @@ from tab.home.train import tab_train
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']
+DEFAULT_TASK_NAME = 'classification'
 
 
 def change_tab_to(destination=None):
@@ -39,17 +40,19 @@ def change_tab_to_scheduler():
     return change_tab_to(destination='home-scheduler')
 
 
-def change_tab_to_model():
-    return change_tab_to(destination='home-model')
+def load_augmentation_config_both(task_choices):
+    augmentation_config = load_augmentation_config(task=task_choices)
+    return augmentation_config, augmentation_config
 
 
 def tab_home(args):
     with gr.Row(equal_height=True):
         task_choices = gr.Dropdown(
-            label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST
+            label="Task: ", value=DEFAULT_TASK_NAME, choices=SUPPORTING_TASK_LIST
         )
         model_choices = gr.Dropdown(
-            label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST
+            label="Model: ", value=DEFAULT_MODEL_DICT[DEFAULT_TASK_NAME],
+            choices=list(CONFIG_MODEL_DICT[DEFAULT_TASK_NAME].keys())
         )
 
     with gr.Tabs() as tabs_home:
@@ -71,9 +74,23 @@ def tab_home(args):
             scheduler_config_input, scheduler_config_copy_button, scheduler_go_back_button = \
                 tab_scheduler(args, task_choices, model_choices)
 
-        with gr.Tab("Model", id='home-model'):
-            gr.Markdown("\n\n### <center>TBD</center>\n\n")
-            tab_model(args, task_choices, model_choices)
+    task_choices.change(
+        fn=lambda t: model_choices.update(value=DEFAULT_MODEL_DICT[t],
+                                          choices=list(CONFIG_MODEL_DICT[t].keys())),
+        inputs=task_choices, outputs=[model_choices]
+    ).success(
+        fn=load_model_config,
+        inputs=[task_choices, model_choices],
+        outputs=[train_config_model]
+    ).success(
+        fn=load_augmentation_config_both,
+        inputs=task_choices,
+        outputs=[train_config_augmentation, augmentation_config_input]
+    )
+
+    model_choices.change(
+        fn=load_model_config, inputs=[task_choices, model_choices], outputs=[train_config_model]
+    )
 
     train_button_dataset.click(
         fn=change_tab_to_dataset, inputs=None, outputs=[tabs_home]
@@ -83,9 +100,6 @@ def tab_home(args):
     )
     train_button_scheduler.click(
         fn=change_tab_to_scheduler, inputs=None, outputs=[tabs_home]
-    )
-    train_button_model.click(
-        fn=change_tab_to_model, inputs=None, outputs=[tabs_home]
     )
 
     augmentation_config_copy_button.click(

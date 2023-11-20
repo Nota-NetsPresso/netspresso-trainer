@@ -19,7 +19,6 @@ def tab_experiments(args):
     experiment_select_data_choices = sorted(set(experiment_df.default_no_render['data']))
     experiment_select_model_choices = sorted(set(experiment_df.default_no_render['model']))
 
-
     def id_from_dataframe_select(df: pd.DataFrame, evt: gr.SelectData):
         return df.at[evt.index[0], COLUMN_NAME_AS["id"]]
 

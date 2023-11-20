@@ -6,8 +6,8 @@ from func.scheduler import get_lr_dataframe_from_config
 
 PATH_SCHEDULER_DOCS = os.getenv(
     "PATH_SCHEDULER_DOCS", default="docs/description_scheduler.md")
-PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
-    "PATH_SCHEDULER_EXAMPLE_CONFIG", default="config/training_template_common.yaml")
+PATH_CONFIG_ROOT = os.getenv("PATH_CONFIG_ROOT", default="config/")
+PATH_SCHEDULER_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "training/template/common.yaml"
 
 
 def tab_scheduler(args, task_choices, model_choices):
@@ -17,7 +17,7 @@ def tab_scheduler(args, task_choices, model_choices):
             with gr.Group():
                 config_input = gr.Code(label="Training configuration",
                                        value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
-                                       language='yaml', lines=30)
+                                       language='yaml', lines=15)
                 with gr.Row():
                     go_back_button = gr.Button(value="Back to Train", variant='secondary')
                     config_copy_button = gr.Button(value="Copy to Train", variant='secondary')

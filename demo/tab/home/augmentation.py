@@ -7,8 +7,8 @@ from func.augmentation import get_augmented_images, summary_transform
 
 PATH_AUG_DOCS = os.getenv(
     "PATH_AUG_DOCS", default="docs/description_augmentation.md")
-PATH_AUG_EXAMPLE_CONFIG = os.getenv(
-    "PATH_AUG_EXAMPLE_CONFIG", default="config/augmentation_template_common.yaml")
+PATH_CONFIG_ROOT = os.getenv("PATH_CONFIG_ROOT", default="config/")
+PATH_AUG_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "augmentation/classification.yaml"
 
 
 def tab_augmentation(args, task_choices, model_choices):
