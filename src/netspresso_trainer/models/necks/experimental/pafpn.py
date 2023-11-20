@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from ...op.custom import ConvLayer, CSPLayer
+from ...utils import BackboneOutput
 
 
 class PAFPN(nn.Module):
@@ -85,6 +86,8 @@ class PAFPN(nn.Module):
             act_type=act_type,
         )
 
+        self._intermediate_features_dim = in_channels
+
     def forward(self, inputs):
         """
         Args:
@@ -115,7 +118,11 @@ class PAFPN(nn.Module):
         pan_out0 = self.C3_n4(p_out0)  # 1024->1024/32
 
         outputs = (pan_out2, pan_out1, pan_out0)
-        return outputs
+        return BackboneOutput(intermediate_features=outputs)
+    
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
 
 def pafpn(intermediate_features_dim, **kwargs):
     configuration = {
