@@ -44,11 +44,11 @@ class TwoStageDetectionPipeline(BasePipeline):
 
         # forward to rpn
         backbone = self.model.backbone
+        neck = self.model.neck
         head = self.model.head
 
         features = backbone(images)['intermediate_features']
-        if head.neck:
-            features = head.neck(features)
+        features = neck(features)['intermediate_features']
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = head.rpn(features, head.image_size)
