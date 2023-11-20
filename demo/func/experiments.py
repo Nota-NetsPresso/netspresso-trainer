@@ -1,10 +1,10 @@
-from pathlib import Path
-from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
-import torch
 import pandas as pd
-from omegaconf import OmegaConf, DictConfig
+import torch
+from omegaconf import DictConfig, OmegaConf
 
 OUTPUT_DIR = Path("./outputs")
 
@@ -60,7 +60,7 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
     experiment_dir = Path(experiment_dir)
     assert experiment_dir.exists(), f"Experiment root directory {str(experiment_dir)} does not exist!"
 
-    experiment_dir_list_candidate = [run_dir for run_dir in experiment_dir.glob("**/version_*")]
+    experiment_dir_list_candidate = list(experiment_dir.glob("**/version_*"))
     experiment_dir_list = [run_dir for run_dir in experiment_dir_list_candidate
                            if (run_dir / "training_summary.ckpt").exists()]
 
@@ -168,7 +168,7 @@ class ExperimentDataFrame:
             queries.append(f'`params` <= {params * (10 ** 6)}')
 
         if ignore_compressed_model:
-            queries.append(f'`is_fx_retrain` == False')
+            queries.append('`is_fx_retrain` == False')
 
         if len(queries) == 0:
             return self.default
@@ -178,21 +178,21 @@ class ExperimentDataFrame:
         filtered_df = self._df.query(query_str)
 
         return self._render(filtered_df)
-    
+
     def find_compression_info_with_id(self, id: str):
         filtered_df = self._raw_df.loc[self._raw_df['id'] == id]
-        
+
         assert filtered_df.shape[0] == 1, f"No unique experiment found with the given id: {id}"
-        
+
         model_name = filtered_df['id'].values[0]
         model_task = filtered_df['task'].values[0]
         model_path = filtered_df['checkpoint_path'].values[0]
-        
+
         input_image_size: Tuple[int, int] = filtered_df['input_image_size'].values[0]
         image_height, image_width = input_image_size
         compress_input_batch_size = 1
         compress_input_channels = 3
         compress_input_height = image_height
         compress_input_width = image_width
-        
+
         return model_name, model_task, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width

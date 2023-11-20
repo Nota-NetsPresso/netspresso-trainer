@@ -3,7 +3,7 @@ from pathlib import Path
 
 import gradio as gr
 import pandas as pd
-from func.experiments import ExperimentDataFrame, COLUMN_NAME_AS
+from func.experiments import COLUMN_NAME_AS, ExperimentDataFrame
 
 
 def tab_experiments(args):
@@ -15,11 +15,11 @@ def tab_experiments(args):
         experiment_dir="./outputs"
     )
 
-    experiment_select_task_choices = sorted(list(set(experiment_df.default_no_render['task'])))
-    experiment_select_data_choices = sorted(list(set(experiment_df.default_no_render['data'])))
-    experiment_select_model_choices = sorted(list(set(experiment_df.default_no_render['model'])))
-    
-        
+    experiment_select_task_choices = sorted(set(experiment_df.default_no_render['task']))
+    experiment_select_data_choices = sorted(set(experiment_df.default_no_render['data']))
+    experiment_select_model_choices = sorted(set(experiment_df.default_no_render['model']))
+
+
     def id_from_dataframe_select(df: pd.DataFrame, evt: gr.SelectData):
         return df.at[evt.index[0], COLUMN_NAME_AS["id"]]
 
@@ -32,33 +32,31 @@ def tab_experiments(args):
                 tooltip=COLUMN_NAME_AS['id'],
             )
         with gr.Column():
-            with gr.Row(equal_height=True):
-                with gr.Column(scale=4):
-                    with gr.Group():
-                        with gr.Row():
-                            experiment_select_task = gr.Dropdown(
-                                label="Task",
-                                choices=experiment_select_task_choices,
-                            )
-                            experiment_select_data = gr.Dropdown(
-                                label="Dataset",
-                                choices=experiment_select_data_choices,
-                            )
-                            experiment_select_model = gr.Dropdown(
-                                label="Model",
-                                choices=experiment_select_model_choices,
-                            )
-                        experiment_threshold_macs = gr.Slider(
-                            label="MACs (G, smaller than or equal to)",
-                            minimum=0, maximum=10, step=0.1, value=-1
-                        )
-                        experiment_threshold_params = gr.Slider(
-                            label="# Params (M, smaller than or equal to)",
-                            minimum=0, maximum=1000, step=1, value=-1
-                        )
-                        experiment_select_compressed_ignore = gr.Checkbox(
-                            value=False, label="Ignore compressed models", interactive=True
-                        )
+            with gr.Row(equal_height=True), gr.Column(scale=4), gr.Group():
+                with gr.Row():
+                    experiment_select_task = gr.Dropdown(
+                        label="Task",
+                        choices=experiment_select_task_choices,
+                    )
+                    experiment_select_data = gr.Dropdown(
+                        label="Dataset",
+                        choices=experiment_select_data_choices,
+                    )
+                    experiment_select_model = gr.Dropdown(
+                        label="Model",
+                        choices=experiment_select_model_choices,
+                    )
+                experiment_threshold_macs = gr.Slider(
+                    label="MACs (G, smaller than or equal to)",
+                    minimum=0, maximum=10, step=0.1, value=-1
+                )
+                experiment_threshold_params = gr.Slider(
+                    label="# Params (M, smaller than or equal to)",
+                    minimum=0, maximum=1000, step=1, value=-1
+                )
+                experiment_select_compressed_ignore = gr.Checkbox(
+                    value=False, label="Ignore compressed models", interactive=True
+                )
             with gr.Row():
                 gr.ClearButton([
                     experiment_select_task,

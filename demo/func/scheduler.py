@@ -1,14 +1,13 @@
 import os
 from typing import List
 
-import torch
 import gradio as gr
 import pandas as pd
-from omegaconf import OmegaConf
-
+import torch
 from netspresso_trainer.loggers import START_EPOCH_ZERO_OR_ONE
 from netspresso_trainer.optimizers import build_optimizer
 from netspresso_trainer.schedulers import build_scheduler
+from omegaconf import OmegaConf
 
 
 def _get_lr_list(
@@ -41,4 +40,4 @@ def get_lr_dataframe_from_config(yaml_str: str):
         })
         return gr.LinePlot(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
     except Exception as e:
-        raise gr.Error(str(e))
+        raise gr.Error(str(e)) from e

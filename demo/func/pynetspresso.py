@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import List, Dict, Union, Optional, Tuple, TypedDict
+from typing import Dict, List, Optional, Tuple, TypedDict, Union
 
 import gradio as gr
-
 from netspresso.client import SessionClient
-from netspresso.compressor import ModelCompressor, Task, Framework
+from netspresso.compressor import Framework, ModelCompressor, Task
 
 
 class InputShapes(TypedDict):
@@ -42,14 +41,14 @@ class NetsPressoSession:
                  compressed_model_path: Union[Path, str]) -> Path:
 
         if not self._is_verified:
-            raise gr.Error(f"Please log in first at the console on the left side.")
+            raise gr.Error("Please log in first at the console on the left side.")
 
         if self.compressor is None:
             self._is_verified = False
-            raise gr.Error(f"The session is expired! Please log in again.")
+            raise gr.Error("The session is expired! Please log in again.")
 
         if task not in self.task_dict:
-            raise gr.Error(f"Selected task is not supported in web UI version.")
+            raise gr.Error("Selected task is not supported in web UI version.")
 
         model_path = Path(model_path)
         if not model_path.exists():
@@ -91,7 +90,7 @@ def login_with_session(session: NetsPressoSession, email: str, password: str) ->
     except Exception as e:
         raise gr.Error(
             f"We're sorry, but login failed with an error: {str(e)}"
-        )
+        ) from e
 
 
 def compress_with_session(
@@ -114,4 +113,4 @@ def compress_with_session(
         output_path = "Error!"
         raise gr.Error(
             f"Error while compressing the model with NetsPresso: {str(e)}"
-        )
+        ) from e

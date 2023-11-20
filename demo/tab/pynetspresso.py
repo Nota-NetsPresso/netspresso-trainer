@@ -2,8 +2,7 @@ import os
 from pathlib import Path
 
 import gradio as gr
-from func.pynetspresso import NetsPressoSession, login_with_session, compress_with_session
-
+from func.pynetspresso import NetsPressoSession, compress_with_session, login_with_session
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']

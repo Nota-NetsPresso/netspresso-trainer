@@ -2,7 +2,6 @@ import os
 from pathlib import Path
 
 import gradio as gr
-
 from func.scheduler import get_lr_dataframe_from_config
 
 PATH_SCHEDULER_DOCS = os.getenv(

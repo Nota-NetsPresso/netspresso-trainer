@@ -1,7 +1,6 @@
 import gradio as gr
-from omegaconf import OmegaConf
-
 from netspresso_trainer.dataloaders import CREATE_TRANSFORM
+from omegaconf import OmegaConf
 
 NUM_AUGMENTATION_SAMPLES = 5
 
@@ -14,7 +13,7 @@ def summary_transform(phase, task, model_name, yaml_str):
         transform_composed = transform(conf.augmentation)
         return str(transform_composed)
     except Exception as e:
-        raise gr.Error(str(e))
+        raise gr.Error(str(e)) from e
 
 
 def get_augmented_images(phase, task, model_name, yaml_str, test_image,
@@ -30,4 +29,4 @@ def get_augmented_images(phase, task, model_name, yaml_str, test_image,
                               for _ in range(num_samples)]
         return transformed_images
     except Exception as e:
-        raise gr.Error(str(e))
+        raise gr.Error(str(e)) from e

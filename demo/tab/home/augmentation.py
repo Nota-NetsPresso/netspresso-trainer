@@ -3,9 +3,8 @@ import os
 from pathlib import Path
 
 import gradio as gr
-from netspresso_trainer.models import SUPPORTING_MODEL_LIST, SUPPORTING_TASK_LIST
-
-from func.augmentation import summary_transform, get_augmented_images
+from func.augmentation import get_augmented_images, summary_transform
+from netspresso_trainer.models import SUPPORTING_MODEL_LIST
 
 # TODO: directly import from netspresso_trainer.models
 SUPPORTING_TASK_LIST = ['classification', 'segmentation']
@@ -28,14 +27,13 @@ def tab_augmentation(args):
     model_choices = gr.Radio(
         label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
     with gr.Row(equal_height=True):
-        with gr.Column(scale=1):
-            with gr.Group():
-                config_input = gr.Code(label="Augmentation configuration",
-                                    value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
-                                    language='yaml', lines=30)
-                with gr.Row():
-                    go_back_button = gr.Button(value="Back to Train", variant='secondary')
-                    config_copy_button = gr.Button(value="Copy to Train", variant='secondary')
+        with gr.Column(scale=1), gr.Group():
+            config_input = gr.Code(label="Augmentation configuration",
+                                   value=Path(PATH_AUG_EXAMPLE_CONFIG).read_text(),
+                                   language='yaml', lines=30)
+            with gr.Row():
+                go_back_button = gr.Button(value="Back to Train", variant='secondary')
+                config_copy_button = gr.Button(value="Copy to Train", variant='secondary')
         with gr.Column(scale=2):
             transform_repr_output = gr.Code(
                 label="Data transform", lines=10)

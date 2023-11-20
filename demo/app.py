@@ -2,13 +2,12 @@ import argparse
 import os
 from pathlib import Path
 
+import gradio as gr
 import netspresso
 import netspresso_trainer
-import gradio as gr
-
 from tab.experiments import tab_experiments
-from tab.pynetspresso import tab_pynetspresso
 from tab.home.main import tab_home
+from tab.pynetspresso import tab_pynetspresso
 
 __version__netspresso_trainer = netspresso_trainer.__version__
 __version__netspresso = netspresso.__version__
@@ -17,15 +16,17 @@ __version__netspresso = netspresso.__version__
 PATH_EXAMPLE_IMAGE = os.getenv("PATH_EXAMPLE_IMAGE", default="assets/kyunghwan_cat.jpg")
 
 custom_css = \
-"""
+    """
 /* Hide sort buttons at gr.DataFrame */
 .sort-button {
     display: none !important;
 }
 """
 
+
 def change_tab_to_pynetspresso():
     return gr.Tabs.update(selected='pynetspresso')
+
 
 def parse_args():
 
@@ -50,6 +51,7 @@ def parse_args():
 
     return args
 
+
 def launch_gradio(args):
     with gr.Blocks(theme='nota-ai/theme', title="NetsPresso Trainer", css=custom_css) as demo:
         gr.Markdown("\n\n# <center>Welcome to NetsPresso Trainer!</center>\n\n")
@@ -63,9 +65,10 @@ def launch_gradio(args):
 
             with gr.Tab("Home", id='home'):
                 tab_home(args)
-                    
+
             with gr.Tab("Experiments", id='experiments'):
-                experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor = tab_experiments(args)
+                experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor = tab_experiments(
+                    args)
 
             with gr.Tab("PyNetsPresso", id='pynetspresso'):
                 session, email_input, password_input, model_name, model_task, model_path, \
@@ -73,14 +76,12 @@ def launch_gradio(args):
                     compression_ratio, compressed_model_path, result_compressed_model_path, \
                     login_button, compress_button = \
                     tab_pynetspresso(args)
-                    
+
             experiment_button_compressor.click(
-                fn=experiment_df.find_compression_info_with_id,
-                inputs=[experiment_selected],
-                outputs=[model_name, model_task, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width]
-            ).success(
-                fn=change_tab_to_pynetspresso, inputs=None, outputs=[tabs]
-            )
+                fn=experiment_df.find_compression_info_with_id, inputs=[experiment_selected],
+                outputs=[model_name, model_task, model_path, compress_input_batch_size, compress_input_channels,
+                         compress_input_height, compress_input_width]).success(
+                fn=change_tab_to_pynetspresso, inputs=None, outputs=[tabs])
 
     demo.queue()
 
