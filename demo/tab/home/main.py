@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 
 import gradio as gr
+from netspresso_trainer.models import SUPPORTING_MODEL_LIST
 
 from tab.home.augmentation import tab_augmentation
 from tab.home.dataset import tab_dataset
@@ -10,45 +11,69 @@ from tab.home.model import tab_model
 from tab.home.scheduler import tab_scheduler
 from tab.home.train import tab_train
 
+# TODO: directly import from netspresso_trainer.models
+SUPPORTING_TASK_LIST = ['classification', 'segmentation']
+
 
 def change_tab_to(destination=None):
     return gr.Tabs.update(selected=destination)
 
+
 def copy_config(input_config):
     return input_config
 
+
 def change_tab_to_train():
     return change_tab_to(destination='home-train')
+
+
 def change_tab_to_dataset():
     return change_tab_to(destination='home-dataset')
+
+
 def change_tab_to_augmentation():
     return change_tab_to(destination='home-augmentation')
+
+
 def change_tab_to_scheduler():
     return change_tab_to(destination='home-scheduler')
+
+
 def change_tab_to_model():
     return change_tab_to(destination='home-model')
 
+
 def tab_home(args):
+    with gr.Row(equal_height=True):
+        task_choices = gr.Dropdown(
+            label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST
+        )
+        model_choices = gr.Dropdown(
+            label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST
+        )
+
     with gr.Tabs() as tabs_home:
         with gr.Tab("Train", id='home-train'):
             gr.Markdown("\n\n### <center>TBD</center>\n\n")
             train_config_dataset, train_button_dataset, train_config_augmentation, train_button_augmentation, \
                 train_config_scheduler, train_button_scheduler, train_config_model, train_button_model = \
-                tab_train(args)
+                tab_train(args, task_choices, model_choices)
 
         with gr.Tab("Dataset", id='home-dataset'):
             gr.Markdown("\n\n### <center>TBD</center>\n\n")
-            tab_dataset(args)
+            tab_dataset(args, task_choices, model_choices)
 
         with gr.Tab("Augmentation", id='home-augmentation'):
-            augmentation_config_input, augmentation_config_copy_button, augmentation_go_back_button = tab_augmentation(args)
+            augmentation_config_input, augmentation_config_copy_button, augmentation_go_back_button = \
+                tab_augmentation(args, task_choices, model_choices)
 
         with gr.Tab("Scheduler", id='home-scheduler'):
-            scheduler_config_input, scheduler_config_copy_button, scheduler_go_back_button = tab_scheduler(args)
+            scheduler_config_input, scheduler_config_copy_button, scheduler_go_back_button = \
+                tab_scheduler(args, task_choices, model_choices)
 
         with gr.Tab("Model", id='home-model'):
             gr.Markdown("\n\n### <center>TBD</center>\n\n")
-            tab_model(args)
+            tab_model(args, task_choices, model_choices)
 
     train_button_dataset.click(
         fn=change_tab_to_dataset, inputs=None, outputs=[tabs_home]
@@ -63,7 +88,6 @@ def tab_home(args):
         fn=change_tab_to_model, inputs=None, outputs=[tabs_home]
     )
 
-
     augmentation_config_copy_button.click(
         fn=copy_config, inputs=augmentation_config_input, outputs=train_config_augmentation
     ).success(
@@ -76,13 +100,11 @@ def tab_home(args):
         fn=lambda: gr.Info("[Scheduler] Setting copied to Train tab!"), inputs=None, outputs=None
     )
 
-
     augmentation_go_back_button.click(
         fn=change_tab_to_train, inputs=None, outputs=[tabs_home]
     )
     scheduler_go_back_button.click(
         fn=change_tab_to_train, inputs=None, outputs=[tabs_home]
     )
-
 
     return

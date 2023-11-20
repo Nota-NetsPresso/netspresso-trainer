@@ -10,14 +10,14 @@ PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
     "PATH_SCHEDULER_EXAMPLE_CONFIG", default="config/training_template_common.yaml")
 
 
-def tab_scheduler(args):
+def tab_scheduler(args, task_choices, model_choices):
     gr.Markdown(Path(PATH_SCHEDULER_DOCS).read_text())
     with gr.Row(equal_height=True):
         with gr.Column(scale=1):
             with gr.Group():
                 config_input = gr.Code(label="Training configuration",
-                                    value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
-                                    language='yaml', lines=30)
+                                       value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
+                                       language='yaml', lines=30)
                 with gr.Row():
                     go_back_button = gr.Button(value="Back to Train", variant='secondary')
                     config_copy_button = gr.Button(value="Copy to Train", variant='secondary')

@@ -14,9 +14,7 @@ def change_tab_to(destination=None):
     return gr.Tabs.update(selected=destination)
 
 
-
-
-def tab_train(args):
+def tab_train(args, task_choices, model_choices):
     with gr.Row(equal_height=True):
         with gr.Column(scale=1):
             train_config_dataset = gr.Code(label="Dataset configuration",
@@ -43,5 +41,3 @@ def tab_train(args):
 
     return train_config_dataset, train_button_dataset, train_config_augmentation, train_button_augmentation, \
         train_config_scheduler, train_button_scheduler, train_config_model, train_button_model
-
-

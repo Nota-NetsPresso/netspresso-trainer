@@ -2,7 +2,7 @@ import gradio as gr
 from netspresso_trainer.dataloaders import CREATE_TRANSFORM
 from omegaconf import OmegaConf
 
-NUM_AUGMENTATION_SAMPLES = 5
+NUM_AUGMENTATION_SAMPLES = 8
 
 
 def summary_transform(phase, task, model_name, yaml_str):
