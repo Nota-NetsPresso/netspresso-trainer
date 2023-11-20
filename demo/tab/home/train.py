@@ -16,6 +16,14 @@ def change_tab_to(destination=None):
 
 def tab_train(args, task_choices, model_choices):
     with gr.Row(equal_height=True):
+
+        with gr.Column(scale=2), gr.Group():
+            train_config_model = gr.Code(label="Model configuration",
+                                         value=load_model_config(task=task_choices.value, model=model_choices.value),
+                                         language='yaml', lines=42,
+                                         interactive=True)
+            train_button_model = gr.Button(value="Edit in Model", variant='secondary', visible=False)
+
         with gr.Column(scale=2), gr.Group():
             train_config_dataset = gr.Code(label="Dataset configuration",
                                            value="TBD",
@@ -33,13 +41,6 @@ def tab_train(args, task_choices, model_choices):
                                                  value=Path(PATH_SCHEDULER_EXAMPLE_CONFIG).read_text(),
                                                  language='yaml', lines=15)
                 train_button_scheduler = gr.Button(value="Edit in Scheduler", variant='secondary')
-
-        with gr.Column(scale=2), gr.Group():
-            train_config_model = gr.Code(label="Model configuration",
-                                         value=load_model_config(task=task_choices.value, model=model_choices.value),
-                                         language='yaml', lines=42,
-                                         interactive=True)
-            train_button_model = gr.Button(value="Edit in Model", variant='secondary', visible=False)
 
     return train_config_dataset, train_button_dataset, train_config_augmentation, train_button_augmentation, \
         train_config_scheduler, train_button_scheduler, train_config_model, train_button_model
