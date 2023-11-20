@@ -91,6 +91,8 @@ class FPN(nn.Module):
                 extra_fpn_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
                 self.fpn_convs.append(extra_fpn_conv)
 
+        self._intermediate_features_dim = [out_channels for _ in range(num_outs)]
+
     def forward(self, inputs):
         """Forward function."""
         assert len(inputs) == len(self.in_channels)
@@ -144,6 +146,10 @@ class FPN(nn.Module):
                     else:
                         outs.append(self.fpn_convs[i](outs[-1]))
         return BackboneOutput(intermediate_features=outs)
+    
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
 
 
 def fpn(intermediate_features_dim, **kwargs):
