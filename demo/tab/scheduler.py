@@ -11,7 +11,7 @@ PATH_SCHEDULER_EXAMPLE_CONFIG = os.getenv(
     "PATH_SCHEDULER_EXAMPLE_CONFIG", default="config/training_template_common.yaml")
 
 
-def tab_scheduler(args):
+def tab_scheduler(args, tabs_home):
     gr.Markdown(Path(PATH_SCHEDULER_DOCS).read_text())
     with gr.Row(equal_height=True):
         with gr.Column():

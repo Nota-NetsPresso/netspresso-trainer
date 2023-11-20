@@ -16,7 +16,7 @@ PATH_AUG_EXAMPLE_CONFIG = os.getenv(
     "PATH_AUG_EXAMPLE_CONFIG", default="config/augmentation_template_common.yaml")
 
 
-def tab_augmentation(args):
+def tab_augmentation(args, tabs_home):
     gr.Markdown(Path(PATH_AUG_DOCS).read_text())
     with gr.Row(equal_height=True):
         with gr.Column(scale=2):
