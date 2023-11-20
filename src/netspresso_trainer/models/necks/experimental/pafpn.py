@@ -1,8 +1,7 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
-from ....op.custom import ConvLayer, CSPLayer
+from ...op.custom import ConvLayer, CSPLayer
 
 
 class PAFPN(nn.Module):
@@ -117,3 +116,10 @@ class PAFPN(nn.Module):
 
         outputs = (pan_out2, pan_out1, pan_out0)
         return outputs
+
+def pafpn(intermediate_features_dim, **kwargs):
+    configuration = {
+        'act_type': 'silu',
+    }
+
+    return PAFPN(in_channels=intermediate_features_dim, **configuration)
