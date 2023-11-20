@@ -24,6 +24,7 @@ __all__ = [
 class ArchitectureConfig:
     full: Optional[Dict[str, Any]] = None
     backbone: Optional[Dict[str, Any]] = None
+    neck: Optional[Dict[str, Any]] = None
     head: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
@@ -327,6 +328,7 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
     task: str = "detection"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
+        neck={"name": "fpn"},
         head={"name": "faster_rcnn"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
