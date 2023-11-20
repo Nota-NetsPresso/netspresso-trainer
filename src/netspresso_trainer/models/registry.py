@@ -3,7 +3,7 @@ from typing import Callable, Dict, List, Type
 
 import torch.nn as nn
 
-from .backbones import cspdarknet, efficientformer, mobilenetv3_small, mobilevit, resnet50, segformer, vit
+from .backbones import cspdarknet, efficientformer, mixnet, mobilenetv3_small, mobilevit, resnet50, segformer, vit
 from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import faster_rcnn, yolox_head
@@ -16,7 +16,8 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'mobilevit': mobilevit,
     'vit': vit,
     'efficientformer': efficientformer,
-    'cspdarknet': cspdarknet
+    'cspdarknet': cspdarknet,
+    'mixnet': mixnet,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
