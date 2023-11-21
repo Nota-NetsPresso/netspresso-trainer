@@ -81,7 +81,7 @@ class SegmentationModel(TaskModel):
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
-        if self.neck:
+        if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: ModelOutput = self.head(features['intermediate_features'])
         return out
@@ -94,7 +94,7 @@ class DetectionModel(TaskModel):
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
-        if self.neck:
+        if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out
