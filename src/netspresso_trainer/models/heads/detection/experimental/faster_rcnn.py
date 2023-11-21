@@ -13,7 +13,7 @@ class FasterRCNN(GeneralizedRCNN):
     def __init__(
         self,
         num_classes: int,
-        intermediate_features_dim: List,
+        intermediate_features_dim: List[int],
         params: DictConfig,
     ):
         # Anchor parameters

@@ -15,7 +15,7 @@ class YOLOXHead(nn.Module):
     def __init__(
         self,
         num_classes: int,
-        intermediate_features_dim: List,
+        intermediate_features_dim: List[int],
         params: DictConfig,
     ):
         super().__init__()
