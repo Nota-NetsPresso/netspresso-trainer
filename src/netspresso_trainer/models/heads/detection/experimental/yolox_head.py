@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
+from typing import List
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -12,16 +14,12 @@ from ....utils import ModelOutput
 class YOLOXHead(nn.Module):
     def __init__(
         self,
-        num_classes,
-        intermediate_features_dim,
-        act_type="silu",
+        num_classes: int,
+        intermediate_features_dim: List,
+        params: DictConfig,
     ):
-        """
-        Args:
-            act (str): activation type of conv. Defalut value: "silu".
-            depthwise (bool): whether apply depthwise conv in conv branch. Defalut value: False.
-        """
         super().__init__()
+        act_type = params.act_type
 
         self.num_classes = num_classes
 
@@ -134,8 +132,7 @@ class YOLOXHead(nn.Module):
         return ModelOutput(pred=outputs)
 
 
-def yolox_head(num_classes, intermediate_features_dim, **kwargs):
-    configuration = {
-        'act_type': 'silu',
-    }
-    return YOLOXHead(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim, **configuration)
+def yolox_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> YOLOXHead:
+    return YOLOXHead(num_classes=num_classes,
+                     intermediate_features_dim=intermediate_features_dim,
+                     params=conf_model_head.params)
