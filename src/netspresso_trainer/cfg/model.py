@@ -307,7 +307,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
 
@@ -345,7 +345,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
 
@@ -369,7 +369,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
 
@@ -393,7 +393,7 @@ class ClassificationResNetModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
 
@@ -417,7 +417,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
 
@@ -441,6 +441,6 @@ class ClassificationViTModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
     ])
 
