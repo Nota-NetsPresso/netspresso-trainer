@@ -33,6 +33,9 @@ model:
           replace_stride_with_dilation: False
     head:
       name: fc
+      params:
+        hidden_size: 1024
+        hidden_layers: 0
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1

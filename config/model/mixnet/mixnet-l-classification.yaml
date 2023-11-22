@@ -60,6 +60,9 @@ model:
           se_reduction_ratio: [2, 2]
     head:
       name: fc
+      params:
+        hidden_size: 1024
+        hidden_layers: 0
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1

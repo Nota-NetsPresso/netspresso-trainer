@@ -11,12 +11,14 @@ model:
       params:
         dep_mul: 0.33
         wid_mul: 0.5
-        act_type: "silu"
+        act_type: &act_type "silu"
       stage_params: ~
     neck:
       name: pafpn
     head:
       name: yolox_head
+      params:
+        act_type: *act_type
   losses:
     - criterion: yolox_loss
       weight: ~
