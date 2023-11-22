@@ -5,6 +5,7 @@
 - Add a gpu option in `train_with_config` (only single-GPU supported) by `@deepkyu` in [PR 219](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/219)
 - Support augmentation for classification task: cutmix, mixup by `@illian01` in [PR 221](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/221)
 - Add model: MixNet by `@illian01` in [PR 229](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/229)
+- Construct head by config file by `@illian01` in [PR 237](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/237)
 
 ## Bug Fixes:
 
