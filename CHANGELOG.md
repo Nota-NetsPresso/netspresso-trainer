@@ -10,6 +10,7 @@
 
 - Fix PIDNet model dataclass task field by `@illian01` in [PR 220](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/220)
 - Fix default criterion value of classification `@illian01` in [PR 238](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/238)
+- Fix model access of 2-stage detection pipeline to compat with distributed environment by `@illian` in [PR 239](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/239)
 
 ## Breaking Changes:
 
