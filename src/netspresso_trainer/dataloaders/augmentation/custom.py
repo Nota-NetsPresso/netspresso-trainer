@@ -1,11 +1,13 @@
 import math
 import random
 from collections.abc import Sequence
-from typing import Dict, Optional
+from typing import Dict, Optional, List, Tuple
 
 import numpy as np
+from omegaconf import ListConfig
 import PIL.Image as Image
 import torch
+from torch import Tensor
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from torch.nn import functional as F_torch
@@ -349,6 +351,57 @@ class RandomResizedCrop(T.RandomResizedCrop):
         format_string += ', ratio={0}'.format(tuple(round(r, 4) for r in self.ratio))
         format_string += ', interpolation={0})'.format(interpolate_str)
         return format_string
+
+
+class RandomErasing(T.RandomErasing):
+
+    def __init__(self, p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False):
+        if isinstance(scale, ListConfig):
+            scale = tuple(scale)
+        if isinstance(ratio, ListConfig):
+            ratio = tuple(ratio)
+        if isinstance(value, ListConfig):
+            value = tuple(value)
+        super().__init__(p, scale, ratio, value, inplace)
+
+    @staticmethod
+    def get_params(
+        img, scale: Tuple[float, float], ratio: Tuple[float, float], value: Optional[int] = None
+    ):
+        img_w, img_h = img.size
+        
+        area = img_h * img_w
+
+        log_ratio = torch.log(torch.tensor(ratio))
+        for _ in range(10):
+            erase_area = area * torch.empty(1).uniform_(scale[0], scale[1]).item()
+            aspect_ratio = torch.exp(torch.empty(1).uniform_(log_ratio[0], log_ratio[1])).item()
+
+            h = int(round(math.sqrt(erase_area * aspect_ratio)))
+            w = int(round(math.sqrt(erase_area / aspect_ratio)))
+            if not (h < img_h and w < img_w):
+                continue
+
+            if value is None:
+                v = np.random.randint(255, size=(h, w)).astype('uint8')
+                v = Image.fromarray(v).convert(img.mode)
+            else:
+                v = Image.new(img.mode, (w, h), value)
+
+            i = torch.randint(0, img_h - h + 1, size=(1,)).item()
+            j = torch.randint(0, img_w - w + 1, size=(1,)).item()
+            return i, j, v
+
+        # Return original image
+        return 0, 0, img
+
+    def forward(self, image, mask=None, bbox=None):
+        if torch.rand(1) < self.p:
+            x, y, v = self.get_params(image, scale=self.scale, ratio=self.ratio, value=self.value)
+            image.paste(v, (y, x))
+            # TODO: Object-aware
+            return image, mask, bbox
+        return image, mask, bbox
 
 
 class RandomMixup:

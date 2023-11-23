@@ -9,6 +9,7 @@ from .custom import (
     RandomMixup,
     RandomResizedCrop,
     RandomVerticalFlip,
+    RandomErasing,
     Resize,
 )
 
@@ -19,6 +20,7 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomresizedcrop': RandomResizedCrop,
     'randomhorizontalflip': RandomHorizontalFlip,
     'randomverticalflip': RandomVerticalFlip,
+    'randomerasing': RandomErasing,
     'resize': Resize,
     'mixup': RandomMixup,
     'cutmix': RandomCutmix
