@@ -15,7 +15,7 @@ FXTensorListType = Union[List[Tensor], List[Proxy]]
 
 MODEL_CHECKPOINT_URL_DICT = {
     'resnet50': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50.pth",
-    'mobilenetv3_small': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small.pth",
+    'mobilenet_v3_small': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small.pth",
     'segformer': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer.pth",
     'mobilevit': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s.pth",
     'vit': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit-tiny.pth",
