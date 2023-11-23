@@ -13,6 +13,8 @@ model:
         wid_mul: 0.5
         act_type: "silu"
       stage_params: ~
+    neck:
+      name: pafpn
     head:
       name: yolox_head
   losses:

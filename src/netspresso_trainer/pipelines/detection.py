@@ -35,9 +35,11 @@ class TwoStageDetectionPipeline(BasePipeline):
 
         if conf.distributed:
             self.backbone_to_train = model.module.backbone
+            self.neck_to_train = model.module.neck
             self.head_to_train = model.module.head
         else:
             self.backbone_to_train = model.backbone
+            self.neck = model.neck
             self.head_to_train = model.head
 
     def train_step(self, batch):
@@ -51,11 +53,11 @@ class TwoStageDetectionPipeline(BasePipeline):
 
         # forward to rpn
         backbone = self.backbone_to_train
+        neck = self.neck_to_train
         head = self.head_to_train
 
         features = backbone(images)['intermediate_features']
-        if head.neck:
-            features = head.neck(features)
+        features = neck(features)['intermediate_features']
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = head.rpn(features, head.image_size)

@@ -8,6 +8,7 @@ from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import faster_rcnn, yolox_head
 from .heads.segmentation import all_mlp_decoder
+from .necks import fpn, pafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet50': resnet50,
@@ -18,6 +19,11 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'efficientformer': efficientformer,
     'cspdarknet': cspdarknet,
     'mixnet': mixnet,
+}
+
+MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
+    'fpn': fpn,
+    'pafpn': pafpn,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
