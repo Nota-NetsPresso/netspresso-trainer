@@ -355,6 +355,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
 
 
 class RandomErasing(T.RandomErasing):
+    visualize = True
 
     def __init__(self, p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False):
         if isinstance(scale, ListConfig):
@@ -410,6 +411,7 @@ class TrivialAugmentWide(torch.nn.Module):
     Based on the torchvision implementation.
     https://pytorch.org/vision/main/_modules/torchvision/transforms/autoaugment.html#TrivialAugmentWide
     """
+    visualize = True
 
     def __init__(
         self,
