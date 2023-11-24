@@ -43,6 +43,8 @@ model:
           num_blocks: 4
           hidden_sizes: 448
           downsamples: True
+    neck:
+      name: fpn
     head:
       name: faster_rcnn
   losses:

@@ -20,14 +20,17 @@ __all__ = [
     "ClassificationViTModelConfig",
 ]
 
+
 @dataclass
 class ArchitectureConfig:
     full: Optional[Dict[str, Any]] = None
     backbone: Optional[Dict[str, Any]] = None
+    neck: Optional[Dict[str, Any]] = None
     head: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         assert bool(self.full) != bool(self.backbone), "Only one of full or backbone should be given."
+
 
 @dataclass
 class ModelConfig:
@@ -306,7 +309,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -327,6 +330,7 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
     task: str = "detection"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
+        neck={"name": "fpn"},
         head={"name": "faster_rcnn"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
@@ -343,7 +347,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -367,7 +371,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -391,7 +395,7 @@ class ClassificationResNetModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -415,7 +419,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -439,6 +443,5 @@ class ClassificationViTModelConfig(ModelConfig):
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
-
