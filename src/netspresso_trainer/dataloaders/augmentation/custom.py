@@ -1,18 +1,18 @@
 import math
 import random
 from collections.abc import Sequence
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from omegaconf import ListConfig
 import PIL.Image as Image
 import torch
-from torch import Tensor
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from omegaconf import ListConfig
+from torch import Tensor
 from torch.nn import functional as F_torch
-from torchvision.transforms.functional import InterpolationMode
 from torchvision.transforms.autoaugment import _apply_op
+from torchvision.transforms.functional import InterpolationMode
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -370,7 +370,7 @@ class RandomErasing(T.RandomErasing):
         img, scale: Tuple[float, float], ratio: Tuple[float, float], value: Optional[int] = None
     ):
         img_w, img_h = img.size
-        
+
         area = img_h * img_w
 
         log_ratio = torch.log(torch.tensor(ratio))

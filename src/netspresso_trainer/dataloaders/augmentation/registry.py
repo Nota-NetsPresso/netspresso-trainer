@@ -5,11 +5,11 @@ from .custom import (
     Pad,
     RandomCrop,
     RandomCutmix,
+    RandomErasing,
     RandomHorizontalFlip,
     RandomMixup,
     RandomResizedCrop,
     RandomVerticalFlip,
-    RandomErasing,
     Resize,
     TrivialAugmentWide,
 )
