@@ -86,7 +86,7 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
 @dataclass
 class MobileNetV3ArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "mobilenetv3_small",
+        "name": "mobilenetv3",
         "params": None,
         "stage_params": [
             {

@@ -8,7 +8,7 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      name: mobilenetv3_small
+      name: mobilenetv3
       params: ~
       stage_params:
         -
