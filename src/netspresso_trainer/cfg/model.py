@@ -223,7 +223,7 @@ class PIDNetArchitectureConfig(ArchitectureConfig):
 @dataclass
 class ResNetArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "resnet50",
+        "name": "resnet",
         "params": {
             "block": "bottleneck",
             "norm_layer": "batch_norm",

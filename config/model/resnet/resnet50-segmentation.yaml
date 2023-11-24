@@ -9,7 +9,7 @@ model:
     full:
       name: ~ # auto
     backbone:
-      name: resnet50
+      name: resnet
       params:
         block: bottleneck
         norm_layer: batch_norm
