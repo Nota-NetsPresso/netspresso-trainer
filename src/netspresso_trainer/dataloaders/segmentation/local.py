@@ -5,8 +5,8 @@ from typing import Literal
 import numpy as np
 import PIL.Image as Image
 
+from ..augmentation.transforms import generate_edge, reduce_label
 from ..base import BaseCustomDataset
-from ..segmentation.transforms import generate_edge, reduce_label
 
 
 class SegmentationCustomDataset(BaseCustomDataset):
@@ -51,7 +51,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
 
-        if self.model_name == 'pidnet':
+        if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
             out = self.transform(self.conf_augmentation)(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})

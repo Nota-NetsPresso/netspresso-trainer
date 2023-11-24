@@ -12,7 +12,7 @@ from ...models.heads.detection.experimental.detection import _utils as det_utils
 class RoiHeadLoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
-    
+
     @staticmethod
     def forward(out: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         class_logits, box_regression, labels, regression_targets =\
@@ -43,10 +43,10 @@ class RoiHeadLoss(nn.Module):
             "loss_classifier": classification_loss,
             "loss_box_reg": box_loss
         }
-        
+
         # TODO: return as dict
         return sum(losses.values())
-        
+
 class RPNLoss(nn.Module):
     def __init__(self,
                  box_fg_iou_thresh=0.5,
@@ -54,7 +54,7 @@ class RPNLoss(nn.Module):
                  box_batch_size_per_image=512,
                  box_positive_fraction=0.25) -> None:
         super().__init__()
-        
+
         self.box_coder = det_utils.BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
         self.box_similarity = box_ops.box_iou
         self.proposal_matcher = det_utils.Matcher(
@@ -63,7 +63,7 @@ class RPNLoss(nn.Module):
             allow_low_quality_matches=True,
         )
         self.fg_bg_sampler = det_utils.BalancedPositiveNegativeSampler(box_batch_size_per_image, box_positive_fraction)
-    
+
     def _assign_targets_to_anchors(self, anchors: List[Tensor], targets: List[Dict[str, Tensor]]
     ) -> Tuple[List[Tensor], List[Tensor]]:
 
@@ -100,7 +100,7 @@ class RPNLoss(nn.Module):
             labels.append(labels_per_image)
             matched_gt_boxes.append(matched_gt_boxes_per_image)
         return labels, matched_gt_boxes
-        
+
     def _compute_loss(self, objectness: Tensor, pred_bbox_deltas: Tensor, labels: List[Tensor], regression_targets: List[Tensor]
     ) -> Tuple[Tensor, Tensor]:
         """
@@ -137,7 +137,7 @@ class RPNLoss(nn.Module):
         objectness_loss = F.binary_cross_entropy_with_logits(objectness[sampled_inds], labels[sampled_inds])
 
         return objectness_loss, box_loss
-    
+
     def forward(self, out: torch.Tensor, target: torch.Tensor) -> torch.Tensor:
         anchors, objectness, pred_bbox_deltas = out['anchors'], out['objectness'], out['pred_bbox_deltas']
         labels, matched_gt_boxes = self._assign_targets_to_anchors(anchors, target)

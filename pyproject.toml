@@ -8,6 +8,7 @@ extend-select = [
   "I",
   "SIM",
   "INP001",
+  "W"
 ]
 
 ignore = [
@@ -19,6 +20,8 @@ extend-exclude = [
   "docs/*.py",
   "src/netspresso_trainer/models/backbones/core",
   "src/netspresso_trainer/models/backbones/experimental",
+  "src/netspresso_trainer/models/necks/core",
+  "src/netspresso_trainer/models/necks/experimental",
   "src/netspresso_trainer/models/heads/classification",
   "src/netspresso_trainer/models/heads/detection",
   "src/netspresso_trainer/models/heads/segmentation",

@@ -296,9 +296,9 @@ class InvertedResidual(nn.Module):
         # project
         layers.append(
             ConvLayer(
-                in_channels=hidden_channels, 
-                out_channels=out_channels, 
-                kernel_size=1, 
+                in_channels=hidden_channels,
+                out_channels=out_channels,
+                kernel_size=1,
                 norm_type=norm_type,
                 use_act=False
             )
@@ -365,7 +365,7 @@ class SinusoidalPositionalEncoding(nn.Module):
 
         self.patch_dim = patch_dim
         self.register_buffer("pe", pos_encoding)
-        
+
     def forward_patch_last(
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
@@ -385,8 +385,8 @@ class SinusoidalPositionalEncoding(nn.Module):
         self, x, indices: Optional[Tensor] = None, *args, **kwargs
     ) -> Tensor:
         # seq_length should be the second last dim
-        
-        # @deepkyu: [fx tracing] Always `indices` is None 
+
+        # @deepkyu: [fx tracing] Always `indices` is None
         # if indices is None:
         #     x = x + self.pe[..., : x.shape[-2], :]
         # else:
@@ -396,10 +396,10 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     pe = self.pe.expand(repeat_size)
         #     selected_pe = torch.gather(pe, index=indices, dim=-2)
         #     x = x + selected_pe
-        
+
         # x = x + self.pe[..., :seq_index, :]
         x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
-        
+
         return x
 
     def forward(self, x, indices: Optional[Tensor] = None, *args, **kwargs) -> Tensor:
@@ -480,7 +480,7 @@ class GlobalPool(nn.Module):
         #     dims = [-3, -2, -1]
         # else:
         #     raise NotImplementedError("Currently 2D and 3D global pooling supported")
-        
+
         return self._global_pool(x, dims=(-2, -1))
 
     # def profile_module(self, input: Tensor) -> Tuple[Tensor, float, float]:
@@ -497,9 +497,9 @@ class Focus(nn.Module):
     def __init__(self, in_channels, out_channels, ksize=1, stride=1, act_type="silu"):
         super().__init__()
         self.conv = ConvLayer(in_channels=in_channels * 4,
-                              out_channels=out_channels, 
-                              kernel_size=ksize, 
-                              stride=stride, 
+                              out_channels=out_channels,
+                              kernel_size=ksize,
+                              stride=stride,
                               act_type=act_type)
 
     def forward(self, x):
@@ -542,25 +542,25 @@ class CSPLayer(nn.Module):
         # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
         hidden_channels = int(out_channels * expansion)  # hidden channels
-        self.conv1 = ConvLayer(in_channels=in_channels, 
+        self.conv1 = ConvLayer(in_channels=in_channels,
                                out_channels=hidden_channels,
-                               kernel_size=1, 
+                               kernel_size=1,
                                stride=1, act_type=act_type)
         self.conv2 = ConvLayer(in_channels=in_channels,
-                              out_channels=hidden_channels, 
-                              kernel_size=1, 
+                              out_channels=hidden_channels,
+                              kernel_size=1,
                               stride=1, act_type=act_type)
-        self.conv3 = ConvLayer(in_channels=2 * hidden_channels, 
-                               out_channels=out_channels, 
-                               kernel_size=1, 
+        self.conv3 = ConvLayer(in_channels=2 * hidden_channels,
+                               out_channels=out_channels,
+                               kernel_size=1,
                                stride=1, act_type=act_type)
-        
+
         block = DarknetBlock
 
         module_list = [
             block(
-                in_channels=hidden_channels, 
-                out_channels=hidden_channels, 
+                in_channels=hidden_channels,
+                out_channels=hidden_channels,
                 shortcut=shortcut,
                 expansion=1.0,
                 act_type=act_type
@@ -585,7 +585,7 @@ class SPPBottleneck(nn.Module):
     ):
         super().__init__()
         hidden_channels = in_channels // 2
-        self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels, 
+        self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
                                kernel_size=1, stride=1, act_type=act_type)
         self.m = nn.ModuleList(
             [
@@ -594,7 +594,7 @@ class SPPBottleneck(nn.Module):
             ]
         )
         conv2_channels = hidden_channels * (len(kernel_sizes) + 1)
-        self.conv2 = ConvLayer(in_channels=conv2_channels, out_channels=out_channels, 
+        self.conv2 = ConvLayer(in_channels=conv2_channels, out_channels=out_channels,
                                kernel_size=1, stride=1, act_type=act_type)
 
     def forward(self, x):
@@ -618,9 +618,9 @@ class DarknetBlock(nn.Module):
     ):
         super().__init__()
         hidden_channels = int(out_channels * expansion)
-        self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels, 
+        self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
                                 kernel_size=1, stride=1, act_type=act_type)
-        self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels, 
+        self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
                                 kernel_size=3, stride=1, act_type=act_type)
         self.use_add = shortcut and in_channels == out_channels
 

@@ -25,7 +25,7 @@ def summary_transform(phase, task, model_name, yaml_str):
     try:
         conf = OmegaConf.create(yaml_str)
         is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
         transform_composed = transform(conf.augmentation)
         return str(transform_composed)
     except Exception as e:
@@ -37,7 +37,7 @@ def get_augmented_images(phase, task, model_name, yaml_str, test_image,
     try:
         conf = OmegaConf.create(yaml_str)
         is_training = (phase == 'train')
-        transform = CREATE_TRANSFORM[task](model_name, is_training=is_training)
+        transform = CREATE_TRANSFORM(model_name, is_training=is_training)
         transform_composed = transform(conf.augmentation)
 
         transformed_images = [transform_composed(test_image,
@@ -88,7 +88,7 @@ def launch_gradio(args):
                 task_choices = gr.Radio(label="Task: ", value='classification', choices=SUPPORTING_TASK_LIST)
             with gr.Column(scale=1):
                 phase_choices = gr.Radio(label="Phase: ", value='train', choices=['train', 'valid'])
-        model_choices = gr.Radio(label="Model: ", value='resnet50', choices=SUPPORTING_MODEL_LIST)
+        model_choices = gr.Radio(label="Model: ", value='resnet', choices=SUPPORTING_MODEL_LIST)
         with gr.Row(equal_height=True):
             with gr.Column(scale=1):
                 config_input = gr.Code(label="Augmentation configuration", value=args.config.read_text(), language='yaml', lines=30)

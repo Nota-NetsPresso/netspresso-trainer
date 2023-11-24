@@ -70,14 +70,14 @@ class TensorboardLogger:
     def log_images_with_dict(self, image_dict, mode='train'):
         for k, v in image_dict.items():
             self._log_image(k, v, mode)
-    
+
     def _get_rasterized_hparam(self, hparams):
         if not isinstance(hparams, dict):
             stem = hparams
             if not isinstance(hparams, (int, float, str, bool, torch.Tensor)):
                 return str(stem)
             return stem
-        
+
         rasterized_dict = {}
         for key, value in hparams.items():
             if isinstance(value, dict):
@@ -90,15 +90,15 @@ class TensorboardLogger:
         return rasterized_dict
 
     def log_hparams(self, hp_omegaconf: Union[Dict, List], final_metrics=None):
-        
+
         if final_metrics is None:
             final_metrics = {}
         final_metrics = {f"hparams_metrics/{k}": v for k, v in final_metrics.items()}
-        
+
         hp_dict = OmegaConf.to_container(hp_omegaconf, resolve=True)
         hp_for_log = self._get_rasterized_hparam(hp_dict)
-        
-        exp, ssi, sei = hparams(hparam_dict=hp_for_log, metric_dict=final_metrics)   
+
+        exp, ssi, sei = hparams(hparam_dict=hp_for_log, metric_dict=final_metrics)
         self.tensorboard.file_writer.add_summary(exp)
         self.tensorboard.file_writer.add_summary(ssi)
         self.tensorboard.file_writer.add_summary(sei)

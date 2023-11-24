@@ -15,6 +15,7 @@ from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..optimizers import build_optimizer
+from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
@@ -87,6 +88,7 @@ class BasePipeline(ABC):
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+        self.postprocessor = build_postprocessor(self.task, self.conf.model)
         resume_optimizer_checkpoint = self.conf.model.resume_optimizer_checkpoint
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)

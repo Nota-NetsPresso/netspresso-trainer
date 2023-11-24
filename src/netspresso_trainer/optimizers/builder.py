@@ -21,7 +21,7 @@ def build_optimizer(
                       'adam', 'adamw', 'adamax',
                       'adadelta', 'adagrad', 'rmsprop'] = opt.lower()
     assert opt_name in OPTIMIZER_DICT
-    
+
     conf_optim = {'weight_decay': wd, 'lr': lr}
 
     if opt_name in ['sgd', 'nesterov', 'momentum', 'rmsprop']:
@@ -32,7 +32,7 @@ def build_optimizer(
         conf_optim.update({'nesterov': True})
     if opt_name in ['momentum']:
         conf_optim.update({'nesterov': False})
-        
+
     optimizer = OPTIMIZER_DICT[opt_name](parameters, **conf_optim)
 
     return optimizer

@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import List, Literal, Union
 
+import torch
 from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.cfg import TrainerConfig
@@ -12,7 +13,7 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 def set_struct_recursive(conf: DictConfig, value: bool) -> None:
     OmegaConf.set_struct(conf, value)
-    
+
     for _, conf_value in conf.items():
         if isinstance(conf_value, DictConfig):
             set_struct_recursive(conf_value, value)
@@ -23,18 +24,26 @@ def export_config_as_yaml(config: TrainerConfig) -> str:
     return OmegaConf.to_yaml(conf)
 
 
-def train_with_config(config: TrainerConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO') -> None:
+def train_with_config(gpus: str, config: TrainerConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO') -> None:
+
+    gpus: Union[List, int] = parse_gpu_ids(gpus)
+    assert isinstance(gpus, int), f"Currently, only single-GPU training is supported in this API. Your gpu(s): {gpus}"
+
+    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpus)
+    torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
+
     conf: DictConfig = OmegaConf.create(config)
     set_struct_recursive(conf, False)
+
     train_common(conf, log_level=log_level)
 
 
 def train_with_yaml(gpus: str, data: Union[Path, str], augmentation: Union[Path, str],
                     model: Union[Path, str], training: Union[Path, str],
                     logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
-    
+
     gpus: Union[List, int] = parse_gpu_ids(gpus)
-    
+
     train_with_yaml_impl(
         gpus=gpus,
         data=data,

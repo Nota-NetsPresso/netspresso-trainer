@@ -18,20 +18,31 @@ __all__ = [
     "ClassificationSegFormerModelConfig",
     "SegmentationSegFormerModelConfig",
     "ClassificationViTModelConfig",
+    "DetectionYoloXModelConfig",
+    "ClassificationMixNetSmallModelConfig",
+    "ClassificationMixNetMediumModelConfig",
+    "ClassificationMixNetLargeModelConfig",
+    "SegmentationMixNetSmallModelConfig",
+    "SegmentationMixNetMediumModelConfig",
+    "SegmentationMixNetLargeModelConfig",
 ]
+
 
 @dataclass
 class ArchitectureConfig:
     full: Optional[Dict[str, Any]] = None
     backbone: Optional[Dict[str, Any]] = None
+    neck: Optional[Dict[str, Any]] = None
     head: Optional[Dict[str, Any]] = None
-    
+
     def __post_init__(self):
         assert bool(self.full) != bool(self.backbone), "Only one of full or backbone should be given."
-    
+
+
 @dataclass
 class ModelConfig:
     task: str = MISSING
+    name: str = MISSING
     checkpoint: Optional[Union[Path, str]] = None
     fx_model_checkpoint: Optional[Union[Path, str]] = None
     resume_optimizer_checkpoint: Optional[Union[Path, str]] = None
@@ -44,56 +55,81 @@ class ModelConfig:
 class EfficientFormerArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "efficientformer",
-        "num_blocks": [3, 2, 6, 4],
-        "hidden_sizes": [48, 96, 224, 448],
-        "num_attention_heads": 8,
-        "attention_hidden_size": 256,  # attention_hidden_size_splitted * num_attention_heads
-        "attention_dropout_prob": 0.,
-        "attention_ratio": 4,
-        "attention_bias_resolution": 16,
-        "pool_size": 3,
-        "intermediate_ratio": 4,
-        "hidden_dropout_prob": 0.,
-        "hidden_activation_type": 'gelu',
-        "layer_norm_eps": 1e-5,
-        "drop_path_rate": 0.,
-        "use_layer_scale": True,
-        "layer_scale_init_value": 1e-5,
-        "downsamples": [True, True, True, True],
-        "down_patch_size": 3,
-        "down_stride": 2,
-        "down_pad": 1,
-        "vit_num": 1,
+        "params": {
+            "num_attention_heads": 8,
+            "attention_hidden_size": 256,
+            "attention_dropout_prob": 0.,
+            "attention_ratio": 4,
+            "attention_bias_resolution": 16,
+            "pool_size": 3,
+            "intermediate_ratio": 4,
+            "hidden_dropout_prob": 0.,
+            "hidden_activation_type": 'gelu',
+            "layer_norm_eps": 1e-5,
+            "drop_path_rate": 0.,
+            "use_layer_scale": True,
+            "layer_scale_init_value": 1e-5,
+            "down_patch_size": 3,
+            "down_stride": 2,
+            "down_pad": 1,
+            "vit_num": 1,
+        },
+        "stage_params": [
+            {"num_blocks": 3, "hidden_sizes": 48, "downsamples": True},
+            {"num_blocks": 2, "hidden_sizes": 96, "downsamples": True},
+            {"num_blocks": 6, "hidden_sizes": 224, "downsamples": True},
+            {"num_blocks": 4, "hidden_sizes": 448, "downsamples": True},
+        ],
     })
 
 
 @dataclass
 class MobileNetV3ArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "mobilenetv3_small",
-        
-        # [in_channels, kernel, expended_channels, out_channels, use_se, activation, stride, dilation]
-        "block_info": [
-            [
-                [16, 3, 16, 16, True, "relu", 2, 1]
-            ],
-            [
-                [16, 3, 72, 24, False, "relu", 2, 1],
-                [24, 3, 88, 24, False, "relu", 1, 1]
-            ],
-            [
-                [24, 5, 96, 40, True, "hard_swish", 2, 1],
-                [40, 5, 240, 40, True, "hard_swish", 1, 1],
-                [40, 5, 240, 40, True, "hard_swish", 1, 1],
-                [40, 5, 120, 48, True, "hard_swish", 1, 1],
-                [48, 5, 144, 48, True, "hard_swish", 1, 1]
-            ],
-            [
-                [48, 5, 288, 96, True, "hard_swish", 2, 1],
-                [96, 5, 576, 96, True, "hard_swish", 1, 1],
-                [96, 5, 576, 96, True, "hard_swish", 1, 1]
-            ]
-        ]
+        "name": "mobilenetv3",
+        "params": None,
+        "stage_params": [
+            {
+                "in_channels": [16],
+                "kernel": [3],
+                "expanded_channels": [16],
+                "out_channels": [16],
+                "use_se": [True],
+                "activation": ["relu"],
+                "stride": [2],
+                "dilation": [1],
+            },
+            {
+                "in_channels": [16, 24],
+                "kernel": [3, 3],
+                "expanded_channels": [72, 88],
+                "out_channels": [24, 24],
+                "use_se": [False, False],
+                "activation": ["relu", "relu"],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+            },
+            {
+                "in_channels": [24, 40, 40, 40, 48],
+                "kernel": [5, 5, 5, 5, 5],
+                "expanded_channels": [96, 240, 240, 120, 144],
+                "out_channels": [40, 40, 40, 48, 48],
+                "use_se": [True, True, True, True, True],
+                "activation": ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"],
+                "stride": [2, 1, 1, 1, 1],
+                "dilation": [1, 1, 1, 1, 1],
+            },
+            {
+                "in_channels": [48, 96, 96],
+                "kernel": [5, 5, 5],
+                "expanded_channels": [288, 576, 576],
+                "out_channels": [96, 96, 96],
+                "use_se": [True, True, True],
+                "activation": ["hard_swish", "hard_swish", "hard_swish"],
+                "stride": [2, 1, 1],
+                "dilation": [1, 1, 1],
+            },
+        ],
     })
 
 
@@ -101,24 +137,74 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
 class MobileViTArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mobilevit",
-        "out_channels": [32, 64, 96, 128, 160],
-        "block_type": ['mv2', 'mv2', 'mobilevit', 'mobilevit', 'mobilevit'],
-        "num_blocks": [1, 3, None, None, None],
-        "stride": [1, 2, 2, 2, 2],
-        "hidden_size": [None, None, 144, 192, 240],
-        "intermediate_size": [None, None, 288, 384, 480],
-        "num_transformer_blocks": [None, None, 2, 4, 3],
-        "dilate": [None, None, False, False, False],
-        "expand_ratio": [4, 4, 4, 4, 4],  # [mv2_exp_mult] * 4
-        "patch_embedding_out_channels": 16,
-        "local_kernel_size": 3,
-        "patch_size": 2,
-        "num_attention_heads": 4,  # num_heads
-        "attention_dropout_prob": 0.1,
-        "hidden_dropout_prob": 0.0,
-        "exp_factor": 4,
-        "layer_norm_eps": 1e-5,
-        "use_fusion_layer": True,
+        "params": {
+            "patch_embedding_out_channels": 16,
+            "local_kernel_size": 3,
+            "patch_size": 2,
+            "num_attention_heads": 4,
+            "attention_dropout_prob": 0.1,
+            "hidden_dropout_prob": 0.0,
+            "exp_factor": 4,
+            "layer_norm_eps": 1e-5,
+            "use_fusion_layer": True,
+        },
+        "stage_params": [
+            {
+                "out_channels": 32,
+                "block_type": "mv2",
+                "num_blocks": 1,
+                "stride": 1,
+                "hidden_size": None,
+                "intermediate_size": None,
+                "num_transformer_blocks": None,
+                "dilate": None,
+                "expand_ratio": 4,
+            },
+            {
+                "out_channels": 64,
+                "block_type": "mv2",
+                "num_blocks": 3,
+                "stride": 2,
+                "hidden_size": None,
+                "intermediate_size": None,
+                "num_transformer_blocks": None,
+                "dilate": None,
+                "expand_ratio": 4,
+            },
+            {
+                "out_channels": 96,
+                "block_type": "mobilevit",
+                "num_blocks": None,
+                "stride": 2,
+                "hidden_size": 144,
+                "intermediate_size": 288,
+                "num_transformer_blocks": 2,
+                "dilate": False,
+                "expand_ratio": 4,
+            },
+            {
+                "out_channels": 128,
+                "block_type": "mobilevit",
+                "num_blocks": None,
+                "stride": 2,
+                "hidden_size": 192,
+                "intermediate_size": 384,
+                "num_transformer_blocks": 4,
+                "dilate": False,
+                "expand_ratio": 4,
+            },
+            {
+                "out_channels": 160,
+                "block_type": "mobilevit",
+                "num_blocks": None,
+                "stride": 2,
+                "hidden_size": 240,
+                "intermediate_size": 480,
+                "num_transformer_blocks": 3,
+                "dilate": False,
+                "expand_ratio": 4,
+            },
+        ]
     })
 
 
@@ -137,9 +223,21 @@ class PIDNetArchitectureConfig(ArchitectureConfig):
 @dataclass
 class ResNetArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "resnet50",
-        "block": "bottleneck",
-        "layers": [3, 4, 6, 3],
+        "name": "resnet",
+        "params": {
+            "block": "bottleneck",
+            "norm_layer": "batch_norm",
+            "groups": 1,
+            "width_per_group": 64,
+            "zero_init_residual": False,
+            "expansion": None,
+        },
+        "stage_params": [
+            {"plane": 64, "layers": 3},
+            {"plane": 128, "layers": 4},
+            {"plane": 256, "layers": 6},
+            {"plane": 512, "layers": 3},
+        ],
     })
 
 
@@ -147,18 +245,47 @@ class ResNetArchitectureConfig(ArchitectureConfig):
 class SegFormerArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "segformer",
-        "num_modules": 4,
-        "num_blocks": [2, 2, 2, 2],
-        "sr_ratios": [8, 4, 2, 1],
-        "hidden_sizes": [32, 64, 160, 256],
-        "embedding_patch_sizes": [7, 3, 3, 3],
-        "embedding_strides": [4, 2, 2, 2],
-        "num_attention_heads": [1, 2, 5, 8],
-        "intermediate_ratio": 4,
-        "hidden_activation_type": "gelu",
-        "hidden_dropout_prob": 0.0,
-        "attention_dropout_prob": 0.0,
-        "layer_norm_eps": 1e-5,
+        "params": {
+            "intermediate_ratio": 4,
+            "hidden_activation_type": "gelu",
+            "hidden_dropout_prob": 0.0,
+            "attention_dropout_prob": 0.0,
+            "layer_norm_eps": 1e-5,
+        },
+        "stage_params": [
+            {
+                "num_blocks": 2,
+                "sr_ratios": 8,
+                "hidden_sizes": 32,
+                "embedding_patch_sizes": 7,
+                "embedding_strides": 4,
+                "num_attention_heads": 1,
+            },
+            {
+                "num_blocks": 2,
+                "sr_ratios": 4,
+                "hidden_sizes": 64,
+                "embedding_patch_sizes": 3,
+                "embedding_strides": 2,
+                "num_attention_heads": 2,
+            },
+            {
+                "num_blocks": 2,
+                "sr_ratios": 2,
+                "hidden_sizes": 160,
+                "embedding_patch_sizes": 3,
+                "embedding_strides": 2,
+                "num_attention_heads": 5,
+            },
+            {
+                "num_blocks": 2,
+                "sr_ratios": 1,
+                "hidden_sizes": 256,
+                "embedding_patch_sizes": 3,
+                "embedding_strides": 2,
+                "num_attention_heads": 8,
+            },
+        ],
     })
 
 
@@ -166,31 +293,241 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
 class ViTArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "vit",
-        "patch_size": 16,
-        "hidden_size": 192,
-        "num_blocks": 12,
-        "num_attention_heads": 3,
-        "attention_dropout_prob": 0.0,
-        "intermediate_size": 192 * 4,
-        "hidden_dropout_prob": 0.1,
+        "params": {
+            "patch_size": 16,
+            "hidden_size": 192,
+            "num_blocks": 12,
+            "num_attention_heads": 3,
+            "attention_dropout_prob": 0.0,
+            "intermediate_size": 768,
+            "hidden_dropout_prob": 0.1,
+            "layer_norm_eps": 1e-6,
+            "use_cls_token": True,
+            "vocab_size": 1000,
+        },
+        "stage_params": None,
+    })
+
+
+@dataclass
+class MixNetSmallArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 16,
+            "width_multi": 1.0,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [16, 24, 24],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 2, 1, 2],
+                "kernel_sizes": [[3, 5, 7], [3, 5], [3, 5, 7], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1, 1], [1, 1], [1, 1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 2],
+                "kernel_sizes": [[3, 5, 7, 9, 11], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class MixNetMediumArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 24,
+            "width_multi": 1.0,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [24, 32, 32],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3, 5, 7], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 3, 1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class MixNetLargeArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 24,
+            "width_multi": 1.3,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [24, 32, 32],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3, 5, 7], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 3, 1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class CSPDarkNetSmallArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "cspdarknet",
+        "params": {
+            "dep_mul": 0.33,
+            "wid_mul": 0.5,
+            "act_type": "silu",
+        },
+        "stage_params": None,
     })
 
 
 @dataclass
 class ClassificationEfficientFormerModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
 @dataclass
 class SegmentationEfficientFormerModelConfig(ModelConfig):
     task: str = "segmentation"
+    name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={"name": "all_mlp_decoder"}
@@ -203,8 +540,10 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
 @dataclass
 class DetectionEfficientFormerModelConfig(ModelConfig):
     task: str = "detection"
+    name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
+        neck={"name": "fpn"},
         head={"name": "faster_rcnn"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
@@ -216,18 +555,20 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
 @dataclass
 class ClassificationMobileNetV3ModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "mobilenet_v3_small"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
 @dataclass
 class SegmentationMobileNetV3ModelConfig(ModelConfig):
     task: str = "segmentation"
+    name: str = "mobilenet_v3_small"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={"name": "all_mlp_decoder"}
@@ -240,18 +581,20 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
 @dataclass
 class ClassificationMobileViTModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "mobilevit_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilevit/mobilevit_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileViTArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
 @dataclass
 class PIDNetModelConfig(ModelConfig):
-    task: str = "classification"
+    task: str = "segmentation"
+    name: str = "pidnet_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
@@ -264,18 +607,20 @@ class PIDNetModelConfig(ModelConfig):
 @dataclass
 class ClassificationResNetModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "resnet50"
     checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
 @dataclass
 class SegmentationResNetModelConfig(ModelConfig):
     task: str = "segmentation"
+    name: str = "resnet50"
     checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={"name": "all_mlp_decoder"}
@@ -288,18 +633,20 @@ class SegmentationResNetModelConfig(ModelConfig):
 @dataclass
 class ClassificationSegFormerModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "segformer"
     checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
 @dataclass
 class SegmentationSegFormerModelConfig(ModelConfig):
     task: str = "segmentation"
+    name: str = "segformer"
     checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={"name": "all_mlp_decoder"}
@@ -312,11 +659,103 @@ class SegmentationSegFormerModelConfig(ModelConfig):
 @dataclass
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
+    name: str = "vit_tiny"
     checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
         head={"name": "fc"}
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "label_smoothing_cross_entropy", "smoothing": 0.1, "weight": None}
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
+
+@dataclass
+class DetectionYoloXModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "yolox_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
+        neck={"name": "pafpn"},
+        head={"name": "yolox_head"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "yolox_loss", "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetSmallModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetSmallModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetMediumModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_m"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetMediumModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_m"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetLargeModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_l"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetLargeModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_l"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])

@@ -55,7 +55,7 @@ class DetectionVisualizer:
         return color_image
 
     def __call__(self, results: List[Tuple[np.ndarray, np.ndarray]], images=None):
-        
+
         return_images = []
         for image, result in zip(images, results):
             image = image.copy()
@@ -75,12 +75,12 @@ class DetectionVisualizer:
                 text_w, text_h = text_size
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
                 image = cv2.putText(image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            
+
             return_images.append(image[np.newaxis, ...])
         return_images = np.concatenate(return_images, axis=0)
         return return_images
-        
-        
+
+
 class SegmentationVisualizer:
     def __init__(self, class_map, pallete=None):
         n = len(class_map)

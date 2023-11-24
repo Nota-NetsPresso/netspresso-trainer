@@ -1,8 +1,11 @@
 import logging
 import os
+from functools import partial
 from pathlib import Path
 from typing import Dict, List, Optional, Type, Union
 
+from .augmentation.registry import TRANSFORM_DICT
+from .classification import classification_mix_collate_fn, classification_onehot_collate_fn
 from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
@@ -19,11 +22,10 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
     task = conf_data.task
 
-    assert task in CREATE_TRANSFORM, f"The given task `{task}` is not supported!"
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
 
-    train_transform = CREATE_TRANSFORM[task](model_name, is_training=True)
-    target_transform = CREATE_TRANSFORM[task](model_name, is_training=False)
+    train_transform = CREATE_TRANSFORM(model_name, is_training=True)
+    target_transform = CREATE_TRANSFORM(model_name, is_training=False)
 
     data_format = conf_data.format
 
@@ -101,7 +103,25 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
-        collate_fn = None
+        conf_mix_transform = getattr(conf.augmentation, 'mix_transforms', None)
+        if conf_mix_transform:
+            mix_transforms = []
+            for mix_transform_conf in conf.augmentation.mix_transforms:
+                name = mix_transform_conf.name.lower()
+
+                mix_kwargs = list(mix_transform_conf.keys())
+                mix_kwargs.remove('name')
+                mix_kwargs = {k:mix_transform_conf[k] for k in mix_kwargs}
+                mix_kwargs['num_classes'] = train_dataset.num_classes
+
+                transform = TRANSFORM_DICT[name](**mix_kwargs)
+                mix_transforms.append(transform)
+
+            train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+            eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
+        else:
+            train_collate_fn = None
+            eval_collate_fn = None
 
         train_loader = create_loader(
             train_dataset,
@@ -112,7 +132,7 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=collate_fn,
+            collate_fn=train_collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
@@ -128,7 +148,7 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             is_training=False,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=None,
+            collate_fn=eval_collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,

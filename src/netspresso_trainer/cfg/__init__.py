@@ -8,6 +8,12 @@ from .augmentation import (
     ClassificationAugmentationConfig,
     ColorJitter,
     DetectionAugmentationConfig,
+    Pad,
+    RandomCrop,
+    RandomHorizontalFlip,
+    RandomResizedCrop,
+    RandomVerticalFlip,
+    Resize,
     SegmentationAugmentationConfig,
 )
 from .data import (
@@ -32,15 +38,22 @@ from .environment import EnvironmentConfig
 from .logging import LoggingConfig
 from .model import (
     ClassificationEfficientFormerModelConfig,
+    ClassificationMixNetLargeModelConfig,
+    ClassificationMixNetMediumModelConfig,
+    ClassificationMixNetSmallModelConfig,
     ClassificationMobileNetV3ModelConfig,
     ClassificationMobileViTModelConfig,
     ClassificationResNetModelConfig,
     ClassificationSegFormerModelConfig,
     ClassificationViTModelConfig,
     DetectionEfficientFormerModelConfig,
+    DetectionYoloXModelConfig,
     ModelConfig,
     PIDNetModelConfig,
     SegmentationEfficientFormerModelConfig,
+    SegmentationMixNetLargeModelConfig,
+    SegmentationMixNetMediumModelConfig,
+    SegmentationMixNetSmallModelConfig,
     SegmentationMobileNetV3ModelConfig,
     SegmentationResNetModelConfig,
     SegmentationSegFormerModelConfig,
@@ -59,6 +72,7 @@ _TRAINING_CONFIG_TYPE_DICT = {
     'detection': DetectionScheduleConfig
 }
 
+
 @dataclass
 class TrainerConfig:
     task: str = field(default=MISSING, metadata={"omegaconf_ignore": True})
@@ -69,19 +83,19 @@ class TrainerConfig:
     training: Optional[ScheduleConfig] = None
     logging: LoggingConfig = field(default_factory=lambda: LoggingConfig())
     environment: EnvironmentConfig = field(default_factory=lambda: EnvironmentConfig())
-    
+
     @property
     def epochs(self) -> int:
         return self.training.epochs
-    
+
     @property
     def batch_size(self) -> int:
         return self.training.batch_size
-    
+
     @property
     def num_workers(self) -> int:
         return self.environment.num_workers
-    
+
     @epochs.setter
     def epochs(self, v: int) -> None:
         self.training.epochs = v
@@ -89,16 +103,16 @@ class TrainerConfig:
     @batch_size.setter
     def batch_size(self, v: int) -> None:
         self.training.batch_size = v
-    
+
     @num_workers.setter
     def num_workers(self, v: int) -> None:
         self.environment.num_workers = v
-        
+
     def __post_init__(self):
         assert self.task in ['classification', 'segmentation', 'detection']
         self.data.task = self.task
         self.model.task = self.task
-        
+
         if self.auto:
             if self.augmentation is None:
                 self.augmentation = _AUGMENTATION_CONFIG_TYPE_DICT[self.task]()

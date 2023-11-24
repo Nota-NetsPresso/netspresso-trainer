@@ -1,5 +1,6 @@
 model:
   task: detection
+  name: efficientformer_l1
   checkpoint: ./weights/efficientformer/efficientformer_l1_1000d.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
@@ -8,26 +9,43 @@ model:
     full: ~ # auto
     backbone:
       name: efficientformer
-      num_blocks: [3, 2, 6, 4]
-      hidden_sizes: [48, 96, 224, 448]
-      num_attention_heads: 8
-      attention_hidden_size: 256  # attention_hidden_size_splitted * num_attention_heads
-      attention_dropout_prob: 0.
-      attention_ratio: 4
-      attention_bias_resolution: 16
-      pool_size: 3
-      intermediate_ratio: 4
-      hidden_dropout_prob: 0.
-      hidden_activation_type: 'gelu'
-      layer_norm_eps: 1e-5
-      drop_path_rate: 0.
-      use_layer_scale: True
-      layer_scale_init_value: 1e-5
-      downsamples: [True, True, True, True]
-      down_patch_size: 3
-      down_stride: 2
-      down_pad: 1
-      vit_num: 1
+      params:
+        num_attention_heads: 8
+        attention_hidden_size: 256  # attention_hidden_size_splitted * num_attention_heads
+        attention_dropout_prob: 0.
+        attention_ratio: 4
+        attention_bias_resolution: 16
+        pool_size: 3
+        intermediate_ratio: 4
+        hidden_dropout_prob: 0.
+        hidden_activation_type: 'gelu'
+        layer_norm_eps: 1e-5
+        drop_path_rate: 0.
+        use_layer_scale: True
+        layer_scale_init_value: 1e-5
+        down_patch_size: 3
+        down_stride: 2
+        down_pad: 1
+        vit_num: 1
+      stage_params:
+        - 
+          num_blocks: 3
+          hidden_sizes: 48
+          downsamples: True
+        - 
+          num_blocks: 2
+          hidden_sizes: 96
+          downsamples: True
+        - 
+          num_blocks: 6
+          hidden_sizes: 224
+          downsamples: True
+        - 
+          num_blocks: 4
+          hidden_sizes: 448
+          downsamples: True
+    neck:
+      name: fpn
     head:
       name: faster_rcnn
   losses:

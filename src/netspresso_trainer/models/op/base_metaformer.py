@@ -53,7 +53,7 @@ class MultiHeadAttention(nn.Module):
         attention_bias_resolution = 16,
     ) -> None:
         super().__init__()
-        
+
         attention_hidden_size = attention_hidden_size if attention_hidden_size is not None else hidden_size
         value_hidden_size = value_hidden_size if value_hidden_size is not None else attention_hidden_size
 
@@ -62,17 +62,17 @@ class MultiHeadAttention(nn.Module):
                 f"The hidden size {attention_hidden_size,} is not a multiple of the number of attention "
                 f"heads {num_attention_heads}."
             )
-            
+
         if value_hidden_size % num_attention_heads != 0:
             raise ValueError(
                 f"The hidden size {value_hidden_size,} is not a multiple of the number of attention "
                 f"heads {num_attention_heads}."
             )
-        
+
         self.num_attention_heads = num_attention_heads
         self.attention_head_size = int(attention_hidden_size / num_attention_heads)
         self.value_attention_head_size = int(value_hidden_size / num_attention_heads)
-        
+
         self.head_size = self.num_attention_heads * self.attention_head_size
         self.value_head_size = self.num_attention_heads * self.value_attention_head_size
         self.attention_scale = attention_scale if attention_scale is not None \
@@ -82,7 +82,7 @@ class MultiHeadAttention(nn.Module):
         self.query = nn.Linear(hidden_size, self.head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
         self.key = nn.Linear(hidden_size, self.head_size, bias=use_qkv_bias)  # ... x C -> ... x C_qk
         self.value = nn.Linear(hidden_size, self.value_head_size, bias=use_qkv_bias)  # ... x C -> ... x C_v
-        
+
         self.linear = nn.Linear(self.value_head_size, hidden_size)  # ... x C_v -> ... x C
 
         self.dropout = nn.Dropout(attention_dropout_prob)
@@ -118,14 +118,14 @@ class MultiHeadAttention(nn.Module):
         #         torch.zeros(self.num_attention_heads, len(attention_offsets)))
         #     self.register_buffer('attention_bias_idxs_seg',
         #                          torch.LongTensor(idxs).view(N, N))
-    
+
         self.use_cross_attention = use_cross_attention
 
     def transpose_for_scores(self, x: Tensor, attention_head_size: int) -> Tensor:
         new_x_shape = x.size()[:-1] + (self.num_attention_heads, attention_head_size)
         x = x.view(new_x_shape)
         return x.permute(0, 2, 1, 3)
-    
+
     def sequence_reduce(self, x: Tensor, height: int, width: int) -> Tensor:
         """SegFormer
         """
@@ -167,7 +167,7 @@ class MultiHeadAttention(nn.Module):
         """
 
         mixed_query_layer = self.query(query_states)  # B x S_s x C_qk
-        
+
         if not self.use_cross_attention:  # Self-attention
             key_value_states = query_states  # B x S_t(=S_s) x C_qk
         if self.use_sequence_reduction:
@@ -180,7 +180,7 @@ class MultiHeadAttention(nn.Module):
         attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))  # B x {head} x S_s x S_t
 
         attention_scores = attention_scores / self.attention_scale  # B x {head} x S_s x S_t
-        
+
         if self.use_attention_bias:
             bias = self.attention_biases[:, self.attention_bias_idxs]
             bias = nn.functional.interpolate(bias.unsqueeze(0), size=(attention_scores.size(-2), attention_scores.size(-1)), mode='bicubic')
@@ -199,15 +199,15 @@ class MultiHeadAttention(nn.Module):
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()  # B x S_s x {head} x C_vsplit
         new_context_layer_shape = context_layer.size()[:-2] + (self.value_head_size,)
         context_layer = context_layer.view(new_context_layer_shape)  # B x S_s x C_v
-        
+
         context_layer = self.linear(context_layer)  # B x S_s x C
         context_layer = self.dropout(context_layer)  # B x S_s x C
 
         if self.output_with_attentions:
             return (context_layer, attention_probs)
-        
+
         return context_layer  # B x S_s x C
-    
+
 class ChannelMLP(nn.Module):
     def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type='silu'):
         super().__init__()
@@ -218,7 +218,7 @@ class ChannelMLP(nn.Module):
         self.ffn.add_module('dense2', nn.Linear(in_features=intermediate_size, out_features=hidden_size, bias=True))
 
         self.dropout = nn.Dropout(p=hidden_dropout_prob)
-    
+
     def forward(self, x):
         x = self.ffn(x)
         x = self.dropout(x)
@@ -231,20 +231,20 @@ class MetaFormerBlock(nn.Module):
         self.layernorm_after = nn.LayerNorm(hidden_size)
         self.token_mixer = nn.Identity()  # MultiHeadAttention()
         self.channel_mlp = nn.Identity()  # ChannelMLP()
-    
+
     def forward(self, x):
         out_token_mixer = self.layernorm_before(x)
         out_token_mixer = self.token_mixer(out_token_mixer)
-        
+
         out_token_mixer = out_token_mixer + x
-        
+
         out_final = self.layernorm_after(out_token_mixer)
         out_final = self.channel_mlp(out_final)
-        
+
         out_final = out_final + out_token_mixer
-        
+
         return out_final
-    
+
 class MetaFormerEncoder(nn.Module):
     def __init__(self) -> None:
         super().__init__()
@@ -252,7 +252,7 @@ class MetaFormerEncoder(nn.Module):
         # self.blocks = nn.Sequential(
         #     *[MetaFormerBlock(hidden_size, layer_norm_eps) for _ in range(num_layers)]
         # )
-    
+
     def forward(self, x):
         x = self.blocks(x)
         return x
@@ -262,7 +262,7 @@ class MetaFormer(nn.Module):
         super().__init__()
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
-        
+
         self.patch_embed = nn.Identity()
         self.encoder = MetaFormerEncoder()
         self.norm = nn.Identity()
@@ -270,11 +270,11 @@ class MetaFormer(nn.Module):
     @property
     def feature_dim(self):
         return self._feature_dim
-    
+
     @property
     def intermediate_features_dim(self):
         return self._intermediate_features_dim
-    
+
     def forward(self, x: FXTensorType):
         x = self.patch_embed(x)
         x = self.encoder(x)

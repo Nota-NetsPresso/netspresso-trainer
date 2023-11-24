@@ -33,6 +33,15 @@ class TwoStageDetectionPipeline(BasePipeline):
             model = model.to(device=devices)
             self.model = model
 
+        if conf.distributed:
+            self.backbone_to_train = model.module.backbone
+            self.neck_to_train = model.module.neck
+            self.head_to_train = model.module.head
+        else:
+            self.backbone_to_train = model.backbone
+            self.neck = model.neck
+            self.head_to_train = model.head
+
     def train_step(self, batch):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
@@ -43,12 +52,12 @@ class TwoStageDetectionPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         # forward to rpn
-        backbone = self.model.backbone
-        head = self.model.head
+        backbone = self.backbone_to_train
+        neck = self.neck_to_train
+        head = self.head_to_train
 
         features = backbone(images)['intermediate_features']
-        if head.neck:
-            features = head.neck(features)
+        features = neck(features)['intermediate_features']
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = head.rpn(features, head.image_size)
@@ -86,7 +95,7 @@ class TwoStageDetectionPipeline(BasePipeline):
         out = self.model(images)
 
         # Compute loss
-        head = self.model.head
+        head = self.head_to_train
         matched_idxs, roi_head_labels = head.roi_heads.assign_targets_to_proposals(out['boxes'], bboxes, labels)
         matched_gt_boxes = [bbox[idx] for idx, bbox in zip(matched_idxs, bboxes)]
         regression_targets = head.roi_heads.box_coder.encode(matched_gt_boxes, out['boxes'])
@@ -139,7 +148,7 @@ class TwoStageDetectionPipeline(BasePipeline):
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase=phase)
-        
+
     def save_checkpoint(self, epoch: int):
 
         # Check whether the valid loss is minimum at this epoch
@@ -211,9 +220,9 @@ class OneStageDetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices),}
                    for box, label in zip(bboxes, labels)]
-        
-        targets = {'gt': targets, 
-                   'img_size': images.size(-1), 
+
+        targets = {'gt': targets,
+                   'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -224,9 +233,7 @@ class OneStageDetectionPipeline(BasePipeline):
         self.loss_factory.backward()
         self.optimizer.step()
 
-        # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
-        pred = self.postprocess(pred, self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -235,7 +242,7 @@ class OneStageDetectionPipeline(BasePipeline):
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
             'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy()) 
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
                       if p is not None else (np.array([[]]), np.array([]))
                       for p in pred]
         }
@@ -247,9 +254,9 @@ class OneStageDetectionPipeline(BasePipeline):
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
                    for box, label in zip(bboxes, labels)]
-        
-        targets = {'gt': targets, 
-                   'img_size': images.size(-1), 
+
+        targets = {'gt': targets,
+                   'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
         self.optimizer.zero_grad()
@@ -257,9 +264,7 @@ class OneStageDetectionPipeline(BasePipeline):
         out = self.model(images)
         self.loss_factory.calc(out, targets, phase='valid')
 
-        # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
-        pred = self.postprocess(pred, self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -269,7 +274,7 @@ class OneStageDetectionPipeline(BasePipeline):
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
             'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy()) 
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
                       if p is not None else (np.array([[]]), np.array([]))
                       for p in pred]
         }
@@ -282,9 +287,7 @@ class OneStageDetectionPipeline(BasePipeline):
 
         out = self.model(images.unsqueeze(0))
 
-        # TODO: This step will be moved to postprocessor module
-        pred = self.decode_outputs(out, dtype=out[0].type(), stage_strides=[images.shape[-1] // o.shape[-1] for o in out])
-        pred = self.postprocess(pred, self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
 
         results = [(p[:, :4].detach().cpu().numpy(), p[:, 6].to(torch.int).detach().cpu().numpy())
                    if p is not None else (np.array([[]]), np.array([]))
@@ -309,73 +312,3 @@ class OneStageDetectionPipeline(BasePipeline):
                 pred_on_image['post_labels'] = class_idx
                 pred.append(pred_on_image)
         self.metric_factory.calc(pred, target=targets, phase=phase)
-
-    # TODO: Temporary defined in pipeline, it will be moved to postprocessor module.
-    def decode_outputs(self, outputs, dtype, stage_strides):
-        hw = [x.shape[-2:] for x in outputs]
-        # [batch, n_anchors_all, num_classes + 5]
-        outputs = torch.cat([x.flatten(start_dim=2) for x in outputs], dim=2).permute(0, 2, 1)
-        outputs[..., 4:] = outputs[..., 4:].sigmoid()
-
-        grids = []
-        strides = []
-        for (hsize, wsize), stride in zip(hw, stage_strides):
-            yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing='ij')
-            grid = torch.stack((xv, yv), 2).view(1, -1, 2)
-            grids.append(grid)
-            shape = grid.shape[:2]
-            strides.append(torch.full((*shape, 1), stride))
-
-        grids = torch.cat(grids, dim=1).type(dtype)
-        strides = torch.cat(strides, dim=1).type(dtype)
-
-        outputs = torch.cat([
-            (outputs[..., 0:2] + grids) * strides,
-            torch.exp(outputs[..., 2:4]) * strides,
-            outputs[..., 4:]
-        ], dim=-1)
-        return outputs
-
-    # TODO: Temporary defined in pipeline, it will be moved to postprocessor module.
-    def postprocess(self, prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
-        box_corner = prediction.new(prediction.shape)
-        box_corner[:, :, 0] = prediction[:, :, 0] - prediction[:, :, 2] / 2
-        box_corner[:, :, 1] = prediction[:, :, 1] - prediction[:, :, 3] / 2
-        box_corner[:, :, 2] = prediction[:, :, 0] + prediction[:, :, 2] / 2
-        box_corner[:, :, 3] = prediction[:, :, 1] + prediction[:, :, 3] / 2
-        prediction[:, :, :4] = box_corner[:, :, :4]
-
-        output = [torch.zeros(0, 7).to(prediction.device) for i in range(len(prediction))]
-        for i, image_pred in enumerate(prediction):
-
-            # If none are remaining => process next image
-            if not image_pred.size(0):
-                continue
-            # Get score and class with highest confidence
-            class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)
-
-            conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
-            # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
-            detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float()), 1)
-            detections = detections[conf_mask]
-            if not detections.size(0):
-                continue
-
-            if class_agnostic:
-                nms_out_index = torchvision.ops.nms(
-                    detections[:, :4],
-                    detections[:, 4] * detections[:, 5],
-                    nms_thre,
-                )
-            else:
-                nms_out_index = torchvision.ops.batched_nms(
-                    detections[:, :4],
-                    detections[:, 4] * detections[:, 5],
-                    detections[:, 6],
-                    nms_thre,
-                )
-
-            detections = detections[nms_out_index]
-            output[i] = torch.cat((output[i], detections))
-
-        return output

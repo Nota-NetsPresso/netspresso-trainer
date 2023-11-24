@@ -26,7 +26,7 @@ class PIDNetCrossEntropy(nn.Module):
         self.boundary_aware = False
 
     def _forward(self, out: torch.Tensor, target: torch.Tensor):
-        
+
         return self.loss_fn(out, target)
 
     def forward(self, out: Dict, target: torch.Tensor):
@@ -36,7 +36,7 @@ class PIDNetCrossEntropy(nn.Module):
             filler = torch.ones_like(target) * self.ignore_index
             bd_label = torch.where(torch.sigmoid(extra_d[:, 0, :, :]) > 0.8, target, filler)
             return self._forward(pred, bd_label)
-        
+
         pred, extra_p = out['pred'], out['extra_p']
         score = [extra_p, pred]
         return sum([w * self._forward(x, target) for (w, x) in zip(BALANCE_WEIGHTS, score)])
@@ -45,7 +45,7 @@ class PIDNetBoundaryAwareCrossEntropy(PIDNetCrossEntropy):
     def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None):
         super().__init__(ignore_index, weight)
         self.boundary_aware = True
-    
+
 # class OhemCrossEntropy(nn.Module):
 #     def __init__(self, ignore_label=-1, thres=0.7, min_kept=100000, weight=None):
 #         super(OhemCrossEntropy, self).__init__()

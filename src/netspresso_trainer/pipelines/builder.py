@@ -9,7 +9,7 @@ def build_pipeline(conf, task, model_name, model, devices, train_dataloader, eva
         task_ = "detection-two-stage" if conf.model.architecture.head.name in ["faster_rcnn"] else "detection-one-stage"
 
     task_pipeline = TASK_PIPELINE[task_]
-    
+
     trainer = task_pipeline(conf, task, model_name, model, devices,
                             train_dataloader, eval_dataloader, class_map,
                             is_graphmodule_training=is_graphmodule_training, profile=profile)
