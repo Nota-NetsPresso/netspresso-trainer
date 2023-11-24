@@ -130,6 +130,7 @@ This change is applied at [PR 151](https://github.com/Nota-NetsPresso/netspresso
 - Initialize loss and metric at same time with optimizer and lr schedulers by `@deepkyu` in [PR 138](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/138)
 - Hotfix the error which shows 0 for validation loss and metrics by fixing the variable name by `@deepkyu` in [PR 140](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/140)
 - Add missing field, `save_optimizer_state`, in `logging.yaml` by `@illian01` in [PR 149](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/149)
+- Hotfix for pythonic config name (classification loss) by `@deepkyu` in [PR 242](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/242)
 
 ## Breaking Changes:
 
