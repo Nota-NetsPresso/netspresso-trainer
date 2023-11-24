@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from omegaconf import OmegaConf
 
-from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT
+from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
 from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
 
 logger = logging.getLogger("netspresso_trainer")
@@ -22,10 +22,16 @@ class TaskModel(nn.Module):
         self.head_name = head_name
 
         backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        conf_model_backbone = OmegaConf.to_object(conf_model.architecture.backbone)
-        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model_backbone)
+        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model.architecture.backbone)
 
         self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
+
+        intermediate_features_dim = self.backbone.intermediate_features_dim
+        if getattr(conf_model.architecture, 'neck', None):
+            neck_name = conf_model.architecture.neck.name
+            neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
+            self.neck = neck_fn(intermediate_features_dim=self.backbone.intermediate_features_dim)
+            intermediate_features_dim = self.neck.intermediate_features_dim
 
         head_module = MODEL_HEAD_DICT[self.task][head_name]
         if task == 'classification':
@@ -33,7 +39,7 @@ class TaskModel(nn.Module):
         elif task in ['segmentation', 'detection']:
             img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
             self.head = head_module(num_classes=num_classes,
-                                    intermediate_features_dim=self.backbone.intermediate_features_dim,
+                                    intermediate_features_dim=intermediate_features_dim,
                                     label_size=img_size)
 
         if freeze_backbone:
@@ -74,6 +80,8 @@ class SegmentationModel(TaskModel):
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
+        if self.neck:
+            features: BackboneOutput = self.neck(features['intermediate_features'])
         out: ModelOutput = self.head(features['intermediate_features'])
         return out
 
@@ -85,5 +93,7 @@ class DetectionModel(TaskModel):
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
+        if self.neck:
+            features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out

@@ -1,5 +1,6 @@
 model:
   task: detection
+  name: yolox_s
   checkpoint: ./weights/yolox/yolox_s.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
@@ -8,8 +9,13 @@ model:
     full: ~ # auto
     backbone:
       name: cspdarknet
-      dep_mul: 0.33
-      wid_mul: 0.5
+      params:
+        dep_mul: 0.33
+        wid_mul: 0.5
+        act_type: "silu"
+      stage_params: ~
+    neck:
+      name: pafpn
     head:
       name: yolox_head
   losses:

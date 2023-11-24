@@ -8,4 +8,5 @@ POSTPROCESSOR_DICT = {
     'fc': ClassificationPostprocessor,
     'all_mlp_decoder': SegmentationPostprocessor,
     'yolox_head': DetectionPostprocessor,
+    'pidnet': SegmentationPostprocessor,
 }

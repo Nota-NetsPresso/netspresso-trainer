@@ -3,6 +3,7 @@
 # ------------------------------------------------------------------------------
 import logging
 import time
+from typing import Optional, List, Dict
 
 import torch
 import torch.nn as nn
@@ -17,8 +18,19 @@ use_align_corners = False
 
 class PIDNet(nn.Module):
 
-    def __init__(self, num_classes=19, m=2, n=3, planes=64, ppm_planes=96, head_planes=128, is_training=True, **kwargs):
+    def __init__(
+            self, 
+            params: Optional[Dict] = None
+    ) -> None:
         super(PIDNet, self).__init__()
+        num_classes = params.num_classes
+        m = params.m
+        n = params.n
+        planes = params.planes
+        ppm_planes = params.ppm_planes
+        head_planes = params.head_planes
+        is_training = params.is_training
+
         self.is_training = is_training
 
         # I Branch
@@ -195,5 +207,6 @@ class PIDNet(nn.Module):
 
 def pidnet(num_classes: int, conf_model_full) -> PIDNet:
     # PIDNet-S
-    return PIDNet(num_classes=num_classes, is_training=True, **conf_model_full)
-
+    conf_model_full.num_classes = num_classes
+    conf_model_full.is_training = True
+    return PIDNet(params=conf_model_full)

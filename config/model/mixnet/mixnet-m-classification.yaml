@@ -1,0 +1,67 @@
+model:
+  task: classification
+  name: mixnet_m
+  checkpoint: ./weights/mixnet/mixnet_m.pth
+  fx_model_checkpoint: ~
+  resume_optimizer_checkpoint: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mixnet
+      params:
+        stem_planes: 24
+        width_multi: 1.0
+        depth_multi: 1.0
+        dropout_rate: 0.
+      stage_params: 
+        -
+          expand_ratio: [1, 6, 3]
+          out_channels: [24, 32, 32]
+          num_blocks: [1, 1, 1]
+          kernel_sizes: [[3], [3, 5, 7], [3]]
+          exp_kernel_sizes: [[1], [1, 1], [1, 1]]
+          poi_kernel_sizes: [[1], [1, 1], [1, 1]]
+          stride: [1, 2, 1]
+          dilation: [1, 1, 1]
+          act_type: ["relu", "relu", "relu"]
+          se_reduction_ratio: [~, ~, ~]
+        -
+          expand_ratio: [6, 6]
+          out_channels: [40, 40]
+          num_blocks: [1, 3]
+          kernel_sizes: [[3, 5, 7, 9], [3, 5]]
+          exp_kernel_sizes: [[1], [1, 1]]
+          poi_kernel_sizes: [[1], [1, 1]]
+          stride: [2, 1]
+          dilation: [1, 1]
+          act_type: ["swish", "swish"]
+          se_reduction_ratio: [2, 2]
+        -
+          expand_ratio: [6, 6, 6, 3]
+          out_channels: [80, 80, 120, 120]
+          num_blocks: [1, 3, 1, 3]
+          kernel_sizes: [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]]
+          exp_kernel_sizes: [[1], [1, 1], [1], [1, 1]]
+          poi_kernel_sizes: [[1], [1, 1], [1], [1, 1]]
+          stride: [2, 1, 1, 1]
+          dilation: [1, 1, 1, 1]
+          act_type: ["swish", "swish", "swish", "swish"]
+          se_reduction_ratio: [4, 4, 2, 2]
+        -
+          expand_ratio: [6, 6]
+          out_channels: [200, 200]
+          num_blocks: [1, 3]
+          kernel_sizes: [[3, 5, 7, 9], [3, 5, 7, 9]]
+          exp_kernel_sizes: [[1], [1]]
+          poi_kernel_sizes: [[1], [1, 1]]
+          stride: [2, 1]
+          dilation: [1, 1]
+          act_type: ["swish", "swish"]
+          se_reduction_ratio: [2, 2]
+    head:
+      name: fc
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~

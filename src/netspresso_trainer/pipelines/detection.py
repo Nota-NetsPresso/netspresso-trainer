@@ -33,6 +33,15 @@ class TwoStageDetectionPipeline(BasePipeline):
             model = model.to(device=devices)
             self.model = model
 
+        if conf.distributed:
+            self.backbone_to_train = model.module.backbone
+            self.neck_to_train = model.module.neck
+            self.head_to_train = model.module.head
+        else:
+            self.backbone_to_train = model.backbone
+            self.neck = model.neck
+            self.head_to_train = model.head
+
     def train_step(self, batch):
         self.model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
@@ -43,12 +52,12 @@ class TwoStageDetectionPipeline(BasePipeline):
         self.optimizer.zero_grad()
 
         # forward to rpn
-        backbone = self.model.backbone
-        head = self.model.head
+        backbone = self.backbone_to_train
+        neck = self.neck_to_train
+        head = self.head_to_train
 
         features = backbone(images)['intermediate_features']
-        if head.neck:
-            features = head.neck(features)
+        features = neck(features)['intermediate_features']
 
         features = {str(k): v for k, v in enumerate(features)}
         rpn_features = head.rpn(features, head.image_size)
@@ -86,7 +95,7 @@ class TwoStageDetectionPipeline(BasePipeline):
         out = self.model(images)
 
         # Compute loss
-        head = self.model.head
+        head = self.head_to_train
         matched_idxs, roi_head_labels = head.roi_heads.assign_targets_to_proposals(out['boxes'], bboxes, labels)
         matched_gt_boxes = [bbox[idx] for idx, bbox in zip(matched_idxs, bboxes)]
         regression_targets = head.roi_heads.box_coder.encode(matched_gt_boxes, out['boxes'])
