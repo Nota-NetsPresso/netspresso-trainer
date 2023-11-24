@@ -6,6 +6,7 @@
 - Support augmentation for classification task: cutmix, mixup by `@illian01` in [PR 221](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/221)
 - Add model: MixNet by `@illian01` in [PR 229](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/229)
 - Add `model.name` to get the exact nickname of the model by `@deepkyu` in [PR 243](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/243/)
+- Add transforms: RandomErasing and TrivialAugmentationWide by `@illian01` in [PR 246](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/246)
 
 ## Bug Fixes:
 
@@ -19,6 +20,7 @@
 - Add postprocessor module by `@illian01` in [PR 223](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/223)
 - Equalize the model backbone configuration format by `@illian01` in [PR 228](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/228)
 - Separate FPN and PAFPN as neck module by `@illian01` in [PR 234](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/234)
+- Auto-download pretrained checkpoint from AWS S3 by `@deepkyu` in [PR 244](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/244)
 
 ## Other Changes:
 

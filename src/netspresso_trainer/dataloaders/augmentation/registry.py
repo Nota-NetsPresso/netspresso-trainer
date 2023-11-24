@@ -5,11 +5,13 @@ from .custom import (
     Pad,
     RandomCrop,
     RandomCutmix,
+    RandomErasing,
     RandomHorizontalFlip,
     RandomMixup,
     RandomResizedCrop,
     RandomVerticalFlip,
     Resize,
+    TrivialAugmentWide,
 )
 
 TRANSFORM_DICT: Dict[str, Callable] = {
@@ -19,7 +21,9 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomresizedcrop': RandomResizedCrop,
     'randomhorizontalflip': RandomHorizontalFlip,
     'randomverticalflip': RandomVerticalFlip,
+    'randomerasing': RandomErasing,
     'resize': Resize,
     'mixup': RandomMixup,
-    'cutmix': RandomCutmix
+    'cutmix': RandomCutmix,
+    'trivialaugmentwide': TrivialAugmentWide,
 }

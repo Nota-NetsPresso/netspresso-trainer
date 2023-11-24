@@ -1,14 +1,17 @@
 import math
 import random
 from collections.abc import Sequence
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 import PIL.Image as Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
+from omegaconf import ListConfig
+from torch import Tensor
 from torch.nn import functional as F_torch
+from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
@@ -349,6 +352,132 @@ class RandomResizedCrop(T.RandomResizedCrop):
         format_string += ', ratio={0}'.format(tuple(round(r, 4) for r in self.ratio))
         format_string += ', interpolation={0})'.format(interpolate_str)
         return format_string
+
+
+class RandomErasing(T.RandomErasing):
+    visualize = True
+
+    def __init__(self, p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False):
+        if isinstance(scale, ListConfig):
+            scale = tuple(scale)
+        if isinstance(ratio, ListConfig):
+            ratio = tuple(ratio)
+        if isinstance(value, ListConfig):
+            value = tuple(value)
+        super().__init__(p, scale, ratio, value, inplace)
+
+    @staticmethod
+    def get_params(
+        img, scale: Tuple[float, float], ratio: Tuple[float, float], value: Optional[int] = None
+    ):
+        img_w, img_h = img.size
+
+        area = img_h * img_w
+
+        log_ratio = torch.log(torch.tensor(ratio))
+        for _ in range(10):
+            erase_area = area * torch.empty(1).uniform_(scale[0], scale[1]).item()
+            aspect_ratio = torch.exp(torch.empty(1).uniform_(log_ratio[0], log_ratio[1])).item()
+
+            h = int(round(math.sqrt(erase_area * aspect_ratio)))
+            w = int(round(math.sqrt(erase_area / aspect_ratio)))
+            if not (h < img_h and w < img_w):
+                continue
+
+            if value is None:
+                v = np.random.randint(255, size=(h, w)).astype('uint8')
+                v = Image.fromarray(v).convert(img.mode)
+            else:
+                v = Image.new(img.mode, (w, h), value)
+
+            i = torch.randint(0, img_h - h + 1, size=(1,)).item()
+            j = torch.randint(0, img_w - w + 1, size=(1,)).item()
+            return i, j, v
+
+        # Return original image
+        return 0, 0, img
+
+    def forward(self, image, mask=None, bbox=None):
+        if torch.rand(1) < self.p:
+            x, y, v = self.get_params(image, scale=self.scale, ratio=self.ratio, value=self.value)
+            image.paste(v, (y, x))
+            # TODO: Object-aware
+            return image, mask, bbox
+        return image, mask, bbox
+
+
+class TrivialAugmentWide(torch.nn.Module):
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/main/_modules/torchvision/transforms/autoaugment.html#TrivialAugmentWide
+    """
+    visualize = True
+
+    def __init__(
+        self,
+        num_magnitude_bins: int = 31,
+        interpolation: InterpolationMode = 'bilinear',
+        fill: Optional[List[float]] = None,
+    ) -> None:
+        super().__init__()
+        interpolation = INVERSE_MODES_MAPPING[interpolation]
+
+        self.num_magnitude_bins = num_magnitude_bins
+        self.interpolation = interpolation
+        self.fill = fill
+
+    def _augmentation_space(self, num_bins: int) -> Dict[str, Tuple[Tensor, bool]]:
+        return {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor(0.0), False),
+            "ShearX": (torch.linspace(0.0, 0.99, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.99, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 32.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 32.0, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 135.0, num_bins), True),
+            "Brightness": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Color": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Contrast": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Sharpness": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 6)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor(0.0), False),
+            "Equalize": (torch.tensor(0.0), False),
+        }
+
+    def forward(self, image, mask=None, bbox=None):
+        fill = self.fill
+        channels, height, width = F.get_dimensions(image)
+        if isinstance(image, Tensor):
+            if isinstance(fill, (int, float)):
+                fill = [float(fill)] * channels
+            elif fill is not None:
+                fill = [float(f) for f in fill]
+
+        op_meta = self._augmentation_space(self.num_magnitude_bins)
+        op_index = int(torch.randint(len(op_meta), (1,)).item())
+        op_name = list(op_meta.keys())[op_index]
+        magnitudes, signed = op_meta[op_name]
+        magnitude = (
+            float(magnitudes[torch.randint(len(magnitudes), (1,), dtype=torch.long)].item())
+            if magnitudes.ndim > 0
+            else 0.0
+        )
+        if signed and torch.randint(2, (1,)):
+            magnitude *= -1.0
+
+        # TODO: Compute mask, bbox
+        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), mask, bbox
+
+    def __repr__(self) -> str:
+        s = (
+            f"{self.__class__.__name__}("
+            f"num_magnitude_bins={self.num_magnitude_bins}"
+            f", interpolation={self.interpolation}"
+            f", fill={self.fill}"
+            f")"
+        )
+        return s
 
 
 class RandomMixup:
