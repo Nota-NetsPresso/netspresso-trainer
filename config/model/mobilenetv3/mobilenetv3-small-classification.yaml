@@ -1,5 +1,6 @@
 model:
   task: classification
+  name: mobilenet_v3_small
   checkpoint: ./weights/mobilenetv3/mobilenet_v3_small.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
