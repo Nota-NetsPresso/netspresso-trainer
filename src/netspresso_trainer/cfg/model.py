@@ -18,6 +18,13 @@ __all__ = [
     "ClassificationSegFormerModelConfig",
     "SegmentationSegFormerModelConfig",
     "ClassificationViTModelConfig",
+    "DetectionYoloXModelConfig",
+    "ClassificationMixNetSmallModelConfig",
+    "ClassificationMixNetMediumModelConfig",
+    "ClassificationMixNetLargeModelConfig",
+    "SegmentationMixNetSmallModelConfig",
+    "SegmentationMixNetMediumModelConfig",
+    "SegmentationMixNetLargeModelConfig",
 ]
 
 
@@ -303,6 +310,208 @@ class ViTArchitectureConfig(ArchitectureConfig):
 
 
 @dataclass
+class MixNetSmallArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 16,
+            "width_multi": 1.0,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [16, 24, 24],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 2, 1, 2],
+                "kernel_sizes": [[3, 5, 7], [3, 5], [3, 5, 7], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1, 1], [1, 1], [1, 1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 2],
+                "kernel_sizes": [[3, 5, 7, 9, 11], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class MixNetMediumArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 24,
+            "width_multi": 1.0,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [24, 32, 32],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3, 5, 7], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 3, 1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class MixNetLargeArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "mixnet",
+        "params": {
+            "stem_planes": 24,
+            "width_multi": 1.3,
+            "depth_multi": 1.0,
+            "dropout_rate": 0.,
+        },
+        "stage_params":  [
+            {
+                "expand_ratio": [1, 6, 3],
+                "out_channels": [24, 32, 32],
+                "num_blocks": [1, 1, 1],
+                "kernel_sizes": [[3], [3, 5, 7], [3]],
+                "exp_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1, 1]],
+                "stride": [1, 2, 1],
+                "dilation": [1, 1, 1],
+                "act_type": ["relu", "relu", "relu"],
+                "se_reduction_ratio": [None, None, None],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [40, 40],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
+                "exp_kernel_sizes": [[1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+            {
+                "expand_ratio": [6, 6, 6, 3],
+                "out_channels": [80, 80, 120, 120],
+                "num_blocks": [1, 3, 1, 3],
+                "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "poi_kernel_sizes": [[1], [1, 1], [1], [1, 1]],
+                "stride": [2, 1, 1, 1],
+                "dilation": [1, 1, 1, 1],
+                "act_type": ["swish", "swish", "swish", "swish"],
+                "se_reduction_ratio": [4, 4, 2, 2],
+            },
+            {
+                "expand_ratio": [6, 6],
+                "out_channels": [200, 200],
+                "num_blocks": [1, 3],
+                "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
+                "exp_kernel_sizes": [[1], [1]],
+                "poi_kernel_sizes": [[1], [1, 1]],
+                "stride": [2, 1],
+                "dilation": [1, 1],
+                "act_type": ["swish", "swish"],
+                "se_reduction_ratio": [2, 2],
+            },
+        ],
+    })
+
+
+@dataclass
+class CSPDarkNetSmallArchitectureConfig(ArchitectureConfig):
+    backbone: Dict[str, Any] = field(default_factory=lambda: {
+        "name": "cspdarknet",
+        "params": {
+            "dep_mul": 0.33,
+            "wid_mul": 0.5,
+            "act_type": "silu",
+        },
+        "stage_params": None,
+    })
+
+
+@dataclass
 class ClassificationEfficientFormerModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "efficientformer_l1"
@@ -457,4 +666,96 @@ class ClassificationViTModelConfig(ModelConfig):
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class DetectionYoloXModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "yolox_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
+        neck={"name": "pafpn"},
+        head={"name": "yolox_head"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "yolox_loss", "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetSmallModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetSmallModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetMediumModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_m"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetMediumModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_m"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class ClassificationMixNetLargeModelConfig(ModelConfig):
+    task: str = "classification"
+    name: str = "mixnet_l"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
+        head={"name": "fc"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
+    ])
+
+
+@dataclass
+class SegmentationMixNetLargeModelConfig(ModelConfig):
+    task: str = "segmentation"
+    name: str = "mixnet_l"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
+        head={"name": "all_mlp_decoder"}
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
     ])
