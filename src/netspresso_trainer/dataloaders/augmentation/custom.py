@@ -12,6 +12,7 @@ import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from torch.nn import functional as F_torch
 from torchvision.transforms.functional import InterpolationMode
+from torchvision.transforms.autoaugment import _apply_op
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -402,6 +403,79 @@ class RandomErasing(T.RandomErasing):
             # TODO: Object-aware
             return image, mask, bbox
         return image, mask, bbox
+
+
+class TrivialAugmentWide(torch.nn.Module):
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/main/_modules/torchvision/transforms/autoaugment.html#TrivialAugmentWide
+    """
+
+    def __init__(
+        self,
+        num_magnitude_bins: int = 31,
+        interpolation: InterpolationMode = 'bilinear',
+        fill: Optional[List[float]] = None,
+    ) -> None:
+        super().__init__()
+        interpolation = INVERSE_MODES_MAPPING[interpolation]
+
+        self.num_magnitude_bins = num_magnitude_bins
+        self.interpolation = interpolation
+        self.fill = fill
+
+    def _augmentation_space(self, num_bins: int) -> Dict[str, Tuple[Tensor, bool]]:
+        return {
+            # op_name: (magnitudes, signed)
+            "Identity": (torch.tensor(0.0), False),
+            "ShearX": (torch.linspace(0.0, 0.99, num_bins), True),
+            "ShearY": (torch.linspace(0.0, 0.99, num_bins), True),
+            "TranslateX": (torch.linspace(0.0, 32.0, num_bins), True),
+            "TranslateY": (torch.linspace(0.0, 32.0, num_bins), True),
+            "Rotate": (torch.linspace(0.0, 135.0, num_bins), True),
+            "Brightness": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Color": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Contrast": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Sharpness": (torch.linspace(0.0, 0.99, num_bins), True),
+            "Posterize": (8 - (torch.arange(num_bins) / ((num_bins - 1) / 6)).round().int(), False),
+            "Solarize": (torch.linspace(255.0, 0.0, num_bins), False),
+            "AutoContrast": (torch.tensor(0.0), False),
+            "Equalize": (torch.tensor(0.0), False),
+        }
+
+    def forward(self, image, mask=None, bbox=None):
+        fill = self.fill
+        channels, height, width = F.get_dimensions(image)
+        if isinstance(image, Tensor):
+            if isinstance(fill, (int, float)):
+                fill = [float(fill)] * channels
+            elif fill is not None:
+                fill = [float(f) for f in fill]
+
+        op_meta = self._augmentation_space(self.num_magnitude_bins)
+        op_index = int(torch.randint(len(op_meta), (1,)).item())
+        op_name = list(op_meta.keys())[op_index]
+        magnitudes, signed = op_meta[op_name]
+        magnitude = (
+            float(magnitudes[torch.randint(len(magnitudes), (1,), dtype=torch.long)].item())
+            if magnitudes.ndim > 0
+            else 0.0
+        )
+        if signed and torch.randint(2, (1,)):
+            magnitude *= -1.0
+
+        # TODO: Compute mask, bbox
+        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), mask, bbox
+
+    def __repr__(self) -> str:
+        s = (
+            f"{self.__class__.__name__}("
+            f"num_magnitude_bins={self.num_magnitude_bins}"
+            f", interpolation={self.interpolation}"
+            f", fill={self.fill}"
+            f")"
+        )
+        return s
 
 
 class RandomMixup:

@@ -11,6 +11,7 @@ from .custom import (
     RandomVerticalFlip,
     RandomErasing,
     Resize,
+    TrivialAugmentWide,
 )
 
 TRANSFORM_DICT: Dict[str, Callable] = {
@@ -23,5 +24,6 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomerasing': RandomErasing,
     'resize': Resize,
     'mixup': RandomMixup,
-    'cutmix': RandomCutmix
+    'cutmix': RandomCutmix,
+    'trivialaugmentwide': TrivialAugmentWide,
 }
