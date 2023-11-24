@@ -1,5 +1,6 @@
 model:
   task: segmentation
+  name: pidnet_s
   checkpoint: ./weights/pidnet/pidnet_s.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~

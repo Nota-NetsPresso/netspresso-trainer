@@ -29,10 +29,9 @@ def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING'
 
     # TODO: Get model name from checkpoint
     single_task_model = is_single_task_model(conf.model)
-    conf_model_sub = conf.model.architecture.full if single_task_model else conf.model.architecture.backbone
     conf.model.single_task_model = single_task_model
 
-    model_name = str(conf_model_sub.name).lower()
+    model_name = str(conf.model.name).lower()
 
     if is_graphmodule_training:
         model_name += "_graphmodule"
