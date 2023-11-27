@@ -1,5 +1,6 @@
 model:
   task: classification
+  name: resnet50
   checkpoint: ./weights/resnet/resnet50.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
@@ -7,7 +8,7 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      name: resnet50
+      name: resnet
       params:
         block: bottleneck
         norm_layer: batch_norm

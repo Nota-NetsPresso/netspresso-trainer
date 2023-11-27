@@ -38,15 +38,22 @@ from .environment import EnvironmentConfig
 from .logging import LoggingConfig
 from .model import (
     ClassificationEfficientFormerModelConfig,
+    ClassificationMixNetLargeModelConfig,
+    ClassificationMixNetMediumModelConfig,
+    ClassificationMixNetSmallModelConfig,
     ClassificationMobileNetV3ModelConfig,
     ClassificationMobileViTModelConfig,
     ClassificationResNetModelConfig,
     ClassificationSegFormerModelConfig,
     ClassificationViTModelConfig,
     DetectionEfficientFormerModelConfig,
+    DetectionYoloXModelConfig,
     ModelConfig,
     PIDNetModelConfig,
     SegmentationEfficientFormerModelConfig,
+    SegmentationMixNetLargeModelConfig,
+    SegmentationMixNetMediumModelConfig,
+    SegmentationMixNetSmallModelConfig,
     SegmentationMobileNetV3ModelConfig,
     SegmentationResNetModelConfig,
     SegmentationSegFormerModelConfig,
@@ -64,6 +71,7 @@ _TRAINING_CONFIG_TYPE_DICT = {
     'segmentation': SegmentationScheduleConfig,
     'detection': DetectionScheduleConfig
 }
+
 
 @dataclass
 class TrainerConfig:

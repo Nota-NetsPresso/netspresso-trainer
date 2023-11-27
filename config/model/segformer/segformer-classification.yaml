@@ -1,5 +1,6 @@
 model:
   task: classification
+  name: segformer
   checkpoint: ./weights/segformer/segformer.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~

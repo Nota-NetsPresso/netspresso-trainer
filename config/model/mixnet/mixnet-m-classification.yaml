@@ -1,5 +1,6 @@
 model:
   task: classification
+  name: mixnet_m
   checkpoint: ./weights/mixnet/mixnet_m.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~

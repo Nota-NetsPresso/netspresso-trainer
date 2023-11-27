@@ -12,7 +12,7 @@ from torch import Tensor
 from ...op.custom import ConvLayer, InvertedResidual
 from ...utils import BackboneOutput
 
-__all__ = ['mobilenetv3_small']
+__all__ = ['mobilenetv3']
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 
@@ -130,5 +130,5 @@ class MobileNetV3(nn.Module):
         return task.lower() in SUPPORTING_TASK
 
 
-def mobilenetv3_small(task, conf_model_backbone) -> MobileNetV3:
+def mobilenetv3(task, conf_model_backbone) -> MobileNetV3:
     return MobileNetV3(task, conf_model_backbone.params, conf_model_backbone.stage_params)

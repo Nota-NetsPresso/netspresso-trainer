@@ -12,7 +12,7 @@ from torch import Tensor
 from ...op.custom import BasicBlock, Bottleneck, ConvLayer
 from ...utils import BackboneOutput
 
-__all__ = ['resnet50']
+__all__ = ['resnet']
 
 SUPPORTING_TASK = ['classification', 'segmentation']
 
@@ -158,8 +158,8 @@ class ResNet(nn.Module):
         return task.lower() in SUPPORTING_TASK
 
 
-def resnet50(task, conf_model_backbone) -> ResNet:
+def resnet(task, conf_model_backbone) -> ResNet:
     """
-        ResNet-50 model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
+        ResNet model from "Deep Residual Learning for Image Recognition" https://arxiv.org/pdf/1512.03385.pdf.
     """
     return ResNet(task, conf_model_backbone.params, conf_model_backbone.stage_params)

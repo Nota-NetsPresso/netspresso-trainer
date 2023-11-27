@@ -1,5 +1,6 @@
 model:
   task: segmentation
+  name: resnet50
   checkpoint: ./weights/resnet/resnet50.pth
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
@@ -8,7 +9,7 @@ model:
     full:
       name: ~ # auto
     backbone:
-      name: resnet50
+      name: resnet
       params:
         block: bottleneck
         norm_layer: batch_norm

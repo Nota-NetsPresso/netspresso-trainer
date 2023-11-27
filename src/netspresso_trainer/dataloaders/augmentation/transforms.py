@@ -84,6 +84,6 @@ def val_transforms_pidnet(conf_augmentation):
 
 
 def create_transform(model_name: str, is_training=False):
-    if model_name == 'pidnet':
+    if 'pidnet' in model_name:
         return train_transforms_pidnet if is_training else val_transforms_pidnet
     return transforms_custom_train if is_training else transforms_custom_eval
