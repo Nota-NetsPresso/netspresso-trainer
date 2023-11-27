@@ -10,12 +10,15 @@ model:
     backbone:
       name: cspdarknet
       params:
-        dep_mul: 0.33
+        dep_mul: &dep_mul 0.33
         wid_mul: 0.5
         act_type: &act_type "silu"
       stage_params: ~
     neck:
       name: pafpn
+      params:
+        dep_mul: *dep_mul
+        act_type: *act_type
     head:
       name: yolox_head
       params:

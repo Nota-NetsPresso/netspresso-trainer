@@ -1,3 +1,6 @@
+from typing import List
+
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
@@ -12,43 +15,43 @@ class PAFPN(nn.Module):
 
     def __init__(
         self,
-        in_channels,
-        act_type="silu",
+        intermediate_features_dim: List[int],
+        params: DictConfig,
     ):
         super().__init__()
         
-        self.in_channels = in_channels
+        self.in_channels = intermediate_features_dim
         Conv = ConvLayer
 
-        # TODO: Get from config
-        depth = 0.33
+        depth = params.dep_mul
+        act_type = params.act_type
 
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
         self.lateral_conv0 = ConvLayer(
-            in_channels=int(in_channels[2]), 
-            out_channels=int(in_channels[1]), 
+            in_channels=int(self.in_channels[2]), 
+            out_channels=int(self.in_channels[1]), 
             kernel_size=1, 
             stride=1,
             act_type=act_type
         )
         self.C3_p4 = CSPLayer(
-            in_channels=int(2 * in_channels[1]),
-            out_channels=int(in_channels[1]),
+            in_channels=int(2 * self.in_channels[1]),
+            out_channels=int(self.in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
             act_type=act_type,
         )  # cat
 
         self.reduce_conv1 = ConvLayer(
-            in_channels=int(in_channels[1]), 
-            out_channels=int(in_channels[0]), 
+            in_channels=int(self.in_channels[1]), 
+            out_channels=int(self.in_channels[0]), 
             kernel_size=1, 
             stride=1, 
             act_type=act_type
         )
         self.C3_p3 = CSPLayer(
-            in_channels=int(2 * in_channels[0]),
-            out_channels=int(in_channels[0]),
+            in_channels=int(2 * self.in_channels[0]),
+            out_channels=int(self.in_channels[0]),
             n=round(3 * depth),
             shortcut=False,
             act_type=act_type,
@@ -56,15 +59,15 @@ class PAFPN(nn.Module):
 
         # bottom-up conv
         self.bu_conv2 = Conv(
-            in_channels=int(in_channels[0]), 
-            out_channels=int(in_channels[0]), 
+            in_channels=int(self.in_channels[0]), 
+            out_channels=int(self.in_channels[0]), 
             kernel_size=3, 
             stride=2, 
             act_type=act_type
         )
         self.C3_n3 = CSPLayer(
-            in_channels=int(2 * in_channels[0]),
-            out_channels=int(in_channels[1]),
+            in_channels=int(2 * self.in_channels[0]),
+            out_channels=int(self.in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
             act_type=act_type,
@@ -72,21 +75,21 @@ class PAFPN(nn.Module):
 
         # bottom-up conv
         self.bu_conv1 = Conv(
-            in_channels=int(in_channels[1]), 
-            out_channels=int(in_channels[1]), 
+            in_channels=int(self.in_channels[1]), 
+            out_channels=int(self.in_channels[1]), 
             kernel_size=3, 
             stride=2, 
             act_type=act_type
         )
         self.C3_n4 = CSPLayer(
-            in_channels=int(2 * in_channels[1]),
-            out_channels=int(in_channels[2]),
+            in_channels=int(2 * self.in_channels[1]),
+            out_channels=int(self.in_channels[2]),
             n=round(3 * depth),
             shortcut=False,
             act_type=act_type,
         )
 
-        self._intermediate_features_dim = in_channels
+        self._intermediate_features_dim = self.in_channels
 
     def forward(self, inputs):
         """
@@ -124,9 +127,5 @@ class PAFPN(nn.Module):
     def intermediate_features_dim(self):
         return self._intermediate_features_dim
 
-def pafpn(intermediate_features_dim, **kwargs):
-    configuration = {
-        'act_type': 'silu',
-    }
-
-    return PAFPN(in_channels=intermediate_features_dim, **configuration)
+def pafpn(intermediate_features_dim, conf_model_neck, **kwargs):
+    return PAFPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)

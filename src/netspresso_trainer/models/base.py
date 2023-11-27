@@ -30,7 +30,7 @@ class TaskModel(nn.Module):
         if getattr(conf_model.architecture, 'neck', None):
             neck_name = conf_model.architecture.neck.name
             neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
-            self.neck = neck_fn(intermediate_features_dim=self.backbone.intermediate_features_dim)
+            self.neck = neck_fn(intermediate_features_dim=self.backbone.intermediate_features_dim, conf_model_neck=conf_model.architecture.neck)
             intermediate_features_dim = self.neck.intermediate_features_dim
 
         head_module = MODEL_HEAD_DICT[self.task][head_name]
