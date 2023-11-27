@@ -13,13 +13,13 @@ class FC(nn.Module):
     def __init__(self, feature_dim: int, num_classes: int, params: DictConfig) -> None:
         super(FC, self).__init__()
         hidden_size = params.hidden_size
-        num_hidden_layers = params.num_hidden_layers
+        num_layers = params.num_hidden_layers
 
-        assert num_hidden_layers >= 1, "num_hidden_layers must be integer larger than 0"
+        assert num_layers >= 1, "num_hidden_layers must be integer larger than 0"
 
         prev_size = feature_dim
         classifier = []
-        for _ in range(num_hidden_layers - 1):
+        for _ in range(num_layers - 1):
             classifier.append(nn.Linear(prev_size, hidden_size))
             prev_size = hidden_size
         classifier.append(nn.Linear(prev_size, num_classes))

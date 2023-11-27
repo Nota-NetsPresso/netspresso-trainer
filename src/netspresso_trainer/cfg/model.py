@@ -521,7 +521,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -603,7 +603,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -641,7 +641,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -673,7 +673,7 @@ class ClassificationResNetModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -711,7 +711,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -749,7 +749,7 @@ class ClassificationViTModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -782,7 +782,7 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -814,7 +814,7 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
@@ -846,7 +846,7 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "num_hidden_layers": 1,
+                "num_layers": 1,
             }
         }
     ))
