@@ -53,7 +53,6 @@ model:
         add_extra_convs: False
         relu_before_extra_convs: False
         no_norm_on_lateral: False
-        upsample_type: ~
     head:
       name: faster_rcnn
       params:
