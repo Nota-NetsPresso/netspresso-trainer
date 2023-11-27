@@ -46,6 +46,9 @@ model:
           downsamples: True
     head:
       name: all_mlp_decoder
+      params:
+        decoder_hidden_size: 256
+        classifier_dropout_prob: 0.
   losses:
     - criterion: cross_entropy
       weight: ~

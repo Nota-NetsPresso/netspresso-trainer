@@ -1,6 +1,7 @@
 import math
 from typing import List, Tuple
 
+from omegaconf import ListConfig
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -369,10 +370,10 @@ class AnchorGenerator(nn.Module):
     ):
         super().__init__()
 
-        if not isinstance(sizes[0], (list, tuple)):
+        if not isinstance(sizes[0], (list, tuple, ListConfig)):
             # TODO change this
             sizes = tuple((s,) for s in sizes)
-        if not isinstance(aspect_ratios[0], (list, tuple)):
+        if not isinstance(aspect_ratios[0], (list, tuple, ListConfig)):
             aspect_ratios = (aspect_ratios,) * len(sizes)
 
         self.sizes = sizes

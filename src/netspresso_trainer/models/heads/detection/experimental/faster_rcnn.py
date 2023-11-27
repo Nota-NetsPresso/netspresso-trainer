@@ -1,3 +1,6 @@
+from typing import List
+
+from omegaconf import DictConfig
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -9,38 +12,37 @@ IMAGE_SIZE = (512, 512) # TODO: Get from configuration
 class FasterRCNN(GeneralizedRCNN):
     def __init__(
         self,
-        num_classes,
-        intermediate_features_dim,
-        # FPN parameters
-        fpn_num_outs=4,
-        # Anchor parameters
-        anchor_sizes=((64,), (128,), (256,), (512,)),
-        aspect_ratios=(0.5, 1.0, 2.0),
-        # RPN parameters
-        rpn_pre_nms_top_n=2000,
-        rpn_post_nms_top_n=2000,
-        rpn_nms_thresh=0.7,
-        rpn_fg_iou_thresh=0.7,
-        rpn_bg_iou_thresh=0.3,
-        rpn_batch_size_per_image=256,
-        rpn_positive_fraction=0.5,
-        rpn_score_thresh=0.0,
-        # RoI parameters
-        roi_output_size=7,
-        roi_sampling_ratio=2,
-        roi_representation_size=1024,
-        # Box parameters
-        box_score_thresh=0.05,
-        box_nms_thresh=0.5,
-        box_detections_per_img=100,
-        box_fg_iou_thresh=0.5,
-        box_bg_iou_thresh=0.5,
-        box_batch_size_per_image=512,
-        box_positive_fraction=0.25,
-        bbox_reg_weights=None,
-        **kwargs,
+        num_classes: int,
+        intermediate_features_dim: List[int],
+        params: DictConfig,
     ):
-        assert fpn_num_outs == len(anchor_sizes)
+        # Anchor parameters
+        anchor_sizes = params.anchor_sizes
+        #anchor_sizes = ((64,), (128,), (256,), (512,))
+        aspect_ratios = params.aspect_ratios
+        #aspect_ratios = (0.5, 1.0, 2.0)
+        # RPN parameters
+        rpn_pre_nms_top_n = params.rpn_pre_nms_top_n
+        rpn_post_nms_top_n = params.rpn_post_nms_top_n
+        rpn_nms_thresh = params.rpn_nms_thresh
+        rpn_fg_iou_thresh = params.rpn_fg_iou_thresh
+        rpn_bg_iou_thresh = params.rpn_bg_iou_thresh
+        rpn_batch_size_per_image = params.rpn_batch_size_per_image
+        rpn_positive_fraction = params.rpn_positive_fraction
+        rpn_score_thresh = params.rpn_score_thresh
+        # RoI parameters
+        roi_output_size = params.roi_output_size
+        roi_sampling_ratio = params.roi_sampling_ratio
+        roi_representation_size = params.roi_representation_size
+        # Box parameters
+        box_score_thresh = params.box_score_thresh
+        box_nms_thresh = params.box_nms_thresh
+        box_detections_per_img = params.box_detections_per_img
+        box_fg_iou_thresh = params.box_fg_iou_thresh
+        box_bg_iou_thresh = params.box_bg_iou_thresh
+        box_batch_size_per_image = params.box_batch_size_per_image
+        box_positive_fraction = params.box_positive_fraction
+        bbox_reg_weights = params.bbox_reg_weights
 
         out_channels = intermediate_features_dim[-1]
 
@@ -134,34 +136,7 @@ class FastRCNNPredictor(nn.Module):
         return scores, bbox_deltas
 
 
-def faster_rcnn(num_classes, intermediate_features_dim, **kwargs):
-    configuration = {
-        # FPN parameters
-        'fpn_num_outs': 4,
-        # Anchor parameters
-        'anchor_sizes': ((64,), (128,), (256,), (512,)),
-        'aspect_ratios': (0.5, 1.0, 2.0),
-        # RPN parameters
-        'rpn_pre_nms_top_n': 2000,
-        'rpn_post_nms_top_n': 2000,
-        'rpn_nms_thresh': 0.7,
-        'rpn_fg_iou_thresh': 0.7,
-        'rpn_bg_iou_thresh': 0.3,
-        'rpn_batch_size_per_image': 256,
-        'rpn_positive_fraction': 0.5,
-        'rpn_score_thresh': 0.0,
-        # RoI parameters
-        'roi_output_size': 7,
-        'roi_sampling_ratio': 2,
-        'roi_representation_size': 1024,
-        # Box parameters
-        'box_score_thresh': 0.05,
-        'box_nms_thresh': 0.5,
-        'box_detections_per_img': 100,
-        'box_fg_iou_thresh': 0.5,
-        'box_bg_iou_thresh': 0.5,
-        'box_batch_size_per_image': 512,
-        'box_positive_fraction': 0.25,
-        'bbox_reg_weights': None,
-    }
-    return FasterRCNN(num_classes=num_classes, intermediate_features_dim=intermediate_features_dim, **configuration)
+def faster_rcnn(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> FasterRCNN:
+    return FasterRCNN(num_classes=num_classes, 
+                      intermediate_features_dim=intermediate_features_dim, 
+                      params=conf_model_head.params)

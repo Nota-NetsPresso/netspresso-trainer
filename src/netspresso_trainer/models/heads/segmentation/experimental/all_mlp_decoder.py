@@ -1,6 +1,7 @@
 import math
 from typing import List, Tuple, Union
 
+from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,9 +11,17 @@ from ....utils import FXTensorListType, ModelOutput
 
 
 class AllMLPDecoder(nn.Module):
-    def __init__(self, num_classes, intermediate_features_dim: List[int], label_size: Union[Tuple[int, int], int],
-                 decoder_hidden_size: int, classifier_dropout_prob=0.1, ):
+    def __init__(
+            self,
+            num_classes: int,
+            intermediate_features_dim: List[int],
+            label_size: Union[Tuple[int, int], int],
+            params: DictConfig,
+        ):
         super().__init__()
+        decoder_hidden_size = params.decoder_hidden_size
+        classifier_dropout_prob = params.classifier_dropout_prob
+
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
         for feature_dim in intermediate_features_dim:
@@ -60,9 +69,8 @@ class AllMLPDecoder(nn.Module):
         return ModelOutput(pred=logits)
 
 
-def all_mlp_decoder(num_classes, intermediate_features_dim, label_size, **kwargs):
-    configuration = {
-        'decoder_hidden_size': 256,
-        'classifier_dropout_prob': 0.1,
-    }
-    return AllMLPDecoder(num_classes, intermediate_features_dim, label_size=label_size, **configuration)
+def all_mlp_decoder(num_classes, intermediate_features_dim, label_size, conf_model_head, **kwargs) -> AllMLPDecoder:
+    return AllMLPDecoder(num_classes,
+                         intermediate_features_dim,
+                         label_size=label_size,
+                         params=conf_model_head.params)

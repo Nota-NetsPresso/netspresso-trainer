@@ -517,7 +517,13 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
     name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -530,7 +536,13 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
     name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -544,7 +556,36 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         neck={"name": "fpn"},
-        head={"name": "faster_rcnn"}
+        head={
+            "name": "faster_rcnn",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                # RPN parameters
+                "rpn_pre_nms_top_n": 2000,
+                "rpn_post_nms_top_n": 2000,
+                "rpn_nms_thresh": 0.7,
+                "rpn_fg_iou_thresh": 0.7,
+                "rpn_bg_iou_thresh": 0.3,
+                "rpn_batch_size_per_image": 256,
+                "rpn_positive_fraction": 0.5,
+                "rpn_score_thresh": 0.0,
+                # RoI parameters
+                "roi_output_size": 7,
+                "roi_sampling_ratio": 2,
+                "roi_representation_size": 1024,
+                # Box parameters
+                "box_score_thresh": 0.05,
+                "box_nms_thresh": 0.5,
+                "box_detections_per_img": 100,
+                "box_fg_iou_thresh": 0.5,
+                "box_bg_iou_thresh": 0.5,
+                "box_batch_size_per_image": 512,
+                "box_positive_fraction": 0.25,
+                "bbox_reg_weights": None,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "roi_head_loss", "weight": None},
@@ -558,7 +599,13 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
     name: str = "mobilenet_v3_small"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -571,7 +618,13 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
     name: str = "mobilenet_v3_small"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -584,7 +637,13 @@ class ClassificationMobileViTModelConfig(ModelConfig):
     name: str = "mobilevit_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/mobilevit/mobilevit_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileViTArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -610,7 +669,13 @@ class ClassificationResNetModelConfig(ModelConfig):
     name: str = "resnet50"
     checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -623,7 +688,13 @@ class SegmentationResNetModelConfig(ModelConfig):
     name: str = "resnet50"
     checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -636,7 +707,13 @@ class ClassificationSegFormerModelConfig(ModelConfig):
     name: str = "segformer"
     checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -649,7 +726,13 @@ class SegmentationSegFormerModelConfig(ModelConfig):
     name: str = "segformer"
     checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -662,7 +745,13 @@ class ClassificationViTModelConfig(ModelConfig):
     name: str = "vit_tiny"
     checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -689,7 +778,13 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
     name: str = "mixnet_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -715,7 +810,13 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
     name: str = "mixnet_m"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -741,7 +842,13 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
     name: str = "mixnet_l"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
