@@ -39,7 +39,7 @@ class TwoStageDetectionPipeline(BasePipeline):
             self.head_to_train = model.module.head
         else:
             self.backbone_to_train = model.backbone
-            self.neck = model.neck
+            self.neck_to_train = model.neck
             self.head_to_train = model.head
 
     def train_step(self, batch):
