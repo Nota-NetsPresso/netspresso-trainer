@@ -46,6 +46,14 @@ model:
           downsamples: True
     neck:
       name: fpn
+      params:
+        num_outs: 4
+        start_level: 0
+        end_level: -1
+        add_extra_convs: False
+        relu_before_extra_convs: False
+        no_norm_on_lateral: False
+        upsample_type: ~
     head:
       name: faster_rcnn
       params:
