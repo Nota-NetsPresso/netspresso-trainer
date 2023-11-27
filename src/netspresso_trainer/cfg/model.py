@@ -521,7 +521,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -603,7 +603,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -641,7 +641,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -673,7 +673,7 @@ class ClassificationResNetModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -711,7 +711,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -749,7 +749,7 @@ class ClassificationViTModelConfig(ModelConfig):
             "name": "fc",
             "params": {
                 "hidden_size": 1024,
-                "hidden_layers": 0,
+                "num_hidden_layers": 1,
             }
         }
     ))
@@ -778,7 +778,13 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
     name: str = "mixnet_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_hidden_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -804,7 +810,13 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
     name: str = "mixnet_m"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_hidden_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
@@ -830,7 +842,13 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
     name: str = "mixnet_l"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
-        head={"name": "fc"}
+        head={
+            "name": "fc",
+            "params": {
+                "hidden_size": 1024,
+                "num_hidden_layers": 1,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
