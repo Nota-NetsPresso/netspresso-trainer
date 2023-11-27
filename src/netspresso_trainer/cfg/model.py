@@ -555,7 +555,17 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
     name: str = "efficientformer_l1"
     checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
-        neck={"name": "fpn"},
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
         head={
             "name": "faster_rcnn",
             "params": {
@@ -764,8 +774,17 @@ class DetectionYoloXModelConfig(ModelConfig):
     name: str = "yolox_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
-        neck={"name": "pafpn"},
-        head={"name": "yolox_head"}
+        neck={
+            "name": "pafpn",
+            "params": {
+                "dep_mul": 0.33,
+                "act_type": "silu",
+            },
+        },
+        head={
+            "name": "yolox_head",
+            "params": {"act_type": "silu"}
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "yolox_loss", "weight": None}
@@ -797,7 +816,13 @@ class SegmentationMixNetSmallModelConfig(ModelConfig):
     name: str = "mixnet_s"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -829,7 +854,13 @@ class SegmentationMixNetMediumModelConfig(ModelConfig):
     name: str = "mixnet_m"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
@@ -861,7 +892,13 @@ class SegmentationMixNetLargeModelConfig(ModelConfig):
     name: str = "mixnet_l"
     checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
-        head={"name": "all_mlp_decoder"}
+        head={
+            "name": "all_mlp_decoder",
+            "params": {
+                "decoder_hidden_size": 256,
+                "classifier_dropout_prob": 0.,
+            }
+        }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
