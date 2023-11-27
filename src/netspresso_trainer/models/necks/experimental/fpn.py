@@ -15,15 +15,8 @@ class FPN(nn.Module):
                  add_extra_convs=False,
                  relu_before_extra_convs=False,
                  no_norm_on_lateral=False,
-                 conv_cfg=None,
-                 norm_cfg=None,
-                 act_cfg=None,
-                 upsample_cfg=None,
-                 init_cfg=None):
-        if init_cfg is None:
-            init_cfg = {'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}
-        if upsample_cfg is None:
-            upsample_cfg = {'mode': 'nearest'}
+    ):
+        upsample_cfg = {'mode': 'nearest'}
         super(FPN, self).__init__()
         assert isinstance(in_channels, list)
         self.in_channels = in_channels
@@ -160,11 +153,6 @@ def fpn(intermediate_features_dim, **kwargs):
         'add_extra_convs': False,
         'relu_before_extra_convs': False,
         'no_norm_on_lateral': False,
-        'conv_cfg': None,
-        'norm_cfg': None,
-        'act_cfg': None,
-        'upsample_cfg': None,
-        'init_cfg': None
     }
 
     return FPN(in_channels=intermediate_features_dim,
