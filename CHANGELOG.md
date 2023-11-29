@@ -7,7 +7,7 @@
 
 ## Bug Fixes:
 
-- 
+- Fix attribute error on fc by `@illian01` in [PR 252](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/252)
 
 ## Breaking Changes:
 
