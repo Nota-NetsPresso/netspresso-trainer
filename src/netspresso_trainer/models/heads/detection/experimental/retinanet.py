@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 from ....op.custom import ConvLayer
+from .detection import AnchorGenerator
 
 
 class RetinaNetHead(nn.Module):
@@ -23,8 +24,16 @@ class RetinaNetHead(nn.Module):
         assert len(set(intermediate_features_dim)) == 1, "Feature dimensions of all stages have to same."
         in_channels = intermediate_features_dim[0]
 
+        anchor_sizes = params.anchor_sizes
+        aspect_ratios = params.aspect_ratios
+
         num_anchors = params.num_anchors
         norm_layer = params.norm_layer
+
+        aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
+        # TODO: Temporarily hard-coded
+        # May be anchor generator should be moved to outside of the model
+        self.anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios, (512, 512)) 
 
         self.classification_head = RetinaNetClassificationHead(
             in_channels, num_anchors, num_classes, norm_layer=norm_layer
@@ -32,7 +41,10 @@ class RetinaNetHead(nn.Module):
         self.regression_head = RetinaNetRegressionHead(in_channels, num_anchors, norm_layer=norm_layer)
 
     def forward(self, x):
-        return {"cls_logits": self.classification_head(x), "bbox_regression": self.regression_head(x)}
+        anchors = torch.cat(self.anchor_generator(x), dim=0)
+        cls_logits = self.classification_head(x)
+        bbox_regression = self.regression_head(x)
+        return {"anchors": anchors, "cls_logits": cls_logits, "bbox_regression": bbox_regression}
 
 
 class RetinaNetClassificationHead(nn.Module):
