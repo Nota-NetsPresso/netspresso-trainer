@@ -1,4 +1,4 @@
-from .common import CrossEntropyLoss
+from .common import CrossEntropyLoss, SigmoidFocalLoss
 from .detection import RoiHeadLoss, RPNLoss, YOLOXLoss, RetinaNetLoss
 from .segmentation import BoundaryLoss, PIDNetBoundaryAwareCrossEntropy, PIDNetCrossEntropy
 
@@ -11,6 +11,7 @@ LOSS_DICT = {
     'rpn_loss': RPNLoss,
     'yolox_loss': YOLOXLoss,
     'retinanet_loss': RetinaNetLoss,
+    'focal_loss': SigmoidFocalLoss,
 }
 
 PHASE_LIST = ['train', 'valid', 'test']
