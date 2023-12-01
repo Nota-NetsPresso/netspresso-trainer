@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 from ....op.custom import ConvLayer
+from ....utils import AnchorBasedDetectionModelOutput
 from .detection import AnchorGenerator
 
 
@@ -44,7 +45,7 @@ class RetinaNetHead(nn.Module):
         anchors = torch.cat(self.anchor_generator(x), dim=0)
         cls_logits = self.classification_head(x)
         bbox_regression = self.regression_head(x)
-        return {"anchors": anchors, "cls_logits": cls_logits, "bbox_regression": bbox_regression}
+        return AnchorBasedDetectionModelOutput(anchors=anchors, cls_logits=cls_logits, bbox_regression=bbox_regression)
 
 
 class RetinaNetClassificationHead(nn.Module):
