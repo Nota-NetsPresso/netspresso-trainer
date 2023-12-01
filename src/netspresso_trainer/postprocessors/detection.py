@@ -62,7 +62,7 @@ def retinanet_decode_outputs(pred, original_shape):
         image_scores = torch.cat(image_scores, dim=0)
         image_labels = torch.cat(image_labels, dim=0)
 
-        # x1, y1, x2, y2, pred_sore, pred_label
+        # x1, y1, x2, y2, pred_score, pred_label
         detections.append(
             torch.cat([image_boxes, image_scores.view(-1, 1), image_labels.view(-1, 1)], dim=1)
         )
@@ -70,7 +70,7 @@ def retinanet_decode_outputs(pred, original_shape):
     return detections
 
 
-def yolox_decode_outputs(pred, original_shape):
+def yolox_decode_outputs(pred, original_shape, conf_thre=0.7):
     pred = pred['pred']
     dtype = pred[0].type()
     stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
@@ -104,42 +104,46 @@ def yolox_decode_outputs(pred, original_shape):
     box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
     box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
     pred[:, :, :4] = box_corner[:, :, :4]
-    return pred
+
+    # TODO: This process better to be done before box decode
+    detections = []
+    for p in pred:
+        class_conf, class_pred = torch.max(p[:, 5:], 1, keepdim=True)
+
+        conf_mask = (p[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
+        
+        # x1, y1, x2, y2, obj_conf, pred_score, pred_label
+        detections.append(
+            torch.cat((p[:, :5], class_conf, class_pred.float()), 1)[conf_mask]
+        )
+
+    return detections
 
 
-def nms(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=False):
-    output = [torch.zeros(0, 7).to(prediction.device) for i in range(len(prediction))]
+def nms(prediction, nms_thre=0.45, class_agnostic=False):
+    output = [torch.zeros(0, 7).to(prediction[0].device) for i in range(len(prediction))]
     for i, image_pred in enumerate(prediction):
 
         # If none are remaining => process next image
         if not image_pred.size(0):
             continue
-        # Get score and class with highest confidence
-        class_conf, class_pred = torch.max(image_pred[:, 5: 5 + num_classes], 1, keepdim=True)
-
-        conf_mask = (image_pred[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
-        # Detections ordered as (x1, y1, x2, y2, obj_conf, class_conf, class_pred)
-        detections = torch.cat((image_pred[:, :5], class_conf, class_pred.float()), 1)
-        detections = detections[conf_mask]
-        if not detections.size(0):
-            continue
 
         if class_agnostic:
             nms_out_index = torchvision.ops.nms(
-                detections[:, :4],
-                detections[:, 4] * detections[:, 5],
+                image_pred[:, :4],
+                image_pred[:, 4] * image_pred[:, 5],
                 nms_thre,
             )
         else:
             nms_out_index = torchvision.ops.batched_nms(
-                detections[:, :4],
-                detections[:, 4] * detections[:, 5],
-                detections[:, 6],
+                image_pred[:, :4],
+                image_pred[:, 4] * image_pred[:, 5],
+                image_pred[:, 6],
                 nms_thre,
             )
 
-        detections = detections[nms_out_index]
-        output[i] = torch.cat((output[i], detections))
+        image_pred = image_pred[nms_out_index]
+        output[i] = torch.cat((output[i], image_pred))
 
     return output
 
@@ -154,13 +158,11 @@ class DetectionPostprocessor:
         head_name = conf_model.architecture.head.name
         self.decode_outputs, self.postprocess = HEAD_POSTPROCESS_MAPPING[head_name]
 
-    def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
+    def __call__(self, outputs: ModelOutput, original_shape, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
         pred = outputs
-
-        # torch.Size([4, 5376, 9])
 
         if self.decode_outputs:
             pred = self.decode_outputs(pred, original_shape)
         if self.postprocess:
-            pred = self.postprocess(pred, num_classes=num_classes, conf_thre=conf_thresh, nms_thre=nms_thre, class_agnostic=class_agnostic)
+            pred = self.postprocess(pred, nms_thre=nms_thre, class_agnostic=class_agnostic)
         return pred
