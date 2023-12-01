@@ -1,11 +1,11 @@
 import torch
 import torch.nn.functional as F
 import torchvision
-from torchvision.ops import boxes as box_ops
 from torchvision.models.detection._utils import _topk_min
+from torchvision.ops import boxes as box_ops
 
-from ..models.utils import ModelOutput
 from ..models.heads.detection.experimental.detection._utils import BoxCoder
+from ..models.utils import ModelOutput
 
 
 def retinanet_decode_outputs(pred, original_shape):
@@ -112,7 +112,7 @@ def yolox_decode_outputs(pred, original_shape, conf_thre=0.7):
         class_conf, class_pred = torch.max(p[:, 5:], 1, keepdim=True)
 
         conf_mask = (p[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
-        
+
         # x1, y1, x2, y2, obj_conf, pred_score, pred_label
         detections.append(
             torch.cat((p[:, :5], class_conf, class_pred.float()), 1)[conf_mask]

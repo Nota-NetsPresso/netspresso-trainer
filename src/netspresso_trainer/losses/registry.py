@@ -1,5 +1,5 @@
 from .common import CrossEntropyLoss, SigmoidFocalLoss
-from .detection import RoiHeadLoss, RPNLoss, YOLOXLoss, RetinaNetLoss
+from .detection import RetinaNetLoss, RoiHeadLoss, RPNLoss, YOLOXLoss
 from .segmentation import BoundaryLoss, PIDNetBoundaryAwareCrossEntropy, PIDNetCrossEntropy
 
 LOSS_DICT = {

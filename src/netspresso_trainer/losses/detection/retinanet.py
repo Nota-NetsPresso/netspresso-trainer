@@ -6,8 +6,8 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision.ops import boxes as box_ops
 
+from ...models.heads.detection.experimental.detection._utils import BoxCoder, Matcher
 from ..common import SigmoidFocalLoss
-from ...models.heads.detection.experimental.detection._utils import Matcher, BoxCoder
 
 
 class RetinaNetLoss(nn.Module):
@@ -22,7 +22,7 @@ class RetinaNetLoss(nn.Module):
         )
         self.cls_loss = RetinaNetClassificationLoss(self.proposal_matcher.BETWEEN_THRESHOLDS)
         self.reg_loss = RetinaNetRegressionLoss()
-    
+
     def compute_loss(self, out, target, matched_idxs):
         cls_loss = self.cls_loss(out, target, matched_idxs)
         box_loss = self.reg_loss(out, target, matched_idxs)
@@ -55,7 +55,7 @@ class RetinaNetClassificationLoss(nn.Module):
         alpha = 0.25
         gamma = 2
         self.focal_loss = SigmoidFocalLoss(alpha=alpha, gamma=gamma)
-    
+
     def forward(self, out, target, matched_idxs):
         losses = []
 
@@ -94,7 +94,7 @@ class RetinaNetRegressionLoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
-    
+
     def forward(self, out, target, matched_idxs):
         losses = []
 
