@@ -7,7 +7,7 @@ from torch import Tensor
 from torchvision.ops import boxes as box_ops
 
 from ..common import SigmoidFocalLoss
-from ...models.heads.detection.experimental.detection._utils import Matcher
+from ...models.heads.detection.experimental.detection._utils import Matcher, BoxCoder
 
 
 class RetinaNetLoss(nn.Module):
@@ -92,6 +92,30 @@ class RetinaNetClassificationLoss(nn.Module):
 class RetinaNetRegressionLoss(nn.Module):
     def __init__(self) -> None:
         super().__init__()
+        self.box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
     
-    def forward(self, target, out, matched_idxs):
-        pass
+    def forward(self, out, target, matched_idxs):
+        losses = []
+
+        bbox_regression = out["bbox_regression"]
+        anchors = out["anchors"]
+
+        for targets_per_image, bbox_regression_per_image, matched_idxs_per_image in zip(
+            target['gt'], bbox_regression, matched_idxs
+        ):
+            # determine only the foreground indices, ignore the rest
+            foreground_idxs_per_image = torch.where(matched_idxs_per_image >= 0)[0]
+            num_foreground = foreground_idxs_per_image.numel()
+
+            # select only the foreground boxes
+            matched_gt_boxes_per_image = targets_per_image["boxes"][matched_idxs_per_image[foreground_idxs_per_image]]
+            bbox_regression_per_image = bbox_regression_per_image[foreground_idxs_per_image, :]
+            anchors_per_image = anchors[foreground_idxs_per_image, :]
+
+            target_regression = self.box_coder.encode_single(matched_gt_boxes_per_image, anchors_per_image)
+            loss = F.l1_loss(bbox_regression_per_image, target_regression, reduction="sum")
+
+            # compute the loss
+            losses.append(loss / max(1, num_foreground))
+
+        return sum(losses) / max(1, len(target['gt']))
