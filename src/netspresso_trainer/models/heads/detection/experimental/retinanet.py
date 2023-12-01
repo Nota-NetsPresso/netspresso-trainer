@@ -95,7 +95,7 @@ class RetinaNetClassificationHead(nn.Module):
 
             all_cls_logits.append(cls_logits)
 
-        return torch.cat(all_cls_logits, dim=1)
+        return all_cls_logits
 
 
 class RetinaNetRegressionHead(nn.Module):
@@ -141,7 +141,7 @@ class RetinaNetRegressionHead(nn.Module):
 
             all_bbox_regression.append(bbox_regression)
 
-        return torch.cat(all_bbox_regression, dim=1)
+        return all_bbox_regression
 
 
 def retinanet_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RetinaNetHead:

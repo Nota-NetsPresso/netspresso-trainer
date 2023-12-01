@@ -60,6 +60,7 @@ class RetinaNetClassificationLoss(nn.Module):
         losses = []
 
         cls_logits = out["cls_logits"]
+        cls_logits = torch.cat(cls_logits, dim=1)
 
         for targets_per_image, cls_logits_per_image, matched_idxs_per_image in zip(target['gt'], cls_logits, matched_idxs):
             # determine only the foreground
@@ -98,6 +99,7 @@ class RetinaNetRegressionLoss(nn.Module):
         losses = []
 
         bbox_regression = out["bbox_regression"]
+        bbox_regression = torch.cat(bbox_regression, dim=1)
         anchors = out["anchors"]
 
         for targets_per_image, bbox_regression_per_image, matched_idxs_per_image in zip(
