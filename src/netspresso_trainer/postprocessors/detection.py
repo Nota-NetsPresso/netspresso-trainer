@@ -1,7 +1,73 @@
 import torch
+import torch.nn.functional as F
 import torchvision
+from torchvision.ops import boxes as box_ops
+from torchvision.models.detection._utils import _topk_min
 
 from ..models.utils import ModelOutput
+from ..models.heads.detection.experimental.detection._utils import BoxCoder
+
+
+def retinanet_decode_outputs(pred, original_shape):
+    box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
+
+    class_logits = pred["cls_logits"]
+    box_regression = pred["bbox_regression"]
+    anchors = pred["anchors"]
+
+    # TODO: Get from config
+    topk_candidates = 1000
+    score_thresh = 0.05
+
+    detections = []
+
+    for index in range(len(box_regression)):
+        box_regression_per_image = [br[index] for br in box_regression]
+        logits_per_image = [cl[index] for cl in class_logits]
+        anchors_per_image = anchors.split([b.shape[0] for b in box_regression_per_image])
+
+        image_boxes = []
+        image_scores = []
+        image_labels = []
+
+        for box_regression_per_level, logits_per_level, anchors_per_level in zip(
+            box_regression_per_image, logits_per_image, anchors_per_image
+        ):
+            num_classes = logits_per_level.shape[-1]
+
+            # remove low scoring boxes
+            scores_per_level = torch.sigmoid(logits_per_level).flatten()
+            keep_idxs = scores_per_level > score_thresh
+            scores_per_level = scores_per_level[keep_idxs]
+            topk_idxs = torch.where(keep_idxs)[0]
+
+            # keep only topk scoring predictions
+            num_topk = _topk_min(topk_idxs, topk_candidates, 0)
+            scores_per_level, idxs = scores_per_level.topk(num_topk)
+            topk_idxs = topk_idxs[idxs]
+
+            anchor_idxs = torch.div(topk_idxs, num_classes, rounding_mode="floor")
+            labels_per_level = topk_idxs % num_classes
+
+            boxes_per_level = box_coder.decode_single(
+                box_regression_per_level[anchor_idxs], anchors_per_level[anchor_idxs]
+            )
+            boxes_per_level = box_ops.clip_boxes_to_image(boxes_per_level, original_shape[1:])
+
+            image_boxes.append(boxes_per_level)
+            image_scores.append(scores_per_level)
+            image_labels.append(labels_per_level)
+
+        image_boxes = torch.cat(image_boxes, dim=0)
+        image_scores = torch.cat(image_scores, dim=0)
+        image_labels = torch.cat(image_labels, dim=0)
+
+        # x1, y1, x2, y2, pred_sore, pred_label
+        detections.append(
+            torch.cat([image_boxes, image_scores.view(-1, 1), image_labels.view(-1, 1)], dim=1)
+        )
+
+    return detections
 
 
 def yolox_decode_outputs(pred, original_shape):
@@ -81,7 +147,8 @@ def nms(prediction, num_classes, conf_thre=0.7, nms_thre=0.45, class_agnostic=Fa
 class DetectionPostprocessor:
     def __init__(self, conf_model):
         HEAD_POSTPROCESS_MAPPING = {
-            'yolox_head': [yolox_decode_outputs, nms]
+            'yolox_head': [yolox_decode_outputs, nms],
+            'retinanet_head': [retinanet_decode_outputs, nms],
         }
 
         head_name = conf_model.architecture.head.name
@@ -89,6 +156,8 @@ class DetectionPostprocessor:
 
     def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
         pred = outputs
+
+        # torch.Size([4, 5376, 9])
 
         if self.decode_outputs:
             pred = self.decode_outputs(pred, original_shape)
