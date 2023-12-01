@@ -18,7 +18,7 @@ from ..optimizers import build_optimizer
 from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
 from ..utils.fx import save_graphmodule
-from ..utils.logger import yaml_for_logging
+from ..utils.logger import add_file_handler, yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
@@ -67,6 +67,7 @@ class BasePipeline(ABC):
             self.train_logger = build_logger(self.conf, self.task, self.model_name,
                                              step_per_epoch=self.train_step_per_epoch, class_map=class_map,
                                              num_sample_images=NUM_SAMPLES)
+            add_file_handler(logger, Path(self.train_logger.result_dir) / "result.log", distributed=self.conf.distributed)
 
     @final
     def _is_ready(self):

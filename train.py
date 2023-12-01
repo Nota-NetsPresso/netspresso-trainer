@@ -35,9 +35,7 @@ def train_with_inline_cfg():
     """
     cfg.batch_size = 64
     cfg.epochs = 5
-    
-    print(export_config_as_yaml(cfg))
-    
+        
     train_with_config(gpus="1",
                       config=cfg,
                       log_level='INFO')
