@@ -5,6 +5,7 @@ from ..models.utils import ModelOutput
 
 
 def yolox_decode_outputs(pred, original_shape):
+    pred = pred['pred']
     dtype = pred[0].type()
     stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
 
@@ -87,7 +88,7 @@ class DetectionPostprocessor:
         self.decode_outputs, self.postprocess = HEAD_POSTPROCESS_MAPPING[head_name]
 
     def __call__(self, outputs: ModelOutput, original_shape, num_classes, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
-        pred = outputs['pred']
+        pred = outputs
 
         if self.decode_outputs:
             pred = self.decode_outputs(pred, original_shape)
