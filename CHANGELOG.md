@@ -8,6 +8,7 @@
 ## Bug Fixes:
 
 - Fix attribute error on fc by `@illian01` in [PR 252](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/252)
+- Restore file export for stream log by `@deepkyu` in [PR 255](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/255)
 
 ## Breaking Changes:
 
