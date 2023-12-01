@@ -7,7 +7,6 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 
 __all__ = ['set_logger', 'yaml_for_logging']
 
-
 class RankFilter(logging.Filter):
     def filter(self, record):
         try:
@@ -15,27 +14,50 @@ class RankFilter(logging.Filter):
         except RuntimeError:  # Default process group has not been initialized, please make sure to call init_process_group.
             return True
 
-
-def _custom_logger(name: str, level: str, distributed: bool):
+def get_format(name: str, level: str, distributed: bool):
     fmt_date = '%Y-%m-%d_%T %Z'
     debug_and_multi_gpu = (level == 'DEBUG' and distributed)
     if debug_and_multi_gpu:
         fmt = f'[GPU:{dist.get_rank()}] %(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
     else:
         fmt = '%(asctime)s | %(levelname)s\t\t| %(funcName)s:<%(filename)s>:%(lineno)s >>> %(message)s'
+
+    return fmt, fmt_date
+
+def add_stream_handler(logger: logging.Logger, distributed: bool):
+    handler = logging.StreamHandler()
+    fmt, fmt_date = get_format(logger.name, logger.level, distributed=distributed)
+
+    formatter = logging.Formatter(fmt, fmt_date)
+    handler.setFormatter(formatter)
+    if distributed:
+        handler.addFilter(RankFilter())
+
+    logger.addHandler(handler)
+
+
+def add_file_handler(logger: logging.Logger, log_filepath: str, distributed: bool):
+    handler = logging.FileHandler(log_filepath)
+
+    fmt, fmt_date = get_format(logger.name, logger.level, distributed=distributed)
+    formatter = logging.Formatter(fmt, fmt_date)
+    handler.setFormatter(formatter)
+    if distributed:
+        handler.addFilter(RankFilter())
+
+    logger.addHandler(handler)
+
+
+
+def _custom_logger(name: str, level: str, distributed: bool):
     logger = logging.getLogger(name)
 
+    logger.setLevel(logging.INFO)
     if not logger.hasHandlers():
-        handler = logging.StreamHandler()
+        add_stream_handler(logger, distributed)
 
-        formatter = logging.Formatter(fmt, fmt_date)
-        handler.setFormatter(formatter)
-        if distributed:
-            handler.addFilter(RankFilter())
-
-        logger.setLevel(logging.DEBUG)
-        logger.addHandler(handler)
     return logger
+
 
 
 def set_logger(logger_name="netspresso_trainer", level: str = 'INFO', distributed=False):

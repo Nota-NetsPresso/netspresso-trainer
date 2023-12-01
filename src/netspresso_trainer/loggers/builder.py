@@ -61,7 +61,7 @@ class TrainingLogger():
             TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
         self.stdout_logger: Optional[StdOutLogger] = \
-            StdOutLogger(task=task, model=model, total_epochs=conf.training.epochs) if self.use_stdout else None
+            StdOutLogger(task=task, model=model, total_epochs=conf.training.epochs, result_dir=self._result_dir) if self.use_stdout else None
 
         self.netspresso_api_client = None
         if self.use_netspresso:
