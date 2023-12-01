@@ -21,7 +21,7 @@ def retinanet_decode_outputs(pred, original_shape):
 
     detections = []
 
-    for index in range(len(box_regression)):
+    for index in range(len(box_regression[0])):
         box_regression_per_image = [br[index] for br in box_regression]
         logits_per_image = [cl[index] for cl in class_logits]
         anchors_per_image = anchors.split([b.shape[0] for b in box_regression_per_image])
@@ -60,11 +60,12 @@ def retinanet_decode_outputs(pred, original_shape):
 
         image_boxes = torch.cat(image_boxes, dim=0)
         image_scores = torch.cat(image_scores, dim=0)
-        image_labels = torch.cat(image_labels, dim=0)
+        image_labels = torch.cat(image_labels, dim=0).to(image_scores.dtype)
+        tmp_obj = torch.ones(image_labels.shape, dtype=image_labels.dtype, device=image_labels.device).view(-1, 1)
 
-        # x1, y1, x2, y2, pred_score, pred_label
+        # x1, y1, x2, y2, dummy, pred_score, pred_label
         detections.append(
-            torch.cat([image_boxes, image_scores.view(-1, 1), image_labels.view(-1, 1)], dim=1)
+            torch.cat([image_boxes, tmp_obj.view(-1, 1), image_scores.view(-1, 1), image_labels.view(-1, 1)], dim=1)
         )
 
     return detections
