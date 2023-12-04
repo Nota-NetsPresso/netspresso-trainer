@@ -35,6 +35,12 @@ class ModelOutput(TypedDict):
     pred: FXTensorType
 
 
+class AnchorBasedDetectionModelOutput(ModelOutput):
+    anchors: FXTensorType
+    cls_logits: FXTensorType
+    bbox_regression: FXTensorType
+
+
 class DetectionModelOutput(ModelOutput):
     boxes: Any
     proposals: Any
