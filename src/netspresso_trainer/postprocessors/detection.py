@@ -3,8 +3,8 @@ import torch.nn.functional as F
 import torchvision
 from torchvision.models.detection._utils import _topk_min
 from torchvision.ops import boxes as box_ops
+from torchvision.models.detection._utils import BoxCoder
 
-from ..models.heads.detection.experimental.detection._utils import BoxCoder
 from ..models.utils import ModelOutput
 
 
