@@ -52,6 +52,7 @@ class AnchorGenerator(nn.Module):
         ]
         
         self.image_size = image_size
+        self.anchors_over_all_feature_maps = None
 
     # TODO: https://github.com/pytorch/pytorch/issues/26792
     # For every (aspect_ratios, scales) combination, output a zero-centered anchor with those values.
@@ -116,6 +117,11 @@ class AnchorGenerator(nn.Module):
         return anchors
 
     def forward(self, feature_maps: List[Tensor]) -> List[Tensor]:
+        # TODO: Fix anchor as constant for fx transoform
+        # This forces inference image size same with training phase.
+        if self.anchors_over_all_feature_maps:
+            return self.anchors_over_all_feature_maps
+
         grid_sizes = [feature_map.shape[-2:] for feature_map in feature_maps]
         # each feature_map has (b, c, h, w) shape
         grid_templates = [(feature_map[0, 0, :, 0], feature_map[0, 0, 0, :]) for feature_map in feature_maps]
@@ -130,4 +136,5 @@ class AnchorGenerator(nn.Module):
         cell_anchors = self.set_cell_anchors(dtype, device)
         anchors_over_all_feature_maps = self.grid_anchors(cell_anchors, grid_templates, grid_sizes, strides)
 
+        self.anchors_over_all_feature_maps = anchors_over_all_feature_maps
         return anchors_over_all_feature_maps
