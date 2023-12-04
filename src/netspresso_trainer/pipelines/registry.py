@@ -11,5 +11,5 @@ SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection'
 TASK_PIPELINE: Dict[str, Type[BasePipeline]]= {
     'classification': ClassificationPipeline,
     'segmentation': SegmentationPipeline,
-    'detection-one-stage': DetectionPipeline,
+    'detection': DetectionPipeline,
 }
