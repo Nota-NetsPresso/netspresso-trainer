@@ -233,7 +233,7 @@ class OneStageDetectionPipeline(BasePipeline):
         self.loss_factory.backward()
         self.optimizer.step()
 
-        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -264,7 +264,7 @@ class OneStageDetectionPipeline(BasePipeline):
         out = self.model(images)
         self.loss_factory.calc(out, targets, phase='valid')
 
-        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -287,7 +287,7 @@ class OneStageDetectionPipeline(BasePipeline):
 
         out = self.model(images.unsqueeze(0))
 
-        pred = self.postprocessor(out, original_shape=images[0].shape, num_classes=self.num_classes)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         results = [(p[:, :4].detach().cpu().numpy(), p[:, 6].to(torch.int).detach().cpu().numpy())
                    if p is not None else (np.array([[]]), np.array([]))
