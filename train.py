@@ -33,10 +33,10 @@ def train_with_inline_cfg():
     """
     Update major field values considering the spec of training machine
     """
-    cfg.batch_size = 64
-    cfg.epochs = 5
+    cfg.epochs = 30
+    cfg.logging.csv = True
         
-    train_with_config(gpus="1",
+    train_with_config(gpus="0",
                       config=cfg,
                       log_level='INFO')
 
