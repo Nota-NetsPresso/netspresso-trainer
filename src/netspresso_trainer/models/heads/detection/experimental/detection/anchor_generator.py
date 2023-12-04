@@ -117,7 +117,7 @@ class AnchorGenerator(nn.Module):
         return anchors
 
     def forward(self, feature_maps: List[Tensor]) -> List[Tensor]:
-        # TODO: Fix anchor as constant for fx transoform
+        # TODO: Use constant anchor for fx transform
         # This forces inference image size same with training phase.
         if self.anchors_over_all_feature_maps:
             return self.anchors_over_all_feature_maps
