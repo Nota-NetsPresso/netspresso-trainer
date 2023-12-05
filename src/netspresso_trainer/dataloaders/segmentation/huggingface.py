@@ -38,8 +38,8 @@ class SegmentationHFDataset(BaseHFDataset):
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
 
-        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.metadata.label_image_mode).upper() \
-            if conf_data.metadata.label_image_mode is not None else 'L'
+        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_mode).upper() \
+            if conf_data.label_image_mode is not None else 'L'
 
         self.image_feature_name = conf_data.metadata.features.image
         self.label_feature_name = conf_data.metadata.features.label
