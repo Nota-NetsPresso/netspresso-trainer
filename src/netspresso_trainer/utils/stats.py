@@ -1,5 +1,5 @@
-from typing import TypedDict
 import logging
+from typing import TypedDict
 
 import thop
 import torch

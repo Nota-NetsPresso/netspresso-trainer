@@ -47,11 +47,11 @@ class BaseCSVLogger(ABC):
 
     def _clear_temp(self):
         self._temp_row_dict = {k: None for k in self.header}
-        
+
     def convert_csv_string(self):
         row_dict = self._temp_row_dict
         return_string_list = []
-        
+
         for _key in self.header:
             if row_dict[_key] is None:  # skip value
                 return_string_list.append("")
@@ -61,9 +61,9 @@ class BaseCSVLogger(ABC):
                 return_string_list.append(f"{row_dict[_key]}")
             else:
                 return_string_list.append(f"{row_dict[_key]:.09f}")
-        
+
         return return_string_list
-            
+
 
     def _update_with_list(self, data: List):
         if data is not None and len(data) != 0:
