@@ -23,7 +23,7 @@ from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 NUM_SAMPLES = 16
 

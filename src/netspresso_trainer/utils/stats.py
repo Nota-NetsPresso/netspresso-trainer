@@ -1,4 +1,5 @@
 from typing import TypedDict
+import logging
 
 import thop
 import torch
@@ -19,6 +20,8 @@ def get_params_and_macs(model: nn.Module, sample_input: torch.Tensor):
     return macs, params
 
 def _params_and_macs_fvcore(model: nn.Module, sample_input: torch.Tensor):
+    fvcore_logger = logging.getLogger('fvcore')
+    fvcore_logger.setLevel(logging.CRITICAL)
     macs = FlopCountAnalysis(model, sample_input).total()
     params = sum(p.numel() for p in model.parameters())
     return macs, params

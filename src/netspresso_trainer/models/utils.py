@@ -8,7 +8,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 FXTensorType = Union[Tensor, Proxy]
 FXTensorListType = Union[List[Tensor], List[Proxy]]

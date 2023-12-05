@@ -60,16 +60,16 @@ def _custom_logger(name: str, level: str, distributed: bool):
 
 
 
-def set_logger(logger_name="netspresso_trainer", level: str = 'INFO', distributed=False):
+def set_logger(level: str = 'INFO', distributed=False):
     try:
         time.tzset()
     except AttributeError as e:
         print(e)
         print("Skipping timezone setting.")
     _level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = level.upper()
-    _custom_logger(logger_name, _level, distributed)
+    _custom_logger("netspresso_trainer", _level, distributed)
 
-    logger = logging.getLogger(logger_name)
+    logger = logging.getLogger("netspresso_trainer")
     if _level == 'DEBUG':
         logger.setLevel(logging.DEBUG)
     elif _level == 'INFO':
@@ -103,4 +103,4 @@ def yaml_for_logging(config: DictConfig):
 
 
 if __name__ == '__main__':
-    set_logger(__name__, level='DEBUG')
+    set_logger(level='DEBUG')

@@ -7,7 +7,7 @@ from omegaconf import OmegaConf
 
 from .base import BasePipeline
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 MAX_SAMPLE_RESULT = 10
 

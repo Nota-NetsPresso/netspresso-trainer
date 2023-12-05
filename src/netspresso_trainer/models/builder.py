@@ -11,7 +11,7 @@ from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskMo
 from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST
 from .utils import load_from_checkpoint
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
