@@ -77,7 +77,7 @@ class LocalSegmentationDatasetConfig(DatasetConfig):
     format: str = "local"
     path: PathConfig = field(default_factory=lambda: PathConfig())
     label_image_mode: str = "L"
-    id_mapping: Optional[Union[List[str], Dict[str, str]]] = None
+    id_mapping: Any = None
     pallete: Optional[List[List[int]]] = None
 
 
@@ -86,7 +86,7 @@ class LocalDetectionDatasetConfig(DatasetConfig):
     task: str = "detection"
     format: str = "local"
     path: PathConfig = field(default_factory=lambda: PathConfig())
-    id_mapping: Optional[List[str]] = None
+    id_mapping: Any = None
     pallete: Optional[List[List[int]]] = None
 
 
