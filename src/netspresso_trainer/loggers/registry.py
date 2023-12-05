@@ -1,9 +1,10 @@
-from .csv import ClassificationCSVLogger, SegmentationCSVLogger
+from .csv import ClassificationCSVLogger, SegmentationCSVLogger, DetectionCSVLogger
 from .visualizer import DetectionVisualizer, SegmentationVisualizer
 
 CSV_LOGGER = {
     'classification': ClassificationCSVLogger,
-    'segmentation': SegmentationCSVLogger
+    'segmentation': SegmentationCSVLogger,
+    'detection': DetectionCSVLogger
 }
 
 VISUALIZER = {
