@@ -5,7 +5,7 @@ import requests
 from bson.objectid import ObjectId
 from pymongo.mongo_client import MongoClient
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 MONGODB_TEMP_URI = ""
 

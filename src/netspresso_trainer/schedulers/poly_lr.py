@@ -4,7 +4,7 @@ import warnings
 import torch
 from torch.optim.lr_scheduler import _LRScheduler
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 class PolynomialLRWithWarmUp(_LRScheduler):
     """Decays the learning rate of each parameter group using a polynomial function

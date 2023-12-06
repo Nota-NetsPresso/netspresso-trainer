@@ -28,7 +28,7 @@ class ColorJitter(Transform):
     contrast: Optional[float] = 0.25
     saturation: Optional[float] = 0.25
     hue: Optional[float] = 0.1
-    colorjitter_p: Optional[float] = 0.5
+    p: Optional[float] = 0.5
 
 
 @dataclass

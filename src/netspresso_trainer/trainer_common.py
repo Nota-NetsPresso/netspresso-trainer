@@ -18,7 +18,7 @@ def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING'
     is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
 
     distributed, world_size, rank, devices = set_device(conf.training.seed)
-    logger = set_logger(logger_name="netspresso_trainer", level=log_level, distributed=distributed)
+    logger = set_logger(level=log_level, distributed=distributed)
 
     conf.distributed = distributed
     conf.world_size = world_size

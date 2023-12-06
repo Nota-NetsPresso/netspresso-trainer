@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from .base import BasePipeline
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 
 class DetectionPipeline(BasePipeline):
