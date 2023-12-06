@@ -104,7 +104,7 @@ def yolox_decode_outputs(pred, original_shape, score_thresh=0.7):
     box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
     pred[:, :, :4] = box_corner[:, :, :4]
 
-    # TODO: This process better to be done before box decode
+    # Discard boxes with low score
     detections = []
     for p in pred:
         class_conf, class_pred = torch.max(p[:, 5:], 1, keepdim=True)
