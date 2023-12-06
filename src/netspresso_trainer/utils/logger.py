@@ -8,7 +8,15 @@ from omegaconf import DictConfig, ListConfig, OmegaConf
 from loguru import logger
 
 __all__ = ['set_logger', 'yaml_for_logging']
-ROOT_LOGGER_NAME = "netspresso_trainer"
+
+LEVELNO_TO_LEVEL_NAME = {
+    0: "NOTSET",
+    10: "DEBUG",
+    20: "INFO",
+    30: "WARNING",
+    40: "ERROR",
+    50: "CRITICAL",
+}
 
 def rank_filter(record):
     try:
@@ -16,25 +24,26 @@ def rank_filter(record):
     except RuntimeError:  # Default process group has not been initialized, please make sure to call init_process_group.
         return True
 
-def get_format(level: str = "INFO", distributed: bool = False):
+def get_format(level: str, distributed: bool = False):
     debug_and_multi_gpu = (level == 'DEBUG' and distributed)
     fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
     
     if debug_and_multi_gpu:
-        fmt = f"[GPU:{dist.get_rank()}]" + fmt
+        fmt = f"[GPU:{dist.get_rank()}] " + fmt
     
-    return fmt
+    only_rank_zero = not debug_and_multi_gpu
+    return fmt, only_rank_zero
 
 def add_stream_handler(level: str, distributed: bool):
-    fmt = get_format(level, distributed=distributed)
-    logger.add(sys.stderr, level=level, format=fmt, filter=rank_filter)
+    fmt, only_rank_zero = get_format(level, distributed=distributed)
+    logger.add(sys.stderr, level=level, format=fmt, filter=rank_filter if only_rank_zero else "")
 
 
 
 def add_file_handler(log_filepath: str, distributed: bool):
-    level = logger._core.min_level
-    fmt = get_format(level, distributed=distributed)
-    logger.add(log_filepath, format=fmt, filter=rank_filter, level=level)
+    level = LEVELNO_TO_LEVEL_NAME[logger._core.min_level]
+    fmt, only_rank_zero = get_format(level, distributed=distributed)
+    logger.add(log_filepath, level=level, format=fmt, filter=rank_filter if only_rank_zero else "", enqueue=False if only_rank_zero else True)
 
 
 
