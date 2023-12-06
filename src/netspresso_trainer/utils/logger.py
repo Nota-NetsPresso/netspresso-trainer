@@ -6,6 +6,7 @@ import torch.distributed as dist
 from omegaconf import DictConfig, ListConfig, OmegaConf
 
 __all__ = ['set_logger', 'yaml_for_logging']
+ROOT_LOGGER_NAME = "netspresso_trainer"
 
 class RankFilter(logging.Filter):
     def filter(self, record):
@@ -24,7 +25,8 @@ def get_format(name: str, level: str, distributed: bool):
 
     return fmt, fmt_date
 
-def add_stream_handler(logger: logging.Logger, distributed: bool):
+def add_stream_handler(distributed: bool):
+    logger = logging.getLogger(ROOT_LOGGER_NAME)
     handler = logging.StreamHandler()
     fmt, fmt_date = get_format(logger.name, logger.level, distributed=distributed)
 
@@ -36,7 +38,8 @@ def add_stream_handler(logger: logging.Logger, distributed: bool):
     logger.addHandler(handler)
 
 
-def add_file_handler(logger: logging.Logger, log_filepath: str, distributed: bool):
+def add_file_handler(log_filepath: str, distributed: bool):
+    logger = logging.getLogger(ROOT_LOGGER_NAME)
     handler = logging.FileHandler(log_filepath)
 
     fmt, fmt_date = get_format(logger.name, logger.level, distributed=distributed)
@@ -54,7 +57,7 @@ def _custom_logger(name: str, level: str, distributed: bool):
 
     logger.setLevel(logging.INFO)
     if not logger.hasHandlers():
-        add_stream_handler(logger, distributed)
+        add_stream_handler(distributed)
 
     return logger
 
@@ -67,9 +70,9 @@ def set_logger(level: str = 'INFO', distributed=False):
         print(e)
         print("Skipping timezone setting.")
     _level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = level.upper()
-    _custom_logger("netspresso_trainer", _level, distributed)
+    _custom_logger(ROOT_LOGGER_NAME, _level, distributed)
 
-    logger = logging.getLogger("netspresso_trainer")
+    logger = logging.getLogger(ROOT_LOGGER_NAME)
     if _level == 'DEBUG':
         logger.setLevel(logging.DEBUG)
     elif _level == 'INFO':
