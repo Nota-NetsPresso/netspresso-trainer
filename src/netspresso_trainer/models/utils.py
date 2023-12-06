@@ -8,6 +8,8 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
+from ..utils.checkpoint import load_checkpoint
+
 logger = logging.getLogger(__name__)
 
 FXTensorType = Union[Tensor, Proxy]
@@ -86,7 +88,7 @@ def load_from_checkpoint(
                 f"model_name {model_name} in path {model_checkpoint} is not valid name!"
             model_checkpoint = download_model_checkpoint(model_checkpoint, model_name)
 
-        model_state_dict = torch.load(model_checkpoint, map_location='cpu')
+        model_state_dict = load_checkpoint(model_checkpoint)
         missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
 
         if len(missing_keys) != 0:
