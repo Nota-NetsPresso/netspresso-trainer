@@ -67,7 +67,7 @@ class BasePipeline(ABC):
             self.train_logger = build_logger(self.conf, self.task, self.model_name,
                                              step_per_epoch=self.train_step_per_epoch, class_map=class_map,
                                              num_sample_images=NUM_SAMPLES)
-            add_file_handler(logger, Path(self.train_logger.result_dir) / "result.log", distributed=self.conf.distributed)
+            add_file_handler(Path(self.train_logger.result_dir) / "result.log", distributed=self.conf.distributed)
 
     @final
     def _is_ready(self):
