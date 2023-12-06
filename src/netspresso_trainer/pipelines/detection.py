@@ -3,6 +3,7 @@ from typing import Literal
 
 import numpy as np
 import torch
+
 from .base import BasePipeline
 
 logger = logging.getLogger(__name__)

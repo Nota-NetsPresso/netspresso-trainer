@@ -4,8 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import Tensor
+from torchvision.models.detection._utils import BoxCoder, Matcher
 from torchvision.ops import boxes as box_ops
-from torchvision.models.detection._utils import Matcher, BoxCoder
 
 from ..common import SigmoidFocalLoss
 

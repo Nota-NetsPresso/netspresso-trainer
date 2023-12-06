@@ -3,9 +3,8 @@ from functools import partial
 import torch
 import torch.nn.functional as F
 import torchvision
-from torchvision.models.detection._utils import _topk_min
+from torchvision.models.detection._utils import BoxCoder, _topk_min
 from torchvision.ops import boxes as box_ops
-from torchvision.models.detection._utils import BoxCoder
 
 from ..models.utils import ModelOutput
 
@@ -171,5 +170,5 @@ class DetectionPostprocessor:
 
         pred = [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
                       p[:, 6].to(torch.int).detach().cpu().numpy())
-                      for p in pred]    
+                      for p in pred]
         return pred
