@@ -10,7 +10,7 @@ from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 

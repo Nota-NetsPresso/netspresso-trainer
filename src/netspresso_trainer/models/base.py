@@ -10,7 +10,7 @@ from omegaconf import OmegaConf
 from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
 from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 
 class TaskModel(nn.Module):

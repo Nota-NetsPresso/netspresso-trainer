@@ -15,7 +15,7 @@ from ..utils.fx import save_graphmodule
 from ..utils.onnx import save_onnx
 from .base import BasePipeline
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 
 class TwoStageDetectionPipeline(BasePipeline):

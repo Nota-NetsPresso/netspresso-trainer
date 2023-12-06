@@ -8,7 +8,7 @@ from omegaconf import OmegaConf
 
 from .base import BasePipeline
 
-logger = logging.getLogger("netspresso_trainer")
+logger = logging.getLogger(__name__)
 
 CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
