@@ -19,6 +19,7 @@
 ## Other Changes:
 
 - Refactoring for detection models by `@illian01` in [PR 260](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/260)
+- Equalize logging format with `PyNetsPresso` by `@deepkyu` in [PR 263](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/263)
 
 # v0.0.10
 
