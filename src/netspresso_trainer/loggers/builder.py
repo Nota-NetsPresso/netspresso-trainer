@@ -14,7 +14,6 @@ from .stdout import StdOutLogger
 from .tensorboard import TensorboardLogger
 from .visualizer import magic_image_handler
 
-OUTPUT_ROOT_DIR = "./outputs"
 START_EPOCH_ZERO_OR_ONE = 1
 
 class TrainingLogger():
@@ -26,7 +25,8 @@ class TrainingLogger():
         class_map: Dict[int, str],
         step_per_epoch: int,
         num_sample_images: int,
-        epoch: Optional[int] = None
+        result_dir: Union[Path, str],
+        epoch: Optional[int] = None,
     ) -> None:
         super(TrainingLogger, self).__init__()
         self.conf = conf
@@ -38,12 +38,6 @@ class TrainingLogger():
 
         self.project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{self.task}_{self.model}"
 
-        version_idx = 0
-        result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
-        while result_dir.exists():
-            version_idx += 1
-            result_dir = Path(OUTPUT_ROOT_DIR) / self.project_id / f"version_{version_idx}"
-        result_dir.mkdir(exist_ok=True, parents=True)
         self._result_dir = result_dir
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
@@ -215,11 +209,12 @@ class TrainingLogger():
             self.tensorboard_logger.log_hparams(self.conf, final_metrics=final_metrics)
 
 
-def build_logger(conf, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, epoch: Optional[int] = None):
+def build_logger(conf, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, result_dir: Union[Path, str], epoch: Optional[int] = None):
     training_logger = TrainingLogger(conf,
                                      task=task, model=model_name,
                                      step_per_epoch=step_per_epoch,
                                      class_map=class_map, num_sample_images=num_sample_images,
+                                     result_dir=result_dir,
                                      epoch=epoch)
 
     return training_logger

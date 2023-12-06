@@ -13,9 +13,9 @@ MAX_SAMPLE_RESULT = 10
 
 class ClassificationPipeline(BasePipeline):
     def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, **kwargs):
+                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
         super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                     train_dataloader, eval_dataloader, class_map, **kwargs)
+                                                     train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
 
     def train_step(self, batch):
         self.model.train()

@@ -1,14 +1,17 @@
 # import logging
 import sys
 import time
-from typing import Literal
+from typing import Literal, Optional, Union
+from pathlib import Path
 
+import torch
 import torch.distributed as dist
 from omegaconf import DictConfig, ListConfig, OmegaConf
 from loguru import logger
 
 __all__ = ['set_logger', 'yaml_for_logging']
 
+OUTPUT_ROOT_DIR = "./outputs"
 LEVELNO_TO_LEVEL_NAME = {
     0: "NOTSET",
     10: "DEBUG",
@@ -43,7 +46,7 @@ def add_stream_handler(level: str, distributed: bool):
 def add_file_handler(log_filepath: str, distributed: bool):
     level = LEVELNO_TO_LEVEL_NAME[logger._core.min_level]
     fmt, only_rank_zero = get_format(level, distributed=distributed)
-    logger.add(log_filepath, level=level, format=fmt, filter=rank_filter if only_rank_zero else "", enqueue=False if only_rank_zero else True)
+    logger.add(log_filepath, level=level, format=fmt, filter=rank_filter if only_rank_zero else "", enqueue=True)
 
 
 
@@ -85,6 +88,48 @@ def yaml_for_logging(config: DictConfig):
     config_summarized = OmegaConf.create(_yaml_for_logging(config))
     return OmegaConf.to_yaml(config_summarized)
 
+
+def _new_logging_dir(output_root_dir, project_id):
+    version_idx = 0
+    project_dir: Path = Path(output_root_dir) / project_id
+    
+    while (project_dir / f"version_{version_idx}").exists():
+        version_idx += 1
+    
+    new_logging_dir: Path = project_dir / f"version_{version_idx}"
+    new_logging_dir.mkdir(exist_ok=True, parents=True)
+    return new_logging_dir
+
+def _find_logging_dir(output_root_dir, project_id):
+    version_idx = 0
+    project_dir: Path = Path(output_root_dir) / project_id
+    
+    while (project_dir / f"version_{version_idx + 1}").exists():
+        version_idx += 1
+    
+    logging_dir: Path = project_dir / f"version_{version_idx}"
+    return logging_dir
+
+def get_logging_dir(task: str, model: str, project_id: Optional[str] = None, output_root_dir: str = OUTPUT_ROOT_DIR, distributed: bool = False) -> Path:
+    project_id = project_id if project_id is not None else f"{task}_{model}"
+    
+    if not distributed:
+        return _new_logging_dir(output_root_dir, project_id)
+    
+    # TODO: Better synchronization
+    if dist.get_rank() == 0:
+        logging_dir = _new_logging_dir(output_root_dir, project_id)
+        signal = torch.tensor([1]).to("cuda")
+        for rank_idx in range(1, dist.get_world_size()):
+            dist.send(tensor=signal, dst=rank_idx)
+    else:
+        signal = torch.tensor([0]).to("cuda")
+        dist.recv(tensor=signal, src=0)
+
+        logging_dir = _find_logging_dir(output_root_dir, project_id)
+    
+    dist.barrier()
+    return logging_dir
 
 if __name__ == '__main__':
     set_logger(level='DEBUG')
