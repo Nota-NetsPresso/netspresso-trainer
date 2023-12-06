@@ -1,0 +1,71 @@
+model:
+  task: detection
+  name: segformer
+  checkpoint: ./weights/segformer/segformer.pth
+  fx_model_checkpoint: ~
+  resume_optimizer_checkpoint: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: segformer
+      params:
+        intermediate_ratio: 4
+        hidden_activation_type: "gelu"
+        hidden_dropout_prob: 0.0
+        attention_dropout_prob: 0.0
+        layer_norm_eps: 1e-5
+      stage_params:
+        -
+          num_blocks: 2
+          sr_ratios: 8
+          hidden_sizes: 32
+          embedding_patch_sizes: 7
+          embedding_strides: 4
+          num_attention_heads: 1
+        -
+          num_blocks: 2
+          sr_ratios: 4
+          hidden_sizes: 64
+          embedding_patch_sizes: 3
+          embedding_strides: 2
+          num_attention_heads: 2
+        -
+          num_blocks: 2
+          sr_ratios: 2
+          hidden_sizes: 160
+          embedding_patch_sizes: 3
+          embedding_strides: 2
+          num_attention_heads: 5
+        -
+          num_blocks: 2
+          sr_ratios: 1
+          hidden_sizes: 256
+          embedding_patch_sizes: 3
+          embedding_strides: 2
+          num_attention_heads: 8
+    neck:
+      name: fpn
+      params:
+        num_outs: 4
+        start_level: 0
+        end_level: -1
+        add_extra_convs: False
+        relu_before_extra_convs: False
+        no_norm_on_lateral: False
+    head:
+      name: retinanet_head
+      params:
+        anchor_sizes: [[64,], [128,], [256,], [512,]]
+        aspect_ratios: [0.5, 1.0, 2.0]
+        num_anchors: 3
+        norm_layer: batch_norm
+        # postprocessor - decode
+        topk_candidates: 1000
+        score_thresh: 0.05
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
+  losses:
+    - criterion: retinanet_loss
+      weight: ~
