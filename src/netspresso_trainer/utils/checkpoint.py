@@ -22,7 +22,8 @@ def load_checkpoint(f: Union[str, Path]):
     if extension == '.safetensors':
         state_dict = {}
         with safe_open(str(file_path), framework="pt", device='cpu') as f:
-            for k in f:
+            state_dict_keys = f.keys()
+            for k in state_dict_keys:
                 state_dict[k] = f.get_tensor(k)
         return state_dict
 
