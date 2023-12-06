@@ -23,6 +23,11 @@ model:
       name: yolox_head
       params:
         act_type: *act_type
+        # postprocessor - decode
+        score_thresh: 0.7
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
   losses:
     - criterion: yolox_loss
       weight: ~

@@ -18,7 +18,7 @@
 
 ## Other Changes:
 
-- 
+- Refactoring for detection models by `@illian01` in [PR 260](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/260)
 
 # v0.0.10
 

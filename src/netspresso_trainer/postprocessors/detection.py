@@ -1,23 +1,20 @@
+from functools import partial
+
 import torch
 import torch.nn.functional as F
 import torchvision
-from torchvision.models.detection._utils import _topk_min
+from torchvision.models.detection._utils import BoxCoder, _topk_min
 from torchvision.ops import boxes as box_ops
 
-from ..models.heads.detection.experimental.detection._utils import BoxCoder
 from ..models.utils import ModelOutput
 
 
-def retinanet_decode_outputs(pred, original_shape):
+def retinanet_decode_outputs(pred, original_shape, topk_candidates=1000, score_thresh=0.05):
     box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
 
     class_logits = pred["cls_logits"]
     box_regression = pred["bbox_regression"]
     anchors = pred["anchors"]
-
-    # TODO: Get from config
-    topk_candidates = 1000
-    score_thresh = 0.05
 
     detections = []
 
@@ -71,7 +68,7 @@ def retinanet_decode_outputs(pred, original_shape):
     return detections
 
 
-def yolox_decode_outputs(pred, original_shape, conf_thre=0.7):
+def yolox_decode_outputs(pred, original_shape, score_thresh=0.7):
     pred = pred['pred']
     dtype = pred[0].type()
     stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
@@ -106,12 +103,12 @@ def yolox_decode_outputs(pred, original_shape, conf_thre=0.7):
     box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
     pred[:, :, :4] = box_corner[:, :, :4]
 
-    # TODO: This process better to be done before box decode
+    # Discard boxes with low score
     detections = []
     for p in pred:
         class_conf, class_pred = torch.max(p[:, 5:], 1, keepdim=True)
 
-        conf_mask = (p[:, 4] * class_conf.squeeze() >= conf_thre).squeeze()
+        conf_mask = (p[:, 4] * class_conf.squeeze() >= score_thresh).squeeze()
 
         # x1, y1, x2, y2, obj_conf, pred_score, pred_label
         detections.append(
@@ -121,7 +118,7 @@ def yolox_decode_outputs(pred, original_shape, conf_thre=0.7):
     return detections
 
 
-def nms(prediction, nms_thre=0.45, class_agnostic=False):
+def nms(prediction, nms_thresh=0.45, class_agnostic=False):
     output = [torch.zeros(0, 7).to(prediction[0].device) for i in range(len(prediction))]
     for i, image_pred in enumerate(prediction):
 
@@ -133,14 +130,14 @@ def nms(prediction, nms_thre=0.45, class_agnostic=False):
             nms_out_index = torchvision.ops.nms(
                 image_pred[:, :4],
                 image_pred[:, 4] * image_pred[:, 5],
-                nms_thre,
+                nms_thresh,
             )
         else:
             nms_out_index = torchvision.ops.batched_nms(
                 image_pred[:, :4],
                 image_pred[:, 4] * image_pred[:, 5],
                 image_pred[:, 6],
-                nms_thre,
+                nms_thresh,
             )
 
         image_pred = image_pred[nms_out_index]
@@ -151,19 +148,27 @@ def nms(prediction, nms_thre=0.45, class_agnostic=False):
 
 class DetectionPostprocessor:
     def __init__(self, conf_model):
-        HEAD_POSTPROCESS_MAPPING = {
-            'yolox_head': [yolox_decode_outputs, nms],
-            'retinanet_head': [retinanet_decode_outputs, nms],
-        }
-
         head_name = conf_model.architecture.head.name
-        self.decode_outputs, self.postprocess = HEAD_POSTPROCESS_MAPPING[head_name]
+        params = conf_model.architecture.head.params
+        if head_name == 'yolox_head':
+            self.decode_outputs = partial(yolox_decode_outputs, score_thresh=params.score_thresh)
+            self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        elif head_name == 'retinanet_head':
+            self.decode_outputs = partial(retinanet_decode_outputs, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
+            self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        else:
+            self.decode_outputs = None
+            self.postprocess = None
 
-    def __call__(self, outputs: ModelOutput, original_shape, conf_thresh=0.7, nms_thre=0.45, class_agnostic=False):
+    def __call__(self, outputs: ModelOutput, original_shape):
         pred = outputs
 
         if self.decode_outputs:
             pred = self.decode_outputs(pred, original_shape)
         if self.postprocess:
-            pred = self.postprocess(pred, nms_thre=nms_thre, class_agnostic=class_agnostic)
+            pred = self.postprocess(pred)
+
+        pred = [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
+                      for p in pred]
         return pred

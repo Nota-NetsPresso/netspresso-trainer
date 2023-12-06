@@ -11,10 +11,12 @@ __all__ = [
     "DetectionEfficientFormerModelConfig",
     "ClassificationMobileNetV3ModelConfig",
     "SegmentationMobileNetV3ModelConfig",
+    "DetectionMobileNetV3ModelConfig",
     "ClassificationMobileViTModelConfig",
     "PIDNetModelConfig",
     "ClassificationResNetModelConfig",
     "SegmentationResNetModelConfig",
+    "DetectionResNetModelConfig",
     "ClassificationSegFormerModelConfig",
     "SegmentationSegFormerModelConfig",
     "ClassificationViTModelConfig",
@@ -25,6 +27,9 @@ __all__ = [
     "SegmentationMixNetSmallModelConfig",
     "SegmentationMixNetMediumModelConfig",
     "SegmentationMixNetLargeModelConfig",
+    "DetectionMixNetSmallModelConfig",
+    "DetectionMixNetMediumModelConfig",
+    "DetectionMixNetLargeModelConfig",
 ]
 
 
@@ -567,39 +572,24 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "faster_rcnn",
+            "name": "retinanet_head",
             "params": {
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                # RPN parameters
-                "rpn_pre_nms_top_n": 2000,
-                "rpn_post_nms_top_n": 2000,
-                "rpn_nms_thresh": 0.7,
-                "rpn_fg_iou_thresh": 0.7,
-                "rpn_bg_iou_thresh": 0.3,
-                "rpn_batch_size_per_image": 256,
-                "rpn_positive_fraction": 0.5,
-                "rpn_score_thresh": 0.0,
-                # RoI parameters
-                "roi_output_size": 7,
-                "roi_sampling_ratio": 2,
-                "roi_representation_size": 1024,
-                # Box parameters
-                "box_score_thresh": 0.05,
-                "box_nms_thresh": 0.5,
-                "box_detections_per_img": 100,
-                "box_fg_iou_thresh": 0.5,
-                "box_bg_iou_thresh": 0.5,
-                "box_batch_size_per_image": 512,
-                "box_positive_fraction": 0.25,
-                "bbox_reg_weights": None,
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
             }
         }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "roi_head_loss", "weight": None},
-        {"criterion": "rpn_loss", "weight": None},
+        {"criterion": "retinanet_loss", "weight": None},
     ])
 
 
@@ -638,6 +628,45 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class DetectionMobileNetV3ModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "mobilenet_v3_small"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
     ])
 
 
@@ -712,6 +741,45 @@ class SegmentationResNetModelConfig(ModelConfig):
 
 
 @dataclass
+class DetectionResNetModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "resnet50"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
+    ])
+
+
+@dataclass
 class ClassificationSegFormerModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "segformer"
@@ -750,6 +818,45 @@ class SegmentationSegFormerModelConfig(ModelConfig):
 
 
 @dataclass
+class DetectionSegFormerModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "segformer"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
+    ])
+
+
+@dataclass
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "vit_tiny"
@@ -783,7 +890,14 @@ class DetectionYoloXModelConfig(ModelConfig):
         },
         head={
             "name": "yolox_head",
-            "params": {"act_type": "silu"}
+            "params": {
+                "act_type": "silu",
+                # postprocessor - decode
+                "score_thresh": 0.7,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
         }
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
@@ -830,6 +944,45 @@ class SegmentationMixNetSmallModelConfig(ModelConfig):
 
 
 @dataclass
+class DetectionMixNetSmallModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "mixnet_s"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
+    ])
+
+
+@dataclass
 class ClassificationMixNetMediumModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mixnet_m"
@@ -868,6 +1021,45 @@ class SegmentationMixNetMediumModelConfig(ModelConfig):
 
 
 @dataclass
+class DetectionMixNetMediumModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "mixnet_m"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
+    ])
+
+
+@dataclass
 class ClassificationMixNetLargeModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mixnet_l"
@@ -902,4 +1094,43 @@ class SegmentationMixNetLargeModelConfig(ModelConfig):
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
+    ])
+
+
+@dataclass
+class DetectionMixNetLargeModelConfig(ModelConfig):
+    task: str = "detection"
+    name: str = "mixnet_l"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
+        neck={
+            "name": "fpn",
+            "params": {
+                "num_outs": 4,
+                "start_level": 0,
+                "end_level": -1,
+                "add_extra_convs": False,
+                "relu_before_extra_convs": False,
+                "no_norm_on_lateral": False,
+            },
+        },
+        head={
+            "name": "retinanet_head",
+            "params": {
+                # Anchor parameters
+                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_anchors": 3,
+                "norm_layer": "batch_norm",
+                # postprocessor - decode
+                "topk_candidates": 1000,
+                "score_thresh": 0.05,
+                # postprocessor - nms
+                "nms_thresh": 0.45,
+                "class_agnostic": False,
+            }
+        }
+    ))
+    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
+        {"criterion": "retinanet_loss", "weight": None},
     ])
