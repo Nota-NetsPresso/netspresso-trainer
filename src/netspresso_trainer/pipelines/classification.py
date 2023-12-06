@@ -2,11 +2,10 @@ import os
 from typing import Literal
 
 import torch
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-
-from loguru import logger
 
 MAX_SAMPLE_RESULT = 10
 

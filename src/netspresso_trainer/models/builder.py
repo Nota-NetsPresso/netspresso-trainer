@@ -4,13 +4,12 @@ from typing import Callable, Dict, List, Type
 
 import torch
 import torch.nn as nn
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
 from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST
 from .utils import load_from_checkpoint
-
-from loguru import logger
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):

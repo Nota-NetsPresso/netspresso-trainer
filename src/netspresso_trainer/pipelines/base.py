@@ -9,6 +9,7 @@ from typing import Dict, Literal, final
 
 import torch
 import torch.nn as nn
+from loguru import logger
 from tqdm import tqdm
 
 from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
@@ -23,8 +24,6 @@ from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
-
-from loguru import logger
 
 NUM_SAMPLES = 16
 

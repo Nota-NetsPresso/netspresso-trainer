@@ -3,13 +3,13 @@ from functools import partial
 from pathlib import Path
 from typing import Dict, List, Optional, Type, Union
 
+from loguru import logger
+
 from .augmentation.registry import TRANSFORM_DICT
 from .classification import classification_mix_collate_fn, classification_onehot_collate_fn
 from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
-
-from loguru import logger
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 

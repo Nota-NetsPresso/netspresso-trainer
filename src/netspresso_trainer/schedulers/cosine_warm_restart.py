@@ -1,12 +1,13 @@
 """
 This code is modified from https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#CosineAnnealingWarmRestarts .
 """
-from loguru import logger
 import math
 import warnings
 
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import _LRScheduler
+
 
 class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
     r"""Set the learning rate of each parameter group using a cosine annealing

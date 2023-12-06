@@ -1,8 +1,9 @@
-from loguru import logger
 import warnings
 
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import _LRScheduler
+
 
 class PolynomialLRWithWarmUp(_LRScheduler):
     """Decays the learning rate of each parameter group using a polynomial function

@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from loguru import logger
+
 LOG_FILENAME = "result.log"
 
 class StdOutLogger:

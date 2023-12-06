@@ -2,9 +2,8 @@ import os
 
 import requests
 from bson.objectid import ObjectId
-from pymongo.mongo_client import MongoClient
-
 from loguru import logger
+from pymongo.mongo_client import MongoClient
 
 MONGODB_TEMP_URI = ""
 

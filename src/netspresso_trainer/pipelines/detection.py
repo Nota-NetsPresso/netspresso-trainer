@@ -2,10 +2,9 @@ from typing import Literal
 
 import numpy as np
 import torch
+from loguru import logger
 
 from .base import BasePipeline
-
-from loguru import logger
 
 
 class DetectionPipeline(BasePipeline):

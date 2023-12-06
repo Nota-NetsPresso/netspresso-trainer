@@ -1,13 +1,13 @@
 # import logging
 import sys
 import time
-from typing import Literal, Optional, Union
 from pathlib import Path
+from typing import Literal, Optional, Union
 
 import torch
 import torch.distributed as dist
-from omegaconf import DictConfig, ListConfig, OmegaConf
 from loguru import logger
+from omegaconf import DictConfig, ListConfig, OmegaConf
 
 __all__ = ['set_logger', 'yaml_for_logging']
 
@@ -30,10 +30,10 @@ def rank_filter(record):
 def get_format(level: str, distributed: bool = False):
     debug_and_multi_gpu = (level == 'DEBUG' and distributed)
     fmt = "<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>"
-    
+
     if debug_and_multi_gpu:
         fmt = f"[GPU:{dist.get_rank()}] " + fmt
-    
+
     only_rank_zero = not debug_and_multi_gpu
     return fmt, only_rank_zero
 
@@ -92,10 +92,10 @@ def yaml_for_logging(config: DictConfig):
 def _new_logging_dir(output_root_dir, project_id):
     version_idx = 0
     project_dir: Path = Path(output_root_dir) / project_id
-    
+
     while (project_dir / f"version_{version_idx}").exists():
         version_idx += 1
-    
+
     new_logging_dir: Path = project_dir / f"version_{version_idx}"
     new_logging_dir.mkdir(exist_ok=True, parents=True)
     return new_logging_dir
@@ -103,19 +103,19 @@ def _new_logging_dir(output_root_dir, project_id):
 def _find_logging_dir(output_root_dir, project_id):
     version_idx = 0
     project_dir: Path = Path(output_root_dir) / project_id
-    
+
     while (project_dir / f"version_{version_idx + 1}").exists():
         version_idx += 1
-    
+
     logging_dir: Path = project_dir / f"version_{version_idx}"
     return logging_dir
 
 def get_logging_dir(task: str, model: str, project_id: Optional[str] = None, output_root_dir: str = OUTPUT_ROOT_DIR, distributed: bool = False) -> Path:
     project_id = project_id if project_id is not None else f"{task}_{model}"
-    
+
     if not distributed:
         return _new_logging_dir(output_root_dir, project_id)
-    
+
     # TODO: Better synchronization
     if dist.get_rank() == 0:
         logging_dir = _new_logging_dir(output_root_dir, project_id)
@@ -127,7 +127,7 @@ def get_logging_dir(task: str, model: str, project_id: Optional[str] = None, out
         dist.recv(tensor=signal, src=0)
 
         logging_dir = _find_logging_dir(output_root_dir, project_id)
-    
+
     dist.barrier()
     return logging_dir
 

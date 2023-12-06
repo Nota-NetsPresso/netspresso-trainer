@@ -2,9 +2,9 @@ import math
 import warnings
 
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import _LRScheduler
 
-from loguru import logger
 
 class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
     """Modified from CosineAnnealingLR in PyTorch

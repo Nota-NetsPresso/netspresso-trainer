@@ -3,11 +3,10 @@ from typing import Literal
 
 import numpy as np
 import torch
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-
-from loguru import logger
 
 CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
