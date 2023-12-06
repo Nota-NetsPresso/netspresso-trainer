@@ -16,17 +16,17 @@ FXTensorType = Union[Tensor, Proxy]
 FXTensorListType = Union[List[Tensor], List[Proxy]]
 
 MODEL_CHECKPOINT_URL_DICT = {
-    'resnet50': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50.pth",
-    'mobilenet_v3_small': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small.pth",
-    'segformer': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer.pth",
-    'mobilevit_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s.pth",
-    'vit_tiny': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit-tiny.pth",
-    'efficientformer_l1': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_1000d.pth",
-    'mixnet_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s.pth",
-    'mixnet_m': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m.pth",
-    'mixnet_l': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l.pth",
-    'pidnet_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s.pth",
-    'yolox_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/cspdarknet/yolox_s.pth",
+    'resnet50': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50.safetensors",
+    'mobilenet_v3_small': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small.safetensors",
+    'segformer': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer.safetensors",
+    'mobilevit_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s.safetensors",
+    'vit_tiny': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit-tiny.safetensors",
+    'efficientformer_l1': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_1000d.safetensors",
+    'mixnet_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s.safetensors",
+    'mixnet_m': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m.safetensors",
+    'mixnet_l': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l.safetensors",
+    'pidnet_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s.safetensors",
+    'yolox_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/cspdarknet/yolox_s.safetensors",
 }
 
 
