@@ -1,6 +1,5 @@
 import copy
 import json
-import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import asdict
@@ -25,7 +24,7 @@ from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 NUM_SAMPLES = 16
 

@@ -1,5 +1,4 @@
 import csv
-import logging
 import random
 from collections import Counter
 from itertools import chain
@@ -15,7 +14,7 @@ from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
 

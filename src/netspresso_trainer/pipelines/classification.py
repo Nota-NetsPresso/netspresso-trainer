@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Literal
 
@@ -7,7 +6,7 @@ from omegaconf import OmegaConf
 
 from .base import BasePipeline
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 MAX_SAMPLE_RESULT = 10
 

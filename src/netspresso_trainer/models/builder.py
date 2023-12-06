@@ -1,4 +1,3 @@
-import logging
 import os
 from pathlib import Path
 from typing import Callable, Dict, List, Type
@@ -11,7 +10,7 @@ from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskMo
 from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST
 from .utils import load_from_checkpoint
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint):

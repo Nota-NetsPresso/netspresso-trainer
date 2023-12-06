@@ -1,4 +1,3 @@
-import logging
 import os
 from functools import partial
 from pathlib import Path
@@ -10,7 +9,7 @@ from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.loader import create_loader
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 

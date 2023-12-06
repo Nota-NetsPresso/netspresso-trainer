@@ -1,4 +1,3 @@
-import logging
 from pathlib import Path
 from typing import Any, List, Optional, TypedDict, Union
 
@@ -10,7 +9,7 @@ from torch.fx.proxy import Proxy
 
 from ..utils.checkpoint import load_checkpoint
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 FXTensorType = Union[Tensor, Proxy]
 FXTensorListType = Union[List[Tensor], List[Proxy]]

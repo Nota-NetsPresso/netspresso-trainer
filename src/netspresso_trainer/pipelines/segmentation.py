@@ -1,4 +1,3 @@
-import logging
 import os
 from typing import Literal
 
@@ -8,7 +7,7 @@ from omegaconf import OmegaConf
 
 from .base import BasePipeline
 
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
