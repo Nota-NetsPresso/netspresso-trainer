@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Dict, List
 
 import torch
+from safetensors.torch import save_file
 from omegaconf import ListConfig, OmegaConf
 
 
@@ -67,14 +68,14 @@ def convert_state_dict_to_model(yaml_path, model, state_dict):
     print(f"no_match_layers: \n{no_match_layers[:]}")
     print(f"NO MATCH COUNT: {len(no_match_layers)}")
     model.load_state_dict(dict(extracted_state_dict), strict=False)
-    _save_extracted_state_dict(extracted_state_dict, "result.pth")
+    _save_extracted_state_dict(extracted_state_dict, "result.safetensors")
 
     print("Complete!")
     return model
 
 
 def _save_extracted_state_dict(extracted_state_dict, f):
-    torch.save(extracted_state_dict, f)
+    save_file(extracted_state_dict, f)
 
 
 if __name__ == '__main__':
