@@ -168,4 +168,8 @@ class DetectionPostprocessor:
             pred = self.decode_outputs(pred, original_shape)
         if self.postprocess:
             pred = self.postprocess(pred)
+
+        pred = [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
+                      p[:, 6].to(torch.int).detach().cpu().numpy())
+                      for p in pred]    
         return pred

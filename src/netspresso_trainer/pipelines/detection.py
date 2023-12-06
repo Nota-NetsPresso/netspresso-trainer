@@ -41,10 +41,7 @@ class DetectionPipeline(BasePipeline):
         logs = {
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
-            'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy())
-                      if p is not None else (np.array([[]]), np.array([]))
-                      for p in pred]
+            'pred': pred
         }
         return dict(logs.items())
 
@@ -73,10 +70,7 @@ class DetectionPipeline(BasePipeline):
             'images': images.detach().cpu().numpy(),
             'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
                        for bbox, label in zip(bboxes, labels)],
-            'pred': [(torch.cat([p[:, :4], p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy())
-                      if p is not None else (np.array([[]]), np.array([]))
-                      for p in pred]
+            'pred': pred
         }
         return dict(logs.items())
 
@@ -89,10 +83,7 @@ class DetectionPipeline(BasePipeline):
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
-        results = [(p[:, :4].detach().cpu().numpy(), p[:, 6].to(torch.int).detach().cpu().numpy())
-                   if p is not None else (np.array([[]]), np.array([]))
-                   for p in pred]
-
+        results = pred
         return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
