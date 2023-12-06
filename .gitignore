@@ -11,6 +11,9 @@ __pycache__/
 *.whl
 *.tar
 *.gz
+*.json
+*.zip
+*.safetensors
 
 **/*/exp/
 **/*/events*

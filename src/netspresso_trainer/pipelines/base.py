@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -17,6 +18,7 @@ from ..metrics import build_metrics
 from ..optimizers import build_optimizer
 from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
+from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import add_file_handler, yaml_for_logging
 from ..utils.onnx import save_onnx
@@ -293,11 +295,13 @@ class BasePipeline(ABC):
                 torch.save(model, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
-        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        pytorch_model_state_dict_path = model_path.with_suffix(".safetensors")
+        save_checkpoint(model.state_dict(), pytorch_model_state_dict_path)
+        logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
         if save_best_model:
-            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
-            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
+            pytorch_best_model_state_dict_path = best_model_path.with_suffix(".safetensors")
+            save_checkpoint(model.state_dict(), pytorch_best_model_state_dict_path)
+            logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
             try:
                 save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
@@ -331,8 +335,9 @@ class BasePipeline(ABC):
             training_summary.params = params
 
         result_dir = self.train_logger.result_dir
-        summary_path = Path(result_dir) / "training_summary.ckpt"
-        torch.save(asdict(training_summary), summary_path)
+        summary_path = Path(result_dir) / "training_summary.json"
+        with open(summary_path, 'w') as f:
+            json.dump(asdict(training_summary), f, indent=4)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
     def profile_one_epoch(self):

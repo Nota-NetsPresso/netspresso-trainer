@@ -1,7 +1,7 @@
 model:
   task: classification
   name: mixnet_m
-  checkpoint: ./weights/mixnet/mixnet_m.pth
+  checkpoint: ./weights/mixnet/mixnet_m.safetensors
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

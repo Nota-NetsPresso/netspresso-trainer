@@ -14,7 +14,7 @@
 
 ## Breaking Changes:
 
--
+- Provide pytorch state dict with `.safetensors` and training summary with `.json` for a better utilization by `@deepkyu` in [PR 262](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/262)
 
 ## Other Changes:
 
