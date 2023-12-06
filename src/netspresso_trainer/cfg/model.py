@@ -520,7 +520,7 @@ class CSPDarkNetSmallArchitectureConfig(ArchitectureConfig):
 class ClassificationEfficientFormerModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "efficientformer_l1"
-    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={
             "name": "fc",
@@ -539,7 +539,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
 class SegmentationEfficientFormerModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "efficientformer_l1"
-    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -558,7 +558,7 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
 class DetectionEfficientFormerModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "efficientformer_l1"
-    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/efficientformer/efficientformer_l1_1000d.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: EfficientFormerArchitectureConfig(
         neck={
             "name": "fpn",
@@ -597,7 +597,7 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
 class ClassificationMobileNetV3ModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mobilenet_v3_small"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={
             "name": "fc",
@@ -616,7 +616,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
 class SegmentationMobileNetV3ModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "mobilenet_v3_small"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -635,7 +635,7 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
 class DetectionMobileNetV3ModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "mobilenet_v3_small"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilenetv3/mobilenet_v3_small.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileNetV3ArchitectureConfig(
         neck={
             "name": "fpn",
@@ -674,7 +674,7 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
 class ClassificationMobileViTModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mobilevit_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mobilevit/mobilevit_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mobilevit/mobilevit_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MobileViTArchitectureConfig(
         head={
             "name": "fc",
@@ -693,7 +693,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
 class PIDNetModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "pidnet_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "pidnet_cross_entropy", "ignore_index": 255, "weight": None},
@@ -706,7 +706,7 @@ class PIDNetModelConfig(ModelConfig):
 class ClassificationResNetModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "resnet50"
-    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={
             "name": "fc",
@@ -725,7 +725,7 @@ class ClassificationResNetModelConfig(ModelConfig):
 class SegmentationResNetModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "resnet50"
-    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -744,7 +744,7 @@ class SegmentationResNetModelConfig(ModelConfig):
 class DetectionResNetModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "resnet50"
-    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/resnet/resnet50.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ResNetArchitectureConfig(
         neck={
             "name": "fpn",
@@ -783,7 +783,7 @@ class DetectionResNetModelConfig(ModelConfig):
 class ClassificationSegFormerModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={
             "name": "fc",
@@ -802,7 +802,7 @@ class ClassificationSegFormerModelConfig(ModelConfig):
 class SegmentationSegFormerModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -821,7 +821,7 @@ class SegmentationSegFormerModelConfig(ModelConfig):
 class DetectionSegFormerModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
         neck={
             "name": "fpn",
@@ -860,7 +860,7 @@ class DetectionSegFormerModelConfig(ModelConfig):
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "vit_tiny"
-    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
         head={
             "name": "fc",
@@ -879,7 +879,7 @@ class ClassificationViTModelConfig(ModelConfig):
 class DetectionYoloXModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "yolox_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
         neck={
             "name": "pafpn",
@@ -909,7 +909,7 @@ class DetectionYoloXModelConfig(ModelConfig):
 class ClassificationMixNetSmallModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mixnet_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
         head={
             "name": "fc",
@@ -928,7 +928,7 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
 class SegmentationMixNetSmallModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "mixnet_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -947,7 +947,7 @@ class SegmentationMixNetSmallModelConfig(ModelConfig):
 class DetectionMixNetSmallModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "mixnet_s"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetSmallArchitectureConfig(
         neck={
             "name": "fpn",
@@ -986,7 +986,7 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
 class ClassificationMixNetMediumModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mixnet_m"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
         head={
             "name": "fc",
@@ -1005,7 +1005,7 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
 class SegmentationMixNetMediumModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "mixnet_m"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -1024,7 +1024,7 @@ class SegmentationMixNetMediumModelConfig(ModelConfig):
 class DetectionMixNetMediumModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "mixnet_m"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_m.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetMediumArchitectureConfig(
         neck={
             "name": "fpn",
@@ -1063,7 +1063,7 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
 class ClassificationMixNetLargeModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "mixnet_l"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
         head={
             "name": "fc",
@@ -1082,7 +1082,7 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
 class SegmentationMixNetLargeModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "mixnet_l"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
         head={
             "name": "all_mlp_decoder",
@@ -1101,7 +1101,7 @@ class SegmentationMixNetLargeModelConfig(ModelConfig):
 class DetectionMixNetLargeModelConfig(ModelConfig):
     task: str = "detection"
     name: str = "mixnet_l"
-    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.pth"
+    checkpoint: Optional[Union[Path, str]] = "./weights/mixnet/mixnet_l.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: MixNetLargeArchitectureConfig(
         neck={
             "name": "fpn",
