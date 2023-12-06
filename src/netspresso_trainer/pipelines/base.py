@@ -1,4 +1,5 @@
 import copy
+import json
 import logging
 import os
 from abc import ABC, abstractmethod
@@ -331,8 +332,9 @@ class BasePipeline(ABC):
             training_summary.params = params
 
         result_dir = self.train_logger.result_dir
-        summary_path = Path(result_dir) / "training_summary.ckpt"
-        torch.save(asdict(training_summary), summary_path)
+        summary_path = Path(result_dir) / "training_summary.json"
+        with open(summary_path, 'w') as f:
+            json.dump(asdict(training_summary), f, indent=4)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
     def profile_one_epoch(self):
