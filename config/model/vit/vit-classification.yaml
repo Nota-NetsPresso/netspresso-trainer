@@ -1,7 +1,7 @@
 model:
   task: classification
   name: vit_tiny
-  checkpoint: ./weights/vit/vit-tiny.pth
+  checkpoint: ./weights/vit/vit-tiny.safetensors
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False
