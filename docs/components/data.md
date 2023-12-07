@@ -1,4 +1,4 @@
-## Overview
+# Data
 
 NetsPresso Trainer supports learning functions for various vision tasks with your custom data. 
 In addition to data stored in a local repository, it also supports learning with data accessible through APIs such as [Hugging Face datasets](https://huggingface.co/datasets). 

@@ -1,4 +1,4 @@
-# Overview
+# Augmentation
 
 NetsPresso Trainer provides data augmentation function to improve model performance, allowing users to configure their own training recipes as desired. 
 Data augmentation in NetsPresso Trainer is based on torch and torchvision, and all augmentations are written based on `pillow` images and `torch.Tensor`.  
