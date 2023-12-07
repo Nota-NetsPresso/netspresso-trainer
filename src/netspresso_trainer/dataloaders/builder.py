@@ -3,6 +3,7 @@ from functools import partial
 from pathlib import Path
 from typing import Dict, List, Optional, Type, Union
 
+import torch.distributed as dist
 from loguru import logger
 
 from .augmentation.registry import TRANSFORM_DICT
@@ -13,11 +14,11 @@ from .utils.loader import create_loader
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-
 def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
 
-    logger.info('-'*40)
-    logger.info("Loading data...")
+    if dist.get_rank() == 0:
+        logger.info('-'*40)
+        logger.info("Loading data...")
 
     task = conf_data.task
 
@@ -89,12 +90,13 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
-    logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")
-    logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
-    if valid_dataset is not None:
-        logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
-    if test_dataset is not None:
-        logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
+    if dist.get_rank() == 0:
+        logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")
+        logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
+        if valid_dataset is not None:
+            logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+        if test_dataset is not None:
+            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
 
     return train_dataset, valid_dataset, test_dataset
 

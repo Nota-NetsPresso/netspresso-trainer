@@ -8,6 +8,7 @@ from statistics import mean
 from typing import Dict, Literal, final
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 from loguru import logger
 from tqdm import tqdm
@@ -61,7 +62,7 @@ class BasePipeline(ABC):
         self.is_graphmodule_training = is_graphmodule_training
         self.save_optimizer_state = self.conf.logging.save_optimizer_state
 
-        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
+        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and dist.get_rank() == 0)
 
         if self.single_gpu_or_rank_zero:
             self.train_logger = build_logger(
@@ -156,8 +157,9 @@ class BasePipeline(ABC):
         return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
 
     def train(self):
-        logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
-        logger.info("-" * 40)
+        if self.single_gpu_or_rank_zero:
+            logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
+            logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')
         self._is_ready()
