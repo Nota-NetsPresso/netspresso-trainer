@@ -8,3 +8,4 @@ omegaconf
 opencv-python
 tensorboard
 fvcore
+safetensors
