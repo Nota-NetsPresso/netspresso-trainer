@@ -171,7 +171,6 @@ nav:
       - Task heads: components/model/heads.md
       - Full models: components/model/fulls.md
       - Losses: components/model/losses.md
-      - Field list: components/model/field.md
     - Logging: components/logging.md
   - Models:
     - models/index.md
