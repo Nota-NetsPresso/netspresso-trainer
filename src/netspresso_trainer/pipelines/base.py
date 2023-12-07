@@ -337,6 +337,7 @@ class BasePipeline(ABC):
 
         logging_dir = self.train_logger.result_dir
         summary_path = Path(logging_dir) / "training_summary.json"
+
         with open(summary_path, 'w') as f:
             json.dump(asdict(training_summary), f, indent=4)
         logger.info(f"Model training summary saved at {str(summary_path)}")
