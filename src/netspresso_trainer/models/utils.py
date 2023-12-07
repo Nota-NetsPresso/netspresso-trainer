@@ -10,7 +10,6 @@ from torch.fx.proxy import Proxy
 
 from ..utils.checkpoint import load_checkpoint
 
-
 FXTensorType = Union[Tensor, Proxy]
 FXTensorListType = Union[List[Tensor], List[Proxy]]
 
