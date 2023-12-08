@@ -40,14 +40,14 @@ def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING'
     logging_dir: Path = get_logging_dir(task, model_name, output_root_dir="./outputs", distributed=distributed)
     add_file_handler(logging_dir / "result.log", distributed=conf.distributed)
 
-    if dist.get_rank() == 0:
+    if not distributed or dist.get_rank() == 0:
         logger.info(f"Task: {task} | Model: {model_name} | Training with torch.fx model? {is_graphmodule_training}")
         logger.info(f"Result will be saved at {logging_dir}")
 
     if conf.distributed and conf.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
 
-    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name)
+    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()

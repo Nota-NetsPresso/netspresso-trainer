@@ -14,9 +14,9 @@ from .utils.loader import create_loader
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
+def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, distributed: bool):
 
-    if dist.get_rank() == 0:
+    if not distributed or dist.get_rank() == 0:
         logger.info('-'*40)
         logger.info("Loading data...")
 
@@ -90,7 +90,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str):
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
-    if dist.get_rank() == 0:
+    if not distributed or dist.get_rank() == 0:
         logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")
         logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
         if valid_dataset is not None:
