@@ -1,8 +1,8 @@
-import logging
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-logger = logging.getLogger(__name__)
+from loguru import logger
+
 LOG_FILENAME = "result.log"
 
 class StdOutLogger:

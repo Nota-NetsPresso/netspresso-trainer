@@ -9,3 +9,4 @@ opencv-python
 tensorboard
 fvcore
 safetensors
+loguru>=0.6.0

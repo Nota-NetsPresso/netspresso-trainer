@@ -1,16 +1,14 @@
-import logging
 import os
 from abc import abstractmethod
 from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
 from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
-
-logger = logging.getLogger(__name__)
 
 
 class TaskModel(nn.Module):

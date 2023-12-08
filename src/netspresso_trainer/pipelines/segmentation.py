@@ -1,22 +1,21 @@
-import logging
 import os
 from typing import Literal
 
 import numpy as np
 import torch
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-
-logger = logging.getLogger(__name__)
 
 CITYSCAPE_IGNORE_INDEX = 255  # TODO: get from configuration
 
 
 class SegmentationPipeline(BasePipeline):
-    def __init__(self, conf, task, model_name, model, devices, train_dataloader, eval_dataloader, class_map, **kwargs):
+    def __init__(self, conf, task, model_name, model, devices,
+                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
         super(SegmentationPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                   train_dataloader, eval_dataloader, class_map, **kwargs)
+                                                   train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
         self.ignore_index = CITYSCAPE_IGNORE_INDEX
         self.num_classes = train_dataloader.dataset.num_classes
 

@@ -1,22 +1,20 @@
-import logging
 import os
 from typing import Literal
 
 import torch
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-
-logger = logging.getLogger(__name__)
 
 MAX_SAMPLE_RESULT = 10
 
 
 class ClassificationPipeline(BasePipeline):
     def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, **kwargs):
+                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
         super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                     train_dataloader, eval_dataloader, class_map, **kwargs)
+                                                     train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
 
     def train_step(self, batch):
         self.model.train()

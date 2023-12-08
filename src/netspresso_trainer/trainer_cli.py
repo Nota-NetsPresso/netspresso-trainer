@@ -21,7 +21,7 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
         "--training", training,
         "--logging", logging,
         "--environment", environment,
-        "--log_level", log_level,
+        "--log-level", log_level,
     ]
 
     # Distributed training script
