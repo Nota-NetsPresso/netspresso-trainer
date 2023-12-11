@@ -21,15 +21,15 @@ from ...utils import BackboneOutput
 # GPConv: Grouped Point-wise Convolution for MixDepthBlock
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 class GPConv(nn.Module):
-    def __init__(self, in_planes, out_planes, kernel_sizes):
+    def __init__(self, in_planes, out_planes, num_groups):
         super(GPConv, self).__init__()
-        self.num_groups = len(kernel_sizes)
+        self.num_groups = num_groups
         assert in_planes % self.num_groups == 0
         sub_in_dim = in_planes // self.num_groups
         sub_out_dim = out_planes // self.num_groups
 
         self.group_point_wise = nn.ModuleList()
-        for _ in kernel_sizes:
+        for _ in range(self.num_groups):
             self.group_point_wise.append(nn.Conv2d(sub_in_dim, sub_out_dim,
                                                    kernel_size=1, stride=1, padding=0,
                                                    groups=1, dilation=1, bias=False))
@@ -77,7 +77,7 @@ class MDConv(nn.Module):
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
 class MixDepthBlock(nn.Module):
     def __init__(self, in_planes, out_planes,
-                 expand_ratio, exp_kernel_sizes, kernel_sizes, poi_kernel_sizes, stride, dilate,
+                 expand_ratio, num_exp_groups, kernel_sizes, num_poi_groups, stride, dilate,
                  reduction_ratio=4, dropout_rate=0.2, act_type="swish"):
         super(MixDepthBlock, self).__init__()
         self.dropout_rate = dropout_rate
@@ -95,7 +95,7 @@ class MixDepthBlock(nn.Module):
         # step 1. Expansion phase/Point-wise convolution
         if expand_ratio != 1:
             self.expansion = nn.Sequential(OrderedDict([
-                ("conv", GPConv(in_planes, hidden_dim, kernel_sizes=exp_kernel_sizes)),
+                ("conv", GPConv(in_planes, hidden_dim, num_groups=num_exp_groups)),
                 ("norm", nn.BatchNorm2d(hidden_dim, eps=1e-3, momentum=0.01)),
                 ("act", ACTIVATION_REGISTRY[act_type]())
             ]))
@@ -114,7 +114,7 @@ class MixDepthBlock(nn.Module):
 
         # step 4. Point-wise convolution phase
         self.point_wise = nn.Sequential(OrderedDict([
-            ("conv", GPConv(hidden_dim, out_planes, kernel_sizes=poi_kernel_sizes)),
+            ("conv", GPConv(hidden_dim, out_planes, num_groups=num_poi_groups)),
             ("norm", nn.BatchNorm2d(out_planes, eps=1e-3, momentum=0.01))
         ]))
 
@@ -172,7 +172,7 @@ class MixNet(nn.Module):
             
             stage: List[nn.Module] = []
             for block in zip(stage_info.expand_ratio, stage_info.out_channels, stage_info.num_blocks,
-                             stage_info.kernel_sizes, stage_info.exp_kernel_sizes, stage_info.poi_kernel_sizes,
+                             stage_info.kernel_sizes, stage_info.num_exp_groups, stage_info.num_poi_groups,
                              stage_info.stride, stage_info.dilation, stage_info.act_type, stage_info.se_reduction_ratio):
                 t, c, n, k, ek, pk, s, d, a, se = block
                 out_channels = self._round_filters(c, width_multi)
@@ -183,8 +183,8 @@ class MixNet(nn.Module):
                     dilate = d if stride == 1 else 1
 
                     stage.append(MixDepthBlock(in_channels, out_channels,
-                                               expand_ratio=t, exp_kernel_sizes=ek,
-                                               kernel_sizes=k, poi_kernel_sizes=pk,
+                                               expand_ratio=t, num_exp_groups=ek,
+                                               kernel_sizes=k, num_poi_groups=pk,
                                                stride=stride, dilate=dilate,
                                                reduction_ratio=se,
                                                dropout_rate=drop_rate,
