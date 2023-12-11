@@ -23,13 +23,13 @@ from ...utils import BackboneOutput
 class GPConv(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_sizes):
         super(GPConv, self).__init__()
-        self.num_groups = len(kernel_sizes)
+        self.num_groups = kernel_sizes
         assert in_planes % self.num_groups == 0
         sub_in_dim = in_planes // self.num_groups
         sub_out_dim = out_planes // self.num_groups
 
         self.group_point_wise = nn.ModuleList()
-        for _ in kernel_sizes:
+        for _ in range(kernel_sizes):
             self.group_point_wise.append(nn.Conv2d(sub_in_dim, sub_out_dim,
                                                    kernel_size=1, stride=1, padding=0,
                                                    groups=1, dilation=1, bias=False))
