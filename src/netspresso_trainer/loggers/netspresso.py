@@ -1,11 +1,9 @@
-import logging
 import os
 
 import requests
 from bson.objectid import ObjectId
+from loguru import logger
 from pymongo.mongo_client import MongoClient
-
-logger = logging.getLogger(__name__)
 
 MONGODB_TEMP_URI = ""
 

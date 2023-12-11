@@ -1,7 +1,6 @@
 # ------------------------------------------------------------------------------
 # Written by Jiacong Xu (jiacong.xu@tamu.edu)
 # ------------------------------------------------------------------------------
-import logging
 import time
 from typing import Optional, List, Dict
 

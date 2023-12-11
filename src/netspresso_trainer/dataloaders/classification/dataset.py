@@ -1,5 +1,4 @@
 import csv
-import logging
 import random
 from collections import Counter
 from itertools import chain
@@ -7,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from loguru import logger
 from omegaconf import DictConfig
 from torch.nn import functional as F
 from torch.utils.data import random_split
@@ -14,8 +14,6 @@ from torch.utils.data import random_split
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
-
-logger = logging.getLogger(__name__)
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
 
