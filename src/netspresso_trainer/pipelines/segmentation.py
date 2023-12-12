@@ -21,9 +21,9 @@ class SegmentationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        images, target = batch['pixel_values'], batch['labels']
-        images = images.to(self.devices)
-        target = {'target': target.long().to(self.devices)}
+        images = batch['pixel_values'].to(self.devices)
+        labels = batch['labels'].long().to(self.devices)
+        target = {'target': labels}
 
         if 'edges' in batch:
             bd_gt = batch['edges']
@@ -38,16 +38,16 @@ class SegmentationPipeline(BasePipeline):
 
         out = {k: v.detach() for k, v in out.items()}
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='train')
+        self.metric_factory.calc(pred, labels, phase='train')
 
         if self.conf.distributed:
             torch.distributed.barrier()
 
     def valid_step(self, batch):
         self.model.eval()
-        images, target = batch['pixel_values'], batch['labels']
-        images = images.to(self.devices)
-        target = {'target': target.long().to(self.devices)}
+        images = batch['pixel_values'].to(self.devices)
+        labels = batch['labels'].long().to(self.devices)
+        target = {'target': labels}
 
         if 'edges' in batch:
             bd_gt = batch['edges']
@@ -57,7 +57,7 @@ class SegmentationPipeline(BasePipeline):
         self.loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='valid')
+        self.metric_factory.calc(pred, labels, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()
@@ -66,7 +66,7 @@ class SegmentationPipeline(BasePipeline):
 
         logs = {
             'images': images.detach().cpu().numpy(),
-            'target': target.detach().cpu().numpy(),
+            'target': labels.detach().cpu().numpy(),
             'pred': output_seg.detach().cpu().numpy()
         }
         if 'edges' in batch:
