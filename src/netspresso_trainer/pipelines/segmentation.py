@@ -23,18 +23,15 @@ class SegmentationPipeline(BasePipeline):
         self.model.train()
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
-        target = target.long().to(self.devices)
+        target = {'target': target.long().to(self.devices)}
 
         if 'edges' in batch:
             bd_gt = batch['edges']
-            bd_gt = bd_gt.to(self.devices)
+            target['bd_gt'] = bd_gt.to(self.devices)
 
         self.optimizer.zero_grad()
         out = self.model(images)
-        if 'edges' in batch:
-            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='train')
-        else:
-            self.loss_factory.calc(out, target, phase='train')
+        self.loss_factory.calc(out, target, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -50,17 +47,14 @@ class SegmentationPipeline(BasePipeline):
         self.model.eval()
         images, target = batch['pixel_values'], batch['labels']
         images = images.to(self.devices)
-        target = target.long().to(self.devices)
+        target = {'target': target.long().to(self.devices)}
 
         if 'edges' in batch:
             bd_gt = batch['edges']
-            bd_gt = bd_gt.to(self.devices)
+            target['bd_gt'] = bd_gt.to(self.devices)
 
         out = self.model(images)
-        if 'edges' in batch:
-            self.loss_factory.calc(out, target, bd_gt=bd_gt, phase='valid')
-        else:
-            self.loss_factory.calc(out, target, phase='valid')
+        self.loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
         self.metric_factory.calc(pred, target, phase='valid')
