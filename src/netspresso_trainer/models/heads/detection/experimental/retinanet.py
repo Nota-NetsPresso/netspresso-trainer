@@ -28,12 +28,12 @@ class RetinaNetHead(nn.Module):
         anchor_sizes = params.anchor_sizes
         aspect_ratios = params.aspect_ratios
 
-        num_anchors = params.num_anchors
         norm_layer = params.norm_layer
 
         aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
         # TODO: Temporarily use hard-coded img_size
         self.anchor_generator = AnchorGenerator(anchor_sizes, aspect_ratios, (512, 512)) 
+        num_anchors = self.anchor_generator.num_anchors_per_location()[0]
 
         self.classification_head = RetinaNetClassificationHead(
             in_channels, num_anchors, num_classes, norm_layer=norm_layer
