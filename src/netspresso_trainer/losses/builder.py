@@ -67,12 +67,11 @@ class LossFactory:
         phase = phase.lower()
         assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
 
-        bd_gt = kwargs['bd_gt'] if 'bd_gt' in kwargs else None
         self._assert_argument(kwargs)
         self._clear_step_start()
 
         for loss_key, loss_func in self.loss_func_dict.items():
-            loss_val = loss_func(out, bd_gt) if loss_key == 'boundary_loss' else loss_func(out, target)
+            loss_val = loss_func(out, target)
             self.loss_val_per_epoch[phase][loss_key].update(loss_val.item())
             self.total_loss_for_backward += loss_val * self.loss_weight_dict[loss_key]
 

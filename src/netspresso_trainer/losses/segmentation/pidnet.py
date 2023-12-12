@@ -29,7 +29,8 @@ class PIDNetCrossEntropy(nn.Module):
 
         return self.loss_fn(out, target)
 
-    def forward(self, out: Dict, target: torch.Tensor):
+    def forward(self, out: Dict, target: Dict):
+        target = target['target']
 
         if self.boundary_aware:
             pred, extra_d = out['pred'], out['extra_d']
@@ -127,6 +128,7 @@ class BoundaryLoss(nn.Module):
 
         return loss
 
-    def forward(self, out: Dict, bd_gt: torch.Tensor) -> torch.Tensor:
+    def forward(self, out: Dict, target: Dict) -> torch.Tensor:
+        bd_gt = target['bd_gt']
         extra_d = out['extra_d']
         return self.weighted_bce(extra_d, bd_gt)
