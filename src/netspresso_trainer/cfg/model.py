@@ -577,7 +577,6 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -654,7 +653,6 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -763,7 +761,6 @@ class DetectionResNetModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -840,7 +837,6 @@ class DetectionSegFormerModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -966,7 +962,6 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -1043,7 +1038,6 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -1120,7 +1114,6 @@ class DetectionMixNetLargeModelConfig(ModelConfig):
                 # Anchor parameters
                 "anchor_sizes": [[64,], [128,], [256,], [512,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_anchors": 3,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
