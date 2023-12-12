@@ -45,8 +45,7 @@ class LossFactory:
         self._clear_step_start()
 
     def _assert_argument(self, kwargs):
-        if 'boundary_loss' in self.loss_func_dict:
-            assert 'bd_gt' in kwargs, "BoundaryLoss failed!"
+        pass
 
     def backward(self):
         assert not self._dirty_backward
