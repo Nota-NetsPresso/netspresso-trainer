@@ -7,7 +7,7 @@ from .segmentation import SegmentationPostprocessor
 POSTPROCESSOR_DICT = {
     'fc': ClassificationPostprocessor,
     'all_mlp_decoder': SegmentationPostprocessor,
-    'yolox_head': DetectionPostprocessor,
+    'anchor_free_decoupled_head': DetectionPostprocessor,
     'pidnet': SegmentationPostprocessor,
     'retinanet_head': DetectionPostprocessor,
 }

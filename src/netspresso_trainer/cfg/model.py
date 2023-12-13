@@ -862,7 +862,7 @@ class DetectionYoloXModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "yolox_head",
+            "name": "anchor_free_decoupled_head",
             "params": {
                 "act_type": "silu",
                 # postprocessor - decode

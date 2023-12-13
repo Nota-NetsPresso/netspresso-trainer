@@ -1,2 +1,2 @@
-from .experimental.yolox_head import yolox_head
+from .experimental.anchor_free_decoupled_head import anchor_free_decoupled_head
 from .experimental.retinanet import retinanet_head

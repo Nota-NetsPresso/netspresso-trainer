@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 # Copyright (c) Megvii Inc. All rights reserved.
+"""
+Based on the YOLOX implementation of Megvii.
+https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/yolo_head.py
+"""
 from typing import List
 
 from omegaconf import DictConfig
@@ -11,7 +15,7 @@ from ....op.custom import ConvLayer
 from ....utils import ModelOutput
 
 
-class YOLOXHead(nn.Module):
+class AnchorFreeDecoupledHead(nn.Module):
     def __init__(
         self,
         num_classes: int,
@@ -132,7 +136,7 @@ class YOLOXHead(nn.Module):
         return ModelOutput(pred=outputs)
 
 
-def yolox_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> YOLOXHead:
-    return YOLOXHead(num_classes=num_classes,
-                     intermediate_features_dim=intermediate_features_dim,
-                     params=conf_model_head.params)
+def anchor_free_decoupled_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> AnchorFreeDecoupledHead:
+    return AnchorFreeDecoupledHead(num_classes=num_classes,
+                                   intermediate_features_dim=intermediate_features_dim,
+                                   params=conf_model_head.params)

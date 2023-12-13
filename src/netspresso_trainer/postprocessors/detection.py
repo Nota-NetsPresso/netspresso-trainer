@@ -68,7 +68,7 @@ def retinanet_decode_outputs(pred, original_shape, topk_candidates=1000, score_t
     return detections
 
 
-def yolox_decode_outputs(pred, original_shape, score_thresh=0.7):
+def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
     pred = pred['pred']
     dtype = pred[0].type()
     stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
@@ -150,8 +150,8 @@ class DetectionPostprocessor:
     def __init__(self, conf_model):
         head_name = conf_model.architecture.head.name
         params = conf_model.architecture.head.params
-        if head_name == 'yolox_head':
-            self.decode_outputs = partial(yolox_decode_outputs, score_thresh=params.score_thresh)
+        if head_name == 'anchor_free_decoupled_head':
+            self.decode_outputs = partial(anchor_free_decoupled_head_decode, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'retinanet_head':
             self.decode_outputs = partial(retinanet_decode_outputs, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
