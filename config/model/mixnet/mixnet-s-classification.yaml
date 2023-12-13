@@ -11,8 +11,8 @@ model:
       name: mixnet
       params:
         stem_planes: 16
-        width_multi: 1.0
-        depth_multi: 1.0
+        wid_mul: 1.0
+        dep_mul: 1.0
         dropout_rate: 0.
       stage_params: 
         -
@@ -23,7 +23,6 @@ model:
           num_exp_groups: [1, 2, 2]
           num_poi_groups: [1, 2, 2]
           stride: [1, 2, 1]
-          dilation: [1, 1, 1]
           act_type: ["relu", "relu", "relu"]
           se_reduction_ratio: [~, ~, ~]
         -
@@ -34,7 +33,6 @@ model:
           num_exp_groups: [1, 2]
           num_poi_groups: [1, 2]
           stride: [2, 1]
-          dilation: [1, 1]
           act_type: ["swish", "swish"]
           se_reduction_ratio: [2, 2]
         -
@@ -45,7 +43,6 @@ model:
           num_exp_groups: [1, 1, 2, 2]
           num_poi_groups: [2, 2, 2, 2]
           stride: [2, 1, 1, 1]
-          dilation: [1, 1, 1, 1]
           act_type: ["swish", "swish", "swish", "swish"]
           se_reduction_ratio: [4, 4, 2, 2]
         -
@@ -56,7 +53,6 @@ model:
           num_exp_groups: [1, 1]
           num_poi_groups: [1, 2]
           stride: [2, 1]
-          dilation: [1, 1]
           act_type: ["swish", "swish"]
           se_reduction_ratio: [2, 2]
     head:
