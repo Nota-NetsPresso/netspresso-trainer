@@ -18,6 +18,7 @@ from ...op.base_metaformer import (
     MultiHeadAttention,
 )
 from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
+from ...utils import BackboneOutput
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -120,6 +121,17 @@ class VisionTransformer(MetaFormer):
         self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_sizes[-1], hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
         self.encoder = ViTEncoder(num_blocks, hidden_sizes[-1], num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
         self.norm = nn.LayerNorm(hidden_sizes[-1], eps=layer_norm_eps)
+
+    def forward(self, x):
+        x = self.patch_embed(x)
+        x = self.encoder(x)
+        x = self.norm(x)
+
+        if self.patch_embed.cls_token is not None:
+            feat = x[:, 0]
+        else:
+            feat = torch.mean(x, dim=1)
+        return BackboneOutput(last_feature=feat)
 
 
 def vit(task, conf_model_backbone):
