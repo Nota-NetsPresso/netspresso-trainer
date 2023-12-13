@@ -65,10 +65,10 @@ class ResNet(nn.Module):
         stages: List[nn.Module] = []
 
         first_stage = stage_params[0]
-        layer = self._make_layer(block, first_stage.plane, first_stage.layers, expansion=expansion)
+        layer = self._make_layer(block, first_stage.channels, first_stage.layers, expansion=expansion)
         stages.append(layer)
         for stage in stage_params[1:]:
-            layer = self._make_layer(block, stage.plane, stage.layers, stride=2,
+            layer = self._make_layer(block, stage.channels, stage.layers, stride=2,
                                      dilate=stage.replace_stride_with_dilation,
                                      expansion=expansion)
             stages.append(layer)
@@ -76,7 +76,7 @@ class ResNet(nn.Module):
         self.stages = nn.ModuleList(stages)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        hidden_sizes = [stage.plane * expansion for stage in stage_params]
+        hidden_sizes = [stage.channels * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 
