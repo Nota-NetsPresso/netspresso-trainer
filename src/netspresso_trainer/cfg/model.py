@@ -833,7 +833,7 @@ class DetectionSegFormerModelConfig(ModelConfig):
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "vit_tiny"
-    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.safetensors"
+    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit_tiny.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
         head={
             "name": "fc",
