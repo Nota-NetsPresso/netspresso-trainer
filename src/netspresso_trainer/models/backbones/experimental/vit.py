@@ -105,9 +105,11 @@ class VisionTransformer(MetaFormer):
         attention_dropout_prob = params.attention_dropout_prob
         intermediate_size = params.intermediate_size
         hidden_dropout_prob = params.hidden_dropout_prob
-        layer_norm_eps = params.layer_norm_eps
         use_cls_token = params.use_cls_token
         vocab_size = params.vocab_size
+
+        # Fix as a constant
+        layer_norm_eps = 1e-6
 
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)
