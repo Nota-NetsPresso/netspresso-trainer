@@ -16,11 +16,6 @@ model:
     backbone: ~
     head: ~
   losses:
-    - criterion: pidnet_cross_entropy
-      weight: ~
-      ignore_index: 255
-    - criterion: boundary_loss
-      weight: 20.0
-    - criterion: pidnet_cross_entropy_with_boundary
+    - criterion: pidnet_loss
       weight: ~
       ignore_index: 255
