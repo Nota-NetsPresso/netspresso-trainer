@@ -173,8 +173,9 @@ class MixNet(nn.Module):
             stage: List[nn.Module] = []
             for block in zip(stage_info.expand_ratio, stage_info.out_channels, stage_info.num_blocks,
                              stage_info.kernel_sizes, stage_info.num_exp_groups, stage_info.num_poi_groups,
-                             stage_info.stride, stage_info.dilation, stage_info.act_type, stage_info.se_reduction_ratio):
-                t, c, n, k, ek, pk, s, d, a, se = block
+                             stage_info.stride, stage_info.act_type, stage_info.se_reduction_ratio):
+                t, c, n, k, ek, pk, s, a, se = block
+                d = 1
                 out_channels = self._round_filters(c, width_multi)
                 repeats = self._round_repeats(n, depth_multi)
 
