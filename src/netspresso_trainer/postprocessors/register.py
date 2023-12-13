@@ -9,5 +9,5 @@ POSTPROCESSOR_DICT = {
     'all_mlp_decoder': SegmentationPostprocessor,
     'anchor_free_decoupled_head': DetectionPostprocessor,
     'pidnet': SegmentationPostprocessor,
-    'retinanet_head': DetectionPostprocessor,
+    'anchor_decoupled_head': DetectionPostprocessor,
 }

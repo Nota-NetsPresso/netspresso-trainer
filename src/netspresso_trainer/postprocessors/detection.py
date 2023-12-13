@@ -9,7 +9,7 @@ from torchvision.ops import boxes as box_ops
 from ..models.utils import ModelOutput
 
 
-def retinanet_decode_outputs(pred, original_shape, topk_candidates=1000, score_thresh=0.05):
+def anchor_decoupled_head_decode(pred, original_shape, topk_candidates=1000, score_thresh=0.05):
     box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
 
     class_logits = pred["cls_logits"]
@@ -153,8 +153,8 @@ class DetectionPostprocessor:
         if head_name == 'anchor_free_decoupled_head':
             self.decode_outputs = partial(anchor_free_decoupled_head_decode, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
-        elif head_name == 'retinanet_head':
-            self.decode_outputs = partial(retinanet_decode_outputs, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
+        elif head_name == 'anchor_decoupled_head':
+            self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         else:
             self.decode_outputs = None

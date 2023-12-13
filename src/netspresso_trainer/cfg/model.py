@@ -551,11 +551,12 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -627,11 +628,12 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -733,11 +735,12 @@ class DetectionResNetModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -809,11 +812,12 @@ class DetectionSegFormerModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -934,11 +938,12 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -1010,11 +1015,12 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
@@ -1086,11 +1092,12 @@ class DetectionMixNetLargeModelConfig(ModelConfig):
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
+                "num_layers": 1,
                 "norm_layer": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
