@@ -232,16 +232,12 @@ class ResNetArchitectureConfig(ArchitectureConfig):
         "params": {
             "block": "bottleneck",
             "norm_layer": "batch_norm",
-            "groups": 1,
-            "width_per_group": 64,
-            "zero_init_residual": False,
-            "expansion": None,
         },
         "stage_params": [
-            {"plane": 64, "layers": 3},
-            {"plane": 128, "layers": 4},
-            {"plane": 256, "layers": 6},
-            {"plane": 512, "layers": 3},
+            {"channels": 64, "layers": 3},
+            {"channels": 128, "layers": 4, "replace_stride_with_dilation": False},
+            {"channels": 256, "layers": 6, "replace_stride_with_dilation": False},
+            {"channels": 512, "layers": 3, "replace_stride_with_dilation": False},
         ],
     })
 
