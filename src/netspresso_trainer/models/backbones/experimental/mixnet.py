@@ -157,8 +157,8 @@ class MixNet(nn.Module):
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         stem_planes = params.stem_planes
-        width_multi = params.width_multi
-        depth_multi = params.depth_multi
+        width_multi = params.wid_mul
+        depth_multi = params.dep_mul
         self.dropout_rate = params.dropout_rate
 
         out_channels = self._round_filters(stem_planes, width_multi)
