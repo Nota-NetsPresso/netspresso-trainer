@@ -132,3 +132,22 @@ class BoundaryLoss(nn.Module):
         bd_gt = target['bd_gt']
         extra_d = out['extra_d']
         return self.weighted_bce(extra_d, bd_gt)
+
+
+class PIDNetLoss(nn.Module):
+    def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None):
+        super().__init__()
+
+        self.cross_entropy_loss = PIDNetCrossEntropy(ignore_index=ignore_index)
+        self.boundary_loss = BoundaryLoss()
+        self.cross_entropy_with_boundary = PIDNetBoundaryAwareCrossEntropy(ignore_index=ignore_index)
+
+    def forward(self, out: Dict, target: Dict):
+
+        cross_entropy_loss = self.cross_entropy_loss(out, target)
+        boundary_loss = self.boundary_loss(out, target)
+        cross_entropy_loss_with_boundary = self.cross_entropy_with_boundary(out, target)
+
+        # TODO: return as dict
+        loss = cross_entropy_loss + 20 * boundary_loss + cross_entropy_loss_with_boundary
+        return loss
