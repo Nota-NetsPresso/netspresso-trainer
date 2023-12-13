@@ -100,9 +100,8 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
                 "expanded_channels": [16],
                 "out_channels": [16],
                 "use_se": [True],
-                "activation": ["relu"],
+                "act_type": ["relu"],
                 "stride": [2],
-                "dilation": [1],
             },
             {
                 "in_channels": [16, 24],
@@ -110,9 +109,8 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
                 "expanded_channels": [72, 88],
                 "out_channels": [24, 24],
                 "use_se": [False, False],
-                "activation": ["relu", "relu"],
+                "act_type": ["relu", "relu"],
                 "stride": [2, 1],
-                "dilation": [1, 1],
             },
             {
                 "in_channels": [24, 40, 40, 40, 48],
@@ -120,9 +118,8 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
                 "expanded_channels": [96, 240, 240, 120, 144],
                 "out_channels": [40, 40, 40, 48, 48],
                 "use_se": [True, True, True, True, True],
-                "activation": ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"],
+                "act_type": ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"],
                 "stride": [2, 1, 1, 1, 1],
-                "dilation": [1, 1, 1, 1, 1],
             },
             {
                 "in_channels": [48, 96, 96],
@@ -130,9 +127,8 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
                 "expanded_channels": [288, 576, 576],
                 "out_channels": [96, 96, 96],
                 "use_se": [True, True, True],
-                "activation": ["hard_swish", "hard_swish", "hard_swish"],
+                "act_type": ["hard_swish", "hard_swish", "hard_swish"],
                 "stride": [2, 1, 1],
-                "dilation": [1, 1, 1],
             },
         ],
     })
