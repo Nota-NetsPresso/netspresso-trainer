@@ -33,11 +33,13 @@ class ResNet(nn.Module):
         super(ResNet, self).__init__()
 
         block: Literal['basicblock', 'bottleneck'] = params.block
-        zero_init_residual: bool = params.zero_init_residual
-        groups: int = params.groups
-        width_per_group: int = params.width_per_group
         norm_layer: Optional[str] = params.norm_layer
-        expansion: Optional[int] = params.expansion
+
+        # Fix as constant
+        zero_init_residual: bool = False
+        groups: int = 1
+        width_per_group: int = 64
+        expansion: Optional[int] = None
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
