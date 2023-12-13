@@ -694,9 +694,7 @@ class PIDNetModelConfig(ModelConfig):
     checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "pidnet_cross_entropy", "ignore_index": 255, "weight": None},
-        {"criterion": "boundary_loss", "weight": 20.0},
-        {"criterion": "pidnet_cross_entropy_with_boundary", "ignore_index": 255, "weight": None},
+        {"criterion": "pidnet_loss", "ignore_index": 255, "weight": None},
     ])
 
 
