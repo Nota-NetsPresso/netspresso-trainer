@@ -547,7 +547,6 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -624,7 +623,6 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -731,7 +729,6 @@ class DetectionResNetModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -808,7 +805,6 @@ class DetectionSegFormerModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -934,7 +930,6 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -1011,7 +1006,6 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
@@ -1088,7 +1082,6 @@ class DetectionMixNetLargeModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={

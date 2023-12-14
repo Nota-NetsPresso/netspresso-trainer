@@ -51,7 +51,6 @@ model:
         end_level: -1
         add_extra_convs: False
         relu_before_extra_convs: False
-        no_norm_on_lateral: False
     head:
       name: anchor_decoupled_head
       params:
