@@ -12,7 +12,7 @@ def train_with_inline_cfg():
     """
     Declare model config
     """
-    example_model = ClassificationMixNetMediumModelConfig()
+    example_model = ClassificationResNetModelConfig()
     
     # ### If you try to train torch.fx model from PyNetsPresso, use this block instead
     # example_model = ClassificationResNetModelConfig(checkpoint=None)
@@ -46,13 +46,14 @@ def train_with_inline_cfg():
 def train_with_inline_yaml():
     from netspresso_trainer import train_with_yaml
     train_with_yaml(
+        # gpus="0,1",
         data="config/data/beans.yaml",
         augmentation="config/augmentation/classification.yaml",
         model="config/model/resnet/resnet50-classification.yaml",
         training="config/training/classification.yaml",
         logging="config/logging.yaml",
         environment="config/environment.yaml",
-        log_level='DEBUG'
+        log_level='INFO'
     )
 
 
@@ -60,7 +61,7 @@ if __name__ == '__main__':
     # train_cli()
 
     # With inline yaml
-    train_with_inline_yaml()
+    # train_with_inline_yaml()
     
     # With inline pythonic config
-    # train_with_inline_cfg()
+    train_with_inline_cfg()
