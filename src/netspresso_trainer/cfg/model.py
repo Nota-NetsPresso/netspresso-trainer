@@ -855,7 +855,7 @@ class DetectionYoloXModelConfig(ModelConfig):
     checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
         neck={
-            "name": "pafpn",
+            "name": "yolopafpn",
             "params": {
                 "dep_mul": 0.33,
                 "act_type": "silu",

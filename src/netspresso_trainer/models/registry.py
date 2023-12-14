@@ -8,7 +8,7 @@ from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
 from .heads.segmentation import all_mlp_decoder
-from .necks import fpn, pafpn
+from .necks import fpn, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
@@ -23,7 +23,7 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
 
 MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
     'fpn': fpn,
-    'pafpn': pafpn,
+    'yolopafpn': yolopafpn,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {

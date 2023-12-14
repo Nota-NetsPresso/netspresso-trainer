@@ -15,7 +15,7 @@ model:
         act_type: &act_type "silu"
       stage_params: ~
     neck:
-      name: pafpn
+      name: yolopafpn
       params:
         dep_mul: *dep_mul
         act_type: *act_type
