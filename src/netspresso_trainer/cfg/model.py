@@ -17,7 +17,6 @@ __all__ = [
     "ClassificationResNetModelConfig",
     "SegmentationResNetModelConfig",
     "DetectionResNetModelConfig",
-    "ClassificationSegFormerModelConfig",
     "SegmentationSegFormerModelConfig",
     "ClassificationViTModelConfig",
     "DetectionYoloXModelConfig",
@@ -241,7 +240,7 @@ class ResNetArchitectureConfig(ArchitectureConfig):
 @dataclass
 class SegFormerArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "segformer",
+        "name": "mixtransformer",
         "params": {
             "intermediate_ratio": 4,
             "hidden_activation_type": "gelu",
@@ -754,25 +753,6 @@ class DetectionResNetModelConfig(ModelConfig):
 
 
 @dataclass
-class ClassificationSegFormerModelConfig(ModelConfig):
-    task: str = "classification"
-    name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
-    architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        head={
-            "name": "fc",
-            "params": {
-                "hidden_size": 1024,
-                "num_layers": 1,
-            }
-        }
-    ))
-    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
-    ])
-
-
-@dataclass
 class SegmentationSegFormerModelConfig(ModelConfig):
     task: str = "segmentation"
     name: str = "segformer"
@@ -788,44 +768,6 @@ class SegmentationSegFormerModelConfig(ModelConfig):
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "cross_entropy", "ignore_index": 255, "weight": None}
-    ])
-
-
-@dataclass
-class DetectionSegFormerModelConfig(ModelConfig):
-    task: str = "detection"
-    name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
-    architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        neck={
-            "name": "fpn",
-            "params": {
-                "num_outs": 4,
-                "start_level": 0,
-                "end_level": -1,
-                "add_extra_convs": False,
-                "relu_before_extra_convs": False,
-            },
-        },
-        head={
-            "name": "anchor_decoupled_head",
-            "params": {
-                # Anchor parameters
-                "anchor_sizes": [[32,], [64,], [128,], [256,]],
-                "aspect_ratios": [0.5, 1.0, 2.0],
-                "num_layers": 1,
-                "norm_layer": "batch_norm",
-                # postprocessor - decode
-                "topk_candidates": 1000,
-                "score_thresh": 0.05,
-                # postprocessor - nms
-                "nms_thresh": 0.45,
-                "class_agnostic": False,
-            }
-        }
-    ))
-    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "retinanet_loss", "weight": None},
     ])
 
 

@@ -135,7 +135,7 @@ class SegformerEncoder(MetaFormerEncoder):
         return x
 
 
-class SegFormer(MetaFormer):
+class MixTransformer(MetaFormer):
     def __init__(
         self,
         task: str,
@@ -211,5 +211,5 @@ class SegFormer(MetaFormer):
         return BackboneOutput(last_feature=feat)
 
 
-def segformer(task, conf_model_backbone) -> SegformerEncoder:
-    return SegFormer(task, conf_model_backbone.params, conf_model_backbone.stage_params)
+def mixtransformer(task, conf_model_backbone) -> MixTransformer:
+    return MixTransformer(task, conf_model_backbone.params, conf_model_backbone.stage_params)

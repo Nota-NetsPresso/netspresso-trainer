@@ -8,7 +8,7 @@ model:
   architecture:
     full: ~ # auto
     backbone:
-      name: segformer
+      name: mixtransformer
       params:
         intermediate_ratio: 4
         hidden_activation_type: "gelu"
