@@ -242,17 +242,16 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mixtransformer",
         "params": {
-            "intermediate_ratio": 4,
-            "hidden_activation_type": "gelu",
-            "hidden_dropout_prob": 0.0,
+            "ffn_intermediate_ratio": 4,
+            "ffn_activation_type": "gelu",
+            "ffn_dropout_prob": 0.0,
             "attention_dropout_prob": 0.0,
-            "layer_norm_eps": 1e-5,
         },
         "stage_params": [
             {
                 "num_blocks": 2,
                 "sr_ratios": 8,
-                "hidden_sizes": 32,
+                "encoder_chananels": 32,
                 "embedding_patch_sizes": 7,
                 "embedding_strides": 4,
                 "num_attention_heads": 1,
@@ -260,7 +259,7 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
             {
                 "num_blocks": 2,
                 "sr_ratios": 4,
-                "hidden_sizes": 64,
+                "encoder_chananels": 64,
                 "embedding_patch_sizes": 3,
                 "embedding_strides": 2,
                 "num_attention_heads": 2,
@@ -268,7 +267,7 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
             {
                 "num_blocks": 2,
                 "sr_ratios": 2,
-                "hidden_sizes": 160,
+                "encoder_chananels": 160,
                 "embedding_patch_sizes": 3,
                 "embedding_strides": 2,
                 "num_attention_heads": 5,
@@ -276,7 +275,7 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
             {
                 "num_blocks": 2,
                 "sr_ratios": 1,
-                "hidden_sizes": 256,
+                "encoder_chananels": 256,
                 "embedding_patch_sizes": 3,
                 "embedding_strides": 2,
                 "num_attention_heads": 8,
