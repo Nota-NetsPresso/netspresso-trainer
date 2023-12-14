@@ -134,7 +134,7 @@ def set_arguments(data: Union[Path, str], augmentation: Union[Path, str],
 
 
 def get_gpu_from_config(conf_environment: DictConfig) -> Optional[Union[List, int]]:
-    conf_environment_gpus = conf_environment.gpus if hasattr(conf_environment, 'gpus') else None
+    conf_environment_gpus = str(conf_environment.gpus) if hasattr(conf_environment, 'gpus') else None
     return parse_gpu_ids(conf_environment_gpus)
 
 
