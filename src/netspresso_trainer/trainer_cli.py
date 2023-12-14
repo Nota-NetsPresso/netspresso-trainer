@@ -2,7 +2,7 @@ import argparse
 import os
 import subprocess
 from pathlib import Path
-from typing import Union
+from typing import List, Optional, Union
 
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -42,8 +42,11 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
         process.wait()
 
 
-def parse_gpu_ids(gpu_arg: str):
+def parse_gpu_ids(gpu_arg: str) -> Optional[Union[List, int]]:
     """Parse comma-separated GPU IDs and return as a list of integers."""
+    if gpu_arg is None or str(gpu_arg) in ["", "None"]:
+        return None
+
     try:
         gpu_ids = [int(id) for id in gpu_arg.split(',')]
 
@@ -64,7 +67,7 @@ def parse_args_netspresso(with_gpus=False):
 
     if with_gpus:
         parser.add_argument(
-            '--gpus', type=parse_gpu_ids, default=0,
+            '--gpus', type=parse_gpu_ids, default="",
             dest='gpus',
             help='GPU device indices (comma-separated)')
 
@@ -130,11 +133,30 @@ def set_arguments(data: Union[Path, str], augmentation: Union[Path, str],
     return conf
 
 
-def train_with_yaml_impl(gpus: Union[list, int], data: Union[Path, str], augmentation: Union[Path, str],
+def get_gpu_from_config(conf_environment: DictConfig) -> Optional[Union[List, int]]:
+    conf_environment_gpus = conf_environment.gpus if hasattr(conf_environment, 'gpus') else None
+    return parse_gpu_ids(conf_environment_gpus)
+
+
+def get_gpus_from_parser_and_config(
+    gpus: Optional[Union[List, int]],
+    conf_environment: DictConfig
+) -> Union[List, int]:
+    conf_environment_gpus = get_gpu_from_config(conf_environment)
+    if gpus is None:
+        if conf_environment_gpus is None:
+            return 0  # Try use the 'cuda:0'
+        return conf_environment_gpus
+    return gpus
+
+
+def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
                          model: Union[Path, str], training: Union[Path, str],
                          logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
-
+    conf_environment = OmegaConf.load(environment).environment
+    gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
     assert isinstance(gpus, (list, int))
+
     gpu_ids_str = ','.join(map(str, gpus)) if isinstance(gpus, list) else str(gpus)
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
     torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change

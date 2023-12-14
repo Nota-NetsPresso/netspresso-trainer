@@ -2,7 +2,7 @@ from netspresso_trainer import train_cli
 
 def train_with_inline_cfg():
     from netspresso_trainer import TrainerConfig, train_with_config, export_config_as_yaml  
-    from netspresso_trainer.cfg import ClassificationResNetModelConfig, ExampleBeansDataset
+    from netspresso_trainer.cfg import ClassificationResNetModelConfig, ClassificationMixNetMediumModelConfig, ExampleBeansDataset
     
     """
     Declare dataset config (Use an example dataset provided from the module)
@@ -33,22 +33,28 @@ def train_with_inline_cfg():
     """
     Update major field values considering the spec of training machine
     """
-    cfg.epochs = 30
+    cfg.epochs = 3
     cfg.logging.csv = True
+    cfg.environment.gpus = "1"
         
-    train_with_config(gpus="0",
-                      config=cfg,
-                      log_level='INFO')
+    train_with_config(
+        # gpus="0",
+        config=cfg,
+        log_level='INFO'
+    )
 
 def train_with_inline_yaml():
     from netspresso_trainer import train_with_yaml
-    train_with_yaml(gpus="0,1",
-                    data="config/data/beans.yaml",
-                    augmentation="config/augmentation/classification.yaml",
-                    model="config/model/resnet/resnet50-classification.yaml",
-                    training="config/training/classification.yaml",
-                    logging="config/logging.yaml",
-                    environment="config/environment.yaml")
+    train_with_yaml(
+        # gpus="0,1",
+        data="config/data/beans.yaml",
+        augmentation="config/augmentation/classification.yaml",
+        model="config/model/resnet/resnet50-classification.yaml",
+        training="config/training/classification.yaml",
+        logging="config/logging.yaml",
+        environment="config/environment.yaml",
+        log_level='INFO'
+    )
 
 
 if __name__ == '__main__':
