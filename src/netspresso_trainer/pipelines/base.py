@@ -336,6 +336,7 @@ class BasePipeline(ABC):
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
             training_summary.params = params
+            training_summary.success = True
 
         logging_dir = self.train_logger.result_dir
         summary_path = Path(logging_dir) / "training_summary.json"

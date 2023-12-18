@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Union
+import json
 
 import torch
 from omegaconf import DictConfig, OmegaConf
@@ -150,7 +151,7 @@ def parse_gpu_ids(gpu_arg: str) -> Optional[Union[List, int]]:
         raise argparse.ArgumentTypeError('Invalid GPU IDs. Please provide comma-separated integers.') from e
 
 
-def get_new_logging_dir(output_root_dir, project_id):
+def get_new_logging_dir(output_root_dir, project_id, initialize=True):
     version_idx = 0
     project_dir: Path = Path(output_root_dir) / project_id
 
@@ -159,6 +160,12 @@ def get_new_logging_dir(output_root_dir, project_id):
 
     new_logging_dir: Path = project_dir / f"version_{version_idx}"
     new_logging_dir.mkdir(exist_ok=True, parents=True)
+    
+    if initialize:
+        summary_path = new_logging_dir / "training_summary.json"
+        with open(summary_path, 'w') as f:
+            json.dump({"success": False}, f, indent=4)
+    
     return new_logging_dir
 
 
@@ -243,22 +250,30 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
     
     conf = set_arguments(data, augmentation, model, training, logging, environment)
     config_summary = validate_config(conf)
-    if isinstance(gpus, int):
-        train_common(
-            conf,
-            task=config_summary.task,
-            model_name=config_summary.model_name,
-            is_graphmodule_training=config_summary.is_graphmodule_training,
-            logging_dir=config_summary.logging_dir,
-            log_level=log_level
-        )
-    else:
-        run_distributed_training_script(
-            gpus, data, augmentation, model, training, logging, environment, log_level,
-            config_summary.task, config_summary.model_name, config_summary.is_graphmodule_training, config_summary.logging_dir
-        )
+    
+    try:
+        if isinstance(gpus, int):
+            train_common(
+                conf,
+                task=config_summary.task,
+                model_name=config_summary.model_name,
+                is_graphmodule_training=config_summary.is_graphmodule_training,
+                logging_dir=config_summary.logging_dir,
+                log_level=log_level
+            )
+        else:
+            run_distributed_training_script(
+                gpus, data, augmentation, model, training, logging, environment, log_level,
+                config_summary.task, config_summary.model_name, config_summary.is_graphmodule_training, config_summary.logging_dir
+            )
+    except Exception as e:
+        raise e
+    finally:
+        return config_summary.logging_dir
         
 def train_with_config_impl(gpus: int, config: TrainerConfig, log_level: str = LOG_LEVEL):
+    
+    gpus = get_gpus_from_parser_and_config(gpus, config.environment)
     assert isinstance(gpus, int), f"Currently, only single-GPU training is supported in this API. Your gpu(s): {gpus}"
 
     os.environ['CUDA_VISIBLE_DEVICES'] = str(gpus)
@@ -268,11 +283,16 @@ def train_with_config_impl(gpus: int, config: TrainerConfig, log_level: str = LO
     set_struct_recursive(conf, False)
     config_summary = validate_config(conf)
 
-    train_common(
-        conf,
-        task=config_summary.task,
-        model_name=config_summary.model_name,
-        is_graphmodule_training=config_summary.is_graphmodule_training,
-        logging_dir=config_summary.logging_dir,
-        log_level=log_level
-    )
+    try:
+        train_common(
+            conf,
+            task=config_summary.task,
+            model_name=config_summary.model_name,
+            is_graphmodule_training=config_summary.is_graphmodule_training,
+            logging_dir=config_summary.logging_dir,
+            log_level=log_level
+        )
+    except Exception as e:
+        raise e
+    finally:
+        return config_summary.logging_dir

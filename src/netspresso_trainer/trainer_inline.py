@@ -23,13 +23,14 @@ def train_with_config(
 ) -> None:
 
     gpus: Union[List, int] = parse_gpu_ids(gpus)
-    conf_environment = config.environment
-    gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
-    train_with_config_impl(
+
+    logging_dir: Path = train_with_config_impl(
         gpus=gpus,
         config=config,
         log_level=log_level
     )
+    
+    return logging_dir
 
 
 def train_with_yaml(
@@ -41,10 +42,8 @@ def train_with_yaml(
 ):
 
     gpus: Union[List, int] = parse_gpu_ids(gpus)
-    # conf_environment = OmegaConf.load(environment).environment
-    # gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
 
-    train_with_yaml_impl(
+    logging_dir: Path = train_with_yaml_impl(
         gpus=gpus,
         data=data,
         augmentation=augmentation,
@@ -54,3 +53,5 @@ def train_with_yaml(
         environment=environment,
         log_level=log_level
     )
+    
+    return logging_dir
