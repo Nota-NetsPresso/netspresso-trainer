@@ -61,13 +61,12 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
         "name": "efficientformer",
         "params": {
             "num_attention_heads": 8,
-            "attention_hidden_size": 256,
+            "attention_channels": 256,
             "attention_dropout_prob": 0.,
-            "attention_ratio": 4,
-            "intermediate_ratio": 4,
-            "hidden_dropout_prob": 0.,
-            "hidden_activation_type": 'gelu',
-            "drop_path_rate": 0.,
+            "attention_value_expansion_ratio": 4,
+            "ffn_intermediate_ratio": 4,
+            "ffn_hidden_dropout_prob": 0.,
+            "ffn_act_type": 'gelu',
             "vit_num": 1,
         },
         "stage_params": [
