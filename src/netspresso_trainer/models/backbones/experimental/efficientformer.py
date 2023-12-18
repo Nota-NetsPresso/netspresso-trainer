@@ -343,13 +343,10 @@ class EfficientFormer(MetaFormer):
         attention_hidden_size = params.attention_hidden_size
         attention_dropout_prob = params.attention_dropout_prob
         attention_ratio = params.attention_ratio
-        attention_bias_resolution = params.attention_bias_resolution
         intermediate_ratio = params.intermediate_ratio
         hidden_dropout_prob = params.hidden_dropout_prob
         hidden_activation_type = params.hidden_activation_type
         drop_path_rate = params.drop_path_rate
-        use_layer_scale = params.use_layer_scale
-
         vit_num = params.vit_num
 
         # Fix as constant
@@ -360,6 +357,8 @@ class EfficientFormer(MetaFormer):
         down_pad = 1
         pool_size = 3
         downsamples = [True for _ in stage_params]
+        use_layer_scale = True
+        attention_bias_resolution = 16
 
         super().__init__(hidden_sizes)
         self.task = task.lower()

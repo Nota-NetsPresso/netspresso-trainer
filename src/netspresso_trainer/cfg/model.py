@@ -64,12 +64,10 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
             "attention_hidden_size": 256,
             "attention_dropout_prob": 0.,
             "attention_ratio": 4,
-            "attention_bias_resolution": 16,
             "intermediate_ratio": 4,
             "hidden_dropout_prob": 0.,
             "hidden_activation_type": 'gelu',
             "drop_path_rate": 0.,
-            "use_layer_scale": True,
             "vit_num": 1,
         },
         "stage_params": [
