@@ -1,14 +1,14 @@
 import os
 
 from netspresso_trainer.trainer_common import train_common
-from netspresso_trainer.trainer_util import set_arguments, parse_args_netspresso
+from netspresso_trainer.trainer_util import parse_args_netspresso, set_arguments
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 
 def train_cli_without_additional_gpu_check() -> None:
     args_parsed = parse_args_netspresso(with_gpus=False)
-    
+
     conf = set_arguments(
         data=args_parsed.data,
         augmentation=args_parsed.augmentation,
@@ -17,7 +17,7 @@ def train_cli_without_additional_gpu_check() -> None:
         logging=args_parsed.logging,
         environment=args_parsed.environment
     )
-    
+
     train_common(
         conf,
         task=args_parsed.task,

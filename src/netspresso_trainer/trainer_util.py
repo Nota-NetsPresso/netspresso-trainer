@@ -1,16 +1,17 @@
 import argparse
+import json
 import os
 import subprocess
-from pathlib import Path
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Union
-import json
+from pathlib import Path
+from typing import List, Optional, Tuple, Union
 
 import torch
 from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.cfg import TrainerConfig
 from netspresso_trainer.trainer_common import train_common
+
 from .models import SUPPORTING_TASK_LIST
 
 OUTPUT_ROOT_DIR = "./outputs"
@@ -68,27 +69,27 @@ def parse_args_netspresso(with_gpus=False):
         '--environment', type=str, default='config/environment.yaml',
         dest='environment',
         help="Config for training environment (# workers, etc.)")
-    
+
     parser.add_argument(
         '--log-level', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default=LOG_LEVEL,
         dest='log_level',
         help="Logging level in training process")
-    
+
     parser.add_argument(
         '--task', type=str, default=None,
         dest='task',
         help="")
-    
+
     parser.add_argument(
         '--model-name', type=str, default=None,
         dest='model_name',
         help="")
-    
+
     parser.add_argument(
         '--is-graphmodule-training', type=str2bool, default=None,
         dest='is_graphmodule_training',
         help="")
-    
+
     parser.add_argument(
         '--logging-dir', type=Path, default=None,
         dest='logging_dir',
@@ -160,12 +161,12 @@ def get_new_logging_dir(output_root_dir, project_id, initialize=True):
 
     new_logging_dir: Path = project_dir / f"version_{version_idx}"
     new_logging_dir.mkdir(exist_ok=True, parents=True)
-    
+
     if initialize:
         summary_path = new_logging_dir / "training_summary.json"
         with open(summary_path, 'w') as f:
             json.dump({"success": False}, f, indent=4)
-    
+
     return new_logging_dir
 
 
@@ -199,7 +200,7 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
     # Get information from configuration
     assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
     is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
-        
+
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST
 
@@ -207,8 +208,8 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
 
     if is_graphmodule_training:
         model_name += "_graphmodule"
-    
-    project_id = project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
+
+    project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
     logging_dir: Path = get_new_logging_dir(output_root_dir="./outputs", project_id=project_id)
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
@@ -247,10 +248,10 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
     gpu_ids_str = ','.join(map(str, gpus)) if isinstance(gpus, list) else str(gpus)
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
     torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
-    
+
     conf = set_arguments(data, augmentation, model, training, logging, environment)
     config_summary = validate_config(conf)
-    
+
     try:
         if isinstance(gpus, int):
             train_common(
@@ -266,13 +267,12 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
                 gpus, data, augmentation, model, training, logging, environment, log_level,
                 config_summary.task, config_summary.model_name, config_summary.is_graphmodule_training, config_summary.logging_dir
             )
+        return config_summary.logging_dir
     except Exception as e:
         raise e
-    finally:
-        return config_summary.logging_dir
-        
+
 def train_with_config_impl(gpus: int, config: TrainerConfig, log_level: str = LOG_LEVEL):
-    
+
     gpus = get_gpus_from_parser_and_config(gpus, config.environment)
     assert isinstance(gpus, int), f"Currently, only single-GPU training is supported in this API. Your gpu(s): {gpus}"
 
@@ -292,7 +292,6 @@ def train_with_config_impl(gpus: int, config: TrainerConfig, log_level: str = LO
             logging_dir=config_summary.logging_dir,
             log_level=log_level
         )
+        return config_summary.logging_dir
     except Exception as e:
         raise e
-    finally:
-        return config_summary.logging_dir

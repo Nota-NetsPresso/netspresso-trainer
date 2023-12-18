@@ -6,7 +6,12 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.cfg import TrainerConfig
-from netspresso_trainer.trainer_util import get_gpus_from_parser_and_config, parse_gpu_ids, train_with_yaml_impl, train_with_config_impl
+from netspresso_trainer.trainer_util import (
+    get_gpus_from_parser_and_config,
+    parse_gpu_ids,
+    train_with_config_impl,
+    train_with_yaml_impl,
+)
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
@@ -29,7 +34,7 @@ def train_with_config(
         config=config,
         log_level=log_level
     )
-    
+
     return logging_dir
 
 
@@ -53,5 +58,5 @@ def train_with_yaml(
         environment=environment,
         log_level=log_level
     )
-    
+
     return logging_dir

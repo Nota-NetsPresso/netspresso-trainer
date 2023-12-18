@@ -27,7 +27,7 @@ def train_common(
     conf.distributed = distributed
     conf.world_size = world_size
     conf.rank = rank
-    
+
     # Basic setup
     add_file_handler(logging_dir / "result.log", distributed=conf.distributed)
 
@@ -37,7 +37,7 @@ def train_common(
 
     if conf.distributed and conf.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
-        
+
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
