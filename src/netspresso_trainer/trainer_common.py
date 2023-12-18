@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 import torch.distributed as dist
@@ -10,34 +10,25 @@ from .dataloaders import build_dataloader, build_dataset
 from .models import SUPPORTING_TASK_LIST, build_model, is_single_task_model
 from .pipelines import build_pipeline
 from .utils.environment import set_device
-from .utils.logger import add_file_handler, get_logging_dir, set_logger
+from .utils.logger import add_file_handler, set_logger
 
 
-def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'):
-
-    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
-    is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
-
+def train_common(
+    conf: DictConfig,
+    task: str,
+    model_name: str,
+    is_graphmodule_training: bool,
+    logging_dir: Path,
+    log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
+):
     distributed, world_size, rank, devices = set_device(conf.training.seed)
     logger = set_logger(level=log_level, distributed=distributed)
 
     conf.distributed = distributed
     conf.world_size = world_size
     conf.rank = rank
-
-    task = str(conf.model.task).lower()
-    assert task in SUPPORTING_TASK_LIST
-
-    # TODO: Get model name from checkpoint
-    single_task_model = is_single_task_model(conf.model)
-    conf.model.single_task_model = single_task_model
-
-    model_name = str(conf.model.name).lower()
-
-    if is_graphmodule_training:
-        model_name += "_graphmodule"
-
-    logging_dir: Path = get_logging_dir(task, model_name, output_root_dir="./outputs", distributed=distributed)
+    
+    # Basic setup
     add_file_handler(logging_dir / "result.log", distributed=conf.distributed)
 
     if not distributed or dist.get_rank() == 0:
@@ -46,6 +37,9 @@ def train_common(conf: DictConfig, log_level: Literal['DEBUG', 'INFO', 'WARNING'
 
     if conf.distributed and conf.rank != 0:
         torch.distributed.barrier()  # wait for rank 0 to download dataset
+        
+    single_task_model = is_single_task_model(conf.model)
+    conf.model.single_task_model = single_task_model
 
     train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
 
