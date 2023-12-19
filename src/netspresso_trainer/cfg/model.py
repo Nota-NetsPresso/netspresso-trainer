@@ -497,7 +497,7 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -573,7 +573,7 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -679,7 +679,7 @@ class SegmentationResNetModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -736,7 +736,7 @@ class SegmentationSegFormerModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -823,7 +823,7 @@ class SegmentationMixNetSmallModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -899,7 +899,7 @@ class SegmentationMixNetMediumModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -975,7 +975,7 @@ class SegmentationMixNetLargeModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
