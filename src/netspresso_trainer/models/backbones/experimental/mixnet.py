@@ -156,12 +156,12 @@ class MixNet(nn.Module):
         self.task = task.lower()
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
-        stem_planes = params.stem_planes
+        stem_channels = params.stem_channels
         width_multi = params.wid_mul
         depth_multi = params.dep_mul
         self.dropout_rate = params.dropout_rate
 
-        out_channels = self._round_filters(stem_planes, width_multi)
+        out_channels = self._round_filters(stem_channels, width_multi)
         self.mod1 = ConvLayer(in_channels=3, out_channels=out_channels, kernel_size=3,
                               stride=2, groups=1, dilation=1, act_type="relu")
 
@@ -171,7 +171,7 @@ class MixNet(nn.Module):
         for stg_idx, stage_info in enumerate(stage_params):
             
             stage: List[nn.Module] = []
-            for block in zip(stage_info.expand_ratio, stage_info.out_channels, stage_info.num_blocks,
+            for block in zip(stage_info.expansion_ratio, stage_info.out_channels, stage_info.num_blocks,
                              stage_info.kernel_sizes, stage_info.num_exp_groups, stage_info.num_poi_groups,
                              stage_info.stride, stage_info.act_type, stage_info.se_reduction_ratio):
                 t, c, n, k, ek, pk, s, a, se = block
