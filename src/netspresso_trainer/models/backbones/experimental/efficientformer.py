@@ -337,14 +337,14 @@ class EfficientFormer(MetaFormer):
     ) -> None:
         
         num_blocks = [stage.num_blocks for stage in stage_params]
-        hidden_sizes = [stage.hidden_sizes for stage in stage_params]
+        hidden_sizes = [stage.channels for stage in stage_params]
 
         num_attention_heads = params.num_attention_heads
         attention_hidden_size = params.attention_channels
         attention_dropout_prob = params.attention_dropout_prob
         attention_ratio = params.attention_value_expansion_ratio
         intermediate_ratio = params.ffn_intermediate_ratio
-        hidden_dropout_prob = params.ffn_hidden_dropout_prob
+        hidden_dropout_prob = params.ffn_dropout_prob
         hidden_activation_type = params.ffn_act_type
         vit_num = params.vit_num
 

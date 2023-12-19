@@ -65,15 +65,15 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
             "attention_dropout_prob": 0.,
             "attention_value_expansion_ratio": 4,
             "ffn_intermediate_ratio": 4,
-            "ffn_hidden_dropout_prob": 0.,
+            "ffn_dropout_prob": 0.,
             "ffn_act_type": 'gelu',
             "vit_num": 1,
         },
         "stage_params": [
-            {"num_blocks": 3, "hidden_sizes": 48},
-            {"num_blocks": 2, "hidden_sizes": 96},
-            {"num_blocks": 6, "hidden_sizes": 224},
-            {"num_blocks": 4, "hidden_sizes": 448},
+            {"num_blocks": 3, "channels": 48},
+            {"num_blocks": 2, "channels": 96},
+            {"num_blocks": 6, "channels": 224},
+            {"num_blocks": 4, "channels": 448},
         ],
     })
 
@@ -238,7 +238,6 @@ class SegFormerArchitectureConfig(ArchitectureConfig):
                 "sequence_reduction_ratio": 4,
                 "attention_chananels": 64,
                 "embedding_patch_sizes": 3,
-                "embedding_strides": 2,
                 "num_attention_heads": 2,
             },
             {
