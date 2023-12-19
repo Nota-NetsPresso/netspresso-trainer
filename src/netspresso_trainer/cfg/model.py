@@ -478,7 +478,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -554,7 +554,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -630,7 +630,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -660,7 +660,7 @@ class ClassificationResNetModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -755,7 +755,7 @@ class ClassificationViTModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -804,7 +804,7 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -880,7 +880,7 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -956,7 +956,7 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
