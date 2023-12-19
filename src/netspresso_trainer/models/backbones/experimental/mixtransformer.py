@@ -142,12 +142,12 @@ class MixTransformer(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
-        super().__init__([stage.encoder_chananels for stage in stage_params])
+        super().__init__([stage.attention_chananels for stage in stage_params])
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
-        intermediate_ratio = params.ffn_intermediate_ratio
-        hidden_activation_type = params.ffn_activation_type
+        intermediate_ratio = params.ffn_intermediate_expansion_ratio
+        hidden_activation_type = params.ffn_act_type
         hidden_dropout_prob = params.ffn_dropout_prob
         attention_dropout_prob = params.attention_dropout_prob
 
@@ -157,8 +157,8 @@ class MixTransformer(MetaFormer):
         self.encoder_modules = nn.ModuleList()
         for blocks in stage_params:
             num_blocks = blocks.num_blocks
-            sr_ratios = blocks.sr_ratios
-            hidden_sizes = blocks.encoder_chananels
+            sr_ratios = blocks.sequence_reduction_ratio
+            hidden_sizes = blocks.attention_chananels
             embedding_patch_sizes = blocks.embedding_patch_sizes
             embedding_strides = blocks.embedding_strides
             num_attention_heads = blocks.num_attention_heads
