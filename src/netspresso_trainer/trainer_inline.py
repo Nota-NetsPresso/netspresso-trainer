@@ -6,17 +6,14 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 
 from netspresso_trainer.cfg import TrainerConfig
-from netspresso_trainer.trainer_cli import get_gpus_from_parser_and_config, parse_gpu_ids, train_with_yaml_impl
-from netspresso_trainer.trainer_common import train_common
+from netspresso_trainer.trainer_util import (
+    get_gpus_from_parser_and_config,
+    parse_gpu_ids,
+    train_with_config_impl,
+    train_with_yaml_impl,
+)
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
-
-def set_struct_recursive(conf: DictConfig, value: bool) -> None:
-    OmegaConf.set_struct(conf, value)
-
-    for _, conf_value in conf.items():
-        if isinstance(conf_value, DictConfig):
-            set_struct_recursive(conf_value, value)
 
 
 def export_config_as_yaml(config: TrainerConfig) -> str:
@@ -31,17 +28,14 @@ def train_with_config(
 ) -> None:
 
     gpus: Union[List, int] = parse_gpu_ids(gpus)
-    conf_environment = config.environment
-    gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
-    assert isinstance(gpus, int), f"Currently, only single-GPU training is supported in this API. Your gpu(s): {gpus}"
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpus)
-    torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
+    logging_dir: Path = train_with_config_impl(
+        gpus=gpus,
+        config=config,
+        log_level=log_level
+    )
 
-    conf: DictConfig = OmegaConf.create(config)
-    set_struct_recursive(conf, False)
-
-    train_common(conf, log_level=log_level)
+    return logging_dir
 
 
 def train_with_yaml(
@@ -53,10 +47,8 @@ def train_with_yaml(
 ):
 
     gpus: Union[List, int] = parse_gpu_ids(gpus)
-    conf_environment = OmegaConf.load(environment).environment
-    gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
 
-    train_with_yaml_impl(
+    logging_dir: Path = train_with_yaml_impl(
         gpus=gpus,
         data=data,
         augmentation=augmentation,
@@ -66,3 +58,5 @@ def train_with_yaml(
         environment=environment,
         log_level=log_level
     )
+
+    return logging_dir

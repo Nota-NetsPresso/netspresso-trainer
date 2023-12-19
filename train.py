@@ -37,15 +37,16 @@ def train_with_inline_cfg():
     cfg.logging.csv = True
     cfg.environment.gpus = "1"
         
-    train_with_config(
+    logging_dir = train_with_config(
         # gpus="0",
         config=cfg,
         log_level='INFO'
     )
+    return logging_dir
 
 def train_with_inline_yaml():
     from netspresso_trainer import train_with_yaml
-    train_with_yaml(
+    logging_dir = train_with_yaml(
         # gpus="0,1",
         data="config/data/beans.yaml",
         augmentation="config/augmentation/classification.yaml",
@@ -55,13 +56,16 @@ def train_with_inline_yaml():
         environment="config/environment.yaml",
         log_level='INFO'
     )
+    return logging_dir
 
 
 if __name__ == '__main__':
     # train_cli()
 
     # With inline yaml
-    # train_with_inline_yaml()
+    # logging_dir = train_with_inline_yaml()
     
     # With inline pythonic config
-    train_with_inline_cfg()
+    logging_dir = train_with_inline_cfg()
+    
+    print(f"Training results are saved at: {logging_dir}")
