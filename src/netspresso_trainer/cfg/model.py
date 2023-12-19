@@ -191,9 +191,9 @@ class PIDNetArchitectureConfig(ArchitectureConfig):
         "name": "pidnet",
         "m": 2,
         "n": 3,
-        "planes": 32,
-        "ppm_planes": 96,
-        "head_planes": 128,
+        "channels": 32,
+        "ppm_channels": 96,
+        "head_channels": 128,
     })
 
 
