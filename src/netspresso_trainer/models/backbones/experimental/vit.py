@@ -100,7 +100,7 @@ class VisionTransformer(MetaFormer):
         stage_params: Optional[List] = None,
     ) -> None:
         patch_size = params.patch_size
-        hidden_size = params.encoder_channels
+        hidden_size = params.attention_channels
         num_blocks = params.num_blocks
         num_attention_heads = params.num_attention_heads
         attention_dropout_prob = params.attention_dropout_prob

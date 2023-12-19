@@ -267,7 +267,7 @@ class ViTArchitectureConfig(ArchitectureConfig):
         "name": "vit",
         "params": {
             "patch_size": 16,
-            "encoder_channels": 192,
+            "attention_channels": 192,
             "num_blocks": 12,
             "num_attention_heads": 3,
             "attention_dropout_prob": 0.0,
