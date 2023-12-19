@@ -10,66 +10,52 @@ model:
     backbone:
       name: mobilevit
       params:
-        patch_embedding_out_channels: 16
-        local_kernel_size: 3
         patch_size: 2
         num_attention_heads: 4  # num_heads
         attention_dropout_prob: 0.1
-        hidden_dropout_prob: 0.0
-        exp_factor: 4
-        layer_norm_eps: 1e-5
+        ffn_dropout_prob: 0.0
+        output_expansion: 4
         use_fusion_layer: True
       stage_params:
         -
-          out_channels: 32
           block_type: 'mv2'
+          out_channels: 32
           num_blocks: 1
           stride: 1
-          hidden_size: None
-          intermediate_size: None
-          num_transformer_blocks: None
-          dilate: None
-          expand_ratio: 4  # [mv2_exp_mult] * 4
+          ir_expansion: 4  # [mv2_exp_mult] * 4
         -
-          out_channels: 64
           block_type: 'mv2'
+          out_channels: 64
           num_blocks: 3
           stride: 2
-          hidden_size: None
-          intermediate_size: None
-          num_transformer_blocks: None
-          dilate: None
-          expand_ratio: 4  # [mv2_exp_mult] * 4
+          ir_expansion: 4  # [mv2_exp_mult] * 4
         -
+          block_type: 'mobilevit'
           out_channels: 96
-          block_type: 'mobilevit'
-          num_blocks: None
+          num_blocks: 2
           stride: 2
-          hidden_size: 144
-          intermediate_size: 288
-          num_transformer_blocks: 2
+          attention_channels: 144
+          ffn_intermediate_channels: 288
           dilate: False
-          expand_ratio: 4  # [mv2_exp_mult] * 4
+          ir_expansion: 4  # [mv2_exp_mult] * 4
         -
+          block_type: 'mobilevit'
           out_channels: 128
-          block_type: 'mobilevit'
-          num_blocks: None
+          num_blocks: 4
           stride: 2
-          hidden_size: 192
-          intermediate_size: 384
-          num_transformer_blocks: 4
+          attention_channels: 192
+          ffn_intermediate_channels: 384
           dilate: False
-          expand_ratio: 4  # [mv2_exp_mult] * 4
+          ir_expansion: 4  # [mv2_exp_mult] * 4
         -
-          out_channels: 160
           block_type: 'mobilevit'
-          num_blocks: None
+          out_channels: 160
+          num_blocks: 3
           stride: 2
-          hidden_size: 240
-          intermediate_size: 480
-          num_transformer_blocks: 3
+          attention_channels: 240
+          ffn_intermediate_channels: 480
           dilate: False
-          expand_ratio: 4  # [mv2_exp_mult] * 4
+          ir_expansion: 4  # [mv2_exp_mult] * 4
     head:
       name: fc
       params:
