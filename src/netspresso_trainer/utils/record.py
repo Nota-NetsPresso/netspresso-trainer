@@ -102,6 +102,7 @@ class TrainingSummary:
     total_train_time: Optional[float] = None
     best_epoch: int = field(init=False)
     last_epoch: int = field(init=False)
+    success: bool = False
 
     def __post_init__(self):
         self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
