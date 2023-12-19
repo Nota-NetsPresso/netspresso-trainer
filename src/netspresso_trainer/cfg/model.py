@@ -86,7 +86,7 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
         "stage_params": [
             {
                 "in_channels": [16],
-                "kernel": [3],
+                "kernel_sizes": [3],
                 "expanded_channels": [16],
                 "out_channels": [16],
                 "use_se": [True],
@@ -95,7 +95,7 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
             },
             {
                 "in_channels": [16, 24],
-                "kernel": [3, 3],
+                "kernel_sizes": [3, 3],
                 "expanded_channels": [72, 88],
                 "out_channels": [24, 24],
                 "use_se": [False, False],
@@ -104,7 +104,7 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
             },
             {
                 "in_channels": [24, 40, 40, 40, 48],
-                "kernel": [5, 5, 5, 5, 5],
+                "kernel_sizes": [5, 5, 5, 5, 5],
                 "expanded_channels": [96, 240, 240, 120, 144],
                 "out_channels": [40, 40, 40, 48, 48],
                 "use_se": [True, True, True, True, True],
@@ -113,7 +113,7 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
             },
             {
                 "in_channels": [48, 96, 96],
-                "kernel": [5, 5, 5],
+                "kernel_sizes": [5, 5, 5],
                 "expanded_channels": [288, 576, 576],
                 "out_channels": [96, 96, 96],
                 "use_se": [True, True, True],

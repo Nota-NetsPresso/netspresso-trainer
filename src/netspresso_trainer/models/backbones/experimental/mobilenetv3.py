@@ -51,7 +51,7 @@ class MobileNetV3(nn.Module):
         for stg_idx, stage_info in enumerate(stage_params):
             stage: List[nn.Module] = []
 
-            for block in zip(stage_info.in_channels, stage_info.kernel, stage_info.expanded_channels,
+            for block in zip(stage_info.in_channels, stage_info.kernel_sizes, stage_info.expanded_channels,
                              stage_info.out_channels, stage_info.use_se, stage_info.act_type,
                              stage_info.stride):
                 in_channels, kernel_size, hidden_channels, out_channels, use_se, act_type_b, stride = block
