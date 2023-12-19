@@ -283,7 +283,7 @@ class MobileViTEncoder(MetaFormerEncoder):
         block_type = stage_param.block_type
         stride = stage_param.stride
         num_blocks = stage_param.num_blocks
-        expand_ratio = stage_param.ir_expansion
+        expand_ratio = stage_param.ir_expansion_ratio
         
         #out_channels, block_type: Literal['mv2', 'mobilevit'], num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio, in_channels
         if block_type == 'mobilevit':
@@ -365,7 +365,7 @@ class MobileViT(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
-        exp_channels = min(params.output_expansion * stage_params[-1].out_channels, 960)
+        exp_channels = min(params.output_expansion_ratio * stage_params[-1].out_channels, 960)
         hidden_sizes = [stage.out_channels for stage in stage_params] + [exp_channels]
         super().__init__(hidden_sizes)
         

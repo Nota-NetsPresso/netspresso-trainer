@@ -133,7 +133,7 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
             "num_attention_heads": 4,
             "attention_dropout_prob": 0.1,
             "ffn_dropout_prob": 0.0,
-            "output_expansion": 4,
+            "output_expansion_ratio": 4,
             "use_fusion_layer": True,
         },
         "stage_params": [
@@ -142,14 +142,14 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
                 "block_type": "mv2",
                 "num_blocks": 1,
                 "stride": 1,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 64,
                 "block_type": "mv2",
                 "num_blocks": 3,
                 "stride": 2,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 96,
@@ -159,7 +159,7 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
                 "hidden_size": 144,
                 "intermediate_size": 288,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 128,
@@ -169,7 +169,7 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
                 "hidden_size": 192,
                 "intermediate_size": 384,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 160,
@@ -179,7 +179,7 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
                 "hidden_size": 240,
                 "intermediate_size": 480,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
         ]
     })
