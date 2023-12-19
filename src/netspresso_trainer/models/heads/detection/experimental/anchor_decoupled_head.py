@@ -29,7 +29,7 @@ class AnchorDecoupledHead(nn.Module):
         aspect_ratios = params.aspect_ratios
         num_layers = params.num_layers
 
-        norm_layer = params.norm_layer
+        norm_layer = params.norm_type
 
         aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
         # TODO: Temporarily use hard-coded img_size

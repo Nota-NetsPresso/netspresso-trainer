@@ -530,7 +530,7 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -606,7 +606,7 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -712,7 +712,7 @@ class DetectionResNetModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -856,7 +856,7 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -932,7 +932,7 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -1008,7 +1008,7 @@ class DetectionMixNetLargeModelConfig(ModelConfig):
                 "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
                 "num_layers": 1,
-                "norm_layer": "batch_norm",
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
