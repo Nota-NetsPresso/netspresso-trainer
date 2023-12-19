@@ -202,14 +202,14 @@ class ResNetArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "resnet",
         "params": {
-            "block": "bottleneck",
-            "norm_layer": "batch_norm",
+            "block_type": "bottleneck",
+            "norm_type": "batch_norm",
         },
         "stage_params": [
-            {"channels": 64, "layers": 3},
-            {"channels": 128, "layers": 4, "replace_stride_with_dilation": False},
-            {"channels": 256, "layers": 6, "replace_stride_with_dilation": False},
-            {"channels": 512, "layers": 3, "replace_stride_with_dilation": False},
+            {"channels": 64, "num_blocks": 3},
+            {"channels": 128, "num_blocks": 4, "replace_stride_with_dilation": False},
+            {"channels": 256, "num_blocks": 6, "replace_stride_with_dilation": False},
+            {"channels": 512, "num_blocks": 3, "replace_stride_with_dilation": False},
         ],
     })
 

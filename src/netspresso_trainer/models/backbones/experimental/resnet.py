@@ -32,8 +32,8 @@ class ResNet(nn.Module):
     ) -> None:
         super(ResNet, self).__init__()
 
-        block: Literal['basicblock', 'bottleneck'] = params.block
-        norm_layer: Optional[str] = params.norm_layer
+        block: Literal['basicblock', 'bottleneck'] = params.block_type
+        norm_layer: Optional[str] = params.norm_type
 
         # Fix as constant
         zero_init_residual: bool = False
@@ -65,10 +65,10 @@ class ResNet(nn.Module):
         stages: List[nn.Module] = []
 
         first_stage = stage_params[0]
-        layer = self._make_layer(block, first_stage.channels, first_stage.layers, expansion=expansion)
+        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, expansion=expansion)
         stages.append(layer)
         for stage in stage_params[1:]:
-            layer = self._make_layer(block, stage.channels, stage.layers, stride=2,
+            layer = self._make_layer(block, stage.channels, stage.num_blocks, stride=2,
                                      dilate=stage.replace_stride_with_dilation,
                                      expansion=expansion)
             stages.append(layer)
