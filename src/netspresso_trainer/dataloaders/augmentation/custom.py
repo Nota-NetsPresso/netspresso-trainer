@@ -103,7 +103,7 @@ class Pad(T.Pad):
 class Resize(T.Resize):
     visualize = True
 
-    def __init__(self, size, interpolation='bilinear', max_size=None, antialias=None):
+    def __init__(self, size, interpolation='bilinear', max_size=None):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
 
         # TODO: There is logic error in forward. If `size` is int, this specify edge for shorter one.
@@ -113,7 +113,8 @@ class Resize(T.Resize):
         if isinstance(size, int):
             size = [size, size]
 
-        super().__init__(size, interpolation, max_size, antialias)
+        # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
+        super().__init__(size, interpolation, max_size)
 
     def forward(self, image, mask=None, bbox=None):
         w, h = image.size
@@ -303,10 +304,10 @@ class RandomResizedCrop(T.RandomResizedCrop):
                  size,
                  scale=(0.08, 1.0),
                  ratio=(3.0 / 4.0, 4.0 / 3.0),
-                 interpolation='bilinear',
-                 antialias: Optional[bool]=None):
+                 interpolation='bilinear',):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
-        super().__init__(size, scale, ratio, interpolation, antialias)
+        # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
+        super().__init__(size, scale, ratio, interpolation)
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
