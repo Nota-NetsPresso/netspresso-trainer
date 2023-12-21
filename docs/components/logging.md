@@ -1,3 +1,20 @@
+# Logging
+
+NetsPresso Trainer provides training results in a variety multiple formats. Users can decide on most output formats through boolean flags, and they also have the option to adjust the interval of validation set evaluations with simple configuration.
+
+```yaml
+logging:
+  project_id: ~
+  output_dir: ./outputs
+  tensorboard: true
+  csv: true
+  image: true
+  stdout: true
+  save_optimizer_state: true
+  validation_epoch: &validation_epoch 5
+  save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.
+```
+
 ## Tensorboard
 
 We provide basic tensorboard to track your training status. Run the tensorboard with the following command: 
