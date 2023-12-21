@@ -8,7 +8,7 @@ from ...op.custom import ConvLayer, CSPLayer
 from ...utils import BackboneOutput
 
 
-class PAFPN(nn.Module):
+class YOLOPAFPN(nn.Module):
     """
     YOLOv3 model. Darknet 53 is the default backbone of this model.
     """
@@ -127,5 +127,5 @@ class PAFPN(nn.Module):
     def intermediate_features_dim(self):
         return self._intermediate_features_dim
 
-def pafpn(intermediate_features_dim, conf_model_neck, **kwargs):
-    return PAFPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)
+def yolopafpn(intermediate_features_dim, conf_model_neck, **kwargs):
+    return YOLOPAFPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)

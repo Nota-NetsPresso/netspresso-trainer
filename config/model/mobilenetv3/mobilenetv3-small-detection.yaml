@@ -13,40 +13,36 @@ model:
       stage_params:
         -
           in_channels: [16]
-          kernel: [3]
+          kernel_sizes: [3]
           expanded_channels: [16]
           out_channels: [16]
           use_se: [True]
-          activation: ["relu"]
+          act_type: ["relu"]
           stride: [2]
-          dilation: [1]
         -
           in_channels: [16, 24]
-          kernel: [3, 3]
+          kernel_sizes: [3, 3]
           expanded_channels: [72, 88]
           out_channels: [24, 24]
           use_se: [False, False]
-          activation: ["relu", "relu"]
+          act_type: ["relu", "relu"]
           stride: [2, 1]
-          dilation: [1, 1]
         -
           in_channels: [24, 40, 40, 40, 48]
-          kernel: [5, 5, 5, 5, 5]
+          kernel_sizes: [5, 5, 5, 5, 5]
           expanded_channels: [96, 240, 240, 120, 144]
           out_channels: [40, 40, 40, 48, 48]
           use_se: [True, True, True, True, True]
-          activation: ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"]
+          act_type: ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"]
           stride: [2, 1, 1, 1, 1]
-          dilation: [1, 1, 1, 1, 1]
         -
           in_channels: [48, 96, 96]
-          kernel: [5, 5, 5]
+          kernel_sizes: [5, 5, 5]
           expanded_channels: [288, 576, 576]
           out_channels: [96, 96, 96]
           use_se: [True, True, True]
-          activation: ["hard_swish", "hard_swish", "hard_swish"]
+          act_type: ["hard_swish", "hard_swish", "hard_swish"]
           stride: [2, 1, 1]
-          dilation: [1, 1, 1]
     neck:
       name: fpn
       params:
@@ -55,13 +51,13 @@ model:
         end_level: -1
         add_extra_convs: False
         relu_before_extra_convs: False
-        no_norm_on_lateral: False
     head:
-      name: retinanet_head
+      name: anchor_decoupled_head
       params:
-        anchor_sizes: [[64,], [128,], [256,], [512,]]
+        anchor_sizes: [[32,], [64,], [128,], [256,]]
         aspect_ratios: [0.5, 1.0, 2.0]
-        norm_layer: batch_norm
+        num_layers: 1
+        norm_type: batch_norm
         # postprocessor - decode
         topk_candidates: 1000
         score_thresh: 0.05

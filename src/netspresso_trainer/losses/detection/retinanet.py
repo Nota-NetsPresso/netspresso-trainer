@@ -30,7 +30,7 @@ class RetinaNetLoss(nn.Module):
         # TODO: return as dict
         return cls_loss + box_loss
 
-    def forward(self, out: Dict, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, out: Dict, target: Dict) -> torch.Tensor:
         matched_idxs = []
         anchors = out['anchors']
 
@@ -81,7 +81,7 @@ class RetinaNetClassificationLoss(nn.Module):
             losses.append(
                 self.focal_loss(
                     {'pred': cls_logits_per_image[valid_idxs_per_image]},
-                    gt_classes_target[valid_idxs_per_image],
+                    {'target': gt_classes_target[valid_idxs_per_image]},
                     reduction="sum",
                 )
                 / max(1, num_foreground)

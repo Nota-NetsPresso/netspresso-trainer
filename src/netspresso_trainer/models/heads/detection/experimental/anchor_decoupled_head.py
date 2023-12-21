@@ -14,7 +14,7 @@ from ....utils import AnchorBasedDetectionModelOutput
 from .detection import AnchorGenerator
 
 
-class RetinaNetHead(nn.Module):
+class AnchorDecoupledHead(nn.Module):
     def __init__(
         self,
         num_classes: int,
@@ -27,8 +27,9 @@ class RetinaNetHead(nn.Module):
 
         anchor_sizes = params.anchor_sizes
         aspect_ratios = params.aspect_ratios
+        num_layers = params.num_layers
 
-        norm_layer = params.norm_layer
+        norm_layer = params.norm_type
 
         aspect_ratios = (aspect_ratios,) * len(anchor_sizes)
         # TODO: Temporarily use hard-coded img_size
@@ -36,9 +37,9 @@ class RetinaNetHead(nn.Module):
         num_anchors = self.anchor_generator.num_anchors_per_location()[0]
 
         self.classification_head = RetinaNetClassificationHead(
-            in_channels, num_anchors, num_classes, norm_layer=norm_layer
+            in_channels, num_anchors, num_classes, num_layers, norm_layer=norm_layer
         )
-        self.regression_head = RetinaNetRegressionHead(in_channels, num_anchors, norm_layer=norm_layer)
+        self.regression_head = RetinaNetRegressionHead(in_channels, num_anchors, num_layers, norm_layer=norm_layer)
 
     def forward(self, x):
         anchors = torch.cat(self.anchor_generator(x), dim=0)
@@ -54,13 +55,14 @@ class RetinaNetClassificationHead(nn.Module):
         in_channels,
         num_anchors,
         num_classes,
+        num_layers,
         prior_probability = 0.01,
         norm_layer: str = 'batch_norm',
     ):
         super().__init__()
 
         conv = []
-        for _ in range(4):
+        for _ in range(num_layers):
             conv.append(
                 ConvLayer(in_channels=in_channels, out_channels=in_channels,
                           kernel_size=3, stride=1, norm_type=norm_layer)
@@ -104,12 +106,13 @@ class RetinaNetRegressionHead(nn.Module):
         self, 
         in_channels,
         num_anchors,
+        num_layers,
         norm_layer: str = 'batch_norm'
     ):
         super().__init__()
 
         conv = []
-        for _ in range(4):
+        for _ in range(num_layers):
             conv.append(
                 ConvLayer(in_channels=in_channels, out_channels=in_channels,
                           kernel_size=3, stride=1, norm_type=norm_layer)
@@ -144,7 +147,7 @@ class RetinaNetRegressionHead(nn.Module):
         return all_bbox_regression
 
 
-def retinanet_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RetinaNetHead:
-    return RetinaNetHead(num_classes=num_classes,
-                         intermediate_features_dim=intermediate_features_dim,
-                         params=conf_model_head.params)
+def anchor_decoupled_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> AnchorDecoupledHead:
+    return AnchorDecoupledHead(num_classes=num_classes,
+                               intermediate_features_dim=intermediate_features_dim,
+                               params=conf_model_head.params)

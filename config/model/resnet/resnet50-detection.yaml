@@ -10,27 +10,23 @@ model:
     backbone:
       name: resnet
       params:
-        block: bottleneck
-        norm_layer: batch_norm
-        groups: 1
-        width_per_group: 64
-        zero_init_residual: False
-        expansion: ~
+        block_type: bottleneck
+        norm_type: batch_norm
       stage_params:
         - 
-          plane: 64
-          layers: 3
+          channels: 64
+          num_blocks: 3
         - 
-          plane: 128
-          layers: 4
+          channels: 128
+          num_blocks: 4
           replace_stride_with_dilation: False
         - 
-          plane: 256
-          layers: 6
+          channels: 256
+          num_blocks: 6
           replace_stride_with_dilation: False
         - 
-          plane: 512
-          layers: 3
+          channels: 512
+          num_blocks: 3
           replace_stride_with_dilation: False
     neck:
       name: fpn
@@ -40,13 +36,13 @@ model:
         end_level: -1
         add_extra_convs: False
         relu_before_extra_convs: False
-        no_norm_on_lateral: False
     head:
-      name: retinanet_head
+      name: anchor_decoupled_head
       params:
-        anchor_sizes: [[64,], [128,], [256,], [512,]]
+        anchor_sizes: [[32,], [64,], [128,], [256,]]
         aspect_ratios: [0.5, 1.0, 2.0]
-        norm_layer: batch_norm
+        num_layers: 1
+        norm_type: batch_norm
         # postprocessor - decode
         topk_candidates: 1000
         score_thresh: 0.05

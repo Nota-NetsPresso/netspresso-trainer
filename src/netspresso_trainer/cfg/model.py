@@ -17,7 +17,6 @@ __all__ = [
     "ClassificationResNetModelConfig",
     "SegmentationResNetModelConfig",
     "DetectionResNetModelConfig",
-    "ClassificationSegFormerModelConfig",
     "SegmentationSegFormerModelConfig",
     "ClassificationViTModelConfig",
     "DetectionYoloXModelConfig",
@@ -62,28 +61,19 @@ class EfficientFormerArchitectureConfig(ArchitectureConfig):
         "name": "efficientformer",
         "params": {
             "num_attention_heads": 8,
-            "attention_hidden_size": 256,
+            "attention_channels": 256,
             "attention_dropout_prob": 0.,
-            "attention_ratio": 4,
-            "attention_bias_resolution": 16,
-            "pool_size": 3,
-            "intermediate_ratio": 4,
-            "hidden_dropout_prob": 0.,
-            "hidden_activation_type": 'gelu',
-            "layer_norm_eps": 1e-5,
-            "drop_path_rate": 0.,
-            "use_layer_scale": True,
-            "layer_scale_init_value": 1e-5,
-            "down_patch_size": 3,
-            "down_stride": 2,
-            "down_pad": 1,
+            "attention_value_expansion_ratio": 4,
+            "ffn_intermediate_ratio": 4,
+            "ffn_dropout_prob": 0.,
+            "ffn_act_type": 'gelu',
             "vit_num": 1,
         },
         "stage_params": [
-            {"num_blocks": 3, "hidden_sizes": 48, "downsamples": True},
-            {"num_blocks": 2, "hidden_sizes": 96, "downsamples": True},
-            {"num_blocks": 6, "hidden_sizes": 224, "downsamples": True},
-            {"num_blocks": 4, "hidden_sizes": 448, "downsamples": True},
+            {"num_blocks": 3, "channels": 48},
+            {"num_blocks": 2, "channels": 96},
+            {"num_blocks": 6, "channels": 224},
+            {"num_blocks": 4, "channels": 448},
         ],
     })
 
@@ -96,43 +86,39 @@ class MobileNetV3ArchitectureConfig(ArchitectureConfig):
         "stage_params": [
             {
                 "in_channels": [16],
-                "kernel": [3],
+                "kernel_sizes": [3],
                 "expanded_channels": [16],
                 "out_channels": [16],
                 "use_se": [True],
-                "activation": ["relu"],
+                "act_type": ["relu"],
                 "stride": [2],
-                "dilation": [1],
             },
             {
                 "in_channels": [16, 24],
-                "kernel": [3, 3],
+                "kernel_sizes": [3, 3],
                 "expanded_channels": [72, 88],
                 "out_channels": [24, 24],
                 "use_se": [False, False],
-                "activation": ["relu", "relu"],
+                "act_type": ["relu", "relu"],
                 "stride": [2, 1],
-                "dilation": [1, 1],
             },
             {
                 "in_channels": [24, 40, 40, 40, 48],
-                "kernel": [5, 5, 5, 5, 5],
+                "kernel_sizes": [5, 5, 5, 5, 5],
                 "expanded_channels": [96, 240, 240, 120, 144],
                 "out_channels": [40, 40, 40, 48, 48],
                 "use_se": [True, True, True, True, True],
-                "activation": ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"],
+                "act_type": ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"],
                 "stride": [2, 1, 1, 1, 1],
-                "dilation": [1, 1, 1, 1, 1],
             },
             {
                 "in_channels": [48, 96, 96],
-                "kernel": [5, 5, 5],
+                "kernel_sizes": [5, 5, 5],
                 "expanded_channels": [288, 576, 576],
                 "out_channels": [96, 96, 96],
                 "use_se": [True, True, True],
-                "activation": ["hard_swish", "hard_swish", "hard_swish"],
+                "act_type": ["hard_swish", "hard_swish", "hard_swish"],
                 "stride": [2, 1, 1],
-                "dilation": [1, 1, 1],
             },
         ],
     })
@@ -143,14 +129,11 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mobilevit",
         "params": {
-            "patch_embedding_out_channels": 16,
-            "local_kernel_size": 3,
             "patch_size": 2,
             "num_attention_heads": 4,
             "attention_dropout_prob": 0.1,
-            "hidden_dropout_prob": 0.0,
-            "exp_factor": 4,
-            "layer_norm_eps": 1e-5,
+            "ffn_dropout_prob": 0.0,
+            "output_expansion_ratio": 4,
             "use_fusion_layer": True,
         },
         "stage_params": [
@@ -159,55 +142,44 @@ class MobileViTArchitectureConfig(ArchitectureConfig):
                 "block_type": "mv2",
                 "num_blocks": 1,
                 "stride": 1,
-                "hidden_size": None,
-                "intermediate_size": None,
-                "num_transformer_blocks": None,
-                "dilate": None,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 64,
                 "block_type": "mv2",
                 "num_blocks": 3,
                 "stride": 2,
-                "hidden_size": None,
-                "intermediate_size": None,
-                "num_transformer_blocks": None,
-                "dilate": None,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 96,
                 "block_type": "mobilevit",
-                "num_blocks": None,
+                "num_blocks": 2,
                 "stride": 2,
                 "hidden_size": 144,
                 "intermediate_size": 288,
-                "num_transformer_blocks": 2,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 128,
                 "block_type": "mobilevit",
-                "num_blocks": None,
+                "num_blocks": 4,
                 "stride": 2,
                 "hidden_size": 192,
                 "intermediate_size": 384,
-                "num_transformer_blocks": 4,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
             {
                 "out_channels": 160,
                 "block_type": "mobilevit",
-                "num_blocks": None,
+                "num_blocks": 3,
                 "stride": 2,
                 "hidden_size": 240,
                 "intermediate_size": 480,
-                "num_transformer_blocks": 3,
                 "dilate": False,
-                "expand_ratio": 4,
+                "ir_expansion_ratio": 4,
             },
         ]
     })
@@ -219,9 +191,9 @@ class PIDNetArchitectureConfig(ArchitectureConfig):
         "name": "pidnet",
         "m": 2,
         "n": 3,
-        "planes": 32,
-        "ppm_planes": 96,
-        "head_planes": 128,
+        "channels": 32,
+        "ppm_channels": 96,
+        "head_channels": 128,
     })
 
 
@@ -230,18 +202,14 @@ class ResNetArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "resnet",
         "params": {
-            "block": "bottleneck",
-            "norm_layer": "batch_norm",
-            "groups": 1,
-            "width_per_group": 64,
-            "zero_init_residual": False,
-            "expansion": None,
+            "block_type": "bottleneck",
+            "norm_type": "batch_norm",
         },
         "stage_params": [
-            {"plane": 64, "layers": 3},
-            {"plane": 128, "layers": 4},
-            {"plane": 256, "layers": 6},
-            {"plane": 512, "layers": 3},
+            {"channels": 64, "num_blocks": 3},
+            {"channels": 128, "num_blocks": 4, "replace_stride_with_dilation": False},
+            {"channels": 256, "num_blocks": 6, "replace_stride_with_dilation": False},
+            {"channels": 512, "num_blocks": 3, "replace_stride_with_dilation": False},
         ],
     })
 
@@ -249,43 +217,41 @@ class ResNetArchitectureConfig(ArchitectureConfig):
 @dataclass
 class SegFormerArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
-        "name": "segformer",
+        "name": "mixtransformer",
         "params": {
-            "intermediate_ratio": 4,
-            "hidden_activation_type": "gelu",
-            "hidden_dropout_prob": 0.0,
+            "ffn_intermediate_expansion_ratio": 4,
+            "ffn_act_type": "gelu",
+            "ffn_dropout_prob": 0.0,
             "attention_dropout_prob": 0.0,
-            "layer_norm_eps": 1e-5,
         },
         "stage_params": [
             {
                 "num_blocks": 2,
-                "sr_ratios": 8,
-                "hidden_sizes": 32,
+                "sequence_reduction_ratio": 8,
+                "attention_chananels": 32,
                 "embedding_patch_sizes": 7,
                 "embedding_strides": 4,
                 "num_attention_heads": 1,
             },
             {
                 "num_blocks": 2,
-                "sr_ratios": 4,
-                "hidden_sizes": 64,
+                "sequence_reduction_ratio": 4,
+                "attention_chananels": 64,
                 "embedding_patch_sizes": 3,
-                "embedding_strides": 2,
                 "num_attention_heads": 2,
             },
             {
                 "num_blocks": 2,
-                "sr_ratios": 2,
-                "hidden_sizes": 160,
+                "sequence_reduction_ratio": 2,
+                "attention_chananels": 160,
                 "embedding_patch_sizes": 3,
                 "embedding_strides": 2,
                 "num_attention_heads": 5,
             },
             {
                 "num_blocks": 2,
-                "sr_ratios": 1,
-                "hidden_sizes": 256,
+                "sequence_reduction_ratio": 1,
+                "attention_chananels": 256,
                 "embedding_patch_sizes": 3,
                 "embedding_strides": 2,
                 "num_attention_heads": 8,
@@ -300,13 +266,12 @@ class ViTArchitectureConfig(ArchitectureConfig):
         "name": "vit",
         "params": {
             "patch_size": 16,
-            "hidden_size": 192,
+            "attention_channels": 192,
             "num_blocks": 12,
             "num_attention_heads": 3,
             "attention_dropout_prob": 0.0,
-            "intermediate_size": 768,
-            "hidden_dropout_prob": 0.1,
-            "layer_norm_eps": 1e-6,
+            "ffn_intermediate_channels": 768,
+            "ffn_dropout_prob": 0.1,
             "use_cls_token": True,
             "vocab_size": 1000,
         },
@@ -319,57 +284,53 @@ class MixNetSmallArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mixnet",
         "params": {
-            "stem_planes": 16,
-            "width_multi": 1.0,
-            "depth_multi": 1.0,
+            "stem_channels": 16,
+            "wid_mul": 1.0,
+            "dep_mul": 1.0,
             "dropout_rate": 0.,
         },
         "stage_params":  [
             {
-                "expand_ratio": [1, 6, 3],
+                "expansion_ratio": [1, 6, 3],
                 "out_channels": [16, 24, 24],
                 "num_blocks": [1, 1, 1],
                 "kernel_sizes": [[3], [3], [3]],
                 "num_exp_groups": [1, 2, 2],
                 "num_poi_groups": [1, 2, 2],
                 "stride": [1, 2, 1],
-                "dilation": [1, 1, 1],
                 "act_type": ["relu", "relu", "relu"],
                 "se_reduction_ratio": [None, None, None],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [40, 40],
                 "num_blocks": [1, 3],
                 "kernel_sizes": [[3, 5, 7], [3, 5]],
                 "num_exp_groups": [1, 2],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
             {
-                "expand_ratio": [6, 6, 6, 3],
+                "expansion_ratio": [6, 6, 6, 3],
                 "out_channels": [80, 80, 120, 120],
                 "num_blocks": [1, 2, 1, 2],
                 "kernel_sizes": [[3, 5, 7], [3, 5], [3, 5, 7], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 1, 2, 2],
                 "num_poi_groups": [2, 2, 2, 2],
                 "stride": [2, 1, 1, 1],
-                "dilation": [1, 1, 1, 1],
                 "act_type": ["swish", "swish", "swish", "swish"],
                 "se_reduction_ratio": [4, 4, 2, 2],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [200, 200],
                 "num_blocks": [1, 2],
                 "kernel_sizes": [[3, 5, 7, 9, 11], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 1],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
@@ -382,57 +343,53 @@ class MixNetMediumArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mixnet",
         "params": {
-            "stem_planes": 24,
-            "width_multi": 1.0,
-            "depth_multi": 1.0,
+            "stem_channels": 24,
+            "wid_mul": 1.0,
+            "dep_mul": 1.0,
             "dropout_rate": 0.,
         },
         "stage_params":  [
             {
-                "expand_ratio": [1, 6, 3],
+                "expansion_ratio": [1, 6, 3],
                 "out_channels": [24, 32, 32],
                 "num_blocks": [1, 1, 1],
                 "kernel_sizes": [[3], [3, 5, 7], [3]],
                 "num_exp_groups": [1, 2, 2],
                 "num_poi_groups": [1, 2, 2],
                 "stride": [1, 2, 1],
-                "dilation": [1, 1, 1],
                 "act_type": ["relu", "relu", "relu"],
                 "se_reduction_ratio": [None, None, None],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [40, 40],
                 "num_blocks": [1, 3],
                 "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
                 "num_exp_groups": [1, 2],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
             {
-                "expand_ratio": [6, 6, 6, 3],
+                "expansion_ratio": [6, 6, 6, 3],
                 "out_channels": [80, 80, 120, 120],
                 "num_blocks": [1, 3, 1, 3],
                 "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 2, 1, 2],
                 "num_poi_groups": [1, 2, 1, 2],
                 "stride": [2, 1, 1, 1],
-                "dilation": [1, 1, 1, 1],
                 "act_type": ["swish", "swish", "swish", "swish"],
                 "se_reduction_ratio": [4, 4, 2, 2],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [200, 200],
                 "num_blocks": [1, 3],
                 "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 1],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
@@ -445,57 +402,53 @@ class MixNetLargeArchitectureConfig(ArchitectureConfig):
     backbone: Dict[str, Any] = field(default_factory=lambda: {
         "name": "mixnet",
         "params": {
-            "stem_planes": 24,
-            "width_multi": 1.3,
-            "depth_multi": 1.0,
+            "stem_channels": 24,
+            "wid_mul": 1.3,
+            "dep_mul": 1.0,
             "dropout_rate": 0.,
         },
         "stage_params":  [
             {
-                "expand_ratio": [1, 6, 3],
+                "expansion_ratio": [1, 6, 3],
                 "out_channels": [24, 32, 32],
                 "num_blocks": [1, 1, 1],
                 "kernel_sizes": [[3], [3, 5, 7], [3]],
                 "num_exp_groups": [1, 2, 2],
                 "num_poi_groups": [1, 2, 2],
                 "stride": [1, 2, 1],
-                "dilation": [1, 1, 1],
                 "act_type": ["relu", "relu", "relu"],
                 "se_reduction_ratio": [None, None, None],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [40, 40],
                 "num_blocks": [1, 3],
                 "kernel_sizes": [[3, 5, 7, 9], [3, 5]],
                 "num_exp_groups": [1, 2],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
             {
-                "expand_ratio": [6, 6, 6, 3],
+                "expansion_ratio": [6, 6, 6, 3],
                 "out_channels": [80, 80, 120, 120],
                 "num_blocks": [1, 3, 1, 3],
                 "kernel_sizes": [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 2, 1, 2],
                 "num_poi_groups": [1, 2, 1, 2],
                 "stride": [2, 1, 1, 1],
-                "dilation": [1, 1, 1, 1],
                 "act_type": ["swish", "swish", "swish", "swish"],
                 "se_reduction_ratio": [4, 4, 2, 2],
             },
             {
-                "expand_ratio": [6, 6],
+                "expansion_ratio": [6, 6],
                 "out_channels": [200, 200],
                 "num_blocks": [1, 3],
                 "kernel_sizes": [[3, 5, 7, 9], [3, 5, 7, 9]],
                 "num_exp_groups": [1, 1],
                 "num_poi_groups": [1, 2],
                 "stride": [2, 1],
-                "dilation": [1, 1],
                 "act_type": ["swish", "swish"],
                 "se_reduction_ratio": [2, 2],
             },
@@ -525,7 +478,7 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -544,7 +497,7 @@ class SegmentationEfficientFormerModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -568,16 +521,16 @@ class DetectionEfficientFormerModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -601,7 +554,7 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -620,7 +573,7 @@ class SegmentationMobileNetV3ModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -644,16 +597,16 @@ class DetectionMobileNetV3ModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -677,7 +630,7 @@ class ClassificationMobileViTModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -694,9 +647,7 @@ class PIDNetModelConfig(ModelConfig):
     checkpoint: Optional[Union[Path, str]] = "./weights/pidnet/pidnet_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: PIDNetArchitectureConfig())
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "pidnet_cross_entropy", "ignore_index": 255, "weight": None},
-        {"criterion": "boundary_loss", "weight": 20.0},
-        {"criterion": "pidnet_cross_entropy_with_boundary", "ignore_index": 255, "weight": None},
+        {"criterion": "pidnet_loss", "ignore_index": 255, "weight": None},
     ])
 
 
@@ -709,7 +660,7 @@ class ClassificationResNetModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -728,7 +679,7 @@ class SegmentationResNetModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -752,16 +703,16 @@ class DetectionResNetModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -773,25 +724,6 @@ class DetectionResNetModelConfig(ModelConfig):
     ))
     losses: List[Dict[str, Any]] = field(default_factory=lambda: [
         {"criterion": "retinanet_loss", "weight": None},
-    ])
-
-
-@dataclass
-class ClassificationSegFormerModelConfig(ModelConfig):
-    task: str = "classification"
-    name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
-    architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        head={
-            "name": "fc",
-            "params": {
-                "hidden_size": 1024,
-                "num_layers": 1,
-            }
-        }
-    ))
-    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "cross_entropy", "label_smoothing": 0.1, "weight": None}
     ])
 
 
@@ -804,7 +736,7 @@ class SegmentationSegFormerModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -815,53 +747,15 @@ class SegmentationSegFormerModelConfig(ModelConfig):
 
 
 @dataclass
-class DetectionSegFormerModelConfig(ModelConfig):
-    task: str = "detection"
-    name: str = "segformer"
-    checkpoint: Optional[Union[Path, str]] = "./weights/segformer/segformer.safetensors"
-    architecture: ArchitectureConfig = field(default_factory=lambda: SegFormerArchitectureConfig(
-        neck={
-            "name": "fpn",
-            "params": {
-                "num_outs": 4,
-                "start_level": 0,
-                "end_level": -1,
-                "add_extra_convs": False,
-                "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
-            },
-        },
-        head={
-            "name": "retinanet_head",
-            "params": {
-                # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
-                "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
-                # postprocessor - decode
-                "topk_candidates": 1000,
-                "score_thresh": 0.05,
-                # postprocessor - nms
-                "nms_thresh": 0.45,
-                "class_agnostic": False,
-            }
-        }
-    ))
-    losses: List[Dict[str, Any]] = field(default_factory=lambda: [
-        {"criterion": "retinanet_loss", "weight": None},
-    ])
-
-
-@dataclass
 class ClassificationViTModelConfig(ModelConfig):
     task: str = "classification"
     name: str = "vit_tiny"
-    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit-tiny.safetensors"
+    checkpoint: Optional[Union[Path, str]] = "./weights/vit/vit_tiny.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: ViTArchitectureConfig(
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -878,14 +772,14 @@ class DetectionYoloXModelConfig(ModelConfig):
     checkpoint: Optional[Union[Path, str]] = "./weights/yolox/yolox_s.safetensors"
     architecture: ArchitectureConfig = field(default_factory=lambda: CSPDarkNetSmallArchitectureConfig(
         neck={
-            "name": "pafpn",
+            "name": "yolopafpn",
             "params": {
                 "dep_mul": 0.33,
                 "act_type": "silu",
             },
         },
         head={
-            "name": "yolox_head",
+            "name": "anchor_free_decoupled_head",
             "params": {
                 "act_type": "silu",
                 # postprocessor - decode
@@ -910,7 +804,7 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -929,7 +823,7 @@ class SegmentationMixNetSmallModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -953,16 +847,16 @@ class DetectionMixNetSmallModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -986,7 +880,7 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -1005,7 +899,7 @@ class SegmentationMixNetMediumModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -1029,16 +923,16 @@ class DetectionMixNetMediumModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,
@@ -1062,7 +956,7 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "hidden_size": 1024,
+                "intermediate_channels": 1024,
                 "num_layers": 1,
             }
         }
@@ -1081,7 +975,7 @@ class SegmentationMixNetLargeModelConfig(ModelConfig):
         head={
             "name": "all_mlp_decoder",
             "params": {
-                "decoder_hidden_size": 256,
+                "intermediate_channels": 256,
                 "classifier_dropout_prob": 0.,
             }
         }
@@ -1105,16 +999,16 @@ class DetectionMixNetLargeModelConfig(ModelConfig):
                 "end_level": -1,
                 "add_extra_convs": False,
                 "relu_before_extra_convs": False,
-                "no_norm_on_lateral": False,
             },
         },
         head={
-            "name": "retinanet_head",
+            "name": "anchor_decoupled_head",
             "params": {
                 # Anchor parameters
-                "anchor_sizes": [[64,], [128,], [256,], [512,]],
+                "anchor_sizes": [[32,], [64,], [128,], [256,]],
                 "aspect_ratios": [0.5, 1.0, 2.0],
-                "norm_layer": "batch_norm",
+                "num_layers": 1,
+                "norm_type": "batch_norm",
                 # postprocessor - decode
                 "topk_candidates": 1000,
                 "score_thresh": 0.05,

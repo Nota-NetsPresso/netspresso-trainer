@@ -13,8 +13,9 @@ class CrossEntropyLoss(nn.Module):
         self.loss_fn = nn.CrossEntropyLoss(weight=weight, size_average=size_average, ignore_index=ignore_index,
                                            reduce=reduce, reduction='mean', label_smoothing=label_smoothing)
 
-    def forward(self, out: Dict, target: torch.Tensor) -> torch.Tensor:
+    def forward(self, out: Dict, target: Dict) -> Dict:
         pred = out['pred']
+        target = target['target']
         loss = self.loss_fn(pred, target)
         return loss
 
@@ -25,8 +26,9 @@ class SigmoidFocalLoss(nn.Module):
         self.alpha = alpha
         self.gamma = gamma
 
-    def forward(self, out: Dict, target: torch.Tensor, reduction='mean'):
+    def forward(self, out: Dict, target: Dict, reduction='mean'):
         pred = out['pred']
+        target = target['target']
         assert pred.shape == target.shape, 'Tensor shapes of prediction and target must be same for SigmoidFocalLoss.'
 
         p = torch.sigmoid(pred)
