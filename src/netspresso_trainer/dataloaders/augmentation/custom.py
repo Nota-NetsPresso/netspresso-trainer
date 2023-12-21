@@ -1,7 +1,7 @@
 import math
 import random
 from collections.abc import Sequence
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image as Image
@@ -79,6 +79,13 @@ class Identity:
 
 class Pad(T.Pad):
     visualize = True
+    def __init__(
+        self,
+        padding: Union[int, List],
+        fill: Union[int, List],
+        padding_mode: str,
+    ):
+        super().__init__(padding, fill, padding_mode)
 
     def forward(self, image, mask=None, bbox=None):
         image = F.pad(image, self.padding, self.fill, self.padding_mode)
@@ -103,7 +110,12 @@ class Pad(T.Pad):
 class Resize(T.Resize):
     visualize = True
 
-    def __init__(self, size, interpolation='bilinear', max_size=None):
+    def __init__(
+        self,
+        size: int,
+        interpolation: str,
+        max_size: Optional[int],
+    ):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
 
         # TODO: There is logic error in forward. If `size` is int, this specify edge for shorter one.
@@ -137,8 +149,11 @@ class Resize(T.Resize):
 class RandomHorizontalFlip:
     visualize = True
 
-    def __init__(self, p):
-        self.p = p
+    def __init__(
+        self,
+        p: float,
+    ):
+        self.p: float = max(0., min(1., p))
 
     def __call__(self, image, mask=None, bbox=None):
         w, _ = image.size
@@ -157,8 +172,11 @@ class RandomHorizontalFlip:
 class RandomVerticalFlip:
     visualize = True
 
-    def __init__(self, p):
-        self.p = p
+    def __init__(
+        self,
+        p: float,
+    ):
+        self.p: float = max(0., min(1., p))
 
     def __call__(self, image, mask=None, bbox=None):
         _, h = image.size
@@ -221,7 +239,14 @@ class PadIfNeeded:
 class ColorJitter(T.ColorJitter):
     visualize = True
 
-    def __init__(self, brightness=0, contrast=0, saturation=0, hue=0, p=1.0):
+    def __init__(
+        self,
+        brightness: Union[float, List],
+        contrast: Union[float, List],
+        saturation: Union[float, List],
+        hue: Union[float, List],
+        p: float
+    ):
         super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
         self.p: float = max(0., min(1., p))
 
@@ -254,7 +279,10 @@ class ColorJitter(T.ColorJitter):
 class RandomCrop:
     visualize = True
 
-    def __init__(self, size):
+    def __init__(
+        self,
+        size: Union[int, List],
+    ):
 
         if not isinstance(size, (int, Sequence)):
             raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
@@ -300,11 +328,13 @@ class RandomCrop:
 class RandomResizedCrop(T.RandomResizedCrop):
     visualize = True
 
-    def __init__(self,
-                 size,
-                 scale=(0.08, 1.0),
-                 ratio=(3.0 / 4.0, 4.0 / 3.0),
-                 interpolation='bilinear',):
+    def __init__(
+        self,
+        size: Union[int, List],
+        scale: Union[float, List],
+        ratio: Union[float, List],
+        interpolation: str,
+    ):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
         # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
         super().__init__(size, scale, ratio, interpolation)
@@ -416,9 +446,9 @@ class TrivialAugmentWide(torch.nn.Module):
 
     def __init__(
         self,
-        num_magnitude_bins: int = 31,
-        interpolation: InterpolationMode = 'bilinear',
-        fill: Optional[List[float]] = None,
+        num_magnitude_bins: int,
+        interpolation: str,
+        fill: Optional[Union[List[int], int]],
     ) -> None:
         super().__init__()
         interpolation = INVERSE_MODES_MAPPING[interpolation]
@@ -495,7 +525,13 @@ class RandomMixup:
     """
     visualize = False
 
-    def __init__(self, num_classes: int, alpha, p=1.0, inplace=False):
+    def __init__(
+        self,
+        num_classes: int,
+        alpha: float,
+        p: float,
+        inplace: bool,
+    ):
         if not (num_classes > 0):
             raise ValueError("Please provide a valid positive value for the num_classes.")
         if not (alpha > 0):
@@ -572,7 +608,13 @@ class RandomCutmix:
     """
     visualize = False
 
-    def __init__(self, num_classes, alpha, p=1.0, inplace=False):
+    def __init__(
+        self,
+        num_classes: int,
+        alpha: float,
+        p: float,
+        inplace: bool,
+    ):
         if not (num_classes > 0):
             raise ValueError("Please provide a valid positive value for the num_classes.")
         if not (alpha > 0):
