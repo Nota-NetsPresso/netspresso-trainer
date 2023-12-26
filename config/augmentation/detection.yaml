@@ -5,3 +5,4 @@ augmentation:
       name: resize
       size: *img_size
       interpolation: bilinear
+      max_size: ~

@@ -4,6 +4,8 @@ augmentation:
     - 
       name: randomresizedcrop
       size: ~
+      sclale: ~
+      ratio: ~
       interpolation: bilinear
     -
       name: randomhorizontalflip
@@ -21,7 +23,11 @@ augmentation:
     -
       name: resize
       size: ~
+      interpolation: ~
+      max_size: ~
     -
       name: pad
       padding: ~
+      fill: ~
+      padding_mode: ~
   mix_transforms: ~
