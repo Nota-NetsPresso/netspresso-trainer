@@ -14,6 +14,19 @@ class Adadelta(optim.Adadelta):
         super().__init__(params=params, lr=lr, rho=rho, weight_decay=weight_decay)
 
 
+class Adagrad(optim.Adagrad):
+    def __init__(
+        self,
+        params,
+        optimizer_conf,
+    ) -> None:
+        lr = optimizer_conf.lr
+        lr_decay = optimizer_conf.lr_decay
+        weight_decay = optimizer_conf.weight_decay
+
+        super().__init__(params=params, lr=lr, lr_decay=lr_decay, weight_decay=weight_decay)
+
+
 class Adam(optim.Adam):
     def __init__(
         self,
