@@ -86,10 +86,7 @@ class BasePipeline(ABC):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
+                                         optimizer_conf=self.conf.training.optimizer)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
