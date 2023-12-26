@@ -40,6 +40,19 @@ class Adam(optim.Adam):
         super().__init__(params=params, lr=lr, betas=betas, weight_decay=weight_decay)
 
 
+class Adamax(optim.Adamax):
+    def __init__(
+        self,
+        params,
+        optimizer_conf,
+    ) -> None:
+        lr = optimizer_conf.lr
+        betas = optimizer_conf.betas
+        weight_decay = optimizer_conf.weight_decay
+
+        super().__init__(params=params, lr=lr, betas=betas, weight_decay=weight_decay)
+
+
 class AdamW(optim.AdamW):
     def __init__(
         self,

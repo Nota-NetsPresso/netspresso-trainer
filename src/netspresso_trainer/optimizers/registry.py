@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim.optimizer import Optimizer
 
-from .custom import SGD, RMSprop, Adam, AdamW, Adadelta, Adagrad
+from .custom import SGD, RMSprop, Adam, AdamW, Adadelta, Adagrad, Adamax
 
 OPTIMIZER_DICT: Dict[str, Type[Optimizer]] = {
     'adamw': AdamW,
@@ -12,6 +12,6 @@ OPTIMIZER_DICT: Dict[str, Type[Optimizer]] = {
     'adadelta': Adadelta,
     'adagrad': Adagrad,
     'rmsprop': RMSprop,
-    'adamax': optim.Adamax,
+    'adamax': Adamax,
     'sgd': SGD,
 }
