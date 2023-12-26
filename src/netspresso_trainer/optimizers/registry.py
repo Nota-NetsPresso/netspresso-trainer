@@ -12,6 +12,4 @@ OPTIMIZER_DICT: Dict[str, Type[Optimizer]] = {
     'rmsprop': optim.RMSprop,
     'adamax': optim.Adamax,
     'sgd': optim.SGD,
-    'nesterov': optim.SGD,
-    'momentum': optim.SGD,
 }
