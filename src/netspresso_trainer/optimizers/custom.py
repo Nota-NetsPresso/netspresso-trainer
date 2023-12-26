@@ -1,6 +1,19 @@
 import torch.optim as optim
 
 
+class Adam(optim.Adam):
+    def __init__(
+        self,
+        params,
+        optimizer_conf,
+    ) -> None:
+        lr = optimizer_conf.lr
+        betas = optimizer_conf.betas
+        weight_decay = optimizer_conf.weight_decay
+        
+        super().__init__(params, lr=lr, betas=betas, weight_decay=weight_decay)
+
+
 class RMSprop(optim.RMSprop):
     def __init__(
         self,
