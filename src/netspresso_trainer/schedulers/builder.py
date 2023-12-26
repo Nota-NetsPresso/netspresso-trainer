@@ -10,7 +10,7 @@ def build_scheduler(optimizer, conf_training):
     num_epochs = conf_training.epochs
 
     # Copy training num_epochs to sub-config scheduler
-    conf_scheduler.total_iters = num_epochs
+    conf_scheduler.total_iters = num_epochs # fix total_iters as num_epochs
 
     assert scheduler_name in SCHEDULER_DICT, f"{scheduler_name} not in scheduler dict!"
     lr_scheduler = SCHEDULER_DICT[scheduler_name](optimizer, conf_scheduler)
