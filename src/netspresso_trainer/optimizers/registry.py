@@ -1,10 +1,8 @@
 from typing import Dict, Type
 
-import torch.nn as nn
-import torch.optim as optim
 from torch.optim.optimizer import Optimizer
 
-from .custom import SGD, RMSprop, Adam, AdamW, Adadelta, Adagrad, Adamax
+from .custom import SGD, Adadelta, Adagrad, Adam, Adamax, AdamW, RMSprop
 
 OPTIMIZER_DICT: Dict[str, Type[Optimizer]] = {
     'adamw': AdamW,

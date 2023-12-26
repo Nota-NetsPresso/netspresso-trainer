@@ -1,9 +1,7 @@
-""" Inspired from https://github.com/huggingface/pytorch-image-models/blob/main/timm/optim/optim_factory.py
-"""
-from typing import Callable, Literal, Optional, Tuple
+from typing import Literal
 
-from omegaconf import DictConfig
 import torch.nn as nn
+from omegaconf import DictConfig
 
 from .registry import OPTIMIZER_DICT
 
