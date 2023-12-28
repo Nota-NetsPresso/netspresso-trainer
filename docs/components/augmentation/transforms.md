@@ -4,7 +4,7 @@ Users can create their own augmentation recipe simply by listing their desired d
 
 ## Supporting transforms
 
-The currently supported augmentation methods in NetsPresso Trainer are as follows. Since transform techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -126,7 +126,7 @@ Crop a random portion of image with different aspect of ratio in width and heigh
         name: randomresizedcrop
         size: 256
         scale: [0.08, 1.0]
-        ratio: [3.0 / 4.0, 4.0 / 3.0]
+        ratio: [0.75, 1.33]
         interpolation: 'bilinear'
   ```
 </details>

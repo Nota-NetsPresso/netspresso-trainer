@@ -167,7 +167,10 @@ nav:
       - Overview: components/augmentation/overview.md
       - Transforms: components/augmentation/transforms.md
       - Mix transforms: components/augmentation/mixtransforms.md
-    - Training: components/training.md
+    - Training: 
+      - Overview: components/training/overview.md
+      - Optimizers: components/training/optimizers.md
+      - Schedulers: components/training/schedulers.md
     - Model:
       - Overview: components/model/overview.md
       - Losses: components/model/losses.md
@@ -197,5 +200,6 @@ nav:
     - Layers:
       - Activations: models/layers/activations.md
       - Normalizations: models/layers/normalizations.md
-    - Benchmarks: models/benchmarks.md
+  - Benchmarks & Checkpoints: 
+    - Benchmarks & Checkpoints: benchmarks/benchmarks.md
   - PyNetsPresso: https://nota-netspresso.github.io/PyNetsPresso-docs/

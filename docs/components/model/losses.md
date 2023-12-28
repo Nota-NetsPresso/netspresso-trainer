@@ -7,50 +7,109 @@ However, loss functions can vary depending on the tasks, especially in tasks lik
 
 ## Supporting loss modules
 
-### CrossEntropy
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
 
-Cross entropy loss. This loss follows the nn.CrossEntropyLoss in torch library.
+We appreciate all the original code owners and we also do our best to make other values.
+
+### CrossEntropyLoss
+
+Cross entropy loss. This loss follows the [CrossEntropyLoss](https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html) in torch library.
 
 | Field <img width=200/> | Description |
 |---|---|
-| `criterion` | (str) Criterion must be "cross_entropy" to use CrossEntropy loss. |
-| `params.weight` | (float) Weight for this cross entropy loss. |
+| `criterion` | (str) Criterion must be "cross_entropy" to use `CrossEntropyLoss`. |
+| `label_smoothing` | (float) Specifies the amount of smoothing when computing the loss, where 0.0 means no smoothing. |
+| `weight` | (float) Weight for this cross entropy loss. |
+
+<details>
+  <summary>Cross entropy loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: cross_entropy
+        label_smoothing: 0.1
+        weight: ~
+  ```
+</details>
 
 ### SigmoidFocalLoss
 
-Focal loss based on [Focal loss for dense object detections](). This loss follows the [sigmoid_focal_loss](https://pytorch.org/vision/main/generated/torchvision.ops.sigmoid_focal_loss.html) in the torch library.
+Focal loss based on [Focal loss for dense object detections](https://openaccess.thecvf.com/content_ICCV_2017/papers/Lin_Focal_Loss_for_ICCV_2017_paper.pdf). This loss follows the [sigmoid_focal_loss](https://pytorch.org/vision/main/generated/torchvision.ops.sigmoid_focal_loss.html) in the torch library.
 
 | Field <img width=200/> | Description |
 |---|---|
-| `criterion` | (str) Criterion must be "focal_loss" to use SigmoidFocalLoss loss. |
-| `params.weight` | (float) Weight for this focal loss. |
-| `params.alpha` | (float) Balancing parameter alpha for focal loss. |
-| `params.gamma` | (float) Focusing parameter gamma for focal loss. |
+| `criterion` | (str) Criterion must be "focal_loss" to use `SigmoidFocalLoss`. |
+| `alpha` | (float) Balancing parameter alpha for focal loss. |
+| `gamma` | (float) Focusing parameter gamma for focal loss. |
+| `weight` | (float) Weight for this focal loss. |
+
+<details>
+  <summary>Focal loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: focal_loss
+        alpha: 0.25
+        gamma: 2.0
+        weight: ~
+  ```
+</details>
 
 ### YOLOXLoss
 
-Loss module for [AnchorFreeDecoupledHead](). This loss contains ...
+Loss module for [AnchorFreeDecoupledHead](../../models/heads/anchorfreedecoupledhead.md). This loss follows the [YOLOX implementation](https://github.com/Megvii-BaseDetection/YOLOX).
 
 | Field <img width=200/> | Description |
 |---|---|
-| `criterion` | (str) Criterion must be "yolox_loss" to use YOLOXLoss loss. |
-| `params.weight` | (float) Weight for this YOLOX loss. |
+| `criterion` | (str) Criterion must be "yolox_loss" to use `YOLOXLoss`. |
+| `weight` | (float) Weight for this YOLOX loss. |
+
+<details>
+  <summary>YOLOX loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: yolox_loss
+        weight: ~
+  ```
+</details>
 
 ### RetinaNetLoss 
 
-Loss module for [AnchorDecoupledHead](). This loss contains classification loss by focal loss and box regression loss by L1 loss.
+Loss module for [AnchorDecoupledHead](../../models/heads/anchordecoupledhead.md). This loss follows torchvision implementation, thus contains classification loss by focal loss and box regression loss by L1 loss.
 
 | Field <img width=200/> | Description |
 |---|---|
-| `criterion` | (str) Criterion must be "retinanet_loss" to use RetinaNetLoss loss. |
-| `params.weight` | (float) Weight for this RetinaNet loss. |
+| `criterion` | (str) Criterion must be "retinanet_loss" to use `RetinaNetLoss`. |
+| `weight` | (float) Weight for this RetinaNet loss. |
+
+<details>
+  <summary>RetinaNetLoss loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: retinanet_loss
+        weight: ~
+  ```
+</details>
 
 ### PIDNetLoss
 
-Loss for [PIDNet](). This loss contains ...
+Loss module for PIDNet. This loss follows [official implementation repository](https://github.com/XuJiacong/PIDNet).
 
 | Field <img width=200/> | Description |
 |---|---|
-| `criterion` | (str) Criterion must be "pidnet_loss" to use PIDNetLoss loss. |
-| `params.weight` | (float) Weight for this PIDNet loss. |
-| `params.ignore_index` | (int) |
+| `criterion` | (str) Criterion must be "pidnet_loss" to use `PIDNetLoss`. |
+| `weight` | (float) Weight for this PIDNet loss. |
+| `ignore_index` | (int) A target value that is ignored and does not contribute to the input gradient. |
+
+<details>
+  <summary>PIDNetLoss loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: pidnet_loss
+        weight: ~
+        ignore_index: 255
+  ```
+</details>

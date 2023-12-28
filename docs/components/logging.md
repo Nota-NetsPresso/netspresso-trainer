@@ -1,6 +1,6 @@
 # Logging
 
-NetsPresso Trainer provides training results in a variety multiple formats. Users can decide on most output formats through boolean flags, and they also have the option to adjust the interval of validation set evaluations with simple configuration.
+NetsPresso Trainer provides training results in a variety multiple formats. As a following example, users can decide most of output formats through boolean flags, and adjust the interval of evaluations and checkpoint save with simple configuration.
 
 ```yaml
 logging:
@@ -30,12 +30,12 @@ The port number `50001` is same with the port forwarded in example docker setup.
 
 | Field <img width=200/> | Description |
 |---|---|
-| `logging.project_id` | (str) project name to save the experiment. If None, it is set as `{task}_{model}` (e.g. `segmentation_segformer`)|
-| `logging.output_dir` | (str) root directory for saving the experiment. Default location is `./outputs`|
-| `logging.tensorboard` | (bool) whether to use the tensorboard or not |
-| `logging.csv` | (bool) whether to save the result as csv format or not |
-| `logging.image` | (bool) whether to save the validation results or not. It is ignored if the task is `classification`. |
-| `logging.stdout` | (bool) whether to log the result with standard output or not. |
-| `logging.save_optimizer_state` | (bool) switch for saving optimizer state with model checkpoint to resume training |
-| `logging.validation_epoch` | (int) validation frequency in total training process |
-| `logging.save_checkpoint_epoch` | (int) checkpoint saving frequency in total training process |
+| `logging.project_id` | (str) Project name to save the experiment. If `None`, it is set as `{task}_{model}` (e.g. `segmentation_segformer`). |
+| `logging.output_dir` | (str) Root directory for saving the experiment. Default location is `./outputs`. |
+| `logging.tensorboard` | (bool) Whether to use the tensorboard. |
+| `logging.csv` | (bool) Whether to save the result as csv format. |
+| `logging.image` | (bool) Whether to save the validation results. It is ignored if the task is `classification`. |
+| `logging.stdout` | (bool) Whether to log the standard output. |
+| `logging.save_optimizer_state` | (bool) Whether to save optimizer state with model checkpoint to resume training. |
+| `logging.validation_epoch` | (int) Validation frequency in total training process. |
+| `logging.save_checkpoint_epoch` | (int) Checkpoint saving frequency in total training process. |

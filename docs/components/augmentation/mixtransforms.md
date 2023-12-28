@@ -6,7 +6,9 @@ Currently, NetsPresso Trainer does not support a Gradio demo for visualizing mix
 
 ## Supporting transforms
 
-The currently supported augmentation methods in NetsPresso Trainer are as follows.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+
+We appreciate all the original code owners and we also do our best to make other values.
 
 ### RandomCutmix
 

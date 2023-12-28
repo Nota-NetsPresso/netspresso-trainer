@@ -8,8 +8,8 @@ The currently supported normalization layers in NetsPresso Trainer are as follow
 
 ### BatchNorm
 - This can be applied by giving `'batch_norm'` keyword
-- Batch normalization follows [torch.nn.BatchNorm2d](https://pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html#torch.nn.BatchNorm2d) in the pytorch library.
+- Batch normalization follows [torch.nn.BatchNorm2d](https://pytorch.org/docs/stable/generated/torch.nn.BatchNorm2d.html#torch.nn.BatchNorm2d) in the PyTorch library.
 
 ### InstanceNorm
 - This can be applied by giving `'instance_norm'` keyword
-- Instance normalization follows the [torch.nn.InstanceNorm2d](https://pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html#torch.nn.InstanceNorm2d) in the pytorch library
+- Instance normalization follows the [torch.nn.InstanceNorm2d](https://pytorch.org/docs/stable/generated/torch.nn.InstanceNorm2d.html#torch.nn.InstanceNorm2d) in the PyTorch library
