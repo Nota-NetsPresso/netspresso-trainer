@@ -60,7 +60,7 @@ def train_with_inline_yaml():
 
 
 if __name__ == '__main__':
-    # train_cli()
+    # logging_dir = train_cli()
 
     # With inline yaml
     # logging_dir = train_with_inline_yaml()
