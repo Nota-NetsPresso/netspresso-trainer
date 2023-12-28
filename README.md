@@ -35,10 +35,11 @@ _____
 Write your training script in `train.py` like:
 
 ```python
-from netspresso_trainer import set_arguments, train
+from netspresso_trainer import train_cli
 
-args_parsed, args = set_arguments(is_graphmodule_training=False)
-train(args_parsed, args, is_graphmodule_training=False)
+if __name__ == '__main__':
+    logging_dir = train_cli()
+    print(f"Training results are saved at: {logging_dir}")
 ```
 
 Then, train your model with your own configuraiton:
@@ -108,7 +109,7 @@ We appreciate all the original authors and we also do our best to make other val
 
 [Download all weights (Google Drvie)](https://drive.google.com/drive/folders/15AoBl22hV8JStBu_CHD5WZd7dHBerKzf?usp=sharing)
 
-| Family           | Model    | Link    | Origianl repository    |
+| Family           | Model    | Link    | Original repository    |
 | ------           | -----    | ----    | -------------------    |
 | ResNet           | [`resnet50`](./config/model/resnet) | [Google Drive](https://drive.google.com/file/d/1xFfPcea8VyZ5KlegrIcSMUpRZ-FKOvKF/view?usp=drive_link) | [torchvision](https://download.pytorch.org/models/resnet50-0676ba61.pth) |
 | ViT              | [`vit_tiny`](./config/model/vit) | [Google Drive](https://drive.google.com/file/d/1meGp4epqXcqplHnSkXHIVuvV2LYSaLFU/view?usp=drive_link) | [apple/ml-cvnets](https://docs-assets.developer.apple.com/ml-research/models/cvnets-v2/classification/vit-tiny.pt) |
