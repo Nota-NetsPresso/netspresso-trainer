@@ -262,34 +262,36 @@ class MobileViTEncoder(MetaFormerEncoder):
         stages = []
         
         self.dilation = 1
-        self.local_kernel_size = params.local_kernel_size
         self.patch_size = params.patch_size
         self.num_attention_heads = params.num_attention_heads
         self.attention_dropout_prob = params.attention_dropout_prob
-        self.hidden_dropout_prob = params.hidden_dropout_prob
-        self.layer_norm_eps = params.layer_norm_eps
+        self.hidden_dropout_prob = params.ffn_dropout_prob
         self.use_fusion_layer = params.use_fusion_layer
+
+        # Fix as constant
+        self.layer_norm_eps = 1e-5
+        self.local_kernel_size = 3
         
         in_channels = params.patch_embedding_out_channels
-        for stage in stage_params:
-            out_channels = stage.out_channels
-            block_type = stage.block_type
-            num_blocks = stage.num_blocks
-            stride = stage.stride
-            hidden_size = stage.hidden_size
-            intermediate_size = stage.intermediate_size
-            num_transformer_blocks = stage.num_transformer_blocks
-            dilate = stage.dilate
-            expand_ratio = stage.expand_ratio
-            stages.append(self._make_block(out_channels, block_type, num_blocks, stride, hidden_size,
-                                           intermediate_size, num_transformer_blocks, dilate, expand_ratio,
-                                           in_channels))
-            in_channels = out_channels
+        for stage_param in stage_params:
+            stages.append(self._make_block(stage_param, in_channels))
+            in_channels = stage_param.out_channels
         self.blocks = nn.Sequential(*stages)
     
-    def _make_block(self, out_channels, block_type: Literal['mv2', 'mobilevit'], num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio, in_channels):
-
+    def _make_block(self, stage_param, in_channels):
+        out_channels = stage_param.out_channels
+        block_type = stage_param.block_type
+        stride = stage_param.stride
+        num_blocks = stage_param.num_blocks
+        expand_ratio = stage_param.ir_expansion_ratio
+        
+        #out_channels, block_type: Literal['mv2', 'mobilevit'], num_blocks, stride, hidden_size, intermediate_size, num_transformer_blocks, dilate, expand_ratio, in_channels
         if block_type == 'mobilevit':
+            num_transformer_blocks = num_blocks
+            hidden_size = stage_param.attention_channels
+            intermediate_size = stage_param.ffn_intermediate_channels
+            dilate = stage_param.dilate
+
             return self._make_mobilevit_blocks(
                 num_transformer_blocks, in_channels, out_channels, stride, expand_ratio,
                 hidden_size, intermediate_size, self.patch_size, self.local_kernel_size, self.num_attention_heads,
@@ -363,7 +365,7 @@ class MobileViT(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
-        exp_channels = min(params.exp_factor * stage_params[-1].out_channels, 960)
+        exp_channels = min(params.output_expansion_ratio * stage_params[-1].out_channels, 960)
         hidden_sizes = [stage.out_channels for stage in stage_params] + [exp_channels]
         super().__init__(hidden_sizes)
         
@@ -371,7 +373,9 @@ class MobileViT(MetaFormer):
         self.intermediate_features = self.task in ['segmentation', 'detection']
         
         image_channels = 3
-        self.patch_embed = MobileViTEmbeddings(image_channels, params.patch_embedding_out_channels)
+        # Fix as constant
+        patch_embedding_out_channels = 16
+        self.patch_embed = MobileViTEmbeddings(image_channels, patch_embedding_out_channels)
         self.encoder = MobileViTEncoder(params=params, stage_params=stage_params)
         
         self.conv_1x1_exp = ConvLayer(in_channels=stage_params[-1].out_channels, out_channels=exp_channels,

@@ -32,12 +32,14 @@ class ResNet(nn.Module):
     ) -> None:
         super(ResNet, self).__init__()
 
-        block: Literal['basicblock', 'bottleneck'] = params.block
-        zero_init_residual: bool = params.zero_init_residual
-        groups: int = params.groups
-        width_per_group: int = params.width_per_group
-        norm_layer: Optional[str] = params.norm_layer
-        expansion: Optional[int] = params.expansion
+        block: Literal['basicblock', 'bottleneck'] = params.block_type
+        norm_layer: Optional[str] = params.norm_type
+
+        # Fix as constant
+        zero_init_residual: bool = False
+        groups: int = 1
+        width_per_group: int = 64
+        expansion: Optional[int] = None
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
@@ -49,9 +51,6 @@ class ResNet(nn.Module):
 
         self.inplanes = 64
         self.dilation = 1
-        for i in range(1, len(stage_params)):
-            if 'replace_stride_with_dilation' not in stage_params[i]:
-                stage_params[i]['replace_stride_with_dilation'] = False
         self.groups = groups
         self.base_width = width_per_group
 
@@ -66,18 +65,18 @@ class ResNet(nn.Module):
         stages: List[nn.Module] = []
 
         first_stage = stage_params[0]
-        layer = self._make_layer(block, first_stage['plane'], first_stage['layers'], expansion=expansion)
+        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, expansion=expansion)
         stages.append(layer)
         for stage in stage_params[1:]:
-            layer = self._make_layer(block, stage['plane'], stage['layers'], stride=2,
-                                     dilate=stage['replace_stride_with_dilation'],
+            layer = self._make_layer(block, stage.channels, stage.num_blocks, stride=2,
+                                     dilate=stage.replace_stride_with_dilation,
                                      expansion=expansion)
             stages.append(layer)
 
         self.stages = nn.ModuleList(stages)
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
 
-        hidden_sizes = [stage['plane'] * expansion for stage in stage_params]
+        hidden_sizes = [stage.channels * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
         self._intermediate_features_dim = hidden_sizes
 

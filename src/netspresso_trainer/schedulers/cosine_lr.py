@@ -11,20 +11,22 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
 
     Args:
         optimizer (Optimizer): Wrapped optimizer.
-        warmup_iters (int): The number of steps that the scheduler finishes to warmup the learning rate. Default: 5.
-        total_iters (int): Maximum number of iterations. Originally named as `T_max`. Default: 5.
-        warmup_bias_lr (int): Starting learning rate for warmup period. Default: 0.
-        min_lr (float): Minimum learning rate. Originally named as `eta_min`. Default: 0.
-        last_epoch (int): The index of last epoch. Default: -1.
-        verbose (bool): If ``True``, prints a message to stdout for each update. Default: ``False``.
+        warmup_iters (int): The number of steps that the scheduler finishes to warmup the learning rate.
+        total_iters (int): Maximum number of iterations. Originally named as `T_max`.
+        warmup_bias_lr (int): Starting learning rate for warmup period.
+        min_lr (float): Minimum learning rate. Originally named as `eta_min`.
     """
 
-    def __init__(self, optimizer, warmup_iters=5, total_iters=5, warmup_bias_lr=0, min_lr=0, last_epoch=-1, verbose=False, **kwargs):
-        self.T_max = total_iters
-        self.eta_min = min_lr
-        self.warmup_bias_lr = warmup_bias_lr
-        self.warmup_iters = warmup_iters
-        super().__init__(optimizer, last_epoch, verbose)
+    def __init__(
+        self,
+        optimizer,
+        scheduler_conf,
+    ):
+        self.T_max = scheduler_conf.total_iters
+        self.eta_min = scheduler_conf.min_lr
+        self.warmup_bias_lr = scheduler_conf.warmup_bias_lr
+        self.warmup_iters = scheduler_conf.warmup_epochs
+        super().__init__(optimizer)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:

@@ -12,7 +12,7 @@ from ....utils import ModelOutput
 class FC(nn.Module):
     def __init__(self, feature_dim: int, num_classes: int, params: DictConfig) -> None:
         super(FC, self).__init__()
-        hidden_size = params.hidden_size
+        hidden_size = params.intermediate_channels
         num_layers = params.num_layers
 
         assert num_layers >= 1, "num_hidden_layers must be integer larger than 0"

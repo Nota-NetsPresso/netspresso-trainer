@@ -34,10 +34,15 @@ class StepLR(_LRScheduler):
         >>>     scheduler.step()
     """
 
-    def __init__(self, optimizer, iters_per_phase, gamma=0.1, last_epoch=-1, verbose=False, **kwargs):
-        self.step_size = iters_per_phase
-        self.gamma = gamma
-        super().__init__(optimizer, last_epoch, verbose)
+    def __init__(
+        self,
+        optimizer,
+        scheduler_conf,
+    ):
+        self.step_size = scheduler_conf.iters_per_phase
+        self.gamma = scheduler_conf.gamma
+
+        super().__init__(optimizer)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:

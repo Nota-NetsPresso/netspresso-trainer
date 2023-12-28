@@ -18,6 +18,7 @@ from ...op.base_metaformer import (
     MultiHeadAttention,
 )
 from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
+from ...utils import BackboneOutput
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
@@ -99,15 +100,17 @@ class VisionTransformer(MetaFormer):
         stage_params: Optional[List] = None,
     ) -> None:
         patch_size = params.patch_size
-        hidden_size = params.hidden_size
+        hidden_size = params.attention_channels
         num_blocks = params.num_blocks
         num_attention_heads = params.num_attention_heads
         attention_dropout_prob = params.attention_dropout_prob
-        intermediate_size = params.intermediate_size
-        hidden_dropout_prob = params.hidden_dropout_prob
-        layer_norm_eps = params.layer_norm_eps
+        intermediate_size = params.ffn_intermediate_channels
+        hidden_dropout_prob = params.ffn_dropout_prob
         use_cls_token = params.use_cls_token
         vocab_size = params.vocab_size
+
+        # Fix as a constant
+        layer_norm_eps = 1e-6
 
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)
@@ -118,6 +121,17 @@ class VisionTransformer(MetaFormer):
         self.patch_embed = ViTEmbeddings(image_channels, patch_size, hidden_sizes[-1], hidden_dropout_prob, use_cls_token=use_cls_token, vocab_size=vocab_size)
         self.encoder = ViTEncoder(num_blocks, hidden_sizes[-1], num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps)
         self.norm = nn.LayerNorm(hidden_sizes[-1], eps=layer_norm_eps)
+
+    def forward(self, x):
+        x = self.patch_embed(x)
+        x = self.encoder(x)
+        x = self.norm(x)
+
+        if self.patch_embed.cls_token is not None:
+            feat = x[:, 0]
+        else:
+            feat = torch.mean(x, dim=1)
+        return BackboneOutput(last_feature=feat)
 
 
 def vit(task, conf_model_backbone):

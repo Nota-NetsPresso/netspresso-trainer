@@ -89,47 +89,5 @@ def yaml_for_logging(config: DictConfig):
     return OmegaConf.to_yaml(config_summarized)
 
 
-def _new_logging_dir(output_root_dir, project_id):
-    version_idx = 0
-    project_dir: Path = Path(output_root_dir) / project_id
-
-    while (project_dir / f"version_{version_idx}").exists():
-        version_idx += 1
-
-    new_logging_dir: Path = project_dir / f"version_{version_idx}"
-    new_logging_dir.mkdir(exist_ok=True, parents=True)
-    return new_logging_dir
-
-def _find_logging_dir(output_root_dir, project_id):
-    version_idx = 0
-    project_dir: Path = Path(output_root_dir) / project_id
-
-    while (project_dir / f"version_{version_idx + 1}").exists():
-        version_idx += 1
-
-    logging_dir: Path = project_dir / f"version_{version_idx}"
-    return logging_dir
-
-def get_logging_dir(task: str, model: str, project_id: Optional[str] = None, output_root_dir: str = OUTPUT_ROOT_DIR, distributed: bool = False) -> Path:
-    project_id = project_id if project_id is not None else f"{task}_{model}"
-
-    if not distributed:
-        return _new_logging_dir(output_root_dir, project_id)
-
-    # TODO: Better synchronization
-    if dist.get_rank() == 0:
-        logging_dir = _new_logging_dir(output_root_dir, project_id)
-        signal = torch.tensor([1]).to("cuda")
-        for rank_idx in range(1, dist.get_world_size()):
-            dist.send(tensor=signal, dst=rank_idx)
-    else:
-        signal = torch.tensor([0]).to("cuda")
-        dist.recv(tensor=signal, src=0)
-
-        logging_dir = _find_logging_dir(output_root_dir, project_id)
-
-    dist.barrier()
-    return logging_dir
-
 if __name__ == '__main__':
     set_logger(level='DEBUG')

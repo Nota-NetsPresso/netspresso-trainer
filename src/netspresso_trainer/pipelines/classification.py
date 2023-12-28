@@ -18,18 +18,19 @@ class ClassificationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        images, target = batch
+        images, labels = batch
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        labels = labels.to(self.devices)
+        target = {'target': labels}
 
         self.optimizer.zero_grad()
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='train')
-        if target.dim() > 1: # Soft label to label number
-            target = torch.argmax(target, dim=-1)
+        if labels.dim() > 1: # Soft label to label number
+            labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='train')
+        self.metric_factory.calc(pred, labels, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -39,16 +40,17 @@ class ClassificationPipeline(BasePipeline):
 
     def valid_step(self, batch):
         self.model.eval()
-        images, target = batch
+        images, labels = batch
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        labels = labels.to(self.devices)
+        target = {'target': labels}
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='valid')
-        if target.dim() > 1: # Soft label to label number
-            target = torch.argmax(target, dim=-1)
+        if labels.dim() > 1: # Soft label to label number
+            labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='valid')
+        self.metric_factory.calc(pred, labels, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()

@@ -4,6 +4,8 @@ augmentation:
     - 
       name: randomresizedcrop
       size: *img_size
+      scale: [0.08, 1.0]
+      ratio: [0.75, 1.33]
       interpolation: bilinear
     -
       name: randomhorizontalflip

@@ -23,7 +23,6 @@ class FPN(nn.Module):
         self.num_ins = len(self.in_channels)
         self.num_outs = params.num_outs
         self.relu_before_extra_convs = params.relu_before_extra_convs
-        self.no_norm_on_lateral = params.no_norm_on_lateral
         self.add_extra_convs = params.add_extra_convs
 
         start_level = params.start_level
