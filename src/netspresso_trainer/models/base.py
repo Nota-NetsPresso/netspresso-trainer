@@ -12,17 +12,15 @@ from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_
 
 
 class TaskModel(nn.Module):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
+    def __init__(self, conf_model, task, backbone, backbone_name, head_name, num_classes,
                  img_size: Optional[Union[int, Tuple]] = None, freeze_backbone: bool = False) -> None:
         super(TaskModel, self).__init__()
         self.task = task
         self.backbone_name = backbone_name
         self.head_name = head_name
 
-        backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model.architecture.backbone)
-
-        self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
+        self.backbone = backbone
+        
 
         intermediate_features_dim = self.backbone.intermediate_features_dim
         if getattr(conf_model.architecture, 'neck', None):

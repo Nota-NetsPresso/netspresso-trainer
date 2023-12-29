@@ -8,7 +8,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
-from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST
+from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST, MODEL_BACKBONE_DICT
 from .utils import load_from_checkpoint
 
 
@@ -32,8 +32,12 @@ def load_backbone_and_head_model(
         raise ValueError(
             f"No such task(s) named: {task}. This should be included in SUPPORTING_TASK_LIST ({SUPPORTING_TASK_LIST})")
 
+    backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
+    backbone: nn.Module = backbone_fn(task=task, conf_model_backbone=conf_model.architecture.backbone)
+    backbone = load_from_checkpoint(backbone, model_checkpoint)
+
     return TASK_MODEL_DICT[task](
-        conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone)
+        conf_model, task, backbone, backbone_name, head_name, num_classes, img_size, freeze_backbone)
 
 
 def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn.Module:
