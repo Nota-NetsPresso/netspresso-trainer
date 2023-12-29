@@ -514,7 +514,8 @@ class TrivialAugmentWide(torch.nn.Module):
 class AutoAugment(T.AutoAugment):
     visualize = True
 
-    def __init__(self, 
+    def __init__(
+        self,
         policy: str,
         interpolation: str,
         fill: Optional[List[float]],
