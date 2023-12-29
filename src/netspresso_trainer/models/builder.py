@@ -8,7 +8,14 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
-from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT, TASK_MODEL_DICT
+from .registry import (
+    MODEL_BACKBONE_DICT,
+    MODEL_FULL_DICT,
+    MODEL_HEAD_DICT,
+    MODEL_NECK_DICT,
+    SUPPORTING_TASK_LIST,
+    TASK_MODEL_DICT,
+)
 from .utils import load_from_checkpoint
 
 

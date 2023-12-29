@@ -4,7 +4,7 @@ from typing import Callable, Dict, List, Type
 import torch.nn as nn
 
 from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, vit
-from .base import TaskModel, ClassificationModel, SegmentationModel, DetectionModel
+from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
