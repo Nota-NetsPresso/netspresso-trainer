@@ -12,7 +12,7 @@ from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_
 
 
 class TaskModel(nn.Module):
-    def __init__(self, conf_model, task, backbone, backbone_name, head_name, num_classes,
+    def __init__(self, conf_model, task, backbone, backbone_name, neck, head, head_name, num_classes,
                  img_size: Optional[Union[int, Tuple]] = None, freeze_backbone: bool = False) -> None:
         super(TaskModel, self).__init__()
         self.task = task
@@ -20,24 +20,9 @@ class TaskModel(nn.Module):
         self.head_name = head_name
 
         self.backbone = backbone
-        
-
-        intermediate_features_dim = self.backbone.intermediate_features_dim
-        if getattr(conf_model.architecture, 'neck', None):
-            neck_name = conf_model.architecture.neck.name
-            neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
-            self.neck = neck_fn(intermediate_features_dim=self.backbone.intermediate_features_dim, conf_model_neck=conf_model.architecture.neck)
-            intermediate_features_dim = self.neck.intermediate_features_dim
-
-        head_module = MODEL_HEAD_DICT[self.task][head_name]
-        if task == 'classification':
-            self.head = head_module(num_classes=num_classes, feature_dim=self.backbone.feature_dim, conf_model_head=conf_model.architecture.head)
-        elif task in ['segmentation', 'detection']:
-            img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
-            self.head = head_module(num_classes=num_classes,
-                                    intermediate_features_dim=intermediate_features_dim,
-                                    label_size=img_size,
-                                    conf_model_head=conf_model.architecture.head)
+        if neck:
+            self.neck = neck
+        self.head = head
 
         if freeze_backbone:
             self._freeze_backbone()
