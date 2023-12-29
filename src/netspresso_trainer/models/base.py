@@ -7,17 +7,17 @@ import torch.nn as nn
 from loguru import logger
 from omegaconf import OmegaConf
 
-from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
-from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
+from .utils import BackboneOutput, DetectionModelOutput, ModelOutput
 
 
 class TaskModel(nn.Module):
-    def __init__(self, conf_model, task, backbone, backbone_name, neck, head, head_name, num_classes,
-                 img_size: Optional[Union[int, Tuple]] = None, freeze_backbone: bool = False) -> None:
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone: bool = False) -> None:
         super(TaskModel, self).__init__()
-        self.task = task
-        self.backbone_name = backbone_name
-        self.head_name = head_name
+        self.task = conf_model.task
+        self.backbone_name = conf_model.architecture.backbone.name
+        if neck:
+            self.neck_name = conf_model.architecture.neck.name
+        self.head_name = conf_model.architecture.head.name
 
         self.backbone = backbone
         if neck:
@@ -37,7 +37,10 @@ class TaskModel(nn.Module):
         return next(self.parameters()).device
 
     def _get_name(self):
-        return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
+        if hasattr(self, 'neck'):
+            return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, neck={self.neck_name}, head={self.head_name}]"
+        else:
+            return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
 
     @abstractmethod
     def forward(self, x, label_size=None, targets=None):
@@ -45,9 +48,8 @@ class TaskModel(nn.Module):
 
 
 class ClassificationModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size=None, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
@@ -56,9 +58,8 @@ class ClassificationModel(TaskModel):
 
 
 class SegmentationModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
@@ -69,9 +70,8 @@ class SegmentationModel(TaskModel):
 
 
 class DetectionModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)

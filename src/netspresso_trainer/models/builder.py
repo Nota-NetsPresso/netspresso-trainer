@@ -39,6 +39,7 @@ def load_backbone_and_head_model(
 
     # Neck construction
     intermediate_features_dim = backbone.intermediate_features_dim
+    neck = None
     if getattr(conf_model.architecture, 'neck', None):
         neck_name = conf_model.architecture.neck.name
         neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
@@ -56,8 +57,7 @@ def load_backbone_and_head_model(
                                 label_size=img_size,
                                 conf_model_head=conf_model.architecture.head)
 
-    return TASK_MODEL_DICT[task](
-        conf_model, task, backbone, backbone_name, neck, head, head_name, num_classes, img_size, freeze_backbone)
+    return TASK_MODEL_DICT[task](conf_model, backbone, neck, head, freeze_backbone)
 
 
 def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn.Module:
