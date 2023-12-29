@@ -8,7 +8,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
-from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
+from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST, MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT, TASK_MODEL_DICT
 from .utils import load_from_checkpoint
 
 
@@ -22,12 +22,6 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
 
 def load_backbone_and_head_model(
         conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone):
-    TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
-        'classification': ClassificationModel,
-        'segmentation': SegmentationModel,
-        'detection': DetectionModel
-    }
-
     if task not in TASK_MODEL_DICT:
         raise ValueError(
             f"No such task(s) named: {task}. This should be included in SUPPORTING_TASK_LIST ({SUPPORTING_TASK_LIST})")
