@@ -181,22 +181,22 @@ nav:
     - Full models: 
       - PIDNet: models/fullmodels/pidnet.md
     - Backbones:
-      - ResNet: models/backbones/resnet.md
-      - MobileNetV3: models/backbones/mobilenetv3.md
-      - MixNet: models/backbones/mixnet.md
       - CSPDarkNet: models/backbones/cspdarknet.md
-      - ViT: models/backbones/vit.md
-      - MobileViT: models/backbones/mobilevit.md
-      - MixTransformer: models/backbones/mixtransformer.md
       - EfficientFormer: models/backbones/efficientformer.md
+      - MixNet: models/backbones/mixnet.md
+      - MixTransformer: models/backbones/mixtransformer.md
+      - MobileNetV3: models/backbones/mobilenetv3.md
+      - MobileViT: models/backbones/mobilevit.md
+      - ResNet: models/backbones/resnet.md
+      - ViT: models/backbones/vit.md
     - Necks:
       - FPN: models/necks/fpn.md
       - YOLOPAFPN: models/necks/yolopafpn.md
     - Heads:
-      - FC: models/heads/fc.md
       - AllMLPDecoder: models/heads/allmlpdecoder.md
       - AnchorDecoupledHead: models/heads/anchordecoupledhead.md
       - AnchorFreeDecoupledHead: models/heads/anchorfreedecoupledhead.md
+      - FC: models/heads/fc.md  
     - Layers:
       - Activations: models/layers/activations.md
       - Normalizations: models/layers/normalizations.md
