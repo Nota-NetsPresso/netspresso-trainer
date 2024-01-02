@@ -4,12 +4,12 @@ NetsPresso Trainer and NetsPresso service provides a convenient experience in tr
 
 NetsPresso Trainer categorizes essential parameters for training into six configuration modules. Each module is responsible for the following aspects:
 
-- data: Defines the structure of the user-customized or Hugging Face datasets for NetsPresso Trainer to read.
-- augmentation: Defines the data augmentation recipe.
-- model: Defines the model configuration, loss modules, and pretrained weights.
-- training: Defines necessary elements like optimizer, epochs, and batch size for training.
-- logging: Defines output formats of training results.
-- environment: Defines the training environment, including GPU usage and dataloader 
+- **Data**: Defines the structure of the user-customized or Hugging Face datasets for NetsPresso Trainer to read.
+- **Augmentation**: Defines the data augmentation recipe.
+- **Model**: Defines the model configuration, loss modules, and pretrained weights.
+- **Training**: Defines necessary elements like optimizer, epochs, and batch size for training.
+- **Logging**: Defines output formats of training results.
+- **Environment**: Defines the training environment, including GPU usage and dataloader 
 
 This component section describes the six configuration modules (data, augmentation, model, training, logging, and environment) which are necessary to use NetsPresso Trainer. [You can see yaml configuration examples in our public repository.](https://github.com/Nota-NetsPresso/netspresso-trainer/tree/dev/config)
 
