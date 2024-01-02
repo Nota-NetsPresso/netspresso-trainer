@@ -2,7 +2,7 @@
 
 In training, the training recipe is just as important as the model architecture. Even if you have a good model architecture, the performance on the same data and model combination can vary greatly depending on the training recipe. NetsPresso Trainer not only introduces models optimized for edge devices, but also provides the ability to change training configurations to train these models with various data. The optimal training recipe will vary depending on the data you want to train. Use the options provided by NetsPresso Trainer to find the best training recipe for your data.
 
-NetsPresso Trainer allows for the adjustment of epochs and batch size, as well as the convenience of choosing desired optimizer and scheduler as a following example.
+Users can adjust epochs and batch size, as well as the desired optimizer and scheduler as a following example.
 
 ```yaml
 training:

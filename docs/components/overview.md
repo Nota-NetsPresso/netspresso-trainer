@@ -6,18 +6,18 @@ NetsPresso Trainer categorizes essential parameters for training into six config
 
 - **Data**: Defines the structure of the user-customized or Hugging Face datasets for NetsPresso Trainer to read.
 - **Augmentation**: Defines the data augmentation recipe.
-- **Model**: Defines the model configuration, loss modules, and pretrained weights.
+- **Model**: Defines the model architecture, loss modules, and pretrained weights.
 - **Training**: Defines necessary elements like optimizer, epochs, and batch size for training.
 - **Logging**: Defines output formats of training results.
-- **Environment**: Defines the training environment, including GPU usage and dataloader 
+- **Environment**: Defines the training environment, including GPU usage and dataloader multi-processing.
 
-This component section describes the six configuration modules (data, augmentation, model, training, logging, and environment) which are necessary to use NetsPresso Trainer. [You can see yaml configuration examples in our public repository.](https://github.com/Nota-NetsPresso/netspresso-trainer/tree/dev/config)
+This component section describes in detail the six configuration modules which are necessary to use NetsPresso Trainer. [You can see yaml configuration examples in our public repository.](https://github.com/Nota-NetsPresso/netspresso-trainer/tree/dev/config)
 
 ## Advantage of NetsPresso Trainer
 
-### SOTA models fully compatible with NetsPresso
+### Use SOTA models which is fully compatible with NetsPresso
 
-NetsPresso Trainer provides reimplemented SOTA models to ensure compatibility with NetsPresso. This allows users to avoid expending resources on changing model formats for model compression and device deployment, enabling the application of SOTA models to user-specific tasks.
+NetsPresso Trainer provides reimplemented SOTA models that ensure compatibility with NetsPresso. This allows users to avoid expending resources on changing model formats for model compression and device deployment. Therefore, the users can easily exploit SOTA models to their applications.
 
 ### Easily trainable with yaml configuration
 

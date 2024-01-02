@@ -47,7 +47,7 @@ bash scripts/run_simulator_augmentation.sh
 | Field <img width=200/> | Description |
 |---|---|
 | `augmentation.img_size` | (int) the image size of model input after finishing the data augmentation |
-| `augmentation.transforms` | (list[transforms]) List of transform functions. Augmentation process is defined on list order. |
-| `augmentation.mix_trasforms` | (list[mix_transforms]) List of mix_transform functions. Mix transforms are applied after transform functions have been executed, and if multiple mix_transforms are listed, only one mix transform is applied per batch. |
+| `augmentation.transforms` | (list[dict]) List of transform functions. Augmentation process is defined on list order. |
+| `augmentation.mix_trasforms` | (list[dict]) List of mix_transform functions. Mix transforms are applied after transform functions have been executed, and if multiple mix_transforms are listed, only one mix transform is applied per batch. |
 
 

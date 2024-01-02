@@ -1,12 +1,10 @@
 # Schedulers
 
-NetsPresso Trainer supports various learning rate schedulers based on PyTorch.
-In particular, warm-up is supported for frequently used learning rate schedulers, and warm restart is supported for some schedulers, such as cosine annealing.
-NetsPresso Trainer updates the learning rate at the end of epoch, not the end of step, so users will set the scheduler with epoch-level counts.
+NetsPresso Trainer supports various learning rate schedulers based on PyTorch. In particular, learning rate warm-up is supported for frequently used learning rate schedulers, and also learning rate restart is supported for some schedulers, such as cosine annealing. NetsPresso Trainer updates the learning rate at the end of epoch, not the end of step, so users will set the scheduler with epoch-level counts.
 
 ## Supporting schedulers
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
