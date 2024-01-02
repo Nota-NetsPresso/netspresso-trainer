@@ -60,7 +60,7 @@ We have named the detection head of RetinaNet as AnchorDecoupledHead to represen
           anchor_sizes: [[32,], [64,], [128,], [256,]]
           aspect_ratios: [0.5, 1.0, 2.0]
           num_layers: 1
-          norm_layer: batch_norm
+          norm_type: batch_norm
           # postprocessor - decode
           topk_candidates: 1000
           score_thresh: 0.05

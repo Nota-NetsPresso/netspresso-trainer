@@ -49,7 +49,7 @@ Fully connected layer head for classification. You can adjust the number of laye
       head:
         name: fc
         params:
-          hidden_size: 1024
+          intermediate_channels: 1024
           num_layers: 2
   ```
 </details>

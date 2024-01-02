@@ -59,13 +59,13 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
       backbone:
         name: mixnet
         params:
-          stem_planes: 16
+          stem_channels: 16
           wid_mul: 1.0
           dep_mul: 1.0
           dropout_rate: 0.
         stage_params: 
           -
-            expand_ratio: [1, 6, 3]
+            expansion_ratio: [1, 6, 3]
             out_channels: [16, 24, 24]
             num_blocks: [1, 1, 1]
             kernel_sizes: [[3], [3], [3]]
@@ -75,7 +75,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["relu", "relu", "relu"]
             se_reduction_ratio: [~, ~, ~]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [40, 40]
             num_blocks: [1, 3]
             kernel_sizes: [[3, 5, 7], [3, 5]]
@@ -85,7 +85,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish"]
             se_reduction_ratio: [2, 2]
           -
-            expand_ratio: [6, 6, 6, 3]
+            expansion_ratio: [6, 6, 6, 3]
             out_channels: [80, 80, 120, 120]
             num_blocks: [1, 2, 1, 2]
             kernel_sizes: [[3, 5, 7], [3, 5], [3, 5, 7], [3, 5, 7, 9]]
@@ -95,7 +95,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish", "swish", "swish"]
             se_reduction_ratio: [4, 4, 2, 2]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [200, 200]
             num_blocks: [1, 2]
             kernel_sizes: [[3, 5, 7, 9, 11], [3, 5, 7, 9]]
@@ -116,13 +116,13 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
       backbone:
         name: mixnet
         params:
-          stem_planes: 24
+          stem_channels: 24
           wid_mul: 1.0
           dep_mul: 1.0
           dropout_rate: 0.
         stage_params: 
           -
-            expand_ratio: [1, 6, 3]
+            expansion_ratio: [1, 6, 3]
             out_channels: [24, 32, 32]
             num_blocks: [1, 1, 1]
             kernel_sizes: [[3], [3, 5, 7], [3]]
@@ -132,7 +132,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["relu", "relu", "relu"]
             se_reduction_ratio: [~, ~, ~]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [40, 40]
             num_blocks: [1, 3]
             kernel_sizes: [[3, 5, 7, 9], [3, 5]]
@@ -142,7 +142,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish"]
             se_reduction_ratio: [2, 2]
           -
-            expand_ratio: [6, 6, 6, 3]
+            expansion_ratio: [6, 6, 6, 3]
             out_channels: [80, 80, 120, 120]
             num_blocks: [1, 3, 1, 3]
             kernel_sizes: [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]]
@@ -152,7 +152,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish", "swish", "swish"]
             se_reduction_ratio: [4, 4, 2, 2]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [200, 200]
             num_blocks: [1, 3]
             kernel_sizes: [[3, 5, 7, 9], [3, 5, 7, 9]]
@@ -173,13 +173,13 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
       backbone:
         name: mixnet
         params:
-          stem_planes: 24
+          stem_channels: 24
           wid_mul: 1.3
           dep_mul: 1.0
           dropout_rate: 0.
         stage_params: 
           -
-            expand_ratio: [1, 6, 3]
+            expansion_ratio: [1, 6, 3]
             out_channels: [24, 32, 32]
             num_blocks: [1, 1, 1]
             kernel_sizes: [[3], [3, 5, 7], [3]]
@@ -189,7 +189,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["relu", "relu", "relu"]
             se_reduction_ratio: [~, ~, ~]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [40, 40]
             num_blocks: [1, 3]
             kernel_sizes: [[3, 5, 7, 9], [3, 5]]
@@ -199,7 +199,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish"]
             se_reduction_ratio: [2, 2]
           -
-            expand_ratio: [6, 6, 6, 3]
+            expansion_ratio: [6, 6, 6, 3]
             out_channels: [80, 80, 120, 120]
             num_blocks: [1, 3, 1, 3]
             kernel_sizes: [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]]
@@ -209,7 +209,7 @@ Similar with MobileNetV3, we provide a configuration that allows users to define
             act_type: ["swish", "swish", "swish", "swish"]
             se_reduction_ratio: [4, 4, 2, 2]
           -
-            expand_ratio: [6, 6]
+            expansion_ratio: [6, 6]
             out_channels: [200, 200]
             num_blocks: [1, 3]
             kernel_sizes: [[3, 5, 7, 9], [3, 5, 7, 9]]

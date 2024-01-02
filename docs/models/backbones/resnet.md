@@ -53,10 +53,6 @@ You can flexibly choose between basicblock and bottleneck as the building blocks
         params:
           block: basicblock
           norm_layer: batch_norm
-          groups: 1
-          width_per_group: 64
-          zero_init_residual: False
-          expansion: ~
         stage_params:
           - 
             channels: 64
@@ -87,10 +83,6 @@ You can flexibly choose between basicblock and bottleneck as the building blocks
         params:
           block: basicblock
           norm_layer: batch_norm
-          groups: 1
-          width_per_group: 64
-          zero_init_residual: False
-          expansion: ~
         stage_params:
           - 
             plane: 64
@@ -121,10 +113,6 @@ You can flexibly choose between basicblock and bottleneck as the building blocks
         params:
           block: bottleneck
           norm_layer: batch_norm
-          groups: 1
-          width_per_group: 64
-          zero_init_residual: False
-          expansion: ~
         stage_params:
           - 
             plane: 64
@@ -156,10 +144,6 @@ You can flexibly choose between basicblock and bottleneck as the building blocks
         params:
           block: bottleneck
           norm_layer: batch_norm
-          groups: 1
-          width_per_group: 64
-          zero_init_residual: False
-          expansion: ~
         stage_params:
           - 
             plane: 64
@@ -190,10 +174,6 @@ You can flexibly choose between basicblock and bottleneck as the building blocks
         params:
           block: bottleneck
           norm_layer: batch_norm
-          groups: 1
-          width_per_group: 64
-          zero_init_residual: False
-          expansion: ~
         stage_params:
           - 
             plane: 64

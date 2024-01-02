@@ -51,11 +51,11 @@ ViT (Vision Transformer) does not have a stage configuration and therefore does 
         name: vit
         params:
           patch_size: 16
-          encoder_channels: 192
+          attention_channels: 192
           num_blocks: 12
           num_attention_heads: 3
           attention_dropout_prob: 0.0
-          ffn_intermediate_size: 768  # hidden_size * 4
+          ffn_intermediate_channels: 768  # hidden_size * 4
           ffn_dropout_prob: 0.1
           use_cls_token: True
           vocab_size: 1000
@@ -73,11 +73,11 @@ ViT (Vision Transformer) does not have a stage configuration and therefore does 
         name: vit
         params:
           patch_size: 16
-          encoder_channels: 384
+          attention_channels: 384
           num_blocks: 12
           num_attention_heads: 6
           attention_dropout_prob: 0.0
-          ffn_intermediate_size: 1536  # hidden_size * 4
+          ffn_intermediate_channels: 1536  # hidden_size * 4
           ffn_dropout_prob: 0.0
           use_cls_token: True
           vocab_size: 1000

@@ -61,22 +61,22 @@ EfficientFormer is designed following the design principle of MetaFormer, constr
           attention_dropout_prob: 0.
           attention_value_expansion_ratio: 4
           ffn_intermediate_ratio: 4
-          ffn_hidden_dropout_prob: 0.
+          ffn_dropout_prob: 0.
           ffn_act_type: 'gelu'
           vit_num: 1
         stage_params:
           - 
             num_blocks: 3
-            hidden_sizes: 48
+            channels: 48
           - 
             num_blocks: 2
-            hidden_sizes: 96
+            channels: 96
           - 
             num_blocks: 6
-            hidden_sizes: 224
+            channels: 224
           - 
             num_blocks: 4
-            hidden_sizes: 448
+            channels: 448
   ```
 </details>
 
@@ -94,22 +94,22 @@ EfficientFormer is designed following the design principle of MetaFormer, constr
           attention_dropout_prob: 0.
           attention_value_expansion_ratio: 4
           ffn_intermediate_ratio: 4
-          ffn_hidden_dropout_prob: 0.
+          ffn_dropout_prob: 0.
           ffn_act_type: 'gelu'
           vit_num: 4
         stage_params:
           - 
             num_blocks: 4
-            hidden_sizes: 64
+            channels: 64
           - 
             num_blocks: 4
-            hidden_sizes: 128
+            channels: 128
           - 
             num_blocks: 12
-            hidden_sizes: 320
+            channels: 320
           - 
             num_blocks: 6
-            hidden_sizes: 512
+            channels: 512
   ```
 </details>
 

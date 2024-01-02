@@ -52,7 +52,7 @@ We provide the AllMLP Decoder, the head of SegFormer, as a freely usable head mo
       head:
         name: all_mlp_decoder
         params:
-          decoder_hidden_size: 256
+          intermediate_channels: 256
           classifier_dropout_prob: 0.
   ```
 </details>
