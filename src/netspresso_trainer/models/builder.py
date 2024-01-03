@@ -8,7 +8,14 @@ from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
-from .registry import MODEL_FULL_DICT, SUPPORTING_TASK_LIST
+from .registry import (
+    MODEL_BACKBONE_DICT,
+    MODEL_FULL_DICT,
+    MODEL_HEAD_DICT,
+    MODEL_NECK_DICT,
+    SUPPORTING_TASK_LIST,
+    TASK_MODEL_DICT,
+)
 from .utils import load_from_checkpoint
 
 
@@ -22,18 +29,36 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint):
 
 def load_backbone_and_head_model(
         conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone):
-    TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
-        'classification': ClassificationModel,
-        'segmentation': SegmentationModel,
-        'detection': DetectionModel
-    }
-
     if task not in TASK_MODEL_DICT:
         raise ValueError(
             f"No such task(s) named: {task}. This should be included in SUPPORTING_TASK_LIST ({SUPPORTING_TASK_LIST})")
 
-    return TASK_MODEL_DICT[task](
-        conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, img_size, freeze_backbone)
+    # Backbone construction
+    backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
+    backbone: nn.Module = backbone_fn(task=task, conf_model_backbone=conf_model.architecture.backbone)
+    backbone = load_from_checkpoint(backbone, model_checkpoint)
+
+    # Neck construction
+    intermediate_features_dim = backbone.intermediate_features_dim
+    neck = None
+    if getattr(conf_model.architecture, 'neck', None):
+        neck_name = conf_model.architecture.neck.name
+        neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
+        neck = neck_fn(intermediate_features_dim=backbone.intermediate_features_dim, conf_model_neck=conf_model.architecture.neck)
+        intermediate_features_dim = neck.intermediate_features_dim
+
+    # Head construction
+    head_module = MODEL_HEAD_DICT[task][head_name]
+    if task == 'classification':
+        head = head_module(num_classes=num_classes, feature_dim=backbone.feature_dim, conf_model_head=conf_model.architecture.head)
+    elif task in ['segmentation', 'detection']:
+        img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
+        head = head_module(num_classes=num_classes,
+                                intermediate_features_dim=intermediate_features_dim,
+                                label_size=img_size,
+                                conf_model_head=conf_model.architecture.head)
+
+    return TASK_MODEL_DICT[task](conf_model, backbone, neck, head, freeze_backbone)
 
 
 def build_model(conf_model, task, num_classes, model_checkpoint, img_size) -> nn.Module:
