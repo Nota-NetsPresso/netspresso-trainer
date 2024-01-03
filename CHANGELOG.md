@@ -7,6 +7,7 @@
 - Add model: RetinaNet by `@illian01` in [PR 257](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/257)
 - Select `gpus` with `environment` configuration by `@deepkyu` in [PR 269](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/269)
 - Return logging directory path and fix training interfaces by `@deepkyu` in [PR 271](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/271)
+- Add transform: AutoAugment by `@illian01` in [PR 281](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/281)
 
 ## Bug Fixes:
 

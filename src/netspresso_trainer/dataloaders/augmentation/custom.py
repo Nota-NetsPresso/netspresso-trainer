@@ -511,6 +511,50 @@ class TrivialAugmentWide(torch.nn.Module):
         return s
 
 
+class AutoAugment(T.AutoAugment):
+    visualize = True
+
+    def __init__(
+        self,
+        policy: str,
+        interpolation: str,
+        fill: Optional[List[float]],
+    ) -> None:
+        policy = T.AutoAugmentPolicy(policy)
+        interpolation = INVERSE_MODES_MAPPING[interpolation]
+
+        super().__init__(policy, interpolation, fill)
+
+    def forward(self, image, mask=None, bbox=None):
+        """
+            img (PIL Image or Tensor): Image to be transformed.
+
+        Returns:
+            PIL Image or Tensor: AutoAugmented image.
+        """
+        fill = self.fill
+        channels, height, width = F.get_dimensions(image)
+        if isinstance(image, Tensor):
+            if isinstance(fill, (int, float)):
+                fill = [float(fill)] * channels
+            elif fill is not None:
+                fill = [float(f) for f in fill]
+
+        transform_id, probs, signs = self.get_params(len(self.policies))
+
+        op_meta = self._augmentation_space(10, (height, width))
+        for i, (op_name, p, magnitude_id) in enumerate(self.policies[transform_id]):
+            if probs[i] <= p:
+                magnitudes, signed = op_meta[op_name]
+                magnitude = float(magnitudes[magnitude_id].item()) if magnitude_id is not None else 0.0
+                if signed and signs[i] == 0:
+                    magnitude *= -1.0
+                image = _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill)
+
+        # TODO: Compute mask, bbox
+        return image, mask, bbox
+
+
 class RandomMixup:
     """
     Based on the RandomMixup implementation of ml_cvnets.
