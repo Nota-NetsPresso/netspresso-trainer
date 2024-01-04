@@ -134,6 +134,7 @@ This optimizer follows the [RMSprop](https://pytorch.org/docs/stable/generated/t
 | `alpha` | (float) Smoothing constant. |
 | `momentum` | (float) Momentum factor. |
 | `weight_decay` | (float) weight decay (L2 penalty). |
+| `eps` | (float) Term added to the denominator to improve numerical stability. |
 
 <details>
   <summary>RMSprop example</summary>
@@ -145,6 +146,7 @@ training:
     alpha: 0.99
     momentum: 0.
     weight_decay: 0.
+    eps: 1e-8
 ```
 </details>
 
