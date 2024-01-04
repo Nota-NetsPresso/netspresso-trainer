@@ -61,7 +61,7 @@ PIDNet model based on [PIDNet: A Real-time Semantic Segmentation Network Inspire
 </details>
 
 <details>
-  <summary>PIDNet-s</summary>
+  <summary>PIDNet-l</summary>
   
   ```yaml
   model:
