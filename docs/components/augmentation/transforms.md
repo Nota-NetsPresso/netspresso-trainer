@@ -83,6 +83,35 @@ Crop the given image at a random location. This augmentation follows the [Random
   ```
 </details>
 
+### RancomErasing
+
+Erase random area of given image. This augmentation follows the [RandomErasing](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomErasing.html#torchvision.transforms.RandomErasing) in torchvision library.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "randomhorizontalflip" to use `RandomHorizontalFlip` transform. |
+| `p` | (float) The probability of applying random erasing. If `1.0`, it always applies. |
+| `scale` | (list) Range of proportion of erased area against input image. |
+| `ratio` | (list) Range of aspect ratio of erased area. |
+| `value` | (int, optional) Erasing value. If `None`, erase image with random noise. |
+| `inplace` | (bool) Whether to operate as inplace. |
+
+<details>
+  <summary>RandomErasing example</summary>
+  
+  ```yaml
+  augmentation:
+    transforms:
+      - 
+        name: randomerasing
+        p: 0.5
+        scale: [0.02, 0.33]
+        ratio: [0.3, 3.3]
+        value: 0
+        inplace: False
+  ```
+</details>
+
 ### RandomHorizontalFlip
 
 Horizontally flip the given image randomly with a given probability. This augmentation follows the [RandomHorizontalFlip](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomHorizontalFlip.html#torchvision.transforms.RandomHorizontalFlip) in torchvision library.
