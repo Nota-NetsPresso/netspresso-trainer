@@ -396,6 +396,8 @@ class RandomErasing(T.RandomErasing):
         value: Optional[int],
         inplace: bool,
     ):
+        scale = list(scale)
+        ratio = list(ratio)
         super().__init__(p, scale, ratio, value, inplace)
 
     @staticmethod
