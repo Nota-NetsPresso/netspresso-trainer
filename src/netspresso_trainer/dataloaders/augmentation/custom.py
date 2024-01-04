@@ -388,13 +388,14 @@ class RandomResizedCrop(T.RandomResizedCrop):
 class RandomErasing(T.RandomErasing):
     visualize = True
 
-    def __init__(self, p=0.5, scale=(0.02, 0.33), ratio=(0.3, 3.3), value=0, inplace=False):
-        if isinstance(scale, ListConfig):
-            scale = tuple(scale)
-        if isinstance(ratio, ListConfig):
-            ratio = tuple(ratio)
-        if isinstance(value, ListConfig):
-            value = tuple(value)
+    def __init__(
+        self,
+        p: float,
+        scale: List,
+        ratio: List,
+        value: Optional[int],
+        inplace: bool,
+    ):
         super().__init__(p, scale, ratio, value, inplace)
 
     @staticmethod
