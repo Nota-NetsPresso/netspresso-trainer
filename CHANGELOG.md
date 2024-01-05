@@ -28,6 +28,7 @@
 - Refactoring for clean docs by `@illian01` in [PR 265](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/265), [PR 266](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/266), [PR 272](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/272), [PR 273](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/273), [PR 274](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/274)
 - Refactoring model building code and move TASK_MODEL_DICT by `@illian01` in [PR 282](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/282)
 - Add eps param on RMSprop by `@illian01` in [PR 285](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/285)
+- Fix weights loading logic by `@illian01` in [PR 287](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/287)
 
 # v0.0.10
 
