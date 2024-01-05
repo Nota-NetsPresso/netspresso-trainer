@@ -59,7 +59,7 @@ def load_backbone_and_head_model(
 
     # Assemble model and load checkpoint
     model = TASK_MODEL_DICT[task](conf_model, backbone, neck, head, freeze_backbone)
-    model = load_from_checkpoint(model, model_checkpoint)
+    model = load_from_checkpoint(model, model_checkpoint, conf_model.load_checkpoint_head)
     return model
 
 
