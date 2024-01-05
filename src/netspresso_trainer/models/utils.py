@@ -89,7 +89,7 @@ def load_from_checkpoint(
 
         model_state_dict = load_checkpoint(model_checkpoint)
         if not load_checkpoint_head:
-            head_keys = [key for key in model_state_dict if 'head' in key]
+            head_keys = [key for key in model_state_dict if key.startswith('head.')]
             for key in head_keys:
                 del model_state_dict[key]
 
