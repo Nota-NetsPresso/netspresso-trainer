@@ -48,6 +48,7 @@ class ModelConfig:
     task: str = MISSING
     name: str = MISSING
     checkpoint: Optional[Union[Path, str]] = None
+    load_checkpoint_head: bool = False
     fx_model_checkpoint: Optional[Union[Path, str]] = None
     resume_optimizer_checkpoint: Optional[Union[Path, str]] = None
     freeze_backbone: bool = False

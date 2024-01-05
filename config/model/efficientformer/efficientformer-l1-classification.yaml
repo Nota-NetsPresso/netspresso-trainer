@@ -2,6 +2,7 @@ model:
   task: classification
   name: efficientformer_l1
   checkpoint: ./weights/efficientformer/efficientformer_l1_1000d.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False
