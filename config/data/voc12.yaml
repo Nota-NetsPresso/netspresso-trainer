@@ -3,7 +3,7 @@ data:
   task: segmentation
   format: local
   path:
-    root: ../../netspresso-trainer-dev/data/VOC2012
+    root: /DATA/VOC12Dataset
     train:
       image: image/train
       label: mask/train
