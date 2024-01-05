@@ -76,8 +76,9 @@ class RMSprop(optim.RMSprop):
         alpha = optimizer_conf.alpha
         weight_decay = optimizer_conf.weight_decay
         momentum = optimizer_conf.momentum
+        eps = optimizer_conf.eps
 
-        super().__init__(params=params, lr=lr, alpha=alpha, weight_decay=weight_decay, momentum=momentum)
+        super().__init__(params=params, lr=lr, alpha=alpha, weight_decay=weight_decay, momentum=momentum, eps=eps)
 
 
 class SGD(optim.SGD):
