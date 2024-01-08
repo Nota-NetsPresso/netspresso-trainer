@@ -271,8 +271,9 @@ class MobileViTEncoder(MetaFormerEncoder):
         # Fix as constant
         self.layer_norm_eps = 1e-5
         self.local_kernel_size = 3
-        
-        in_channels = params.patch_embedding_out_channels
+
+        # Fix as constant
+        in_channels = 16
         for stage_param in stage_params:
             stages.append(self._make_block(stage_param, in_channels))
             in_channels = stage_param.out_channels
