@@ -2,6 +2,7 @@ model:
   task: classification
   name: mobilevit_s
   checkpoint: ./weights/mobilevit/mobilevit_s.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

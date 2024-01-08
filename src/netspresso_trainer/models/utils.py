@@ -77,7 +77,8 @@ def download_model_checkpoint(model_checkpoint: Union[str, Path], model_name: st
 
 def load_from_checkpoint(
     model: nn.Module,
-    model_checkpoint: Optional[Union[str, Path]]
+    model_checkpoint: Optional[Union[str, Path]],
+    load_checkpoint_head: bool,
 ) -> nn.Module:
     if model_checkpoint is not None:
         if not Path(model_checkpoint).exists():
@@ -87,6 +88,11 @@ def load_from_checkpoint(
             model_checkpoint = download_model_checkpoint(model_checkpoint, model_name)
 
         model_state_dict = load_checkpoint(model_checkpoint)
+        if not load_checkpoint_head:
+            head_keys = [key for key in model_state_dict if key.startswith('head.')]
+            for key in head_keys:
+                del model_state_dict[key]
+
         missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
 
         if len(missing_keys) != 0:

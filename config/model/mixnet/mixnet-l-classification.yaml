@@ -2,6 +2,7 @@ model:
   task: classification
   name: mixnet_l
   checkpoint: ./weights/mixnet/mixnet_l.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False
