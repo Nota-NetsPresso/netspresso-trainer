@@ -36,5 +36,6 @@ def save_checkpoint(obj_dict, f: Union[str, Path]) -> None:
 
     if extension == '.safetensors':
         save_file(obj_dict, str(file_path))
+        return
 
     torch.save(obj_dict, file_path)
