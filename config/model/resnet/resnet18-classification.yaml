@@ -1,7 +1,7 @@
 model:
   task: classification
-  name: resnet50
-  checkpoint: ./weights/resnet/resnet50_imagenet1k.safetensors
+  name: resnet18
+  checkpoint: ./weights/resnet/resnet18_imagenet1k.safetensors
   load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
@@ -11,23 +11,23 @@ model:
     backbone:
       name: resnet
       params:
-        block_type: bottleneck
+        block_type: basicblock
         norm_type: batch_norm
       stage_params:
         - 
           channels: 64
-          num_blocks: 3
+          num_blocks: 2
         - 
           channels: 128
-          num_blocks: 4
+          num_blocks: 2
           replace_stride_with_dilation: False
         - 
           channels: 256
-          num_blocks: 6
+          num_blocks: 2
           replace_stride_with_dilation: False
         - 
           channels: 512
-          num_blocks: 3
+          num_blocks: 2
           replace_stride_with_dilation: False
     head:
       name: fc
