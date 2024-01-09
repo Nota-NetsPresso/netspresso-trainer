@@ -16,6 +16,7 @@
 - Fix CSV logging, configuration error, and misused loggings by `@deepkyu` in [PR 259](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/259)
 - Fix minor bug in train.py by `@illian01` in [PR 277](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/277)
 - Fix local classification dataset loader error by `@illian01` in [PR 279](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/279)
+- Fix safetensors file overwriting bug by `@illian01` in [PR 289](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/289)
 
 ## Breaking Changes:
 
