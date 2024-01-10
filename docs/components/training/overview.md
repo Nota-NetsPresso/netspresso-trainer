@@ -6,7 +6,6 @@ Users can adjust epochs and batch size, as well as the desired optimizer and sch
 
 ```yaml
 training:
-  seed: 1
   epochs: 3
   batch_size: 32 
   optimizer:
@@ -30,7 +29,6 @@ Adjust these values according to your server specifications, but for successful 
 
 | Field <img width=200/> | Description |
 |---|---|
-| `training.seed` | (int) Random seed |
 | `training.epochs` | (int) The total number of epoch for training the model |
 | `training.batch_size` | (int) The number of samples in single batch input |
 | `training.optimizer` | (dict) The configuration of optimizer. Please refer to [the list of supporting optimizer](./optimizers.md) for more details. |
