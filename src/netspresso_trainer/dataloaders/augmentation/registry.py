@@ -1,6 +1,7 @@
 from typing import Callable, Dict
 
 from .custom import (
+    AutoAugment,
     ColorJitter,
     Pad,
     RandomCrop,
@@ -26,4 +27,5 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'mixup': RandomMixup,
     'cutmix': RandomCutmix,
     'trivialaugmentwide': TrivialAugmentWide,
+    'autoaugment': AutoAugment,
 }

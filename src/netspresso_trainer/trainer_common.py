@@ -21,7 +21,7 @@ def train_common(
     logging_dir: Path,
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
 ):
-    distributed, world_size, rank, devices = set_device(conf.training.seed)
+    distributed, world_size, rank, devices = set_device(conf.environment.seed)
     logger = set_logger(level=log_level, distributed=distributed)
 
     conf.distributed = distributed

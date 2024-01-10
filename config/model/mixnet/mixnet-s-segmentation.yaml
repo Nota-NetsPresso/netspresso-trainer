@@ -1,7 +1,8 @@
 model:
   task: segmentation
   name: mixnet_s
-  checkpoint: ./weights/mixnet/mixnet_s.safetensors
+  checkpoint: ./weights/mixnet/mixnet_s_imagenet1k.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

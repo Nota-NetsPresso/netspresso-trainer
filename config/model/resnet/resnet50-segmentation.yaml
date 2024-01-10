@@ -2,6 +2,7 @@ model:
   task: segmentation
   name: resnet50
   checkpoint: ./weights/resnet/resnet50.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

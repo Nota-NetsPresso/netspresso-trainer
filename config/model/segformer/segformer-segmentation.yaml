@@ -1,7 +1,8 @@
 model:
   task: segmentation
   name: segformer
-  checkpoint: ./weights/segformer/segformer.safetensors
+  checkpoint: ./weights/segformer/segformer_b0.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

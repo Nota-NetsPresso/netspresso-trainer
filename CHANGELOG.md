@@ -7,12 +7,17 @@
 - Add model: RetinaNet by `@illian01` in [PR 257](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/257)
 - Select `gpus` with `environment` configuration by `@deepkyu` in [PR 269](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/269)
 - Return logging directory path and fix training interfaces by `@deepkyu` in [PR 271](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/271)
+- Add transform: AutoAugment by `@illian01` in [PR 281](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/281)
 
 ## Bug Fixes:
 
 - Fix attribute error on fc by `@illian01` in [PR 252](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/252)
 - Restore file export for stream log by `@deepkyu` in [PR 255](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/255)
 - Fix CSV logging, configuration error, and misused loggings by `@deepkyu` in [PR 259](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/259)
+- Fix minor bug in train.py by `@illian01` in [PR 277](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/277)
+- Fix local classification dataset loader error by `@illian01` in [PR 279](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/279)
+- Fix safetensors file overwriting bug by `@illian01` in [PR 289](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/289)
+- Fix error on full model load by `@illian01` in [PR 295](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/295)
 
 ## Breaking Changes:
 
@@ -22,8 +27,14 @@
 
 - Refactoring for detection models by `@illian01` in [PR 260](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/260)
 - Equalize logging format with `PyNetsPresso` by `@deepkyu` in [PR 263](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/263)
-- Refactoring for clean docs by `@illian01` in [PR 265](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/265), [PR 266](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/266), [PR 272](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/272), [PR 273](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/273), [PR 274](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/274)
+- Refactoring for clean docs by `@illian01` in [PR 265](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/265), [PR 266](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/266), [PR 272](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/272), [PR 273](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/273), [PR 274](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/274), [PR 284](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/284)
 - Update docs up-to-date by `@illian01` in [PR 278](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/278)
+- Refactoring model building code and move TASK_MODEL_DICT by `@illian01` in [PR 282](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/282)
+- Add eps param on RMSprop by `@illian01` in [PR 285](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/285)
+- Fix weights loading logic by `@illian01` in [PR 287](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/287), [PR 290](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/290)
+- Change pretrained checkpoint name convention and update weight path and url by `@illian01` in [PR 291](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/291)
+- Move seed field to environment config by `@illian01` in [PR 292](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/292)
+- Move ResNet and Fc implementation code to core directory by `@illian01` in [PR 294](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/294)
 
 # v0.0.10
 

@@ -1,7 +1,8 @@
 model:
   task: segmentation
   name: mobilenet_v3_small
-  checkpoint: ./weights/mobilenetv3/mobilenet_v3_small.safetensors
+  checkpoint: ./weights/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False

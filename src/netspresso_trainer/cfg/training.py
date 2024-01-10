@@ -6,7 +6,6 @@ from omegaconf import MISSING, MissingMandatoryValue
 
 @dataclass
 class ScheduleConfig:
-    seed: int = 1
     epochs: int = 3
     batch_size: int = 8
     optimizer: Dict = field(default_factory=lambda: {
