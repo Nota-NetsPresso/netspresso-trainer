@@ -1,7 +1,7 @@
 model:
   task: detection
   name: yolox_s
-  checkpoint: ./weights/yolox/yolox_s.safetensors
+  checkpoint: ./weights/yolox/yolox_s_coco.safetensors
   load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
