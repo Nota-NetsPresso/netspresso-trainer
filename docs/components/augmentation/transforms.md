@@ -1,10 +1,10 @@
 # Transforms
 
-Users can create their own augmentation recipe simply by listing their desired data transform modules. It's possible to adjust the intensity and frequency of each transform module, and the listed transform modules are applied in sequence to produce augmented data. In NetsPresso Trainer, a visualization tool is also provided through a Gradio demo, allowing users to see how their custom augmentation recipe produces the data for the model.
+Users can easily create their own augmentation recipe simply by listing their desired data transform modules. It's possible to adjust the intensity and frequency of each transform module, and the listed transform modules are applied in sequence to produce augmented data. In NetsPresso Trainer, a visualization tool is also provided through a Gradio demo, allowing users to see how their custom augmentation recipe produces the data for the model.
 
 ## Supporting transforms
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We note that most of these parameter descriptions are derived from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -19,7 +19,7 @@ This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/gene
 | `contrast` | (float or list) The contrast scale value is randomly selected within [max(0, 1 - contrast), 1 + contrast] or given [min, max] range. |
 | `saturation` | (float or list) The saturation scale value is randomly selected within [max(0, 1 - saturation), 1 + saturation] or given [min, max] range. |
 | `hue` | (float or list) The hue scale value is randomly selected within [max(0, 1 - hue), 1 + hue] or given [min, max] range. |
-| `p` | (float) the probability of applying color jitter. If `1.0`, it always applies the color transform. |
+| `p` | (float) The probability of applying the color jitter. If set to `1.0`, the color transform is always applied. |
 
 <details>
   <summary>ColorJitter example</summary>
@@ -46,7 +46,7 @@ Pad an image. This augmentation follows the [Pad](https://pytorch.org/vision/0.1
 | `name` | (str) Name must be "pad" to use `Pad` transform. |
 | `padding` | (int or list) Padding on each border. If a single int is provided this is used to pad all borders. If list of length 2 is provided this is the padding on left/right and top/bottom respectively. If a list of length 4 is provided this is the padding for the left, top, right and bottom borders respectively. |
 | `fill` | (int or list) This value is only for when the `padding_mode` is "constant". If a single int is provided this is used to fill pixels with constant value. If a list of length 3, it is used to fill R, G, B channels respectively. |
-| `padding_mode` | (str) Type of padding. Should be: constant, edge, reflect or symmetric. |
+| `padding_mode` | (str) Type of padding. Should be: constant, edge, reflect, or symmetric. |
 
 <details>
   <summary>Pad example</summary>
@@ -89,7 +89,7 @@ Erase random area of given image. This augmentation follows the [RandomErasing](
 
 | Field <img width=200/> | Description |
 |---|---|
-| `name` | (str) Name must be "randomhorizontalflip" to use `RandomHorizontalFlip` transform. |
+| `name` | (str) Name must be "randomerasing" to use `RancomErasing` transform. |
 | `p` | (float) The probability of applying random erasing. If `1.0`, it always applies. |
 | `scale` | (list) Range of proportion of erased area against input image. |
 | `ratio` | (list) Range of aspect ratio of erased area. |
@@ -191,7 +191,7 @@ Naively resize the input image to the given size. This augmentation follows the 
 | `name` | (str) Name must be "resize" to use `Resize` transform. |
 | `size` | (int) Desired output size. If size is an int, a square image (`size`, `size`) is made. If provided a list of length 1, it will be interpreted as (`size[0]`, `size[0]`). If a list of length 2 is provided, an image with size (`size[0]`, `size[1]`) is made. |
 | `interpolation` | (str) Desired interpolation type. Supporting interpolations are 'nearest', 'bilinear' and 'bicubic'. |
-| `max_size` | (int, optional) The maximum allowed for the longer edge of the resized image: if the longer edge of the image is greater than `max_size` after being resized according to `size`, then the image is resized again so that the longer edge is equal to `max_size`. As a result, `size` might be overruled, i.e the smaller edge may be shorter than `size`. This is only supported if `size` is an int. |
+| `max_size` | (int, optional) The maximum allowed for the longer edge of the resized image: if the longer edge of the image exceeds `max_size` after being resized according to `size`, then the image is resized again so that the longer edge is equal to `max_size`. As a result, `size` might be overruled, i.e the smaller edge may be shorter than `size`. This is only supported if `size` is an int. |
 
 <details>
   <summary>Resize example</summary>
@@ -209,8 +209,7 @@ Naively resize the input image to the given size. This augmentation follows the 
 
 ### TrivialAugmentWide
 
-TrivialAugment based on [TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation](https://openaccess.thecvf.com/content/ICCV2021/papers/Muller_TrivialAugment_Tuning-Free_Yet_State-of-the-Art_Data_Augmentation_ICCV_2021_paper.pdf). This augmentation follows the [TrivialAugmentWide](https://pytorch.org/vision/0.15/generated/torchvision.transforms.TrivialAugmentWide.html#torchvision.transforms.TrivialAugmentWide) in the torchvision library. This transform function is not supoorted for segmentation and detection data yet.
-
+TrivialAugment based on [TrivialAugment: Tuning-free Yet State-of-the-Art Data Augmentation](https://openaccess.thecvf.com/content/ICCV2021/papers/Muller_TrivialAugment_Tuning-Free_Yet_State-of-the-Art_Data_Augmentation_ICCV_2021_paper.pdf). This augmentation follows the [TrivialAugmentWide](https://pytorch.org/vision/0.15/generated/torchvision.transforms.TrivialAugmentWide.html#torchvision.transforms.TrivialAugmentWide) in the torchvision library. Currently, this transform function does not support segmentation and detection data.
 
 | Field <img width=200/> | Description |
 |---|---|

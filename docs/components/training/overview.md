@@ -1,6 +1,6 @@
 # Overview
 
-In training, the training recipe is just as important as the model architecture. Even if you have a good model architecture, the performance on the same data and model combination can vary greatly depending on the training recipe. NetsPresso Trainer not only introduces models optimized for edge devices, but also provides the ability to change training configurations to train these models with various data. The optimal training recipe will vary depending on the data you want to train. Use the options provided by NetsPresso Trainer to find the best training recipe for your data.
+In training, the training recipe is just as important as the model architecture. Even if you have a good model architecture, the performance on the same data and model combination can vary greatly depending on your training recipe. NetsPresso Trainer not only introduces models optimized for edge devices, but also provides the ability to change training configurations to train these models with various data. The optimal training recipe will vary depending on the data you want to train. Use the options provided by NetsPresso Trainer to find the optimal training recipe for your data.
 
 Users can adjust epochs and batch size, as well as the desired optimizer and scheduler as a following example.
 
@@ -23,15 +23,15 @@ training:
 
 ## Batch size and epochs
 
-The batch size and epoch used in training may vary depending on the GPU and server specifications you have. If the batch size is large, it tends to take up a lot of GPU memory, and as the number of epochs trained increases, it tends to take a long time to complete the training.
-Adjust the values according to your server specifications, but for successful training, it is recommended to set the batch size to at least 8.
+The batch size and epoch used in training may vary depending on the GPU and server specifications you have. A large batch size tends to consume more GPU memory, and as the number of epochs trained increases, it takes a long time to complete the training.
+Adjust these values according to your server specifications, but for successful training, it is recommended to set the batch size to at least 8.
 
 ## Field list
 
 | Field <img width=200/> | Description |
 |---|---|
-| `training.seed` | (int) random seed |
-| `training.epochs` | (int) the total number of epoch for training the model |
-| `training.batch_size` | (int) the number of samples in single batch input |
-| `training.optimizer` | (dict) The configuration of optimizer. Please check [the list of supporting optimizer](./optimizers.md) for more details. |
-| `training.scheduler` | (dict) The configuration of learning rate scheduler. Please check [the list of supporting scheduler](./schedulers.md) for more details. |
+| `training.seed` | (int) Random seed |
+| `training.epochs` | (int) The total number of epoch for training the model |
+| `training.batch_size` | (int) The number of samples in single batch input |
+| `training.optimizer` | (dict) The configuration of optimizer. Please refer to [the list of supporting optimizer](./optimizers.md) for more details. |
+| `training.scheduler` | (dict) The configuration of learning rate scheduler. Please refer to [the list of supporting scheduler](./schedulers.md) for more details. |

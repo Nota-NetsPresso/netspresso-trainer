@@ -2,7 +2,7 @@
 
 Netspresso Trainer provides a variety of backbones and heads, allowing flexible combinations. Users can choose appropriate backbones and heads based on their dataset and task requirements. The models can be optimized for on-device environments using Netspresso's compression and converting services.
 
-We provide configuration format which can easily construct backbones and heads to meet user requirements. As composed in the example of the ResNet50 model below, backbones and heads are structured as separate fields, and then connected. Also, Users can freely choose suitable loss modules compatible with head and task. The range of supported models and the detailed configuration definitions for each model are extensively described in the separated [Models page](../../../models/overview).
+We provide a configuration format which can easily construct backbones and heads to meet user requirements. As composed in the example of the ResNet50 model below, backbones and heads are structured as separate fields, and then connected. Also, Users can freely choose suitable loss modules suitable for the head and task. The range of supported models and the detailed configuration definitions for each model are extensively described in the separated [Models page](../../../models/overview).
 
 ```yaml
 model:
@@ -25,7 +25,7 @@ model:
 
 ## Retraining the model from NetsPresso
 
-If you got compressed model from NetsPresso, then it's time to retrain your model to get the best performance. Netspresso Trainer uses the same configuration format for retraining torch.fx GraphModule. This can be executed by specifying the path to the torch.fx model in the `fx_model_checkpoint` field. Since the torch.fx model file contains the entire model definition, fields like `architecture` become unnecessary, can be ignored.
+If you have compressed model from NetsPresso, then it's time to retrain your model to get the best performance. Netspresso Trainer uses the same configuration format for retraining torch.fx GraphModule. This can be executed by specifying the path to the torch.fx model in the `fx_model_checkpoint` field. Since the torch.fx model file contains the complete model definition, fields like `architecture` become unnecessary, can be ignored.
 
 ```yaml
 model:

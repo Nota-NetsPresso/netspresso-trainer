@@ -1,10 +1,10 @@
 # Overview
 
-This section describes the architecture configuration design of models. NetsPresso Trainer prioritize model compression and device deployment, thus models are fulfills the following criteria:
+This section describes the architecture configuration design of models. NetsPresso Trainer prioritize model compression and device deployment, thus models fulfill the following criteria:
 
 - Compatible with torch.fx converting
-- Can be compressed with pruning method provided in [NetsPresso](https://netspresso.ai)
-- Efficient to be easily deployed at many edge devices.
+- Can be compressed by pruning method provided in [NetsPresso](https://netspresso.ai)
+- Can be easily deployed at many edge devices.
 
 To provide a wide range of models that meet these conditions in diverse forms, we define and use four fields for model definition: full, backbone, neck, and head. This approach allows users to utilize backbones, necks, and heads in desired configurations. For models that cannot be segmented into these three modules, we provide them in a full models.
 

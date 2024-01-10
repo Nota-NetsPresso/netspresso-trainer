@@ -1,10 +1,10 @@
 # Schedulers
 
-NetsPresso Trainer supports various learning rate schedulers based on PyTorch. In particular, learning rate warm-up is supported for frequently used learning rate schedulers, and also learning rate restart is supported for some schedulers, such as cosine annealing. NetsPresso Trainer updates the learning rate at the end of epoch, not the end of step, so users will set the scheduler with epoch-level counts.
+NetsPresso Trainer supports various learning rate schedulers based on PyTorch. In particular, learning rate warm-up is supported for frequently used schedulers, and learning rate restart is supported for some schedulers, such as cosine annealing. NetsPresso Trainer updates the learning rate at the end of epoch, not the end of step, so users will set the scheduler with epoch-level counts.
 
 ## Supporting schedulers
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We note that most of these parameter descriptions are derived from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -106,7 +106,7 @@ training:
 
 In many training feature repositories, it is recommended to perform the entire training pipeline and check the log to see how the learning rate scheduler works.
 NetsPresso Trainer supports learning rate schedule simulation to allow users to easily understand the learning rate scheduler for their configured training recipe.
-By copying the training configuration into the simulator, users can see how the learning rate changes every epoch.
+By copying and pasting the training configuration into the simulator, users can see how the learning rate changes every epoch.
 
 > :warning: This simulation is not supported for some schedulers which adjust the learning rate dynamically with training results.
 
@@ -114,6 +114,6 @@ By copying the training configuration into the simulator, users can see how the 
 
 Please run the gradio demo with following command:
 
-```
+```bash
 bash scripts/run_simulator_lr_scheduler.sh
 ```

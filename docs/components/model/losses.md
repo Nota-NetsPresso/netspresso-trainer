@@ -1,13 +1,13 @@
 # Losses
 
-Loss modules is very important in the training of neural networks, because it actually guides and shapes the learning process by minimizing the loss. It can affect the speed of convergence during training and the overall robustness of the model. 
+Loss modules are very important in the training of neural networks, because as they guide and shape the learning process by minimizing the loss. They can affect the speed of convergence during training and the overall robustness of the model. 
 
-However, loss functions can vary depending on the tasks, especially in tasks like detection and segmentation, where specialized loss functions are required. Therefore, NetsPresso Trainer provides a predefined variety of loss modules, designed for flexible use across different tasks. Users can seamlessly apply the appropriate loss function to their desired task through simple configuration settings.
+However, loss functions can vary depending on the task, especially in tasks like detection and segmentation, where specialized loss functions are required. Therefore, NetsPresso Trainer provides a predefined variety of loss modules, designed for flexible use across different tasks. Users can seamlessly apply the appropriate loss function to their desired task through simple configuration settings.
 
 
 ## Supporting loss modules
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, hence most of the parameters remain unchanged. We note that most of these parameter descriptions are derived from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -76,7 +76,7 @@ Loss module for [AnchorFreeDecoupledHead](../../models/heads/anchorfreedecoupled
 
 ### RetinaNetLoss 
 
-Loss module for [AnchorDecoupledHead](../../models/heads/anchordecoupledhead.md). This loss follows torchvision implementation, thus contains classification loss by focal loss and box regression loss by L1 loss.
+Loss module for [AnchorDecoupledHead](../../models/heads/anchordecoupledhead.md). This loss follows torchvision implementation, it contains classification loss via focal loss and box regression loss via L1 loss.
 
 | Field <img width=200/> | Description |
 |---|---|

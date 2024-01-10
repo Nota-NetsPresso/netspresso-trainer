@@ -1,12 +1,12 @@
 # Mix transforms
 
-We have named the techniques that shuffle samples within a batch after the processing of transform modules as "Mix transforms". Therefore, the modules supported in mix transforms do not assume a batch size 1, and when multiple mix transforms are applied, only one random mix transform is used per batch processing. Users can employ desired mix transform modules by listing them in the configuration.
+We named the techniques that shuffle samples within a batch after the processing of transform modules as "Mix transforms". Therefore, the modules supported in mix transforms do not assume a batch size 1, and when multiple mix transforms are applied, only one mix transform is randomly selected and used per batch processing. Users can employ desired mix transform modules by listing them in the configuration.
 
-Currently, NetsPresso Trainer does not support a Gradio demo for visualizing mix transforms. This feature is planned to be added soon.
+Currently, NetsPresso Trainer does not support a Gradio demo visualization for mix transforms. This feature is planned to be added soon.
 
 ## Supporting transforms
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We note that most of these parameter descriptions are derived from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -18,11 +18,11 @@ Cutmix augmentation based on [CutMix: Regularization Strategy to Train Strong Cl
 |---|---|
 | `name` | (str) Name must be "cutmix" to use `RandomCutmix` mix transform. |
 | `alpha` | (float) Mixing strength alpha. |
-| `p` | (float) the probability of applying cutmix. If `1.0`, it always applies. |
+| `p` | (float) The probability of applying cutmix. If set to `1.0`, it is always applied. |
 | `inplace` | (bool) Whether to operate as inplace. |
 
 <details>
-  <summary>Cutmix</summary>
+  <summary>Cutmix example</summary>
   
   ```yaml
   augmentation:
@@ -44,11 +44,11 @@ Mixup augmentation based on [mixup: Beyond empirical risk minimization](https://
 |---|---|
 | `name` | (str) Name must be "mixup" to use `RandomMixup` mix transform. |
 | `alpha` | (float) Mixing strength alpha. |
-| `p` | (float) the probability of applying cutmix. If `1.0`, it always applies. |
+| `p` | (float) The probability of applying cutmix. If set to `1.0`, it is always applied. |
 | `inplace` | (bool) Whether to operate as inplace. |
 
 <details>
-  <summary>Cutmix + Mixup</summary>
+  <summary>Mixup example</summary>
   
   ```yaml
   augmentation:

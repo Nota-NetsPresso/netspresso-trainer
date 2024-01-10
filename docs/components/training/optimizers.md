@@ -1,10 +1,10 @@
 # Optimizers
 
-NetsPresso Trainer uses the optimizers implemented in PyTorch as is. By selecting an optimizer suitable for the training recipe, you can configure the optimal training. If you are unsure which optimizer to use, we recommend reading the [blog post from *towardsdatascience*](https://towardsdatascience.com/7-tips-to-choose-the-best-optimizer-47bb9c1219e).
+NetsPresso Trainer uses the optimizers implemented in PyTorch as is. By selecting an optimizer that suits your training recipe, you can configure the optimal training. If you are unsure which optimizer to use, we recommend reading the [blog post from *towardsdatascience*](https://towardsdatascience.com/7-tips-to-choose-the-best-optimizer-47bb9c1219e).
 
 ## Supporting optimizers
 
-The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We notice that most of these parameter descriptions are from original implementations.
+The currently supported methods in NetsPresso Trainer are as follows. Since techniques are adapted from pre-existing codes, most of the parameters remain unchanged. We note that most of these parameter descriptions are derived from original implementations.
 
 We appreciate all the original code owners and we also do our best to make other values.
 
@@ -15,7 +15,7 @@ This optimizer follows the [Adadelta](https://pytorch.org/docs/stable/generated/
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "adadelta" to use `Adadelta` optimizer. |
-| `lr` | (float) Coefficient that scale delta before it is applied to the parameters. |
+| `lr` | (float) Coefficient that scales delta before it is applied to the parameters. |
 | `rho` | (float) Coefficient used for computing a running average of squared gradients |
 | `weight_decay` | (float) weight decay (L2 penalty). |
 
