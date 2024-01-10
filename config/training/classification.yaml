@@ -1,5 +1,4 @@
 training:
-  seed: 1
   epochs: 3
   batch_size: 32 
   optimizer:
