@@ -1,37 +1,36 @@
-import logging
 import os
 from typing import Literal
 
 import torch
+from loguru import logger
 from omegaconf import OmegaConf
 
 from .base import BasePipeline
-
-logger = logging.getLogger("netspresso_trainer")
 
 MAX_SAMPLE_RESULT = 10
 
 
 class ClassificationPipeline(BasePipeline):
     def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, **kwargs):
+                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
         super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                     train_dataloader, eval_dataloader, class_map, **kwargs)
+                                                     train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
 
     def train_step(self, batch):
         self.model.train()
-        images, target = batch
+        images, labels = batch
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        labels = labels.to(self.devices)
+        target = {'target': labels}
 
         self.optimizer.zero_grad()
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='train')
-        if target.dim() > 1: # Soft label to label number
-            target = torch.argmax(target, dim=-1)
+        if labels.dim() > 1: # Soft label to label number
+            labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='train')
+        self.metric_factory.calc(pred, labels, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
@@ -41,16 +40,17 @@ class ClassificationPipeline(BasePipeline):
 
     def valid_step(self, batch):
         self.model.eval()
-        images, target = batch
+        images, labels = batch
         images = images.to(self.devices)
-        target = target.to(self.devices)
+        labels = labels.to(self.devices)
+        target = {'target': labels}
 
         out = self.model(images)
         self.loss_factory.calc(out, target, phase='valid')
-        if target.dim() > 1: # Soft label to label number
-            target = torch.argmax(target, dim=-1)
+        if labels.dim() > 1: # Soft label to label number
+            labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, target, phase='valid')
+        self.metric_factory.calc(pred, labels, phase='valid')
 
         if self.conf.distributed:
             torch.distributed.barrier()

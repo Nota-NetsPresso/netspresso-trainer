@@ -1,2 +1,2 @@
 from .experimental.fpn import fpn
-from .experimental.pafpn import pafpn
+from .experimental.yolopafpn import yolopafpn

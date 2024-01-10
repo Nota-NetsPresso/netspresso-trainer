@@ -1,3 +1,6 @@
+from typing import List
+
+from omegaconf import DictConfig
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -6,58 +9,48 @@ from ...utils import BackboneOutput
 
 class FPN(nn.Module):
 
-    def __init__(self,
-                 in_channels,
-                 out_channels,
-                 num_outs,
-                 start_level=0,
-                 end_level=-1,
-                 add_extra_convs=False,
-                 relu_before_extra_convs=False,
-                 no_norm_on_lateral=False,
-                 conv_cfg=None,
-                 norm_cfg=None,
-                 act_cfg=None,
-                 upsample_cfg=None,
-                 init_cfg=None):
-        if init_cfg is None:
-            init_cfg = {'type': 'Xavier', 'layer': 'Conv2d', 'distribution': 'uniform'}
-        if upsample_cfg is None:
-            upsample_cfg = {'mode': 'nearest'}
-        super(FPN, self).__init__()
-        assert isinstance(in_channels, list)
-        self.in_channels = in_channels
-        self.out_channels = out_channels
-        self.num_ins = len(in_channels)
-        self.num_outs = num_outs
-        self.relu_before_extra_convs = relu_before_extra_convs
-        self.no_norm_on_lateral = no_norm_on_lateral
-        self.fp16_enabled = False
+    def __init__(
+        self,
+        intermediate_features_dim: List[int],
+        params: DictConfig,
+    ):
+        upsample_cfg = {'mode': 'nearest'}
         self.upsample_cfg = upsample_cfg.copy()
+        super(FPN, self).__init__()
+
+        self.in_channels = intermediate_features_dim
+        self.out_channels = intermediate_features_dim[-1]
+        self.num_ins = len(self.in_channels)
+        self.num_outs = params.num_outs
+        self.relu_before_extra_convs = params.relu_before_extra_convs
+        self.add_extra_convs = params.add_extra_convs
+
+        start_level = params.start_level
+        end_level = params.end_level
 
         if end_level == -1 or end_level == self.num_ins - 1:
             self.backbone_end_level = self.num_ins
-            assert num_outs >= self.num_ins - start_level
+            assert self.num_outs >= self.num_ins - start_level
         else:
             # if end_level is not the last level, no extra level is allowed
             self.backbone_end_level = end_level + 1
             assert end_level < self.num_ins
-            assert num_outs == end_level - start_level + 1
+            assert self.num_outs == end_level - start_level + 1
         self.start_level = start_level
         self.end_level = end_level
-        self.add_extra_convs = add_extra_convs
-        assert isinstance(add_extra_convs, (str, bool))
-        if isinstance(add_extra_convs, str):
+        self.add_extra_convs = self.add_extra_convs
+        assert isinstance(self.add_extra_convs, (str, bool))
+        if isinstance(self.add_extra_convs, str):
             # Extra_convs_source choices: 'on_input', 'on_lateral', 'on_output'
-            assert add_extra_convs in ('on_input', 'on_lateral', 'on_output')
-        elif add_extra_convs:  # True
+            assert self.add_extra_convs in ('on_input', 'on_lateral', 'on_output')
+        elif self.add_extra_convs:  # True
             self.add_extra_convs = 'on_input'
 
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
         for i in range(self.start_level, self.backbone_end_level):
-            l_conv = nn.Conv2d(in_channels[i], out_channels, kernel_size=1, stride=1, padding=0)
+            l_conv = nn.Conv2d(self.in_channels[i], self.out_channels, kernel_size=1, stride=1, padding=0)
             # ConvModule(
             #     in_channels[i],
             #     out_channels,
@@ -66,7 +59,7 @@ class FPN(nn.Module):
             #     norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
             #     act_cfg=act_cfg,
             #     inplace=False)
-            fpn_conv = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
+            fpn_conv = nn.Conv2d(self.out_channels, self.out_channels, kernel_size=3, stride=1, padding=1)
             # ConvModule(
             #     out_channels,
             #     out_channels,
@@ -81,17 +74,17 @@ class FPN(nn.Module):
             self.fpn_convs.append(fpn_conv)
 
         # add extra conv layers (e.g., RetinaNet)
-        extra_levels = num_outs - self.backbone_end_level + self.start_level
+        extra_levels = self.num_outs - self.backbone_end_level + self.start_level
         if self.add_extra_convs and extra_levels >= 1:
             for i in range(extra_levels):
                 if i == 0 and self.add_extra_convs == 'on_input':
                     in_channels = self.in_channels[self.backbone_end_level - 1]
                 else:
-                    in_channels = out_channels
-                extra_fpn_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
+                    in_channels = self.out_channels
+                extra_fpn_conv = nn.Conv2d(in_channels, self.out_channels, kernel_size=3, stride=2, padding=1)
                 self.fpn_convs.append(extra_fpn_conv)
 
-        self._intermediate_features_dim = [out_channels for _ in range(num_outs)]
+        self._intermediate_features_dim = [self.out_channels for _ in range(self.num_outs)]
 
     def forward(self, inputs):
         """Forward function."""
@@ -152,21 +145,5 @@ class FPN(nn.Module):
         return self._intermediate_features_dim
 
 
-def fpn(intermediate_features_dim, **kwargs):
-    configuration = {
-        'num_outs': 4,
-        'start_level': 0,
-        'end_level': -1,
-        'add_extra_convs': False,
-        'relu_before_extra_convs': False,
-        'no_norm_on_lateral': False,
-        'conv_cfg': None,
-        'norm_cfg': None,
-        'act_cfg': None,
-        'upsample_cfg': None,
-        'init_cfg': None
-    }
-
-    return FPN(in_channels=intermediate_features_dim,
-               out_channels=intermediate_features_dim[-1],
-               **configuration)
+def fpn(intermediate_features_dim, conf_model_neck, **kwargs):
+    return FPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)

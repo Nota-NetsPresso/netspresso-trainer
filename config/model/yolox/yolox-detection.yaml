@@ -1,7 +1,8 @@
 model:
   task: detection
   name: yolox_s
-  checkpoint: ./weights/yolox/yolox_s.pth
+  checkpoint: ./weights/yolox/yolox_s_coco.safetensors
+  load_checkpoint_head: False
   fx_model_checkpoint: ~
   resume_optimizer_checkpoint: ~
   freeze_backbone: False
@@ -10,14 +11,24 @@ model:
     backbone:
       name: cspdarknet
       params:
-        dep_mul: 0.33
+        dep_mul: &dep_mul 0.33
         wid_mul: 0.5
-        act_type: "silu"
+        act_type: &act_type "silu"
       stage_params: ~
     neck:
-      name: pafpn
+      name: yolopafpn
+      params:
+        dep_mul: *dep_mul
+        act_type: *act_type
     head:
-      name: yolox_head
+      name: anchor_free_decoupled_head
+      params:
+        act_type: *act_type
+        # postprocessor - decode
+        score_thresh: 0.7
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
   losses:
     - criterion: yolox_loss
       weight: ~

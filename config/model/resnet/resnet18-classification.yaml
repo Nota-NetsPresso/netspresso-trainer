@@ -1,0 +1,40 @@
+model:
+  task: classification
+  name: resnet18
+  checkpoint: ./weights/resnet/resnet18_imagenet1k.safetensors
+  load_checkpoint_head: False
+  fx_model_checkpoint: ~
+  resume_optimizer_checkpoint: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: resnet
+      params:
+        block_type: basicblock
+        norm_type: batch_norm
+      stage_params:
+        - 
+          channels: 64
+          num_blocks: 2
+        - 
+          channels: 128
+          num_blocks: 2
+          replace_stride_with_dilation: False
+        - 
+          channels: 256
+          num_blocks: 2
+          replace_stride_with_dilation: False
+        - 
+          channels: 512
+          num_blocks: 2
+          replace_stride_with_dilation: False
+    head:
+      name: fc
+      params:
+        intermediate_channels: 1024
+        num_layers: 1
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~

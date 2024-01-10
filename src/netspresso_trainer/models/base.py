@@ -1,46 +1,28 @@
-import logging
 import os
 from abc import abstractmethod
 from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
+from loguru import logger
 from omegaconf import OmegaConf
 
-from .registry import MODEL_BACKBONE_DICT, MODEL_HEAD_DICT, MODEL_NECK_DICT
-from .utils import BackboneOutput, DetectionModelOutput, ModelOutput, load_from_checkpoint
-
-logger = logging.getLogger("netspresso_trainer")
+from .utils import BackboneOutput, DetectionModelOutput, ModelOutput
 
 
 class TaskModel(nn.Module):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 img_size: Optional[Union[int, Tuple]] = None, freeze_backbone: bool = False) -> None:
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone: bool = False) -> None:
         super(TaskModel, self).__init__()
-        self.task = task
-        self.backbone_name = backbone_name
-        self.head_name = head_name
+        self.task = conf_model.task
+        self.backbone_name = conf_model.architecture.backbone.name
+        if neck:
+            self.neck_name = conf_model.architecture.neck.name
+        self.head_name = conf_model.architecture.head.name
 
-        backbone_fn: Callable[..., nn.Module] = MODEL_BACKBONE_DICT[backbone_name]
-        self.backbone: nn.Module = backbone_fn(task=self.task, conf_model_backbone=conf_model.architecture.backbone)
-
-        self.backbone = load_from_checkpoint(self.backbone, model_checkpoint)
-
-        intermediate_features_dim = self.backbone.intermediate_features_dim
-        if getattr(conf_model.architecture, 'neck', None):
-            neck_name = conf_model.architecture.neck.name
-            neck_fn: Callable[..., nn.Module] = MODEL_NECK_DICT[neck_name]
-            self.neck = neck_fn(intermediate_features_dim=self.backbone.intermediate_features_dim)
-            intermediate_features_dim = self.neck.intermediate_features_dim
-
-        head_module = MODEL_HEAD_DICT[self.task][head_name]
-        if task == 'classification':
-            self.head = head_module(num_classes=num_classes, feature_dim=self.backbone.feature_dim)
-        elif task in ['segmentation', 'detection']:
-            img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
-            self.head = head_module(num_classes=num_classes,
-                                    intermediate_features_dim=intermediate_features_dim,
-                                    label_size=img_size)
+        self.backbone = backbone
+        if neck:
+            self.neck = neck
+        self.head = head
 
         if freeze_backbone:
             self._freeze_backbone()
@@ -55,7 +37,10 @@ class TaskModel(nn.Module):
         return next(self.parameters()).device
 
     def _get_name(self):
-        return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
+        if hasattr(self, 'neck'):
+            return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, neck={self.neck_name}, head={self.head_name}]"
+        else:
+            return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
 
     @abstractmethod
     def forward(self, x, label_size=None, targets=None):
@@ -63,9 +48,8 @@ class TaskModel(nn.Module):
 
 
 class ClassificationModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size=None, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
@@ -74,26 +58,24 @@ class ClassificationModel(TaskModel):
 
 
 class SegmentationModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
-        if self.neck:
+        if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: ModelOutput = self.head(features['intermediate_features'])
         return out
 
 
 class DetectionModel(TaskModel):
-    def __init__(self, conf_model, task, backbone_name, head_name, num_classes, model_checkpoint,
-                 label_size, freeze_backbone=False) -> None:
-        super().__init__(conf_model, task, backbone_name, head_name, num_classes, model_checkpoint, label_size, freeze_backbone)
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
     def forward(self, x, label_size=None, targets=None):
         features: BackboneOutput = self.backbone(x)
-        if self.neck:
+        if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out

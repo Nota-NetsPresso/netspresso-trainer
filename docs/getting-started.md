@@ -3,10 +3,11 @@
 Write your training script in `train.py` like:
 
 ```python
-from netspresso_trainer import set_arguments, train
+from netspresso_trainer import train_cli
 
-args_parsed, args = set_arguments(is_graphmodule_training=False)
-train(args_parsed, args, is_graphmodule_training=False)
+if __name__ == '__main__':
+    logging_dir = train_cli()
+    print(f"Training results are saved at: {logging_dir}")
 ```
 
 Then, train your model with your own configuraiton:

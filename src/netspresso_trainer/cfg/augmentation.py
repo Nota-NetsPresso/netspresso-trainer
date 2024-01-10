@@ -28,26 +28,29 @@ class ColorJitter(Transform):
     contrast: Optional[float] = 0.25
     saturation: Optional[float] = 0.25
     hue: Optional[float] = 0.1
-    colorjitter_p: Optional[float] = 0.5
+    p: Optional[float] = 0.5
 
 
 @dataclass
 class Pad(Transform):
     name: str = 'pad'
     padding: Union[int, List] = 0
+    fill: Union[int, List] = 0
+    padding_mode: str = 'constant'
 
 
 @dataclass
 class RandomCrop(Transform):
     name: str = 'randomcrop'
     size: int = DEFAULT_IMG_SIZE
-    interpolation: Optional[str] = 'bilinear'
 
 
 @dataclass
 class RandomResizedCrop(Transform):
     name: str = 'randomresizedcrop'
     size: int = DEFAULT_IMG_SIZE
+    scale: List = field(default_factory=lambda: [0.08, 1.0])
+    ratio: List = field(default_factory=lambda: [0.75, 1.33])
     interpolation: Optional[str] = 'bilinear'
 
 
@@ -68,6 +71,14 @@ class Resize(Transform):
     name: str = 'resize'
     size: int = DEFAULT_IMG_SIZE
     interpolation: Optional[str] = 'bilinear'
+    max_size: Optional[int] =  None
+
+
+class TrivialAugmentWide(Transform):
+    name: str = 'trivialaugmentwide'
+    num_magnitude_bins: int = 31
+    interpolation: str = 'bilinear'
+    fill: Optional[Union[int, List]] = None
 
 
 @dataclass
@@ -75,6 +86,7 @@ class RandomMixup(Transform):
     name: str = 'mixup'
     alpha: float = 0.2
     p: float = 1.0
+    inplace: bool = False
 
 
 @dataclass
@@ -82,6 +94,7 @@ class RandomCutmix(Transform):
     name: str = 'cutmix'
     alpha: float = 1.0
     p: float = 1.0
+    inplace: bool = False
 
 
 @dataclass

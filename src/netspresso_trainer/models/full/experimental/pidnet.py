@@ -1,7 +1,6 @@
 # ------------------------------------------------------------------------------
 # Written by Jiacong Xu (jiacong.xu@tamu.edu)
 # ------------------------------------------------------------------------------
-import logging
 import time
 from typing import Optional, List, Dict
 
@@ -26,9 +25,9 @@ class PIDNet(nn.Module):
         num_classes = params.num_classes
         m = params.m
         n = params.n
-        planes = params.planes
-        ppm_planes = params.ppm_planes
-        head_planes = params.head_planes
+        planes = params.channels
+        ppm_planes = params.ppm_channels
+        head_planes = params.head_channels
         is_training = params.is_training
 
         self.is_training = is_training

@@ -35,10 +35,11 @@ _____
 Write your training script in `train.py` like:
 
 ```python
-from netspresso_trainer import set_arguments, train
+from netspresso_trainer import train_cli
 
-args_parsed, args = set_arguments(is_graphmodule_training=False)
-train(args_parsed, args, is_graphmodule_training=False)
+if __name__ == '__main__':
+    logging_dir = train_cli()
+    print(f"Training results are saved at: {logging_dir}")
 ```
 
 Then, train your model with your own configuraiton:
@@ -102,18 +103,4 @@ Note that the default directory of saving result will be `./outputs` directory.
 
 ## Pretrained weights
 
-For now, we provide the pretrained weight from other awesome repositories. We have converted several models' weights into our own model architectures.  
-In the near soon, we are planning to provide the pretrained weights directly trained from our resources.  
-We appreciate all the original authors and we also do our best to make other values.
-
-[Download all weights (Google Drvie)](https://drive.google.com/drive/folders/15AoBl22hV8JStBu_CHD5WZd7dHBerKzf?usp=sharing)
-
-| Family           | Model    | Link    | Origianl repository    |
-| ------           | -----    | ----    | -------------------    |
-| ResNet           | [`resnet50`](./config/model/resnet) | [Google Drive](https://drive.google.com/file/d/1xFfPcea8VyZ5KlegrIcSMUpRZ-FKOvKF/view?usp=drive_link) | [torchvision](https://download.pytorch.org/models/resnet50-0676ba61.pth) |
-| ViT              | [`vit_tiny`](./config/model/vit) | [Google Drive](https://drive.google.com/file/d/1meGp4epqXcqplHnSkXHIVuvV2LYSaLFU/view?usp=drive_link) | [apple/ml-cvnets](https://docs-assets.developer.apple.com/ml-research/models/cvnets-v2/classification/vit-tiny.pt) |
-| MobileViT        | [`mobilevit_s`](./config/model/mobilevit) | [Google Drive](https://drive.google.com/file/d/1HF6iq1T0QSUqPViJobXx639xlBxkBHWd/view?usp=drive_link) | [apple/ml-cvnets](https://docs-assets.developer.apple.com/ml-research/models/cvnets/classification/mobilevit_s.pt) |
-| SegFormer        | [`segformer`](./config/model/segformer) | [Google Drive](https://drive.google.com/file/d/1QIvgBOwGKXfUS9ysDk3K9AkTAOaiyRXK/view?usp=drive_link) | [(Hugging Face) nvidia](https://huggingface.co/nvidia/mit-b0) |
-| EfficientForemer | [`efficientformer_l1_3000d`](./config/model/efficientformer) | [Google Drive](https://drive.google.com/file/d/1I0SoTFs5AcI3mHpG_kDM2mW1PXDmG8X_/view?usp=drive_link) | [snap-research/EfficientFormer](https://drive.google.com/file/d/11SbX-3cfqTOc247xKYubrAjBiUmr818y/view) |
-| PIDNet           | [`pidnet_s`](./config/model/pidnet) | [Google Drive](https://drive.google.com/file/d/16mGyzAJAgrefs7oXnxhGZaiG7T7Uriuf/view?usp=drive_link) | [XuJiacong/PIDNet](https://drive.google.com/file/d/1hIBp_8maRr60-B3PF0NVtaA6TYBvO4y-/view) |
-| MobileNetV3      | [`mobilenetv3_small`](./config/model/mobilenetv3) | [Google Drive](https://drive.google.com/file/d/1gzBIQLcj75VpU6JRPsHT4GhLPYT6KcQm/view?usp=drive_link) | [torchvision](https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth ) |
+Please refer to our [official documentation](https://nota-netspresso.github.io/netspresso-trainer/) for pretrained weights supported by NetsPresso Trainer.

@@ -4,19 +4,15 @@ from omegaconf import OmegaConf
 from .registry import SCHEDULER_DICT
 
 
-def build_scheduler(optimizer, conf_training):
-    scheduler_name = conf_training.sched
-    num_epochs = conf_training.epochs
-    conf_sched = OmegaConf.create({
-        'min_lr': conf_training.min_lr,
-        'power': conf_training.sched_power,
-        'warmup_bias_lr': conf_training.warmup_bias_lr,
-        'warmup_iters': conf_training.warmup_epochs,
-        'total_iters': num_epochs,
-        'iters_per_phase': conf_training.iters_per_phase,  # TODO: config for StepLR
-    })
+def build_scheduler(optimizer, training_conf):
+    scheduler_conf = training_conf.scheduler
+    scheduler_name = scheduler_conf.name
+    num_epochs = training_conf.epochs
+
+    # Copy training num_epochs to sub-config scheduler
+    scheduler_conf.total_iters = num_epochs # fix total_iters as num_epochs
 
     assert scheduler_name in SCHEDULER_DICT, f"{scheduler_name} not in scheduler dict!"
-    lr_scheduler = SCHEDULER_DICT[scheduler_name](optimizer, **conf_sched)
+    lr_scheduler = SCHEDULER_DICT[scheduler_name](optimizer, scheduler_conf)
 
     return lr_scheduler, num_epochs

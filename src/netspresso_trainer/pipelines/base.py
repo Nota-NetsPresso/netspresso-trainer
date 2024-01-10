@@ -1,5 +1,5 @@
 import copy
-import logging
+import json
 import os
 from abc import ABC, abstractmethod
 from dataclasses import asdict
@@ -8,7 +8,9 @@ from statistics import mean
 from typing import Dict, Literal, final
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
+from loguru import logger
 from tqdm import tqdm
 
 from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
@@ -17,20 +19,19 @@ from ..metrics import build_metrics
 from ..optimizers import build_optimizer
 from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
+from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
 
-logger = logging.getLogger("netspresso_trainer")
-
 NUM_SAMPLES = 16
 
 
 class BasePipeline(ABC):
     def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map,
+                 train_dataloader, eval_dataloader, class_map, logging_dir,
                  is_graphmodule_training=False, profile=False):
         super(BasePipeline, self).__init__()
         self.conf = conf
@@ -61,12 +62,16 @@ class BasePipeline(ABC):
         self.is_graphmodule_training = is_graphmodule_training
         self.save_optimizer_state = self.conf.logging.save_optimizer_state
 
-        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and torch.distributed.get_rank() == 0)
+        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and dist.get_rank() == 0)
 
         if self.single_gpu_or_rank_zero:
-            self.train_logger = build_logger(self.conf, self.task, self.model_name,
-                                             step_per_epoch=self.train_step_per_epoch, class_map=class_map,
-                                             num_sample_images=NUM_SAMPLES)
+            self.train_logger = build_logger(
+                self.conf, self.task, self.model_name,
+                step_per_epoch=self.train_step_per_epoch,
+                class_map=class_map,
+                num_sample_images=NUM_SAMPLES,
+                result_dir=logging_dir,
+            )
 
     @final
     def _is_ready(self):
@@ -81,10 +86,7 @@ class BasePipeline(ABC):
 
         assert self.model is not None
         self.optimizer = build_optimizer(self.model,
-                                         opt=self.conf.training.opt,
-                                         lr=self.conf.training.lr,
-                                         wd=self.conf.training.weight_decay,
-                                         momentum=self.conf.training.momentum)
+                                         optimizer_conf=self.conf.training.optimizer)
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
@@ -152,8 +154,9 @@ class BasePipeline(ABC):
         return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
 
     def train(self):
-        logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
-        logger.info("-" * 40)
+        if self.single_gpu_or_rank_zero:
+            logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
+            logger.info("-" * 40)
 
         self.timer.start_record(name='train_all')
         self._is_ready()
@@ -184,9 +187,9 @@ class BasePipeline(ABC):
                         assert with_valid_logging
                         self.save_checkpoint(epoch=num_epoch)
                         self.save_summary()
+                    logger.info("-" * 40)
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`
-                logger.info("-" * 40)
 
             self.timer.end_record(name='train_all')
             total_train_time = self.timer.get(name='train_all', as_pop=False)
@@ -271,10 +274,10 @@ class BasePipeline(ABC):
         model = self.model.module if hasattr(self.model, 'module') else self.model
         if self.save_dtype == torch.float16:
             model = copy.deepcopy(model).type(self.save_dtype)
-        result_dir = self.train_logger.result_dir
-        model_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        best_model_path = Path(result_dir) / f"{self.task}_{self.model_name}_best.ext"
-        optimizer_path = Path(result_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
+        logging_dir = self.train_logger.result_dir
+        model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        best_model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -292,11 +295,13 @@ class BasePipeline(ABC):
                 torch.save(model, best_model_path.with_suffix(".pt"))
                 logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
-        torch.save(model.state_dict(), model_path.with_suffix(".pth"))
-        logger.debug(f"PyTorch model saved at {str(model_path.with_suffix('.pth'))}")
+        pytorch_model_state_dict_path = model_path.with_suffix(".safetensors")
+        save_checkpoint(model.state_dict(), pytorch_model_state_dict_path)
+        logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
         if save_best_model:
-            torch.save(model.state_dict(), best_model_path.with_suffix(".pth"))
-            logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pth'))}")
+            pytorch_best_model_state_dict_path = best_model_path.with_suffix(".safetensors")
+            save_checkpoint(model.state_dict(), pytorch_best_model_state_dict_path)
+            logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
             try:
                 save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
@@ -328,10 +333,13 @@ class BasePipeline(ABC):
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
             training_summary.params = params
+            training_summary.success = True
 
-        result_dir = self.train_logger.result_dir
-        summary_path = Path(result_dir) / "training_summary.ckpt"
-        torch.save(asdict(training_summary), summary_path)
+        logging_dir = self.train_logger.result_dir
+        summary_path = Path(logging_dir) / "training_summary.json"
+
+        with open(summary_path, 'w') as f:
+            json.dump(asdict(training_summary), f, indent=4)
         logger.info(f"Model training summary saved at {str(summary_path)}")
 
     def profile_one_epoch(self):

@@ -51,10 +51,11 @@ class MobileNetV3(nn.Module):
         for stg_idx, stage_info in enumerate(stage_params):
             stage: List[nn.Module] = []
 
-            for block in zip(stage_info.in_channels, stage_info.kernel, stage_info.expanded_channels,
-                             stage_info.out_channels, stage_info.use_se, stage_info.activation,
-                             stage_info.stride, stage_info.dilation):
-                in_channels, kernel_size, hidden_channels, out_channels, use_se, act_type_b, stride, dilation = block
+            for block in zip(stage_info.in_channels, stage_info.kernel_sizes, stage_info.expanded_channels,
+                             stage_info.out_channels, stage_info.use_se, stage_info.act_type,
+                             stage_info.stride):
+                in_channels, kernel_size, hidden_channels, out_channels, use_se, act_type_b, stride = block
+                dilation = 1 # Fix as a constant
                 act_type_b = act_type_b.lower()
                 stage.append(
                     InvertedResidual(in_channels=in_channels,

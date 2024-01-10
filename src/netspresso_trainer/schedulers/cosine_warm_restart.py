@@ -1,15 +1,12 @@
 """
 This code is modified from https://pytorch.org/docs/stable/_modules/torch/optim/lr_scheduler.html#CosineAnnealingWarmRestarts .
 """
-
-import logging
 import math
 import warnings
 
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import _LRScheduler
-
-logger = logging.getLogger("netspresso_trainer")
 
 
 class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
@@ -44,27 +41,34 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
         https://arxiv.org/abs/1608.03983
     """
 
-    def __init__(self, optimizer, warmup_iters=5, total_iters=5, warmup_bias_lr=0,
-                 iters_per_phase=0, T_mult=1, min_lr=0, last_epoch=-1, verbose=False, **kwargs):
+    def __init__(
+        self,
+        optimizer,
+        scheduler_conf,
+    ):
+        total_iters = scheduler_conf.total_iters
+        iters_per_phase = scheduler_conf.iters_per_phase
+
         if iters_per_phase <= 0 or not isinstance(iters_per_phase, int):
             T_0_maybe = total_iters // 10 if total_iters // 10 != 0 else total_iters
             assert T_0_maybe > 0 and isinstance(T_0_maybe, int)
             logger.info(f"Original T_0 is invalid {iters_per_phase}! Prefer to set T_0 as {T_0_maybe}.")
             iters_per_phase = T_0_maybe
-        if T_mult < 1 or not isinstance(T_mult, int):
-            raise ValueError("Expected integer T_mult >= 1, but got {}".format(T_mult))
+        #if T_mult < 1 or not isinstance(T_mult, int):
+        #    raise ValueError("Expected integer T_mult >= 1, but got {}".format(T_mult))
         if iters_per_phase > total_iters:
             iters_per_phase = total_iters
+
         self.T_0 = iters_per_phase
         self.T_i = iters_per_phase
-        self.T_mult = T_mult
+        self.T_mult = 1 # @illian01: fix as 1 for simplicity
         self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_0, self.T_i * self.T_mult, total_iters)
         self.total_iters = total_iters
-        self.eta_min = min_lr
-        self.T_cur = last_epoch
-        self.warmup_bias_lr = warmup_bias_lr
-        self.warmup_iters = warmup_iters
-        super().__init__(optimizer, last_epoch, verbose)
+        self.eta_min = scheduler_conf.min_lr
+        self.T_cur = -1 # @illian01: fix as -1 since last_epoch is set to default
+        self.warmup_bias_lr = scheduler_conf.warmup_bias_lr
+        self.warmup_iters = scheduler_conf.warmup_epochs
+        super().__init__(optimizer)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:

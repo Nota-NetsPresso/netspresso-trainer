@@ -1,5 +1,4 @@
 import csv
-import logging
 import random
 from collections import Counter
 from itertools import chain
@@ -7,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
 import torch
+from loguru import logger
 from omegaconf import DictConfig
 from torch.nn import functional as F
 from torch.utils.data import random_split
@@ -14,8 +14,6 @@ from torch.utils.data import random_split
 from ..base import BaseDataSampler
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
-
-logger = logging.getLogger("netspresso_trainer")
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
 
@@ -119,25 +117,23 @@ class ClassficationDataSampler(BaseDataSampler):
 
             if is_file_dict(image_dir, file_or_dir_to_idx):
                 file_to_idx = file_or_dir_to_idx
-                for file in chain(image_dir.glob(f'*{ext}') for ext in VALID_IMG_EXTENSIONS):
-                    if file.name in file_to_idx:
-                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
-                        continue
-                    if file.stem in file_to_idx:
-                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.stem]})
-                        continue
-                    logger.debug(f"Found file wihtout label: {file}")
+                for ext in IMG_EXTENSIONS:
+                    for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
+                        if file.name in file_to_idx:
+                            images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
+                            continue
+                        logger.debug(f"Found file wihtout label: {file}")
 
             else:
                 dir_to_idx = file_or_dir_to_idx
                 for dir_name, dir_idx in dir_to_idx.items():
                     _dir = Path(image_dir) / dir_name
                     for ext in VALID_IMG_EXTENSIONS:
-                        images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in _dir.glob(f'*{ext}')])
+                        images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in chain(_dir.glob(f'*{ext}'), _dir.glob(f'*{ext.upper()}'))])
 
         else:  # split == test
             for ext in VALID_IMG_EXTENSIONS:
-                images_and_targets.extend([{'image': str(file), 'label': None} for file in image_dir.glob(f'*{ext}')])
+                images_and_targets.extend([{'image': str(file), 'label': None} for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
 
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
@@ -158,7 +154,9 @@ class ClassficationDataSampler(BaseDataSampler):
 
         train_samples = self.load_data(file_or_dir_to_idx, split='train')
         if exists_valid:
-            valid_samples = self.load_data(file_or_dir_to_idx, split='valid')
+            valid_dir = root_dir / self.conf_data.path.valid.image
+            file_or_dir_to_idx_valid, _ = load_class_map_with_id_mapping(root_dir, valid_dir, map_or_filename=self.conf_data.path.valid.label, id_mapping=id_mapping)
+            valid_samples = self.load_data(file_or_dir_to_idx_valid, split='valid')
         if exists_test:
             test_samples = self.load_data(file_or_dir_to_idx, split='test')
 

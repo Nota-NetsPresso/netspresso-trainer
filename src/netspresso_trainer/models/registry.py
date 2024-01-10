@@ -3,17 +3,18 @@ from typing import Callable, Dict, List, Type
 
 import torch.nn as nn
 
-from .backbones import cspdarknet, efficientformer, mixnet, mobilenetv3, mobilevit, resnet, segformer, vit
+from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, vit
+from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
-from .heads.detection import faster_rcnn, yolox_head
+from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
 from .heads.segmentation import all_mlp_decoder
-from .necks import fpn, pafpn
+from .necks import fpn, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
     'mobilenetv3': mobilenetv3,
-    'segformer': segformer,
+    'mixtransformer': mixtransformer,
     'mobilevit': mobilevit,
     'vit': vit,
     'efficientformer': efficientformer,
@@ -23,7 +24,7 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
 
 MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
     'fpn': fpn,
-    'pafpn': pafpn,
+    'yolopafpn': yolopafpn,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -34,8 +35,8 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
         'all_mlp_decoder': all_mlp_decoder,
     },
     'detection': {
-        'faster_rcnn': faster_rcnn,
-        'yolox_head': yolox_head
+        'anchor_free_decoupled_head': anchor_free_decoupled_head,
+        'anchor_decoupled_head': anchor_decoupled_head,
     },
 }
 
@@ -45,3 +46,9 @@ MODEL_FULL_DICT = {
 
 SUPPORTING_MODEL_LIST = list(MODEL_BACKBONE_DICT.keys()) + list(MODEL_FULL_DICT.keys())
 SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection']
+
+TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
+    'classification': ClassificationModel,
+    'segmentation': SegmentationModel,
+    'detection': DetectionModel
+}
