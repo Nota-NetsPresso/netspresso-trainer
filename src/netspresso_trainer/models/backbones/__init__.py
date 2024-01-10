@@ -5,5 +5,5 @@ from .experimental.mixnet import mixnet
 from .experimental.mixtransformer import mixtransformer
 from .experimental.mobilenetv3 import mobilenetv3
 from .experimental.mobilevit import mobilevit
-from .experimental.resnet import resnet
+from .core.resnet import resnet
 from .experimental.vit import vit
