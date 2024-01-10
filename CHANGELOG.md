@@ -32,6 +32,7 @@
 - Fix weights loading logic by `@illian01` in [PR 287](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/287), [PR 290](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/290)
 - Change pretrained checkpoint name convention and update weight path and url by `@illian01` in [PR 291](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/291)
 - Move seed field to environment config by `@illian01` in [PR 292](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/292)
+- Move ResNet and Fc implementation code to core directory by `@illian01` in [PR 294](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/294)
 
 # v0.0.10
 
