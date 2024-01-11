@@ -54,7 +54,12 @@ def train_common(
         assert Path(conf.model.checkpoint.fx_model_path).exists()
         model = torch.load(conf.model.checkpoint.fx_model_path)
     else:
-        model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint.path, conf.augmentation.img_size)
+        model = build_model(
+            conf.model, task, train_dataset.num_classes,
+            model_checkpoint=conf.model.checkpoint.path,
+            use_pretrained=conf.model.checkpoint.use_pretrained,
+            img_size=conf.augmentation.img_size
+        )
 
     model = model.to(device=devices)
     if conf.distributed:
