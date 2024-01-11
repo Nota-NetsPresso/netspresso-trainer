@@ -23,7 +23,10 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_p
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
     model: nn.Module = model_fn(num_classes=num_classes, conf_model_full=conf_model.architecture.full)
     if use_pretrained:
-        model = load_from_checkpoint(model, model_checkpoint, conf_model.checkpoint.load_head)
+        model = load_from_checkpoint(
+            model, model_checkpoint,
+            load_checkpoint_head=conf_model.checkpoint.load_head,
+        )
 
     return model
 
@@ -64,7 +67,10 @@ def load_backbone_and_head_model(
     # Assemble model and load checkpoint
     model = TASK_MODEL_DICT[task](conf_model, backbone, neck, head, freeze_backbone)
     if use_pretrained:
-        model = load_from_checkpoint(model, model_checkpoint, conf_model.checkpoint.load_head)
+        model = load_from_checkpoint(
+            model, model_checkpoint,
+            load_checkpoint_head=conf_model.checkpoint.load_head,
+        )
     return model
 
 
