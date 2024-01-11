@@ -50,11 +50,11 @@ def train_common(
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
     if is_graphmodule_training:
-        assert conf.model.fx_model_checkpoint is not None
-        assert Path(conf.model.fx_model_checkpoint).exists()
-        model = torch.load(conf.model.fx_model_checkpoint)
+        assert conf.model.checkpoint.fx_model_path is not None
+        assert Path(conf.model.checkpoint.fx_model_path).exists()
+        model = torch.load(conf.model.checkpoint.fx_model_path)
     else:
-        model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint, conf.augmentation.img_size)
+        model = build_model(conf.model, task, train_dataset.num_classes, conf.model.checkpoint.path, conf.augmentation.img_size)
 
     model = model.to(device=devices)
     if conf.distributed:

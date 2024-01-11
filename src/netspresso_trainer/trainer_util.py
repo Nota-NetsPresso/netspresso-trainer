@@ -198,8 +198,7 @@ def set_arguments(
 
 def validate_config(conf: DictConfig) -> ConfigSummary:
     # Get information from configuration
-    assert bool(conf.model.fx_model_checkpoint) != bool(conf.model.checkpoint)
-    is_graphmodule_training = bool(conf.model.fx_model_checkpoint)
+    is_graphmodule_training = bool(conf.model.checkpoint.fx_model_path)
 
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST

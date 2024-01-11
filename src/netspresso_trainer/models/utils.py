@@ -92,7 +92,7 @@ def load_from_checkpoint(
         model_state_dict = load_checkpoint(model_checkpoint)
         if not load_checkpoint_head:
             logger.info("-"*40)
-            logger.info("Head weights are not loaded because load_checkpoint_head is set to False")
+            logger.info("Head weights are not loaded because model.checkpoint.load_head is set to False")
             head_keys = [key for key in model_state_dict if key.startswith('head.')]
             for key in head_keys:
                 del model_state_dict[key]
