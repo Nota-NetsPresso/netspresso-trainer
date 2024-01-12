@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 from omegaconf import MISSING, MissingMandatoryValue
 
@@ -13,12 +13,21 @@ class Transform:
 
 
 @dataclass
+class Train:
+    transforms: Optional[List] = None
+    mix_transforms: Optional[List] = None
+
+
+@dataclass
+class Inference:
+    transforms: Optional[List] = None
+
+
+@dataclass
 class AugmentationConfig:
     img_size: int = DEFAULT_IMG_SIZE
-    transforms: List[Transform] = field(default_factory=lambda: [
-        Transform()
-    ])
-    mix_transforms: Optional[List[Transform]] = None
+    train: Train = field(default_factory=lambda: Train())
+    inference: Inference = field(default_factory=lambda: Inference())
 
 
 @dataclass
@@ -100,28 +109,32 @@ class RandomCutmix(Transform):
 @dataclass
 class ClassificationAugmentationConfig(AugmentationConfig):
     img_size: int = 256
-    transforms: List[Transform] = field(default_factory=lambda: [
-        RandomResizedCrop(size=256),
-        RandomHorizontalFlip()
-    ])
-    mix_transforms: List[Transform] = field(default_factory=lambda: [
-        RandomCutmix(),
-    ])
+    train: Train = field(default_factory=lambda: Train(
+        transforms=[RandomResizedCrop(size=256), RandomHorizontalFlip()],
+        mix_transforms=[RandomCutmix()]
+    ))    
+    inference: Inference = field(default_factory=lambda: Inference())
 
 
 @dataclass
 class SegmentationAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    transforms: List[Transform] = field(default_factory=lambda: [
-        RandomResizedCrop(size=512),
-        RandomHorizontalFlip(),
-        ColorJitter()
-    ])
+    train: Train = field(default_factory=lambda: Train(
+        transforms=[RandomResizedCrop(size=512), RandomHorizontalFlip(), ColorJitter()],
+        mix_transforms=None
+    ))
+    inference: Inference = field(default_factory=lambda: Inference(
+        transforms=[Resize(size=512)]
+    ))
 
 
 @dataclass
 class DetectionAugmentationConfig(AugmentationConfig):
     img_size: int = 512
-    transforms: List[Transform] = field(default_factory=lambda: [
-        Resize(size=512)
-    ])
+    train: Train = field(default_factory=lambda: Train(
+        transforms=[Resize(size=512)],
+        mix_transforms=None
+    ))
+    inference: Inference = field(default_factory=lambda: Inference(
+        transforms=[Resize(size=512)],
+    ))
