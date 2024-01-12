@@ -8,9 +8,12 @@ We provide a configuration format which can easily construct backbones and heads
 model:
   task: classification
   name: resnet50
-  checkpoint: ./weights/resnet/resnet50.safetensors
-  fx_model_checkpoint: ~
-  resume_optimizer_checkpoint: ~
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
   freeze_backbone: False
   architecture:
     full:
@@ -31,11 +34,14 @@ If you have compressed model from NetsPresso, then it's time to retrain your mod
 model:
   task: classification
   name: resnet50
-  checkpoint: ~
-  fx_model_checkpoint: ./path_to_your_fx_model.pt
-  resume_optimizer_checkpoint: ~
+  checkpoint:
+    use_pretrained: False # This field will be ignored since fx_model_path is activated
+    load_head: False # This field will be ignored since fx_model_path is activated
+    path: ~ # This field will be ignored since fx_model_path is activated
+    fx_model_path: ./path_to_your_fx_model.pt
+    optimizer_path: ~ # This field will be ignored since fx_model_path is activated
   freeze_backbone: False
-  architecture: # This field will be ignored since fx_model_checkpoint is activated
+  architecture: # This field will be ignored since fx_model_path is activated
     ...
   losses:
     - criterion: cross_entropy
@@ -51,9 +57,11 @@ model:
 |---|---|
 | `model.task` | (str) We support "classification", "segmentation", and "detection" now. |
 | `model.name` | (str) A nickname to identify the model. |
-| `model.checkpoint` | (str) Path to pretrained model weights. If there is no file on the path, automatically download from our storage. Only one of `checkpoint` or `fx_model_checkpoint` must have a value. |
-| `model.fx_model_checkpoint` | (str) Path to `torch.fx` model file. This option can be used for models which compressed with NetsPresso service. Only one of `checkpoint` or `fx_model_checkpoint` must have a value. |
-| `model.resume_optimizer_checkpoint` | (str) Path to resume optimizer and scheduler state from a checkpoint. |
+| `model.checkpoint.use_pretrained` | (bool) Whether to use the pretrained checkpoint. At first time, you will download and save the pretrained checkpoint. |
+| `model.checkpoint.load_head` | (bool) Whether to use the pretrained checkpoint for `head` module. |
+| `model.checkpoint.path` | (str) Checkpoint path to resume training. If `None` and `use_pretrained` is `False`, you can train you model from scratch. |
+| `model.checkpoint.optimizer_path` | (str) Optimizer checkpoint path for resuming training. |
+| `model.checkpoint.fx_model_path` | (str) Model path for fx model retraining. If you have to train the model from NP Compressor, you have to fill your compressed model path at this field. If `fx_model_path` is filled, `use_pretrained`, `load_head`, `path`, `optimizer_path`, and `freeze_backbone` are ignored. |
 | `model.freeze_backbone` | (bool) Whether to freeze backbone in training. |
 | `model.architecture` | (dict) Detailed configuration of the model architecture. Please see [Model page](../../../models/overview) to find NetsPresso supporting models. |
 | `model.losses` | (list) List of losses that model to learn. Please see [Losses page](../losses/) to find NetsPresso supporting loss modules. |
