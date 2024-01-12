@@ -111,16 +111,16 @@ class PIDNetModelOutput(ModelOutput):
 
 def download_model_checkpoint(
     model_name: str,
-    task: Optional[str] = None,  # TODO: Pretrained weights can be distinguished by task 
+    task: Optional[str] = None,  # TODO: Pretrained weights can be distinguished by task
 ) -> Path:
     assert model_name in DEFAULT_WEIGHT_VERSION_DICT
     assert model_name in MODEL_CHECKPOINT_URL_DICT
-    
+
     # TODO: User can select the specific weight version
     checkpoint_weight_version = DEFAULT_WEIGHT_VERSION_DICT[model_name]
-    
+
     checkpoint_url = MODEL_CHECKPOINT_URL_DICT[model_name][checkpoint_weight_version]
-    
+
     checkpoint_filename = Path(checkpoint_url).name
     model_checkpoint: Path = DEFAULT_CACHE_DIR / model_name / checkpoint_filename
     model_checkpoint.parent.mkdir(parents=True, exist_ok=True)
@@ -139,9 +139,9 @@ def load_from_checkpoint(
 ) -> nn.Module:
     model_name = model.name
     task = model.task
-    
+
     if model_checkpoint is None:
-        assert model_name is not None, f"When `use_pretrain` is True, model_name should be given."
+        assert model_name is not None, "When `use_pretrain` is True, model_name should be given."
         assert model_name in MODEL_CHECKPOINT_URL_DICT, \
             f"model_name {model_name} in path {model_checkpoint} is not valid name!"
         model_checkpoint = download_model_checkpoint(model_name, task)
