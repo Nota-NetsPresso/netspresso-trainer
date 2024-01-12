@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Enable customizing inference transform by `@illian01` in [PR 304](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/304)
 
 ## Bug Fixes:
 
