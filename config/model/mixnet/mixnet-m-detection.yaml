@@ -1,10 +1,12 @@
 model:
   task: detection
   name: mixnet_m
-  checkpoint: ./weights/mixnet/mixnet_m_imagenet1k.safetensors
-  load_checkpoint_head: False
-  fx_model_checkpoint: ~
-  resume_optimizer_checkpoint: ~
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
   freeze_backbone: False
   architecture:
     full: ~ # auto

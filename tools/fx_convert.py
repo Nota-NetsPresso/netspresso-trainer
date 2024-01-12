@@ -41,7 +41,8 @@ if __name__ == '__main__':
         try:
             print(f"FX Tracing test for ({model_config_path})..... ", end='', flush=True)            
             config = OmegaConf.load(model_config_path)
-            torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES, model_checkpoint=None)
+            torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES,
+                                                 model_checkpoint=None, use_pretrained=False)
             fx_model: fx.graph_module.GraphModule = convert_graphmodule(torch_model)
             print("Success!")
         except KeyboardInterrupt:

@@ -16,7 +16,7 @@ def train_with_inline_cfg():
     
     # ### If you try to train torch.fx model from PyNetsPresso, use this block instead
     # example_model = ClassificationResNetModelConfig(checkpoint=None)
-    # example_model.fx_model_checkpoint = "classification_resnet50_best_fx.pt"
+    # example_model.checkpoint.fx_model_path = "classification_resnet50_best_fx.pt"
     # ###
     
     
