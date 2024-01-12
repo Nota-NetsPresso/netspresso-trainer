@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Union, Dict
+from typing import Dict, List, Optional, Union
 
 from omegaconf import MISSING, MissingMandatoryValue
 
@@ -112,7 +112,7 @@ class ClassificationAugmentationConfig(AugmentationConfig):
     train: Train = field(default_factory=lambda: Train(
         transforms=[RandomResizedCrop(size=256), RandomHorizontalFlip()],
         mix_transforms=[RandomCutmix()]
-    ))    
+    ))
     inference: Inference = field(default_factory=lambda: Inference())
 
 
