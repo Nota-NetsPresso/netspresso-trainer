@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Update model caching directory and checkpoint configuration by `@deepkyu` in [PR 299](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/299)
 
 # v0.1.0
 

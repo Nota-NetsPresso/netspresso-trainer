@@ -14,6 +14,7 @@ class TaskModel(nn.Module):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone: bool = False) -> None:
         super(TaskModel, self).__init__()
         self.task = conf_model.task
+        self.name = conf_model.name
         self.backbone_name = conf_model.architecture.backbone.name
         if neck:
             self.neck_name = conf_model.architecture.neck.name
