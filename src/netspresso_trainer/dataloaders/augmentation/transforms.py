@@ -35,13 +35,14 @@ def transforms_custom(conf_augmentation, training):
     phase_conf = conf_augmentation.train if training else conf_augmentation.inference
 
     preprocess = []
-    for augment in phase_conf.transforms:
-        name = augment.name.lower()
-        augment_kwargs = list(augment.keys())
-        augment_kwargs.remove('name')
-        augment_kwargs = {k:augment[k] for k in augment_kwargs}
-        transform = TRANSFORM_DICT[name](**augment_kwargs)
-        preprocess.append(transform)
+    if phase_conf.transforms:
+        for augment in phase_conf.transforms:
+            name = augment.name.lower()
+            augment_kwargs = list(augment.keys())
+            augment_kwargs.remove('name')
+            augment_kwargs = {k:augment[k] for k in augment_kwargs}
+            transform = TRANSFORM_DICT[name](**augment_kwargs)
+            preprocess.append(transform)
 
     preprocess = preprocess + [
         TC.ToTensor(),
