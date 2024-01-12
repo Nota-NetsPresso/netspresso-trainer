@@ -35,12 +35,12 @@ if __name__ == "__main__":
     
     # OK: update value of subclass in the main dataclass
     cfg_new: TrainerConfig = deepcopy(cfg)
-    cfg_new.augmentation.transforms[-1].saturation = 0.0
+    cfg_new.augmentation.train.transforms[-1].p = 0.1
     # print(OmegaConf.to_yaml(OmegaConf.structured(cfg_new)))
     
     # OK: update value from OmegaConf Config
     config_new: TrainerConfig = deepcopy(config)
-    cfg_new.augmentation.transforms[-1].hue = 0.5
+    cfg_new.augmentation.train.transforms[-1].p = 0.1
     # print(OmegaConf.to_yaml(config_new))
 
 
