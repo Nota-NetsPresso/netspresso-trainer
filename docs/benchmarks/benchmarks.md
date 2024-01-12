@@ -16,23 +16,23 @@ Therefore, in the benchmark performance table of this section, a **Reproduced** 
 | ImageNet1K | [MixNet-l](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/mixnet/mixnet-l-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors) | 224x224 | 78.67 | - | - | - | Supported | Supported | False |
 | ImageNet1K | [MobileNetV3-small](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/mobilenetv3/mobilenetv3-small-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors) | 224x224 | 67.67 | 87.40 | 2.50M | 0.03G | Supported | Supported | False |
 | ImageNet1K | [MobileViT](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/mobilevit/mobilevit-s-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors) | 224x224 | 78.40 | - | 5.60M | - | Supported | Supported | False |
-| ImageNet1K | [ResNet18]() | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors) | 224x224 | 68.47 | 88.20 | 11.69M | 1.82G | Supported | Supported | True |
-| ImageNet1K | [ResNet34]() | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors) | 224x224 | 72.26 | 90.63 | 21.80M | 3.67G | Supported | Supported | True |
+| ImageNet1K | [ResNet18](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/resnet/resnet18-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors) | 224x224 | 68.47 | 88.20 | 11.69M | 1.82G | Supported | Supported | True |
+| ImageNet1K | [ResNet34](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/resnet/resnet34-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors) | 224x224 | 72.26 | 90.63 | 21.80M | 3.67G | Supported | Supported | True |
 | ImageNet1K | [ResNet50](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/resnet/resnet50-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors) | 224x224 | 79.61 | 94.67 | 25.56M | 2.62G | Supported | Supported | True |
-| ImageNet1K | [ViT-tiny](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/vit/vit-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors) | 224x224 | 72.91 | - | 5.70M | - | Supported | Supported | False |
+| ImageNet1K | [ViT-tiny](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/vit/vit-tiny-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors) | 224x224 | 72.91 | - | 5.70M | - | Supported | Supported | False |
 
 ## Semantic segmentation
 
 | Dataset | Model | Weights | Resolution | mIoU | Pixel acc | Params | MACs | torch.fx | NetsPresso | Reproduced |
 |---|---|---|---|---|---|---|---|---|---|---|
-| - | [SegFormer-b0](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/segformer/segformer-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors) | - | - | - | - | - | Supported | Supported | False |
+| - | [SegFormer-b0](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/segformer/segformer-b0-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors) | - | - | - | - | - | Supported | Supported | False |
 | - | [PIDNet-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/pidnet/pidnet-s-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s.safetensors) | - | - | - | - | - | Supported | Supported | False |
 
 ## Object detection
 
 | Dataset | Model | Weights | Resolution | mAP50 | mAP75 | mAP50:95 | Params | MACs | torch.fx | NetsPresso | Reproduced |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| COCO | [YOLOX-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/yolox/yolox-detection.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors) | 640x640 | - | - | 40.50 | 9.00M | 13.40G | Supported | Supported | False |
+| COCO | [YOLOX-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/model/yolox/yolox-s-detection.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors) | 640x640 | - | - | 40.50 | 9.00M | 13.40G | Supported | Supported | False |
 
 ## Acknowledgment
 
