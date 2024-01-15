@@ -210,7 +210,7 @@ Naively resize the input image to the given size. This augmentation follows the 
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "resize" to use `Resize` transform. |
-| `size` | (int) Desired output size. If size is an int, a square image (`size`, `size`) is made. If provided a list of length 1, it will be interpreted as (`size[0]`, `size[0]`). If a list of length 2 is provided, an image with size (`size[0]`, `size[1]`) is made. |
+| `size` | (int or list) Desired output size. If size is an int, a square image (`size`, `size`) is made. If provided a list of length 1, it will be interpreted as (`size[0]`, `size[0]`). If a list of length 2 is provided, an image with size (`size[0]`, `size[1]`) is made. |
 | `interpolation` | (str) Desired interpolation type. Supporting interpolations are 'nearest', 'bilinear' and 'bicubic'. |
 | `max_size` | (int, optional) The maximum allowed for the longer edge of the resized image: if the longer edge of the image exceeds `max_size` after being resized according to `size`, then the image is resized again so that the longer edge is equal to `max_size`. As a result, `size` might be overruled, i.e the smaller edge may be shorter than `size`. This is only supported if `size` is an int. |
 
