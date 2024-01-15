@@ -65,6 +65,7 @@ class Compose:
 
 
 class CenterCrop(T.CenterCrop):
+    visualize = True
 
     def __init__(
         self,
