@@ -64,6 +64,22 @@ class Compose:
         return compose_summary
 
 
+class CenterCrop(T.CenterCrop):
+
+    def __init__(
+        self,
+        size: Union[int, List],
+    ):
+        super().__init__(size)
+
+    def forward(self, image, mask=None, bbox=None):
+        # TODO: Compute mask, bbox
+        return F.center_crop(image, self.size), mask, bbox
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(size={self.size})"
+
+
 class Identity:
     visualize = True
 
