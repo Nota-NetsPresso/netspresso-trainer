@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix automatic PIDNet weights download bug by `@illian01` in [PR 306](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/306)
 
 ## Breaking Changes:
 
