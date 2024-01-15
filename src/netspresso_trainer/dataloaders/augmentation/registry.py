@@ -2,6 +2,7 @@ from typing import Callable, Dict
 
 from .custom import (
     AutoAugment,
+    CenterCrop,
     ColorJitter,
     Pad,
     RandomCrop,
@@ -16,6 +17,7 @@ from .custom import (
 )
 
 TRANSFORM_DICT: Dict[str, Callable] = {
+    'centercrop': CenterCrop,
     'colorjitter': ColorJitter,
     'pad': Pad,
     'randomcrop': RandomCrop,
