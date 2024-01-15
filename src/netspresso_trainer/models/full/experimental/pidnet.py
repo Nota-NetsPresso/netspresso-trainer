@@ -18,11 +18,11 @@ use_align_corners = False
 class PIDNet(nn.Module):
     task = 'segmentation'
     def __init__(
-            self, 
-            params: Optional[Dict] = None
+        self, 
+        params: Optional[Dict] = None
     ) -> None:
         super(PIDNet, self).__init__()
-        self.name = params.name
+        self.name = params.nick_name
         
         num_classes = params.num_classes
         m = params.m
