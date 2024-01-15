@@ -1,18 +1,26 @@
 augmentation:
   img_size: &img_size 256
-  transforms:
-    - 
-      name: randomresizedcrop
-      size: *img_size
-      scale: [0.08, 1.0]
-      ratio: [0.75, 1.33]
-      interpolation: bilinear
-    - 
-      name: randomhorizontalflip
-      p: 0.5
-  mix_transforms:
-    -
-      name: cutmix
-      alpha: 1.0
-      p: 1.0
-      inplace: false
+  train:
+    transforms:
+      - 
+        name: randomresizedcrop
+        size: *img_size
+        scale: [0.08, 1.0]
+        ratio: [0.75, 1.33]
+        interpolation: bilinear
+      - 
+        name: randomhorizontalflip
+        p: 0.5
+    mix_transforms:
+      -
+        name: cutmix
+        alpha: 1.0
+        p: 1.0
+        inplace: false
+  inference:
+    transforms:
+      - 
+        name: resize
+        size: *img_size
+        interpolation: bilinear
+        max_size: ~
