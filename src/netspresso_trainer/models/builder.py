@@ -21,6 +21,7 @@ from .utils import load_from_checkpoint
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_pretrained):
     model_fn: Callable[..., nn.Module] = MODEL_FULL_DICT[model_name]
+    conf_model.architecture.full.nick_name = conf_model.name # @illian01: model.name should be same with conf_model.name
     model: nn.Module = model_fn(num_classes=num_classes, conf_model_full=conf_model.architecture.full)
     if use_pretrained:
         model = load_from_checkpoint(
