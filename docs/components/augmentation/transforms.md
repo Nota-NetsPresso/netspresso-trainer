@@ -8,6 +8,27 @@ The currently supported methods in NetsPresso Trainer are as follows. Since tech
 
 We appreciate all the original code owners and we also do our best to make other values.
 
+### CenterCrop
+
+This augmentation follows the [CenterCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.CenterCrop.html) in torchvision library.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "centercrop" to use `CenterCrop` transform. |
+| `size` | (int or list) Desired output size of the crop. If size is an int, a square crop (size, size) is made. If provided a list of length 1, it will be interpreted as (size[0], size[0]). If a list of length 2 is provided, a square crop (size[0], size[1]) is made. |
+
+<details>
+  <summary>CenterCrop example</summary>
+  
+  ```yaml
+  augmentation:
+    transforms:
+      - 
+        name: centercrop
+        size: 224
+  ```
+</details>
+
 ### ColorJitter
 
 This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/generated/torchvision.transforms.ColorJitter.html?highlight=colorjitter#torchvision.transforms.ColorJitter) in torchvision library.
