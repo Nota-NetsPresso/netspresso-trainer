@@ -15,7 +15,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-- Update model caching directory and checkpoint configuration by `@deepkyu` in [PR 299](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/299)
+- Update model caching directory and checkpoint configuration by `@deepkyu` in [PR 299](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/299), [PR 312](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/312)
 - Minor docs update by `@illian01` in [PR 300](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/300)
 - Update software development stage by `@illian01` in [PR 301](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/301)
 - Fix size param of Resize to receive int or list by `@illian01` in [PR 310](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/310)
