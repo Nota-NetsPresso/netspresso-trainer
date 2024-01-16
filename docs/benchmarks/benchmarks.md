@@ -26,7 +26,7 @@ Therefore, in the benchmark performance table of this section, a **Reproduced** 
 | Dataset | Model | Weights | Resolution | mIoU | Pixel acc | Params | MACs | torch.fx | NetsPresso | Reproduced |
 |---|---|---|---|---|---|---|---|---|---|---|
 | - | [SegFormer-b0](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/segformer/segformer-b0-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors) | - | - | - | - | - | Supported | Supported | False |
-| - | [PIDNet-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/pidnet/pidnet-s-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s.safetensors) | - | - | - | - | - | Supported | Supported | False |
+| Cityscapes | [PIDNet-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/pidnet/pidnet-s-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors) | 2048x1024 | 78.8 | - | - | - | Supported | Supported | False |
 
 ## Object detection
 
