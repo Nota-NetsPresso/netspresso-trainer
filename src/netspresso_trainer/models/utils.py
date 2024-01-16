@@ -151,14 +151,14 @@ def load_from_checkpoint(
     if not load_checkpoint_head:
         logger.info("-"*40)
         logger.info("Head weights are not loaded because model.checkpoint.load_head is set to False")
-        head_keys = [key for key in model_state_dict if key.startswith('head.')]
+        head_keys = [key for key in model_state_dict if key.startswith(model.head_list)]
         for key in head_keys:
             del model_state_dict[key]
 
     missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
 
     if not load_checkpoint_head:
-        missing_keys = [key for key in missing_keys if not key.startswith('head.')]
+        missing_keys = [key for key in missing_keys if not key.startswith(model.head_list)]
 
     if len(missing_keys) != 0:
         logger.warning(f"Missing key(s) in state_dict: {missing_keys}")

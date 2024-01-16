@@ -144,6 +144,10 @@ class PIDNet(nn.Module):
         return layer
 
     @property
+    def head_list(self):
+        return ('seghead_p', 'seghead_d', 'final_layer')
+
+    @property
     def device(self):
         return next(self.parameters()).device
 

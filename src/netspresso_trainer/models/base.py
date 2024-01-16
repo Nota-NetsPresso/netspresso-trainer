@@ -34,6 +34,10 @@ class TaskModel(nn.Module):
             m.requires_grad = False
 
     @property
+    def head_list(self):
+        return ('head')
+
+    @property
     def device(self):
         return next(self.parameters()).device
 
