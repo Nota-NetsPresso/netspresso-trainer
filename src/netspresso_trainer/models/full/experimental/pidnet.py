@@ -41,7 +41,7 @@ class PIDNet(nn.Module):
                       norm_type='batch_norm', act_type='relu', bias=True),
             ConvLayer(in_channels=planes, out_channels=planes,
                       kernel_size=3, stride=2, padding=1,
-                      norm_type='batch_norm', act_type='relu',  bias=True)
+                      norm_type='batch_norm', act_type='relu', bias=True)
         )
 
         self.relu = nn.ReLU(inplace=True)
