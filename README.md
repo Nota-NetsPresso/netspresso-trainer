@@ -45,11 +45,23 @@ if __name__ == '__main__':
 Then, train your model with your own configuraiton:
 
 ```bash
+python train.py\
+  --data config/data/beans.yaml\
+  --augmentation config/augmentation/classification.yaml\
+  --model config/model/resnet/resnet50-classification.yaml\
+  --training config/training/classification.yaml\
+  --logging config/logging.yaml\
+  --environment config/environment.yaml
+```
+
+Or you can start NetsPresso Trainer by just executing console script which has same feature.
+
+```bash
 netspresso-train\
   --data config/data/beans.yaml\
-  --augmentation config/augmentation/resnet.yaml\
-  --model config/model/resnet.yaml\
-  --training config/training/resnet.yaml\
+  --augmentation config/augmentation/classification.yaml\
+  --model config/model/resnet/resnet50-classification.yaml\
+  --training config/training/classification.yaml\
   --logging config/logging.yaml\
   --environment config/environment.yaml
 ```
