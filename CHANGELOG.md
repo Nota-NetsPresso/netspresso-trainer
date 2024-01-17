@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.1.1
+
+## New Features:
+
 - Enable customizing inference transform by `@illian01` in [PR 304](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/304)
 - Add transform function: CenterCrop by `@illian01` in [PR 308](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/308)
 
