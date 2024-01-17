@@ -27,7 +27,7 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'mixnet_s': 'imagenet1k',
     'mixnet_m': 'imagenet1k',
     'mixnet_l': 'imagenet1k',
-    'pidnet_s': 'undefined',
+    'pidnet_s': 'cityscapes',
     'yolox_s': 'coco',
 }
 
@@ -66,7 +66,7 @@ MODEL_CHECKPOINT_URL_DICT = {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors",
     },
     'pidnet_s': {
-        'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s.safetensors",
+        'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors",
     },
     'yolox_s': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors",
