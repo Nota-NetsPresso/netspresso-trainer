@@ -8,6 +8,7 @@
 ## Bug Fixes:
 
 - Fix automatic PIDNet weights download bug by `@illian01` in [PR 306](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/306)
+- Resize default value to list by `@illian01` in [PR 315](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/315)
 
 ## Breaking Changes:
 
