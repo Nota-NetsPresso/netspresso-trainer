@@ -6,6 +6,24 @@ No changes to highlight.
 
 ## Bug Fixes:
 
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.1.2
+
+## New Features:
+
+No changes to highlight.
+
+## Bug Fixes:
+
 - Remove union of int and list by `@illian01` in [PR 317](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/317)
 
 ## Breaking Changes:
