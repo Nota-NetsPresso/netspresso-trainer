@@ -43,8 +43,8 @@ class ColorJitter(Transform):
 @dataclass
 class Pad(Transform):
     name: str = 'pad'
-    padding: Union[int, List] = 0
-    fill: Union[int, List] = 0
+    padding: int = 0
+    fill: int = 0
     padding_mode: str = 'constant'
 
 
@@ -78,7 +78,7 @@ class RandomVerticalFlip(Transform):
 @dataclass
 class Resize(Transform):
     name: str = 'resize'
-    size: Union[int, List] = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
+    size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
     interpolation: Optional[str] = 'bilinear'
     max_size: Optional[int] =  None
 
@@ -87,7 +87,7 @@ class TrivialAugmentWide(Transform):
     name: str = 'trivialaugmentwide'
     num_magnitude_bins: int = 31
     interpolation: str = 'bilinear'
-    fill: Optional[Union[int, List]] = None
+    fill: Optional[int] = None
 
 
 @dataclass
