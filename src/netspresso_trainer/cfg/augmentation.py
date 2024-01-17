@@ -78,7 +78,7 @@ class RandomVerticalFlip(Transform):
 @dataclass
 class Resize(Transform):
     name: str = 'resize'
-    size: Union[int, List] = [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE]
+    size: Union[int, List] = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
     interpolation: Optional[str] = 'bilinear'
     max_size: Optional[int] =  None
 
