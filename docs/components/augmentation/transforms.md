@@ -222,7 +222,7 @@ Naively resize the input image to the given size. This augmentation follows the 
     transforms:
       - 
         name: resize
-        size: 256
+        size: [256, 256]
         interpolation: 'bilinear'
         max_size: ~
   ```

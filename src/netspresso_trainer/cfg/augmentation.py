@@ -78,7 +78,7 @@ class RandomVerticalFlip(Transform):
 @dataclass
 class Resize(Transform):
     name: str = 'resize'
-    size: int = DEFAULT_IMG_SIZE
+    size: Union[int, List] = [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE]
     interpolation: Optional[str] = 'bilinear'
     max_size: Optional[int] =  None
 
@@ -113,7 +113,9 @@ class ClassificationAugmentationConfig(AugmentationConfig):
         transforms=[RandomResizedCrop(size=256), RandomHorizontalFlip()],
         mix_transforms=[RandomCutmix()]
     ))
-    inference: Inference = field(default_factory=lambda: Inference())
+    inference: Inference = field(default_factory=lambda: Inference(
+        transforms=[Resize(size=[256, 256])]
+    ))
 
 
 @dataclass
@@ -124,7 +126,7 @@ class SegmentationAugmentationConfig(AugmentationConfig):
         mix_transforms=None
     ))
     inference: Inference = field(default_factory=lambda: Inference(
-        transforms=[Resize(size=512)]
+        transforms=[Resize(size=[512, 512])]
     ))
 
 
@@ -132,9 +134,9 @@ class SegmentationAugmentationConfig(AugmentationConfig):
 class DetectionAugmentationConfig(AugmentationConfig):
     img_size: int = 512
     train: Train = field(default_factory=lambda: Train(
-        transforms=[Resize(size=512)],
+        transforms=[Resize(size=[512, 512])],
         mix_transforms=None
     ))
     inference: Inference = field(default_factory=lambda: Inference(
-        transforms=[Resize(size=512)],
+        transforms=[Resize(size=[512, 512])],
     ))

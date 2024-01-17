@@ -4,13 +4,13 @@ augmentation:
     transforms:
       - 
         name: resize
-        size: *img_size
+        size: [*img_size, *img_size]
         interpolation: bilinear
         max_size: ~
   inference:
     transforms:
       - 
         name: resize
-        size: *img_size
+        size: [*img_size, *img_size]
         interpolation: bilinear
         max_size: ~
