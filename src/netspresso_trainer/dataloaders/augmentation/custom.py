@@ -64,6 +64,23 @@ class Compose:
         return compose_summary
 
 
+class CenterCrop(T.CenterCrop):
+    visualize = True
+
+    def __init__(
+        self,
+        size: Union[int, List],
+    ):
+        super().__init__(size)
+
+    def forward(self, image, mask=None, bbox=None):
+        # TODO: Compute mask, bbox
+        return F.center_crop(image, self.size), mask, bbox
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(size={self.size})"
+
+
 class Identity:
     visualize = True
 
@@ -112,19 +129,11 @@ class Resize(T.Resize):
 
     def __init__(
         self,
-        size: int,
+        size: Union[int, List],
         interpolation: str,
         max_size: Optional[int],
     ):
         interpolation = INVERSE_MODES_MAPPING[interpolation]
-
-        # TODO: There is logic error in forward. If `size` is int, this specify edge for shorter one.
-        # And, this is not match with bbox computing logic.
-        # Thus, automatically transform to sequence format for now,
-        # but this should be specified whether Resize receives sequence or int.
-        if isinstance(size, int):
-            size = [size, size]
-
         # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
         super().__init__(size, interpolation, max_size)
 
@@ -136,7 +145,7 @@ class Resize(T.Resize):
             mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
                             max_size=self.max_size)
         if bbox is not None:
-            target_w, target_h = (self.size, self.size) if isinstance(self.size, int) else self.size
+            target_w, target_h = image.size # @illian01: Determine ratio according to the actual resized image
             bbox[..., 0:4:2] *= float(target_w / w)
             bbox[..., 1:4:2] *= float(target_h / h)
         return image, mask, bbox

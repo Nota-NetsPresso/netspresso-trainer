@@ -16,6 +16,30 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v0.1.1
+
+## New Features:
+
+- Enable customizing inference transform by `@illian01` in [PR 304](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/304)
+- Add transform function: CenterCrop by `@illian01` in [PR 308](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/308)
+
+## Bug Fixes:
+
+- Fix automatic PIDNet weights download bug by `@illian01` in [PR 306](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/306)
+- Resize default value to list by `@illian01` in [PR 315](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/315)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Update model caching directory and checkpoint configuration by `@deepkyu` in [PR 299](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/299), [PR 312](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/312)
+- Minor docs update by `@illian01` in [PR 300](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/300)
+- Update software development stage by `@illian01` in [PR 301](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/301)
+- Fix size param of Resize to receive int or list by `@illian01` in [PR 310](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/310)
+- Modify PIDNet conv bias, add head_list property on models by `@illian01` in [PR 311](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/311)
+
 # v0.1.0
 
 ## New Features:

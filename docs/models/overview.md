@@ -1,6 +1,8 @@
 # Overview
 
-This section describes the architecture configuration design of models. NetsPresso Trainer prioritize model compression and device deployment, thus models fulfill the following criteria:
+This section describes the **architecture configuration design** of models. For details on NetsPresso Trainer's model configuration excluding the architecture, please refer to the [model components page](../components/model/overview.md).
+
+NetsPresso Trainer prioritize model compression and device deployment, thus models fulfill the following criteria:
 
 - Compatible with torch.fx converting
 - Can be compressed by pruning method provided in [NetsPresso](https://netspresso.ai)
