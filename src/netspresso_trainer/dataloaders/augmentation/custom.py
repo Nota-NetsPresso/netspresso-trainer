@@ -582,16 +582,16 @@ class Mixing:
         self.num_classes = num_classes
         assert self.mixup or self.cutmix, "One of mixup or cutmix must be activated."
 
-        transforms = []
+        self.transforms = []
         if self.mixup:
             assert len(mixup) == 2, "Mixup transform definition must be List of length 2."
             self.mixup_alpha, self.mixup_p = mixup
-            transforms.append(RandomMixup(num_classes, self.mixup_alpha, self.mixup_p, inplace))
+            self.transforms.append(RandomMixup(num_classes, self.mixup_alpha, self.mixup_p, inplace))
 
         if self.cutmix:
             assert len(cutmix) == 2, "Cutmix transform definition must be List of length 2."
             self.cutmix_alpha, self.cutmix_p = cutmix
-            transforms.append(RandomCutmix(num_classes, self.cutmix_alpha, self.cutmix_p, inplace))
+            self.transforms.append(RandomCutmix(num_classes, self.cutmix_alpha, self.cutmix_p, inplace))
 
     def __call__(self, samples, targets):
         _mixup_transform = random.choice(self.transforms)
