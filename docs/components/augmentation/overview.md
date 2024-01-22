@@ -3,26 +3,36 @@
 NetsPresso Trainer provides data augmentation functions to improve model performance, allowing users to configure their own training recipes as desired. 
 Data augmentation in NetsPresso Trainer is based on torch and torchvision, and all augmentations are implemented based on `pillow` images.
 
-In NetsPresso Trainer, users can create their desired augmentation recipe by composing a configuration as below. We categorized augmentation functions into transforms and mix_transforms. Transforms contain methods that are applied to each individual image, while mix_transforms include techniques that are applied by mixing samples together.
+In NetsPresso Trainer, users can create their desired augmentation recipe by composing a configuration as below. We separately define sample transform procedures for training and inference. 
 
-Functions specified in the `transforms` field are applied sequentially as listed, while for `mix_transforms`, a single function is randomly chosen and applied to each data batch. Note that after all image processing is completed, the final image size must match with the size specified in `augmentation.img_size`.
+Functions specified in the `train` and `inference` fields are applied sequentially as listed. Note that after all image processing is completed, the final image size must match with the size specified in `augmentation.img_size`.
 
 
 ```yaml
 augmentation:
   img_size: &img_size 256
-  transforms:
+  train:
     - 
       name: randomresizedcrop
       size: *img_size
+      scale: [0.08, 1.0]
+      ratio: [0.75, 1.33]
       interpolation: bilinear
     - 
       name: randomhorizontalflip
       p: 0.5
-  mix_transforms:
     -
-      name: cutmix
-      alpha: 0.01
+      name: mixing
+      mixup: [0.25, 1.0]
+      cutmix: ~
+      inplace: false
+  inference:
+    - 
+      name: resize
+      size: [*img_size, *img_size]
+      interpolation: bilinear
+      max_size: ~
+
 ```
 
 ## Gradio demo for simulating the transform
@@ -47,7 +57,6 @@ bash scripts/run_simulator_augmentation.sh
 | Field <img width=200/> | Description |
 |---|---|
 | `augmentation.img_size` | (int) The image size of model input after finishing the data augmentation |
-| `augmentation.transforms` | (list[dict]) List of transform functions. Augmentation process is defined on list order. |
-| `augmentation.mix_transforms` | (list[dict]) List of mix_transform functions. Mix transforms are applied after transform functions have been executed, and if multiple mix_transforms are listed, only one mix transform is applied per batch. |
-
+| `augmentation.train` | list[dict] List of transform functions for training. Augmentation process is defined on list order. |
+| `augmentation.inference` | (list[dict]) List of transform functions for inference. Augmentation process is defined on list order. |
 
