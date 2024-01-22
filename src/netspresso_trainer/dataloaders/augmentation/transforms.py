@@ -45,8 +45,8 @@ def transforms_custom(conf_augmentation, training):
     phase_conf = conf_augmentation.train if training else conf_augmentation.inference
 
     preprocess = []
-    if phase_conf.transforms:
-        checked_transforms = transforms_check(phase_conf.transforms)
+    if phase_conf:
+        checked_transforms = transforms_check(phase_conf)
         for augment in checked_transforms:
             name = augment.name.lower()
             augment_kwargs = list(augment.keys())
