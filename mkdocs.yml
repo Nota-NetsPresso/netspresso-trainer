@@ -166,7 +166,6 @@ nav:
     - Augmentation: 
       - Overview: components/augmentation/overview.md
       - Transforms: components/augmentation/transforms.md
-      - Mix transforms: components/augmentation/mixtransforms.md
     - Training: 
       - Overview: components/training/overview.md
       - Optimizers: components/training/optimizers.md
