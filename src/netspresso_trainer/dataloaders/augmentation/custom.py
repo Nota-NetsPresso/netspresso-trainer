@@ -575,7 +575,7 @@ class Mixing:
         num_classes: int,
         cutmix: Optional[List],
         mixup: Optional[List],
-        inplace: bool,  
+        inplace: bool,
     ):
         self.mixup = bool(mixup)
         self.cutmix = bool(cutmix)

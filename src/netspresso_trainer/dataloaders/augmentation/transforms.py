@@ -36,7 +36,7 @@ def transforms_check(transforms):
         if names[-1] == 'mixing':
             return transforms[:-1]
         else:
-            raise ValueError(f"Mixing transform is in the middle of transforms. This must be in the last of transforms list.")
+            raise ValueError("Mixing transform is in the middle of transforms. This must be in the last of transforms list.")
     return transforms
 
 
