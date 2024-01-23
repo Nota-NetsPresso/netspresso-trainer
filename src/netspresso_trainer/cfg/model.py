@@ -485,8 +485,10 @@ class ClassificationEfficientFormerModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -561,8 +563,10 @@ class ClassificationMobileNetV3ModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -637,8 +641,10 @@ class ClassificationMobileViTModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -665,8 +671,10 @@ class ClassificationResNetModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -759,8 +767,10 @@ class ClassificationViTModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -809,8 +819,10 @@ class ClassificationMixNetSmallModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -885,8 +897,10 @@ class ClassificationMixNetMediumModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
@@ -961,8 +975,10 @@ class ClassificationMixNetLargeModelConfig(ModelConfig):
         head={
             "name": "fc",
             "params": {
-                "intermediate_channels": 1024,
                 "num_layers": 1,
+                "intermediate_channels": None,
+                "act_type": None,
+                "dropout_prob": 0.,
             }
         }
     ))
