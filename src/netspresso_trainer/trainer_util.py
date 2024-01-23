@@ -209,7 +209,7 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
         model_name += "_graphmodule"
 
     project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
-    logging_dir: Path = get_new_logging_dir(output_root_dir="./outputs", project_id=project_id)
+    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id)
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
 
