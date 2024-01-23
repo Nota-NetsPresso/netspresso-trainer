@@ -7,6 +7,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 from ....utils import ModelOutput
+from ....op.registry import ACTIVATION_REGISTRY
 
 
 class FC(nn.Module):
@@ -21,6 +22,7 @@ class FC(nn.Module):
         classifier = []
         for _ in range(num_layers - 1):
             classifier.append(nn.Linear(prev_size, hidden_size))
+            classifier.append(ACTIVATION_REGISTRY[params.act_type]())
             prev_size = hidden_size
         classifier.append(nn.Linear(prev_size, num_classes))
         self.classifier = nn.Sequential(*classifier)
