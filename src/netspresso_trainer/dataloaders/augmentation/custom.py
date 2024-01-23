@@ -567,6 +567,46 @@ class AutoAugment(T.AutoAugment):
         return image, mask, bbox
 
 
+class Mixing:
+    visualize = False
+
+    def __init__(
+        self,
+        num_classes: int,
+        cutmix: Optional[List],
+        mixup: Optional[List],
+        inplace: bool,
+    ):
+        self.mixup = bool(mixup)
+        self.cutmix = bool(cutmix)
+        self.num_classes = num_classes
+        assert self.mixup or self.cutmix, "One of mixup or cutmix must be activated."
+
+        self.transforms = []
+        if self.mixup:
+            assert len(mixup) == 2, "Mixup transform definition must be List of length 2."
+            self.mixup_alpha, self.mixup_p = mixup
+            self.transforms.append(RandomMixup(num_classes, self.mixup_alpha, self.mixup_p, inplace))
+
+        if self.cutmix:
+            assert len(cutmix) == 2, "Cutmix transform definition must be List of length 2."
+            self.cutmix_alpha, self.cutmix_p = cutmix
+            self.transforms.append(RandomCutmix(num_classes, self.cutmix_alpha, self.cutmix_p, inplace))
+
+    def __call__(self, samples, targets):
+        _mixup_transform = random.choice(self.transforms)
+        return _mixup_transform(samples, targets)
+
+    def __repr__(self) -> str:
+        repr = "{}(num_classes={}, ".format(self.__class__.__name__, self.num_classes)
+        if self.mixup:
+            repr += "mixup_p={}, mixup_alpha={}, ".format(self.mixup_p, self.mixup_alpha)
+        if self.cutmix:
+            repr += "cutmix_p={}, alpha={}, ".format(self.cutmix_p, self.cutmix_alpha)
+        repr += "inplace={})".format(self.inplace)
+        return repr
+
+
 class RandomMixup:
     """
     Based on the RandomMixup implementation of ml_cvnets.

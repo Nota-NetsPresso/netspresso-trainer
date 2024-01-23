@@ -30,13 +30,24 @@ def generate_edge(label: np.ndarray) -> Image.Image:
     return Image.fromarray((edge.copy() * 255).astype(np.uint8))
 
 
+def transforms_check(transforms):
+    names = [t.name.lower() for t in transforms]
+    if 'mixing' in names:
+        if names[-1] == 'mixing':
+            return transforms[:-1]
+        else:
+            raise ValueError("Mixing transform is in the middle of transforms. This must be in the last of transforms list.")
+    return transforms
+
+
 def transforms_custom(conf_augmentation, training):
     assert conf_augmentation.img_size > 32
     phase_conf = conf_augmentation.train if training else conf_augmentation.inference
 
     preprocess = []
-    if phase_conf.transforms:
-        for augment in phase_conf.transforms:
+    if phase_conf:
+        checked_transforms = transforms_check(phase_conf)
+        for augment in checked_transforms:
             name = augment.name.lower()
             augment_kwargs = list(augment.keys())
             augment_kwargs.remove('name')
@@ -55,8 +66,9 @@ def train_transforms_pidnet(conf_augmentation, training):
     preprocess = []
     phase_conf = conf_augmentation.train if training else conf_augmentation.inference
 
-    if phase_conf.transforms:
-        for augment in phase_conf.transforms:
+    if phase_conf:
+        checked_transforms = transforms_check(phase_conf)
+        for augment in checked_transforms:
             name = augment.name.lower()
             augment_kwargs = list(augment.keys())
             augment_kwargs.remove('name')

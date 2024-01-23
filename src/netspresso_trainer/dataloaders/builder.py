@@ -104,22 +104,21 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
 def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
 
     if task == 'classification':
-        conf_mix_transform = getattr(conf.augmentation, 'mix_transforms', None)
-        if conf_mix_transform:
-            mix_transforms = []
-            for mix_transform_conf in conf.augmentation.mix_transforms:
-                name = mix_transform_conf.name.lower()
-
-                mix_kwargs = list(mix_transform_conf.keys())
+        transforms = getattr(conf.augmentation, 'train', None)
+        if transforms:
+            name = transforms[-1].name.lower()
+            if name == 'mixing':
+                mix_kwargs = list(transforms[-1].keys())
                 mix_kwargs.remove('name')
-                mix_kwargs = {k:mix_transform_conf[k] for k in mix_kwargs}
+                mix_kwargs = {k:transforms[-1][k] for k in mix_kwargs}
                 mix_kwargs['num_classes'] = train_dataset.num_classes
+                mix_transforms = TRANSFORM_DICT[name](**mix_kwargs)
 
-                transform = TRANSFORM_DICT[name](**mix_kwargs)
-                mix_transforms.append(transform)
-
-            train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
-            eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
+                train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+                eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
+            else:
+                train_collate_fn = None
+                eval_collate_fn = None
         else:
             train_collate_fn = None
             eval_collate_fn = None

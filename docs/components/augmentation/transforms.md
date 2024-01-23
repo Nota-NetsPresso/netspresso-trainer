@@ -22,7 +22,7 @@ This augmentation follows the [CenterCrop](https://pytorch.org/vision/0.15/gener
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: centercrop
         size: 224
@@ -47,7 +47,7 @@ This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/gene
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: colorjitter
         brightness: 0.25
@@ -57,6 +57,36 @@ This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/gene
         p: 1.0
   ```
 </details>
+
+### Mixing
+
+We defined Mixing transform as the combination of CutMix and MixUp augmentation. This shuffles samples within a batch instead of processing per image. Therefore, **Mixing transform must be in the last function of augmentation racipe** if user wants to use it. Also, Mixing not assumes a batch size 1. If both MixUp and CutMix are activated, only one of two is randomly selected and used per batch processing.
+
+Cutmix augmentation is based on [CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_CutMix_Regularization_Strategy_to_Train_Strong_Classifiers_With_Localizable_Features_ICCV_2019_paper.pdf) and MixUp augmentation is based on [mixup: Beyond empirical risk minimization](https://arxiv.org/pdf/1710.09412.pdf%C2%A0). These implementation follow the [RandomCutmix and RandomMixup](https://github.com/apple/ml-cvnets/blob/77717569ab4a852614dae01f010b32b820cb33bb/data/transforms/image_torch.py) in the ml-cvnets library.
+
+Currently, NetsPresso Trainer does not support a Gradio demo visualization for Mixing. This feature is planned to be added soon.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "cutmix" to use `RandomCutmix` mix transform. |
+| `mixup` | (list[float], optional) List of length 2 which contains [mixup alpha, applying probability]. If None, mixup is not applied. |
+| `cutmix` | (list[float], optional) List of length 2 which contains [cutmix alpha, applying probability]. If None, cutmix is not applied. |
+| `inplace` | (bool) Whether to operate as inplace. |
+
+<details>
+  <summary>Mixing example</summary>
+
+  ```yaml
+  augmentation:
+    train:
+      -
+        name: mixing
+        mixup: [0.25, 1.0]
+        cutmix: ~
+        inplace: false
+  ```
+</details>
+
 
 ### Pad
 
@@ -74,7 +104,7 @@ Pad an image. This augmentation follows the [Pad](https://pytorch.org/vision/0.1
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: pad
         padding: 1
@@ -97,7 +127,7 @@ Crop the given image at a random location. This augmentation follows the [Random
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: randomcrop
         size: 256
@@ -122,7 +152,7 @@ Erase random area of given image. This augmentation follows the [RandomErasing](
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: randomerasing
         p: 0.5
@@ -147,7 +177,7 @@ Horizontally flip the given image randomly with a given probability. This augmen
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: randomhorizontalflip
         p: 0.5
@@ -171,7 +201,7 @@ Crop a random portion of image with different aspect of ratio in width and heigh
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: randomresizedcrop
         size: 256
@@ -196,7 +226,7 @@ Vertically flip the given image randomly with a given probability. This augmenta
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: randomverticalflip
         p: 0.5
@@ -219,7 +249,7 @@ Naively resize the input image to the given size. This augmentation follows the 
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: resize
         size: [256, 256]
@@ -244,7 +274,7 @@ TrivialAugment based on [TrivialAugment: Tuning-free Yet State-of-the-Art Data A
   
   ```yaml
   augmentation:
-    transforms:
+    train:
       - 
         name: trivialaugmentwide
         num_magnitude_bins: 31

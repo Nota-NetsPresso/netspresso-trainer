@@ -79,8 +79,7 @@ def classification_mix_collate_fn(original_batch, mix_transforms):
     images = torch.stack(images, dim=0)
     target = torch.tensor(target, dtype=torch.long)
 
-    _mix_transform = random.choice(mix_transforms)
-    images, target = _mix_transform(images, target)
+    images, target = mix_transforms(images, target)
 
     outputs = (images, target)
     return outputs
