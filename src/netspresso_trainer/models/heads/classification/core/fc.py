@@ -13,6 +13,7 @@ from ....op.registry import ACTIVATION_REGISTRY
 class FC(nn.Module):
     def __init__(self, feature_dim: int, num_classes: int, params: DictConfig) -> None:
         super(FC, self).__init__()
+        dropout_prob = params.dropout_prob
         hidden_size = params.intermediate_channels
         num_layers = params.num_layers
 
@@ -24,6 +25,7 @@ class FC(nn.Module):
             classifier.append(nn.Linear(prev_size, hidden_size))
             classifier.append(ACTIVATION_REGISTRY[params.act_type]())
             prev_size = hidden_size
+        classifier.append(nn.Dropout(p=dropout_prob))
         classifier.append(nn.Linear(prev_size, num_classes))
         self.classifier = nn.Sequential(*classifier)
         
