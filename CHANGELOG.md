@@ -10,7 +10,7 @@ No changes to highlight.
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Simplify augmentation configuration hierarchy by `@illian01` in [PR 322](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/322)
 
 ## Other Changes:
 
