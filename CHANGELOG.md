@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add activation and dropout layer in FC by `@illian01` in [PR 325](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/325)
 
 ## Bug Fixes:
 

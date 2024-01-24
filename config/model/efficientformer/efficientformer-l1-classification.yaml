@@ -37,8 +37,10 @@ model:
     head:
       name: fc
       params:
-        intermediate_channels: 1024
         num_layers: 1
+        intermediate_channels: ~
+        act_type: ~
+        dropout_prob: 0.
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
