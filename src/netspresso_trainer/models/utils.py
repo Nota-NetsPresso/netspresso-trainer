@@ -121,11 +121,11 @@ def download_model_checkpoint(
 
     checkpoint_url = MODEL_CHECKPOINT_URL_DICT[model_name][checkpoint_weight_version]
 
-    checkpoint_filename = Path(checkpoint_url).name
+    checkpoint_filename = Path(checkpoint_url).name.split('?versionId')[0] # @illian01: Remove specified version id
     model_checkpoint: Path = DEFAULT_CACHE_DIR / model_name / checkpoint_filename
     model_checkpoint.parent.mkdir(parents=True, exist_ok=True)
     # Safer switch: only extension, user can use the custom name for checkpoint file
-    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_url).suffix)
+    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_filename).suffix)
     if not model_checkpoint.exists():
         torch.hub.download_url_to_file(checkpoint_url, model_checkpoint)
 
