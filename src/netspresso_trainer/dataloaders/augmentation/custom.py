@@ -1,7 +1,7 @@
 import math
 import random
 from collections.abc import Sequence
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image as Image
@@ -785,6 +785,37 @@ class RandomCutmix:
         return "{}(num_classes={}, p={}, alpha={}, inplace={})".format(
             self.__class__.__name__, self.num_classes, self.p, self.alpha, self.inplace
         )
+
+
+class MosaicDetection:
+    """
+    Based on the MosaicDetection implementation of Megvii.
+    https://github.com/Megvii-BaseDetection/YOLOX
+    """
+    visualize = False
+
+    def __init__(
+        self,
+        mosaic_scale: List,
+        mixup_scale: List,
+        degrees: float,
+        translate: float,
+        shear: float,
+        enable_mixup: bool,
+        mosaic_prob: float,
+        mixup_prob: float,
+    ):
+        self.mosaic_scale = mosaic_scale
+        self.mixup_scale = mixup_scale
+        self.degrees = degrees
+        self.translate = translate
+        self.shear = shear
+        self.enable_mixup = enable_mixup
+        self.mosaic_prob = mosaic_prob
+        self.mixup_prob = mixup_prob
+
+    def __call__(self, image, mask=None, bbox=None):
+        pass
 
 
 class Normalize:
