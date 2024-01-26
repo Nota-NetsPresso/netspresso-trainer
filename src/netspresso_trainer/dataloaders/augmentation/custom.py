@@ -164,26 +164,26 @@ class Compose:
         self.transforms = transforms
         self.additional_targets = additional_targets
 
-    def _get_transformed(self, image, mask, bbox, visualize_for_debug):
+    def _get_transformed(self, image, label, mask, bbox, visualize_for_debug, dataset):
         for t in self.transforms:
             if visualize_for_debug and not t.visualize:
                 continue
-            image, mask, bbox = t(image=image, mask=mask, bbox=bbox)
-        return image, mask, bbox
+            image, label, mask, bbox = t(image=image, label=label, mask=mask, bbox=bbox, dataset=dataset)
+        return image, label, mask, bbox
 
-    def __call__(self, image, mask=None, bbox=None, visualize_for_debug=False, **kwargs):
+    def __call__(self, image, label=None, mask=None, bbox=None, visualize_for_debug=False, dataset=None, **kwargs):
         additional_targets_result = {k: None for k in kwargs if k in self.additional_targets}
 
-        result_image, result_mask, result_bbox = self._get_transformed(image=image, mask=mask, bbox=bbox, visualize_for_debug=visualize_for_debug)
+        result_image, result_label, result_mask, result_bbox = self._get_transformed(image=image, label=label, mask=mask, bbox=bbox, dataset=dataset, visualize_for_debug=visualize_for_debug)
         for key in additional_targets_result:
             if self.additional_targets[key] == 'mask':
-                _, additional_targets_result[key], _ = self._get_transformed(image=image, mask=kwargs[key], bbox=None, visualize_for_debug=visualize_for_debug)
+                _, _, additional_targets_result[key], _ = self._get_transformed(image=image, label=label, mask=kwargs[key], bbox=None, dataset=dataset, visualize_for_debug=visualize_for_debug)
             elif self.additional_targets[key] == 'bbox':
-                _, _, additional_targets_result[key] = self._get_transformed(image=image, mask=None, bbox=kwargs[key], visualize_for_debug=visualize_for_debug)
+                _, _, _, additional_targets_result[key] = self._get_transformed(image=image, label=label, mask=None, bbox=kwargs[key], dataset=dataset, visualize_for_debug=visualize_for_debug)
             else:
                 del additional_targets_result[key]
 
-        return_dict = {'image': result_image}
+        return_dict = {'image': result_image, 'label': result_label}
         if mask is not None:
             return_dict.update({'mask': result_mask})
         if bbox is not None:
@@ -207,9 +207,9 @@ class CenterCrop(T.CenterCrop):
     ):
         super().__init__(size)
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         # TODO: Compute mask, bbox
-        return F.center_crop(image, self.size), mask, bbox
+        return F.center_crop(image, self.size), label, mask, bbox
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size})"
@@ -221,8 +221,8 @@ class Identity:
     def __init__(self):
         pass
 
-    def __call__(self, image, mask=None, bbox=None):
-        return image, mask, bbox
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
@@ -238,7 +238,7 @@ class Pad(T.Pad):
     ):
         super().__init__(padding, fill, padding_mode)
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         image = F.pad(image, self.padding, self.fill, self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
@@ -251,7 +251,7 @@ class Pad(T.Pad):
             bbox[..., 0:4:2] += padding_left
             bbox[..., 1:4:2] += padding_top
 
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(padding={0}, fill={1}, padding_mode={2})".format(
@@ -275,7 +275,7 @@ class Resize(T.Resize):
         # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
         super().__init__(size, interpolation, max_size)
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         w, h = image.size
 
         if isinstance(self.size, int) and self.resize_criteria == 'long':
@@ -293,7 +293,7 @@ class Resize(T.Resize):
             target_w, target_h = image.size # @illian01: Determine ratio according to the actual resized image
             bbox[..., 0:4:2] *= float(target_w / w)
             bbox[..., 1:4:2] *= float(target_h / h)
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3}, resize_criteria={4})".format(
@@ -309,7 +309,7 @@ class RandomHorizontalFlip:
     ):
         self.p: float = max(0., min(1., p))
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         w, _ = image.size
         if random.random() < self.p:
             image = F.hflip(image)
@@ -317,7 +317,7 @@ class RandomHorizontalFlip:
                 mask = F.hflip(mask)
             if bbox is not None:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
@@ -332,7 +332,7 @@ class RandomVerticalFlip:
     ):
         self.p: float = max(0., min(1., p))
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         _, h = image.size
         if random.random() < self.p:
             image = F.vflip(image)
@@ -340,7 +340,7 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
@@ -360,7 +360,7 @@ class PadIfNeeded:
         self.fill = fill
         self.padding_mode = padding_mode
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
 
@@ -382,7 +382,7 @@ class PadIfNeeded:
             padding_left, padding_top, _, _ = padding_ltrb
             bbox[..., 0:4:2] += padding_left
             bbox[..., 1:4:2] += padding_top
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, fill={1}, padding_mode={2})".format(
@@ -404,7 +404,7 @@ class ColorJitter(T.ColorJitter):
         super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
         self.p: float = max(0., min(1., p))
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = \
             self.get_params(self.brightness, self.contrast, self.saturation, self.hue)
 
@@ -419,7 +419,7 @@ class ColorJitter(T.ColorJitter):
                 elif fn_id == 3 and hue_factor is not None:
                     image = F.adjust_hue(image, hue_factor)
 
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + \
@@ -458,7 +458,7 @@ class RandomCrop:
         bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
         return bbox
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
         i, j, h, w = T.RandomCrop.get_params(image, (self.size_h, self.size_w))
         image = F.crop(image, i, j, h, w)
@@ -473,7 +473,7 @@ class RandomCrop:
                 bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
                 _bbox_crop_count += 1
             bbox = bbox_candidate
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0})".format((self.size_h, self.size_w))
@@ -505,7 +505,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
         bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
         return bbox
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
         image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
@@ -528,7 +528,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
             bbox[..., 0:4:2] *= float(target_w / w_cropped)
             bbox[..., 1:4:2] *= float(target_h / h_cropped)
 
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         interpolate_str = self.interpolation.value
@@ -585,13 +585,13 @@ class RandomErasing(T.RandomErasing):
         # Return original image
         return 0, 0, img
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         if torch.rand(1) < self.p:
             x, y, v = self.get_params(image, scale=self.scale, ratio=self.ratio, value=self.value)
             image.paste(v, (y, x))
             # TODO: Object-aware
-            return image, mask, bbox
-        return image, mask, bbox
+            return image, label, mask, bbox
+        return image, label, mask, bbox
 
 
 class TrivialAugmentWide(torch.nn.Module):
@@ -633,7 +633,7 @@ class TrivialAugmentWide(torch.nn.Module):
             "Equalize": (torch.tensor(0.0), False),
         }
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         fill = self.fill
         channels, height, width = F.get_dimensions(image)
         if isinstance(image, Tensor):
@@ -655,7 +655,7 @@ class TrivialAugmentWide(torch.nn.Module):
             magnitude *= -1.0
 
         # TODO: Compute mask, bbox
-        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), mask, bbox
+        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), label, mask, bbox
 
     def __repr__(self) -> str:
         s = (
@@ -682,7 +682,7 @@ class AutoAugment(T.AutoAugment):
 
         super().__init__(policy, interpolation, fill)
 
-    def forward(self, image, mask=None, bbox=None):
+    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
         """
             img (PIL Image or Tensor): Image to be transformed.
 
@@ -709,7 +709,7 @@ class AutoAugment(T.AutoAugment):
                 image = _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill)
 
         # TODO: Compute mask, bbox
-        return image, mask, bbox
+        return image, label, mask, bbox
 
 
 class Mixing:
@@ -961,7 +961,7 @@ class MosaicDetection:
 
         self.enable_mosaic = True
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if self.enable_mosaic and random.random() < self.mosaic_prob:
             mosaic_labels = []
             input_dim = (640, 640)
