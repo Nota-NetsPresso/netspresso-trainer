@@ -3,6 +3,7 @@
 ## New Features:
 
 - Add activation and dropout layer in FC by `@illian01` in [PR 325](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/325), [PR 327](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/327)
+- Add function to Resize: Match longer side with input size and keep ratio by `@illian01` in [PR 329](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/329)
 
 ## Bug Fixes:
 
