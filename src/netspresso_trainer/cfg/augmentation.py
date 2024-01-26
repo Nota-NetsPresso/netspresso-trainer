@@ -70,6 +70,7 @@ class Resize(Transform):
     size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
     interpolation: Optional[str] = 'bilinear'
     max_size: Optional[int] =  None
+    resize_criteria: Optional[str] = None
 
 
 class TrivialAugmentWide(Transform):
