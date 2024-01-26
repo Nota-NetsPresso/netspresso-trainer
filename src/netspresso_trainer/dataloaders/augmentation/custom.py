@@ -132,7 +132,11 @@ class Resize(T.Resize):
         size: Union[int, List],
         interpolation: str,
         max_size: Optional[int],
+        resize_criteria: Optional[str],
     ):
+        if isinstance(size, int):
+            assert resize_criteria is not None, "If size is int, resize_criteria must be 'short' or 'long'"
+        self.resize_criteria = resize_criteria
         interpolation = INVERSE_MODES_MAPPING[interpolation]
         # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
         super().__init__(size, interpolation, max_size)
@@ -140,9 +144,16 @@ class Resize(T.Resize):
     def forward(self, image, mask=None, bbox=None):
         w, h = image.size
 
-        image = F.resize(image, self.size, self.interpolation, self.max_size, self.antialias)
+        if isinstance(self.size, int) and self.resize_criteria == 'long':
+            long_side, short_side = max(h, w), min(h, w)
+            resize_factor = self.size / long_side
+            target_size = [self.size, round(resize_factor * short_side)] if h > w else [round(resize_factor * short_side), self.size]
+        else:
+            target_size = self.size
+
+        image = F.resize(image, target_size, self.interpolation, self.max_size, self.antialias)
         if mask is not None:
-            mask = F.resize(mask, self.size, interpolation=T.InterpolationMode.NEAREST,
+            mask = F.resize(mask, target_size, interpolation=T.InterpolationMode.NEAREST,
                             max_size=self.max_size)
         if bbox is not None:
             target_w, target_h = image.size # @illian01: Determine ratio according to the actual resized image
@@ -151,8 +162,8 @@ class Resize(T.Resize):
         return image, mask, bbox
 
     def __repr__(self):
-        return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3})".format(
-            self.size, self.interpolation.value, self.max_size, self.antialias)
+        return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3}, resize_criteria={4})".format(
+            self.size, self.interpolation.value, self.max_size, self.antialias, self.resize_criteria)
 
 
 class RandomHorizontalFlip:
