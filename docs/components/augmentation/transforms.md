@@ -240,12 +240,13 @@ Naively resize the input image to the given size. This augmentation follows the 
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "resize" to use `Resize` transform. |
-| `size` | (int or list) Desired output size. If size is an int, a square image (`size`, `size`) is made. If provided a list of length 1, it will be interpreted as (`size[0]`, `size[0]`). If a list of length 2 is provided, an image with size (`size[0]`, `size[1]`) is made. |
+| `size` | (int or list) Desired output size. If size is a sequence like (h, w), output size will be matched to this. If size is an int, smaller or larger edge of the image will be matched to this number and keep aspect ratio. Determining match to smaller or larger edge is determined by `resize_criteria`. |
 | `interpolation` | (str) Desired interpolation type. Supporting interpolations are 'nearest', 'bilinear' and 'bicubic'. |
 | `max_size` | (int, optional) The maximum allowed for the longer edge of the resized image: if the longer edge of the image exceeds `max_size` after being resized according to `size`, then the image is resized again so that the longer edge is equal to `max_size`. As a result, `size` might be overruled, i.e the smaller edge may be shorter than `size`. This is only supported if `size` is an int. |
+| `resize_criteria` | (str, optional) This field only used when `size` is int. This determines which side (shorter or longer) to match with `size`, and only can have 'short' or 'long' or `None`. i.e, if `resize_criteria` is 'short' and height > width, then image will be rescaled to (size * height / width, size). |
 
 <details>
-  <summary>Resize example</summary>
+  <summary>Resize example - 1</summary>
   
   ```yaml
   augmentation:
@@ -255,6 +256,22 @@ Naively resize the input image to the given size. This augmentation follows the 
         size: [256, 256]
         interpolation: 'bilinear'
         max_size: ~
+        resize_criteria: ~
+  ```
+</details>
+
+<details>
+  <summary>Resize example - 2</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: resize
+        size: 256
+        interpolation: 'bilinear'
+        max_size: ~
+        resize_criteria: long
   ```
 </details>
 
