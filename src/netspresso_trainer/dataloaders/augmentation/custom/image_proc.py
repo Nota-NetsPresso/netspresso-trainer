@@ -3,15 +3,12 @@ import random
 from collections.abc import Sequence
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import cv2
 import numpy as np
 import PIL.Image as Image
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
-from omegaconf import ListConfig
 from torch import Tensor
-from torch.nn import functional as F_torch
 from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
 
