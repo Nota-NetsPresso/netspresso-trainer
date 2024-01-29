@@ -85,7 +85,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs
-    
+
     def pull_item(self, index):
         img_path = Path(self.samples[index]['image'])
         ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None

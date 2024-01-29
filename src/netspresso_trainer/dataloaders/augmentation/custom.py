@@ -1037,7 +1037,7 @@ class MosaicDetection:
             # -----------------------------------------------------------------
             if (
                 self.enable_mixup
-                and not len(mosaic_labels) == 0
+                and len(mosaic_labels) != 0
                 and random.random() < self.mixup_prob
             ):
                 mosaic_img, mosaic_labels = self.mixup(mosaic_img, mosaic_labels, input_dim, dataset)
