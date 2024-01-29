@@ -14,18 +14,6 @@ def adjust_box_anns(bbox, scale_ratio, padw, padh, w_max, h_max):
     return bbox
 
 
-def getRotationMatrix2D(angle, center, scale):
-    angle = np.deg2rad(angle)
-    alpha = scale * np.cos(angle)
-    beta = scale * np.sin(angle)
-    mat = [
-        [alpha, beta, (1-alpha)*center[0] - beta*center[1]],
-        [-beta, alpha, beta*center[0] + (1-alpha)*center[1]]
-    ]
-    mat = np.array(mat)
-    return mat
-
-
 def get_mosaic_coordinate(mosaic_image, mosaic_index, xc, yc, w, h, input_h, input_w):
     # TODO update doc
     # index0 to top left part of image
@@ -75,7 +63,7 @@ def get_affine_matrix(
     if scale <= 0.0:
         raise ValueError("Argument scale should be positive")
 
-    R = getRotationMatrix2D(angle=angle, center=(0, 0), scale=scale)
+    R = cv2.getRotationMatrix2D(angle=angle, center=(0, 0), scale=scale)
 
     M = np.ones([2, 3])
     # Shear
@@ -138,7 +126,6 @@ def random_affine(
 ):
     M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
 
-    # cv2 function should be replaced
     img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
 
     # Transform label coordinates
@@ -199,14 +186,10 @@ class MosaicDetection:
                 w, h = image.size
                 scale = min(1. * input_h / h, 1. * input_w / w)
 
-                image = F.resize(image, (int(h * scale), int(w * scale)), InterpolationMode.BILINEAR)
-
-                # @illian01: PIL -> ndarray, process with ndarray to modify code little
                 image = np.array(image)
+                image = cv2.resize(image, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_LINEAR)
 
                 h, w, _ = image.shape[:3]
-                # generate output mosaic image
-
                 # suffix l means large image, while s means small image in mosaic aug.
                 (l_x1, l_y1, l_x2, l_y2), (s_x1, s_y1, s_x2, s_y2) = get_mosaic_coordinate(
                     mosaic_img, i_mosaic, xc, yc, w, h, input_h, input_w
