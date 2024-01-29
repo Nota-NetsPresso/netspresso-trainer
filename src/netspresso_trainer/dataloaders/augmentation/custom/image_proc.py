@@ -185,9 +185,8 @@ class Pad:
 
     def __init__(
         self,
-        size,
-        fill,
-        padding_mode,
+        size: Union[int, List],
+        fill: Union[int, List],
     ):
         super().__init__()
         if not isinstance(size, (int, Sequence)):
@@ -197,7 +196,7 @@ class Pad:
         self.new_h = size[0] if isinstance(size, Sequence) else size
         self.new_w = size[1] if isinstance(size, Sequence) else size
         self.fill = fill
-        self.padding_mode = padding_mode
+        self.padding_mode = 'constant' # @illian: Fix as constant. I think other options are not gonna used well.
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
