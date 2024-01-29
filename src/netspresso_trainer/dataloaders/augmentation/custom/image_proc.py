@@ -556,16 +556,16 @@ class HSVJitter:
 
     def __init__(
         self,
-        hgain: int,
-        sgain: int,
-        vgain: int,
+        h_mag: int,
+        s_mag: int,
+        v_mag: int,
     ):
-        self.hgain = hgain
-        self.sgain = sgain
-        self.vgain = vgain
+        self.h_mag = h_mag
+        self.s_mag = s_mag
+        self.v_mag = v_mag
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
-        hsv_augs = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain]  # random gains
+        hsv_augs = np.random.uniform(-1, 1, 3) * [self.h_mag, self.s_mag, self.v_mag]  # random gains
         hsv_augs *= np.random.randint(0, 2, 3)  # random selection of h, s, v
         hsv_augs = hsv_augs.astype(np.int16)
 
@@ -579,6 +579,10 @@ class HSVJitter:
         image_hsv = Image.merge('HSV', (h, s, v))
         image = image_hsv.convert('RGB')
         return image, label, mask, bbox
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(h_mag={0}, s_mag={1}, v_mag={2})".format(
+            self.h_mag, self.s_mag, self.v_mag)
 
 
 class Normalize:
