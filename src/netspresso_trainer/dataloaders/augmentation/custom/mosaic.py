@@ -49,10 +49,10 @@ def get_aug_params(value, center=0):
 
 def get_affine_matrix(
     target_size,
-    degrees=10,
-    translate=0.1,
-    scales=0.1,
-    shear=10,
+    degrees,
+    translate,
+    scales,
+    shear,
 ):
     twidth, theight = target_size
 
@@ -117,12 +117,12 @@ def apply_affine_to_bboxes(targets, target_size, M, scale):
 
 def random_affine(
     img,
-    targets=(),
-    target_size=(640, 640),
-    degrees=10,
-    translate=0.1,
-    scales=0.1,
-    shear=10,
+    targets,
+    target_size,
+    degrees,
+    translate,
+    scales,
+    shear,
 ):
     M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
 
