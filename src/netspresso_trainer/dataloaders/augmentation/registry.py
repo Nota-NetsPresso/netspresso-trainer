@@ -1,22 +1,20 @@
 from typing import Callable, Dict
 
-from .custom import (
+from .custom.image_proc import (
     AutoAugment,
     CenterCrop,
     ColorJitter,
-    Mixing,
-    MosaicDetection,
     Pad,
     RandomCrop,
-    RandomCutmix,
     RandomErasing,
     RandomHorizontalFlip,
-    RandomMixup,
     RandomResizedCrop,
     RandomVerticalFlip,
     Resize,
     TrivialAugmentWide,
 )
+from .custom.mixing import Mixing
+from .custom.mosaic import MosaicDetection
 
 TRANSFORM_DICT: Dict[str, Callable] = {
     'centercrop': CenterCrop,
@@ -29,9 +27,7 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomerasing': RandomErasing,
     'resize': Resize,
     'mixing': Mixing,
-    'mixup': RandomMixup,
     'mosaicdetection': MosaicDetection,
-    'cutmix': RandomCutmix,
     'trivialaugmentwide': TrivialAugmentWide,
     'autoaugment': AutoAugment,
 }
