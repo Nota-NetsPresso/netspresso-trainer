@@ -4,19 +4,17 @@ from .custom import (
     AutoAugment,
     CenterCrop,
     ColorJitter,
-    Mixing,
     Pad,
     RandomCrop,
-    RandomCutmix,
     RandomErasing,
     RandomHorizontalFlip,
-    RandomMixup,
     RandomResizedCrop,
     RandomVerticalFlip,
     Resize,
     TrivialAugmentWide,
 )
 from .custom.mosaic import MosaicDetection
+from .custom.mixing import Mixing
 
 
 TRANSFORM_DICT: Dict[str, Callable] = {
@@ -30,9 +28,7 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'randomerasing': RandomErasing,
     'resize': Resize,
     'mixing': Mixing,
-    'mixup': RandomMixup,
     'mosaicdetection': MosaicDetection,
-    'cutmix': RandomCutmix,
     'trivialaugmentwide': TrivialAugmentWide,
     'autoaugment': AutoAugment,
 }
