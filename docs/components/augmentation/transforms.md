@@ -58,6 +58,31 @@ This augmentation follows the [ColorJitter](https://pytorch.org/vision/0.15/gene
   ```
 </details>
 
+### HSVJitter
+
+HSVJitter is based on `augment_hsv` function of [YOLOX repository](https://github.com/MegviiBaseDetection/YOLOX/blob/ac58e0a5e68e57454b7b9ac822aced493b553c53/yolox/data/data_augment.py#L21-L31). This transform convert input image to HSV format, and randomly adjust according to magnitude configuration. Each channel can be randomly adjusted or remain unchanged for every transform step.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "hsvjitter" to use `HSVJitter` transform. |
+| `h_mag` | (int) Randomly adjust the H channel within the range of [-h_mag, h_mag]. |
+| `s_mag` | (int) Randomly adjust the S channel within the range of [-s_mag, s_mag]. |
+| `v_mag` | (int) Randomly adjust the V channel within the range of [-v_mag, v_mag]. |
+
+<details>
+  <summary>HSVJitter example</summary>
+
+  ```yaml
+  augmentation:
+    train:
+      -
+        name: hsvjitter
+        h_mag: 5
+        s_mag: 30
+        v_mag: 30
+  ```
+</details>
+
 ### Mixing
 
 We defined Mixing transform as the combination of CutMix and MixUp augmentation. This shuffles samples within a batch instead of processing per image. Therefore, **Mixing transform must be in the last function of augmentation racipe** if user wants to use it. Also, Mixing not assumes a batch size 1. If both MixUp and CutMix are activated, only one of two is randomly selected and used per batch processing.
