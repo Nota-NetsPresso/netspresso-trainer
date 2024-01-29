@@ -123,10 +123,11 @@ def random_affine(
     translate,
     scales,
     shear,
+    fill,
 ):
     M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
 
-    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
+    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(fill, fill, fill))
 
     # Transform label coordinates
     if len(targets) > 0:
@@ -152,6 +153,7 @@ class MosaicDetection:
         enable_mixup: bool,
         mosaic_prob: float,
         mixup_prob: float,
+        fill: int,
     ):
         self.mosaic_scale = mosaic_scale
         self.mixup_scale = mixup_scale
@@ -161,6 +163,7 @@ class MosaicDetection:
         self.enable_mixup = enable_mixup
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
+        self.fill = fill
 
         self.enable_mosaic = True
 
@@ -179,7 +182,7 @@ class MosaicDetection:
             items = [(image, label, bbox)] + items
 
             c = len(image.split())
-            mosaic_img = np.full((input_h * 2, input_w * 2, c), 114, dtype=np.uint8)
+            mosaic_img = np.full((input_h * 2, input_w * 2, c), self.fill, dtype=np.uint8)
 
             for i_mosaic, (image, label, bbox) in enumerate(items):
                 #h0, w0 = image.shape[:2]  # orig hw
@@ -222,6 +225,7 @@ class MosaicDetection:
                 translate=self.translate,
                 scales=self.mosaic_scale,
                 shear=self.shear,
+                fill=self.fill,
             )
 
             # -----------------------------------------------------------------
