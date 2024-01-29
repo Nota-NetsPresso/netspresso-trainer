@@ -90,26 +90,37 @@ Currently, NetsPresso Trainer does not support a Gradio demo visualization for M
 
 ### Pad
 
-Pad an image. This augmentation follows the [Pad](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Pad.html#torchvision.transforms.Pad) in torchvision library.
+Pad an image with constant. This augmentation is based on the [Pad](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Pad.html#torchvision.transforms.Pad) in torchvision library.
 
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "pad" to use `Pad` transform. |
-| `padding` | (int or list) Padding on each border. If a single int is provided this is used to pad all borders. If list of length 2 is provided this is the padding on left/right and top/bottom respectively. If a list of length 4 is provided this is the padding for the left, top, right and bottom borders respectively. |
-| `fill` | (int or list) This value is only for when the `padding_mode` is "constant". If a single int is provided this is used to fill pixels with constant value. If a list of length 3, it is used to fill R, G, B channels respectively. |
-| `padding_mode` | (str) Type of padding. Should be: constant, edge, reflect, or symmetric. |
+| `size` | (int or list) Padding on each border. If a single int is provided, target size is (`size`, `size`). If a list is provided, it must be length 2, and will produce size of (`size[0]`, `size[1]`) padded image. If each edge of input image is greater or equal than target size, padding will be not processed. |
+| `fill` | (int or list) If a single int is provided this is used to fill pixels with constant value. If a list of length 3, it is used to fill R, G, B channels respectively. |
 
 <details>
-  <summary>Pad example</summary>
+  <summary>Pad example - 1</summary>
   
   ```yaml
   augmentation:
     train:
-      - 
+      -
         name: pad
-        padding: 1
+        size: 512
         fill: 0
-        padding_mode: constant
+  ```
+</details>
+
+<details>
+  <summary>Pad example - 2</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      -
+        name: pad
+        size: [512, 512]
+        fill: 0
   ```
 </details>
 
