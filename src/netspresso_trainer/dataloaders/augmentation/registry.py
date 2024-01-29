@@ -1,6 +1,8 @@
 from typing import Callable, Dict
 
-from .custom import (
+from .custom.mixing import Mixing
+from .custom.mosaic import MosaicDetection
+from .custom.image_proc import (
     AutoAugment,
     CenterCrop,
     ColorJitter,
@@ -13,8 +15,6 @@ from .custom import (
     Resize,
     TrivialAugmentWide,
 )
-from .custom.mosaic import MosaicDetection
-from .custom.mixing import Mixing
 
 
 TRANSFORM_DICT: Dict[str, Callable] = {
