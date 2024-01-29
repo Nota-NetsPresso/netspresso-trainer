@@ -92,36 +92,6 @@ class Identity:
         return self.__class__.__name__ + "()"
 
 
-class Pad(T.Pad):
-    visualize = True
-    def __init__(
-        self,
-        padding: Union[int, List],
-        fill: Union[int, List],
-        padding_mode: str,
-    ):
-        super().__init__(padding, fill, padding_mode)
-
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
-        image = F.pad(image, self.padding, self.fill, self.padding_mode)
-        if mask is not None:
-            mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
-        if bbox is not None:
-            target_padding = [self.padding] if not isinstance(self.padding, Sequence) else self.padding
-
-            padding_left, padding_top, _, _ = \
-                target_padding * (4 / len(target_padding))  # supports 1, 2, 4 length
-
-            bbox[..., 0:4:2] += padding_left
-            bbox[..., 1:4:2] += padding_top
-
-        return image, label, mask, bbox
-
-    def __repr__(self):
-        return self.__class__.__name__ + "(padding={0}, fill={1}, padding_mode={2})".format(
-            self.padding, self.fill, self.padding_mode)
-
-
 class Resize(T.Resize):
     visualize = True
 
@@ -210,19 +180,23 @@ class RandomVerticalFlip:
         return self.__class__.__name__ + "(p={0})".format(self.p)
 
 
-class PadIfNeeded:
+class Pad:
     visualize = True
 
-    def __init__(self, size, fill=0, padding_mode="constant"):
+    def __init__(
+        self,
+        size: Union[int, List],
+        fill: Union[int, List],
+    ):
         super().__init__()
         if not isinstance(size, (int, Sequence)):
             raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
-        if isinstance(size, Sequence) and len(size) not in (1, 2):
-            raise ValueError("If size is a sequence, it should have 1 or 2 values")
+        if isinstance(size, Sequence) and len(size) != 2:
+            raise ValueError("If size is a sequence, it should have 2 values")
         self.new_h = size[0] if isinstance(size, Sequence) else size
         self.new_w = size[1] if isinstance(size, Sequence) else size
         self.fill = fill
-        self.padding_mode = padding_mode
+        self.padding_mode = 'constant' # @illian: Fix as constant. I think other options are not gonna used well.
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
@@ -308,7 +282,7 @@ class RandomCrop:
             raise ValueError("If size is a sequence, it should have 1 or 2 values")
         self.size_h = size[0] if isinstance(size, Sequence) else size
         self.size_w = size[1] if isinstance(size, Sequence) else size
-        self.image_pad_if_needed = PadIfNeeded((self.size_h, self.size_w))
+        self.image_pad_if_needed = Pad((self.size_h, self.size_w))
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
