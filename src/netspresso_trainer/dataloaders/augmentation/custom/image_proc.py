@@ -180,7 +180,7 @@ class RandomVerticalFlip:
         return self.__class__.__name__ + "(p={0})".format(self.p)
 
 
-class PadIfNeeded:
+class Pad:
     visualize = True
 
     def __init__(self, size, fill=0, padding_mode="constant"):
@@ -278,7 +278,7 @@ class RandomCrop:
             raise ValueError("If size is a sequence, it should have 1 or 2 values")
         self.size_h = size[0] if isinstance(size, Sequence) else size
         self.size_w = size[1] if isinstance(size, Sequence) else size
-        self.image_pad_if_needed = PadIfNeeded((self.size_h, self.size_w))
+        self.image_pad_if_needed = Pad((self.size_h, self.size_w))
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
