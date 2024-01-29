@@ -72,7 +72,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
-        out = self.transform(self.conf_augmentation)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
+        out = self.transform(self.conf_augmentation)(image=img, label=label, bbox=boxes, dataset=self)
         assert out['bbox'].shape[-1] == 5  # ltrb + class_label
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
                         'label': torch.as_tensor(out['bbox'][..., 4], dtype=torch.int64)})
@@ -85,3 +85,19 @@ class DetectionCustomDataset(BaseCustomDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs
+    
+    def pull_item(self, index):
+        img_path = Path(self.samples[index]['image'])
+        ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
+        img = Image.open(str(img_path)).convert('RGB')
+
+        org_img = img.copy()
+        w, h = img.size
+        if ann_path is None:
+            return org_img, np.zeros(0, 1), np.zeros(0, 5)
+
+        label, boxes_yolo = get_label(Path(ann_path))
+        boxes = self.xywhn2xyxy(boxes_yolo, w, h)
+
+        return org_img, label, boxes
+
