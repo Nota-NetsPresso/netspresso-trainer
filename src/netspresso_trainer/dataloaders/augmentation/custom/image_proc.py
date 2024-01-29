@@ -192,8 +192,8 @@ class Pad:
         super().__init__()
         if not isinstance(size, (int, Sequence)):
             raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
-        if isinstance(size, Sequence) and len(size) not in (1, 2):
-            raise ValueError("If size is a sequence, it should have 1 or 2 values")
+        if isinstance(size, Sequence) and len(size) != 2:
+            raise ValueError("If size is a sequence, it should have 2 values")
         self.new_h = size[0] if isinstance(size, Sequence) else size
         self.new_w = size[1] if isinstance(size, Sequence) else size
         self.fill = fill
