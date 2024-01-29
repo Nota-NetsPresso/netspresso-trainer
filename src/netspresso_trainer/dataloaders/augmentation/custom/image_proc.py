@@ -92,36 +92,6 @@ class Identity:
         return self.__class__.__name__ + "()"
 
 
-class Pad(T.Pad):
-    visualize = True
-    def __init__(
-        self,
-        padding: Union[int, List],
-        fill: Union[int, List],
-        padding_mode: str,
-    ):
-        super().__init__(padding, fill, padding_mode)
-
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
-        image = F.pad(image, self.padding, self.fill, self.padding_mode)
-        if mask is not None:
-            mask = F.pad(mask, self.padding, fill=255, padding_mode=self.padding_mode)
-        if bbox is not None:
-            target_padding = [self.padding] if not isinstance(self.padding, Sequence) else self.padding
-
-            padding_left, padding_top, _, _ = \
-                target_padding * (4 / len(target_padding))  # supports 1, 2, 4 length
-
-            bbox[..., 0:4:2] += padding_left
-            bbox[..., 1:4:2] += padding_top
-
-        return image, label, mask, bbox
-
-    def __repr__(self):
-        return self.__class__.__name__ + "(padding={0}, fill={1}, padding_mode={2})".format(
-            self.padding, self.fill, self.padding_mode)
-
-
 class Resize(T.Resize):
     visualize = True
 
