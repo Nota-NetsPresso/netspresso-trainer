@@ -87,13 +87,13 @@ HSVJitter is based on `augment_hsv` function of [YOLOX repository](https://githu
 
 We defined Mixing transform as the combination of CutMix and MixUp augmentation. This shuffles samples within a batch instead of processing per image. Therefore, **Mixing transform must be in the last function of augmentation racipe** if user wants to use it. Also, Mixing not assumes a batch size 1. If both MixUp and CutMix are activated, only one of two is randomly selected and used per batch processing.
 
-Cutmix augmentation is based on [CutMix: Regularization Strategy to Train Strong Classifiers with Localizable Features](https://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_CutMix_Regularization_Strategy_to_Train_Strong_Classifiers_With_Localizable_Features_ICCV_2019_paper.pdf) and MixUp augmentation is based on [mixup: Beyond empirical risk minimization](https://arxiv.org/pdf/1710.09412.pdf%C2%A0). These implementation follow the [RandomCutmix and RandomMixup](https://github.com/apple/ml-cvnets/blob/77717569ab4a852614dae01f010b32b820cb33bb/data/transforms/image_torch.py) in the ml-cvnets library.
+Cutmix augmentation is based on [CutMix: Regularization strategy to train strong classifiers with localizable features](https://openaccess.thecvf.com/content_ICCV_2019/papers/Yun_CutMix_Regularization_Strategy_to_Train_Strong_Classifiers_With_Localizable_Features_ICCV_2019_paper.pdf) and MixUp augmentation is based on [mixup: Beyond empirical risk minimization](https://arxiv.org/pdf/1710.09412.pdf%C2%A0). These implementation follow the [RandomCutmix and RandomMixup](https://github.com/apple/ml-cvnets/blob/77717569ab4a852614dae01f010b32b820cb33bb/data/transforms/image_torch.py) in the ml-cvnets library.
 
 Currently, NetsPresso Trainer does not support a Gradio demo visualization for Mixing. This feature is planned to be added soon.
 
 | Field <img width=200/> | Description |
 |---|---|
-| `name` | (str) Name must be "cutmix" to use `RandomCutmix` mix transform. |
+| `name` | (str) Name must be "mixing" to use `Mixing` transform. |
 | `mixup` | (list[float], optional) List of length 2 which contains [mixup alpha, applying probability]. If None, mixup is not applied. |
 | `cutmix` | (list[float], optional) List of length 2 which contains [cutmix alpha, applying probability]. If None, cutmix is not applied. |
 | `inplace` | (bool) Whether to operate as inplace. |
