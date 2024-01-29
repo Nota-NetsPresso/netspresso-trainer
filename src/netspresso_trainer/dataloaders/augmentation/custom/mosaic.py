@@ -4,6 +4,7 @@ from typing import List
 
 import cv2
 import numpy as np
+import PIL.Image as Image
 import torchvision.transforms.functional as F
 from torchvision.transforms.functional import InterpolationMode
 
@@ -240,6 +241,7 @@ class MosaicDetection:
 
             bbox = mosaic_labels[:, :4]
             label = mosaic_labels[:, -1:]
+            mosaic_img = Image.fromarray(mosaic_img) # return as PIL
             return mosaic_img, label, mask, bbox
 
         else:
