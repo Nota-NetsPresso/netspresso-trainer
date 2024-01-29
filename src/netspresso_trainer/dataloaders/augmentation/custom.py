@@ -3,6 +3,7 @@ import random
 from collections.abc import Sequence
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import cv2
 import numpy as np
 import PIL.Image as Image
 import torch
@@ -147,8 +148,8 @@ def random_affine(
 ):
     M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
 
-    #img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
-    img = img.transform()
+    # cv2 function should be replaced
+    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
 
     # Transform label coordinates
     if len(targets) > 0:
@@ -972,38 +973,41 @@ class MosaicDetection:
             xc = int(random.uniform(0.5 * input_w, 1.5 * input_w))
 
             # 3 additional image indices
-            indices = [idx] + [random.randint(0, len(self._dataset) - 1) for _ in range(3)]
+            items = [dataset.pull_item(random.randint(0, len(dataset) - 1)) for _ in range(3)]
+            items = [(image, label, bbox)] + items
 
-            for i_mosaic, index in enumerate(indices):
-                img, _labels, _, img_id = self._dataset.pull_item(index)
-                h0, w0 = img.shape[:2]  # orig hw
-                scale = min(1. * input_h / h0, 1. * input_w / w0)
+            c = len(image.split())
+            mosaic_img = np.full((input_h * 2, input_w * 2, c), 114, dtype=np.uint8)
 
-                image = F.resize(image, (int(w0 * scale), int(h0 * scale)), InterpolationMode.BILINEAR)
-                #img = cv2.resize(
-                #    img, (int(w0 * scale), int(h0 * scale)), interpolation=cv2.INTER_LINEAR
-                #)
+            for i_mosaic, (image, label, bbox) in enumerate(items):
+                #h0, w0 = image.shape[:2]  # orig hw
+                w, h = image.size
+                scale = min(1. * input_h / h, 1. * input_w / w)
+
+                image = F.resize(image, (int(h * scale), int(w * scale)), InterpolationMode.BILINEAR)
+
+                # @illian01: PIL -> ndarray, process with ndarray to modify code little
+                image = np.array(image)
+
+                h, w, _ = image.shape[:3]
                 # generate output mosaic image
-                (h, w, c) = img.shape[:3]
-                if i_mosaic == 0:
-                    mosaic_img = np.full((input_h * 2, input_w * 2, c), 114, dtype=np.uint8)
 
                 # suffix l means large image, while s means small image in mosaic aug.
                 (l_x1, l_y1, l_x2, l_y2), (s_x1, s_y1, s_x2, s_y2) = get_mosaic_coordinate(
                     mosaic_img, i_mosaic, xc, yc, w, h, input_h, input_w
                 )
 
-                mosaic_img[l_y1:l_y2, l_x1:l_x2] = img[s_y1:s_y2, s_x1:s_x2]
+                mosaic_img[l_y1:l_y2, l_x1:l_x2] = image[s_y1:s_y2, s_x1:s_x2]
                 padw, padh = l_x1 - s_x1, l_y1 - s_y1
 
-                labels = _labels.copy()
+                m_labels = np.concatenate([bbox, label], axis=-1)
                 # Normalized xywh to pixel xyxy format
-                if _labels.size > 0:
-                    labels[:, 0] = scale * _labels[:, 0] + padw
-                    labels[:, 1] = scale * _labels[:, 1] + padh
-                    labels[:, 2] = scale * _labels[:, 2] + padw
-                    labels[:, 3] = scale * _labels[:, 3] + padh
-                mosaic_labels.append(labels)
+                if m_labels.size > 0:
+                    m_labels[:, 0] = scale * m_labels[:, 0] + padw
+                    m_labels[:, 1] = scale * m_labels[:, 1] + padh
+                    m_labels[:, 2] = scale * m_labels[:, 2] + padw
+                    m_labels[:, 3] = scale * m_labels[:, 3] + padh
+                mosaic_labels.append(m_labels)
 
             if len(mosaic_labels):
                 mosaic_labels = np.concatenate(mosaic_labels, 0)
@@ -1018,7 +1022,7 @@ class MosaicDetection:
                 target_size=(input_w, input_h),
                 degrees=self.degrees,
                 translate=self.translate,
-                scales=self.scale,
+                scales=self.mosaic_scale,
                 shear=self.shear,
             )
 
@@ -1030,21 +1034,14 @@ class MosaicDetection:
                 and not len(mosaic_labels) == 0
                 and random.random() < self.mixup_prob
             ):
-                mosaic_img, mosaic_labels = self.mixup(mosaic_img, mosaic_labels, self.input_dim)
-            mix_img, padded_labels = self.preproc(mosaic_img, mosaic_labels, self.input_dim)
-            img_info = (mix_img.shape[1], mix_img.shape[0])
+                mosaic_img, mosaic_labels = self.mixup(mosaic_img, mosaic_labels, input_dim)
 
-            # -----------------------------------------------------------------
-            # img_info and img_id are not used for training.
-            # They are also hard to be specified on a mosaic image.
-            # -----------------------------------------------------------------
-            return mix_img, padded_labels, img_info, img_id
+            label = mosaic_labels[:, :4]
+            bbox = mosaic_labels[:, -1:]
+            return mosaic_img, label, mask, bbox
 
         else:
-            self._dataset._input_dim = self.input_dim
-            img, label, img_info, img_id = self._dataset.pull_item(idx)
-            img, label = self.preproc(img, label, self.input_dim)
-            return img, label, img_info, img_id
+            return image, label, mask, bbox
 
 
 class Normalize:
@@ -1054,9 +1051,9 @@ class Normalize:
         self.mean = mean
         self.std = std
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         image = F.normalize(image, mean=self.mean, std=self.std)
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "(mean={0}, std={1})".format(
@@ -1067,14 +1064,14 @@ class Normalize:
 class ToTensor(T.ToTensor):
     visualize = False
 
-    def __call__(self, image, mask=None, bbox=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         image = F.to_tensor(image)
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
         if bbox is not None:
             bbox = torch.as_tensor(np.array(bbox), dtype=torch.float)
 
-        return image, mask, bbox
+        return image, label, mask, bbox
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
