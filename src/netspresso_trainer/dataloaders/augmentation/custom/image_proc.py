@@ -183,7 +183,12 @@ class RandomVerticalFlip:
 class Pad:
     visualize = True
 
-    def __init__(self, size, fill=0, padding_mode="constant"):
+    def __init__(
+        self,
+        size,
+        fill,
+        padding_mode,
+    ):
         super().__init__()
         if not isinstance(size, (int, Sequence)):
             raise TypeError("Size should be int or sequence. Got {}".format(type(size)))
