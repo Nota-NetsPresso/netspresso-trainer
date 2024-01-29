@@ -3,6 +3,7 @@ import random
 from collections.abc import Sequence
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import cv2
 import numpy as np
 import PIL.Image as Image
 import torch
@@ -553,10 +554,30 @@ class AutoAugment(T.AutoAugment):
 class HSVJitter:
     visualize = True
 
-    def __init__(self) -> None:
-        pass
+    def __init__(
+        self,
+        hgain: int,
+        sgain: int,
+        vgain: int,
+    ):
+        self.hgain = hgain
+        self.sgain = sgain
+        self.vgain = vgain
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+        hsv_augs = np.random.uniform(-1, 1, 3) * [self.hgain, self.sgain, self.vgain]  # random gains
+        hsv_augs *= np.random.randint(0, 2, 3)  # random selection of h, s, v
+        hsv_augs = hsv_augs.astype(np.int16)
+
+        image_hsv = image.convert('HSV')
+        h, s, v = image_hsv.split()
+
+        h = h.point(lambda i: (i + hsv_augs[0]) % 180)
+        s = s.point(lambda i: np.clip(i + hsv_augs[1], 0, 255))
+        v = v.point(lambda i: np.clip(i + hsv_augs[2], 0, 255))
+
+        image_hsv = Image.merge('HSV', (h, s, v))
+        image = image_hsv.convert('RGB')
         return image, label, mask, bbox
 
 
