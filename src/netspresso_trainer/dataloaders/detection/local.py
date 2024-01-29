@@ -73,9 +73,8 @@ class DetectionCustomDataset(BaseCustomDataset):
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         out = self.transform(self.conf_augmentation)(image=img, label=label, bbox=boxes, dataset=self)
-        assert out['bbox'].shape[-1] == 5  # ltrb + class_label
-        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
-                        'label': torch.as_tensor(out['bbox'][..., 4], dtype=torch.int64)})
+        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'],
+                        'label': torch.as_tensor(out['label'].ravel(), dtype=torch.int64)})
 
 
         if self._split in ['train', 'training']:
