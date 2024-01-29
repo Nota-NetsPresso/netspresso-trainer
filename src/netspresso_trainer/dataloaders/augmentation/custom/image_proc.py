@@ -550,6 +550,16 @@ class AutoAugment(T.AutoAugment):
         return image, label, mask, bbox
 
 
+class HSVJitter:
+    visualize = True
+
+    def __init__(self) -> None:
+        pass
+
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+        return image, label, mask, bbox
+
+
 class Normalize:
     visualize = False
 
