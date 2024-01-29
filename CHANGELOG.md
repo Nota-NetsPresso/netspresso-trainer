@@ -16,7 +16,7 @@
 
 ## Other Changes:
 
-No changes to highlight.
+- Refactoring: Move custom transforms to each python module by `@illian01` in [PR 332](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/332)
 
 # v0.1.2
 
