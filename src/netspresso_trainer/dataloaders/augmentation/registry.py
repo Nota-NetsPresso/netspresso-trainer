@@ -5,7 +5,6 @@ from .custom import (
     CenterCrop,
     ColorJitter,
     Mixing,
-    MosaicDetection,
     Pad,
     RandomCrop,
     RandomCutmix,
@@ -17,6 +16,8 @@ from .custom import (
     Resize,
     TrivialAugmentWide,
 )
+from .custom.mosaic import MosaicDetection
+
 
 TRANSFORM_DICT: Dict[str, Callable] = {
     'centercrop': CenterCrop,
