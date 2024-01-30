@@ -147,7 +147,7 @@ class MosaicDetection:
     def __init__(
         self,
         size: List,
-        mosaic_scale: List,
+        affine_scale: List,
         mixup_scale: List,
         degrees: float,
         translate: float,
@@ -158,7 +158,7 @@ class MosaicDetection:
         fill: int,
     ):
         self.size = size
-        self.mosaic_scale = mosaic_scale
+        self.affine_scale = affine_scale
         self.mixup_scale = mixup_scale
         self.degrees = degrees
         self.translate = translate
@@ -226,7 +226,7 @@ class MosaicDetection:
                 target_size=(input_w, input_h),
                 degrees=self.degrees,
                 translate=self.translate,
-                scales=self.mosaic_scale,
+                scales=self.affine_scale,
                 shear=self.shear,
                 fill=self.fill,
             )
