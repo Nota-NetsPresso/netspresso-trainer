@@ -73,6 +73,7 @@ class Resize(Transform):
     resize_criteria: Optional[str] = None
 
 
+@dataclass
 class TrivialAugmentWide(Transform):
     name: str = 'trivialaugmentwide'
     num_magnitude_bins: int = 31
@@ -94,6 +95,29 @@ class Mixing(Transform):
     mixup: Optional[List] = None
     cutmix: Optional[List] = None
     inplace: bool = False
+
+
+@dataclass
+class HSVJitter(Transform):
+    name: str = 'hsvjitter'
+    h_mag: int = 5
+    s_mag: int = 30
+    v_mag: int = 30
+
+
+@dataclass
+class MosaicDetection(Transform):
+    name: str = 'mosaicdetection'
+    size: List = [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE]
+    mosaic_prob: float = 1.0
+    affine_scale: List = [0.5, 1.5]
+    degrees: float = 10.0
+    translate: float = 0.1
+    shear: float = 2.0
+    enable_mixup: bool = True
+    mixup_prob: float = 1.0
+    mixup_scale: List = [0.5, 1.5]
+    fill: int = 114
 
 
 @dataclass

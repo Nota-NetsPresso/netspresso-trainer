@@ -4,6 +4,7 @@ from typing import List
 
 import cv2
 import numpy as np
+import PIL.Image as Image
 import torchvision.transforms.functional as F
 from torchvision.transforms.functional import InterpolationMode
 
@@ -12,18 +13,6 @@ def adjust_box_anns(bbox, scale_ratio, padw, padh, w_max, h_max):
     bbox[:, 0::2] = np.clip(bbox[:, 0::2] * scale_ratio + padw, 0, w_max)
     bbox[:, 1::2] = np.clip(bbox[:, 1::2] * scale_ratio + padh, 0, h_max)
     return bbox
-
-
-def getRotationMatrix2D(angle, center, scale):
-    angle = np.deg2rad(angle)
-    alpha = scale * np.cos(angle)
-    beta = scale * np.sin(angle)
-    mat = [
-        [alpha, beta, (1-alpha)*center[0] - beta*center[1]],
-        [-beta, alpha, beta*center[0] + (1-alpha)*center[1]]
-    ]
-    mat = np.array(mat)
-    return mat
 
 
 def get_mosaic_coordinate(mosaic_image, mosaic_index, xc, yc, w, h, input_h, input_w):
@@ -61,10 +50,10 @@ def get_aug_params(value, center=0):
 
 def get_affine_matrix(
     target_size,
-    degrees=10,
-    translate=0.1,
-    scales=0.1,
-    shear=10,
+    degrees,
+    translate,
+    scales,
+    shear,
 ):
     twidth, theight = target_size
 
@@ -75,7 +64,7 @@ def get_affine_matrix(
     if scale <= 0.0:
         raise ValueError("Argument scale should be positive")
 
-    R = getRotationMatrix2D(angle=angle, center=(0, 0), scale=scale)
+    R = cv2.getRotationMatrix2D(angle=angle, center=(0, 0), scale=scale)
 
     M = np.ones([2, 3])
     # Shear
@@ -129,17 +118,17 @@ def apply_affine_to_bboxes(targets, target_size, M, scale):
 
 def random_affine(
     img,
-    targets=(),
-    target_size=(640, 640),
-    degrees=10,
-    translate=0.1,
-    scales=0.1,
-    shear=10,
+    targets,
+    target_size,
+    degrees,
+    translate,
+    scales,
+    shear,
+    fill,
 ):
     M, scale = get_affine_matrix(target_size, degrees, translate, scales, shear)
 
-    # cv2 function should be replaced
-    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(114, 114, 114))
+    img = cv2.warpAffine(img, M, dsize=target_size, borderValue=(fill, fill, fill))
 
     # Transform label coordinates
     if len(targets) > 0:
@@ -157,7 +146,8 @@ class MosaicDetection:
 
     def __init__(
         self,
-        mosaic_scale: List,
+        size: List,
+        affine_scale: List,
         mixup_scale: List,
         degrees: float,
         translate: float,
@@ -165,8 +155,10 @@ class MosaicDetection:
         enable_mixup: bool,
         mosaic_prob: float,
         mixup_prob: float,
+        fill: int,
     ):
-        self.mosaic_scale = mosaic_scale
+        self.size = size
+        self.affine_scale = affine_scale
         self.mixup_scale = mixup_scale
         self.degrees = degrees
         self.translate = translate
@@ -174,13 +166,14 @@ class MosaicDetection:
         self.enable_mixup = enable_mixup
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
+        self.fill = fill
 
         self.enable_mosaic = True
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if self.enable_mosaic and random.random() < self.mosaic_prob:
             mosaic_labels = []
-            input_dim = (640, 640)
+            input_dim = self.size
             input_h, input_w = input_dim[0], input_dim[1]
 
             # yc, xc = s, s  # mosaic center x, y
@@ -192,21 +185,17 @@ class MosaicDetection:
             items = [(image, label, bbox)] + items
 
             c = len(image.split())
-            mosaic_img = np.full((input_h * 2, input_w * 2, c), 114, dtype=np.uint8)
+            mosaic_img = np.full((input_h * 2, input_w * 2, c), self.fill, dtype=np.uint8)
 
             for i_mosaic, (image, label, bbox) in enumerate(items):
                 #h0, w0 = image.shape[:2]  # orig hw
                 w, h = image.size
                 scale = min(1. * input_h / h, 1. * input_w / w)
 
-                image = F.resize(image, (int(h * scale), int(w * scale)), InterpolationMode.BILINEAR)
-
-                # @illian01: PIL -> ndarray, process with ndarray to modify code little
                 image = np.array(image)
+                image = cv2.resize(image, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_LINEAR)
 
                 h, w, _ = image.shape[:3]
-                # generate output mosaic image
-
                 # suffix l means large image, while s means small image in mosaic aug.
                 (l_x1, l_y1, l_x2, l_y2), (s_x1, s_y1, s_x2, s_y2) = get_mosaic_coordinate(
                     mosaic_img, i_mosaic, xc, yc, w, h, input_h, input_w
@@ -237,8 +226,9 @@ class MosaicDetection:
                 target_size=(input_w, input_h),
                 degrees=self.degrees,
                 translate=self.translate,
-                scales=self.mosaic_scale,
+                scales=self.affine_scale,
                 shear=self.shear,
+                fill=self.fill,
             )
 
             # -----------------------------------------------------------------
@@ -253,6 +243,7 @@ class MosaicDetection:
 
             bbox = mosaic_labels[:, :4]
             label = mosaic_labels[:, -1:]
+            mosaic_img = Image.fromarray(mosaic_img) # return as PIL
             return mosaic_img, label, mask, bbox
 
         else:
