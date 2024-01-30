@@ -113,6 +113,51 @@ Currently, NetsPresso Trainer does not support a Gradio demo visualization for M
 </details>
 
 
+### MosaicDetection
+
+This MosaicDetection augmentation is based on [YOLOX repository](https://github.com/Megvii-BaseDetection/YOLOX). For each sample, the following steps are taken to create an augmented sample.
+
+- Load three additional images.
+- Resize the four images to fit the `size`.
+- Merge the four images into one, with the merge center point randomly determined.
+- Apply a random affine transformation to the merged image. And resize output image to fit the `size`.
+- Finally, if `enable_mixup` is set to `True`, apply a mixup transformation with a fixed alpha of 0.5. The mixup image also is randomly loaded from dataset.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "mosaicdetection" to use `MosaicDetection` transform. |
+| `size` | (list) Desired output size of the `MosaicDetection`. |
+| `mosaic_prob` | (float) The probability of applying the `MosaicDetection`. If set to 1.0, it is always applied. |
+| `affine_scale` | (list) Generate affine matrix with a scale range of [affine_scale[0], affine_scale[1]]. |
+| `degrees` | (float) Generate affine matrix with a rotation range of [-degrees, degrees]. |
+| `translate` | (float) Generate affine matrix with a translate range of [-translate, translate]. |
+| `shear` | (float) Generate affine matrix with a shear range of [-shear, shear]. Randomly generate for each x-axis and y-axis. |
+| `enable_mixup` | (bool) Whether to apply mixup. |
+| `mixup_prob` | (float) The probability of applying the mixup. If set to 1.0, it is always applied. |
+| `mixup_scale` | (list) Resize scale range for mixup image.  |
+| `fill` | (int)  This is used to fill pixels with constant value. |
+
+<details>
+  <summary>MosaicDetection example</summary>
+
+  ```yaml
+  augmentation:
+    train:
+      -
+        name: mosaicdetection
+        size: [*img_size, *img_size]
+        mosaic_prob: 1.0
+        affine_scale: [0.5, 1.5]
+        degrees: 10.0
+        translate: 0.1
+        shear: 2.0
+        enable_mixup: True
+        mixup_prob: 1.0
+        mixup_scale: [0.5, 1.5]
+        fill: 114
+  ```
+</details>
+
 ### Pad
 
 Pad an image with constant. This augmentation is based on the [Pad](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Pad.html#torchvision.transforms.Pad) in torchvision library.
