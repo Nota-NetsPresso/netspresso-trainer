@@ -73,7 +73,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         out = self.transform(self.conf_augmentation)(image=img, label=label, bbox=boxes, dataset=self)
-        # Remove 
+        # Remove
         mask = np.minimum(out['bbox'][:, 2] - out['bbox'][:, 0], out['bbox'][:, 3] - out['bbox'][:, 1]) > 1
         out['bbox'] = out['bbox'][mask]
         out['label'] = torch.as_tensor(out['label'].ravel(), dtype=torch.int64)
