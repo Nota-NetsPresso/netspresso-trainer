@@ -4,6 +4,7 @@ from .custom.image_proc import (
     AutoAugment,
     CenterCrop,
     ColorJitter,
+    HSVJitter,
     Pad,
     RandomCrop,
     RandomErasing,
@@ -30,4 +31,5 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'mosaicdetection': MosaicDetection,
     'trivialaugmentwide': TrivialAugmentWide,
     'autoaugment': AutoAugment,
+    'hsvjitter': HSVJitter,
 }
