@@ -73,8 +73,13 @@ class DetectionCustomDataset(BaseCustomDataset):
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         out = self.transform(self.conf_augmentation)(image=img, label=label, bbox=boxes, dataset=self)
+        # Remove 
+        mask = np.minimum(out['bbox'][:, 2] - out['bbox'][:, 0], out['bbox'][:, 3] - out['bbox'][:, 1]) > 1
+        out['bbox'] = out['bbox'][mask]
+        out['label'] = torch.as_tensor(out['label'].ravel(), dtype=torch.int64)
+        out['label'] = out['label'][mask]
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'],
-                        'label': torch.as_tensor(out['label'].ravel(), dtype=torch.int64)})
+                        'label': out['label']})
 
 
         if self._split in ['train', 'training']:
