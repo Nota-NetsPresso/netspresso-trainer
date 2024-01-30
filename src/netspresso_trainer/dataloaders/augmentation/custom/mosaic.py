@@ -146,6 +146,7 @@ class MosaicDetection:
 
     def __init__(
         self,
+        size: List,
         mosaic_scale: List,
         mixup_scale: List,
         degrees: float,
@@ -156,6 +157,7 @@ class MosaicDetection:
         mixup_prob: float,
         fill: int,
     ):
+        self.size = size
         self.mosaic_scale = mosaic_scale
         self.mixup_scale = mixup_scale
         self.degrees = degrees
@@ -171,7 +173,7 @@ class MosaicDetection:
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         if self.enable_mosaic and random.random() < self.mosaic_prob:
             mosaic_labels = []
-            input_dim = (640, 640)
+            input_dim = self.size
             input_h, input_w = input_dim[0], input_dim[1]
 
             # yc, xc = s, s  # mosaic center x, y
