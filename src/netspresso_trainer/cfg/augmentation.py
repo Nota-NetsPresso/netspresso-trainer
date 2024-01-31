@@ -118,6 +118,7 @@ class MosaicDetection(Transform):
     mixup_prob: float = 1.0
     mixup_scale: List = field(default_factory=lambda: [0.5, 1.5])
     fill: int = 114
+    mosaic_off_epochs: int = 10
 
 
 @dataclass
