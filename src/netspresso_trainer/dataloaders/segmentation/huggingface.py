@@ -28,10 +28,10 @@ class SegmentationHFDataset(BaseHFDataset):
             model_name,
             root,
             split,
+            transform,
             with_label
         )
 
-        self.transform = transform
         self.idx_to_class = idx_to_class
         self.samples = huggingface_dataset
 
@@ -76,17 +76,17 @@ class SegmentationHFDataset(BaseHFDataset):
         w, h = img.size
 
         if label is None:
-            out = self.transform(self.conf_augmentation)(image=img)
+            out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
 
         if self.model_name == 'pidnet':
             edge = generate_edge(np.array(label))
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask, edge=edge)
+            out = self.transform(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
         else:
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask)
+            out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
         if self._split in ['train', 'training']:

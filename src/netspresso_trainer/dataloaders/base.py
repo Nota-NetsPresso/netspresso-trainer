@@ -16,7 +16,7 @@ class BaseCustomDataset(data.Dataset):
         self.conf_augmentation = conf_augmentation
         self.model_name = model_name
 
-        self.transform = transform
+        self.transform = transform(conf_augmentation)
         self.samples = samples
 
         self._root = conf_data.path.root
@@ -55,11 +55,12 @@ class BaseCustomDataset(data.Dataset):
 
 class BaseHFDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, root, split, with_label):
+    def __init__(self, conf_data, conf_augmentation, model_name, root, split, transform, with_label):
         super(BaseHFDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
         self.model_name = model_name
+        self.transform = transform(conf_augmentation)
         self._root = root
         self._split = split
         self._with_label = with_label

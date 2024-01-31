@@ -64,7 +64,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if ann_path is None:
-            out = self.transform(self.conf_augmentation)(image=img)
+            out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
@@ -72,7 +72,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
-        out = self.transform(self.conf_augmentation)(image=img, label=label, bbox=boxes, dataset=self)
+        out = self.transform(image=img, label=label, bbox=boxes, dataset=self)
         # Remove
         mask = np.minimum(out['bbox'][:, 2] - out['bbox'][:, 0], out['bbox'][:, 3] - out['bbox'][:, 1]) > 1
         out['bbox'] = out['bbox'][mask]
