@@ -33,7 +33,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if ann_path is None:
-            out = self.transform(self.conf_augmentation)(image=img)
+            out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
@@ -53,10 +53,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask, edge=edge)
+            out = self.transform(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})
         else:
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask)
+            out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
         if self._split in ['train', 'training']:

@@ -19,6 +19,7 @@
 
 - Refactoring: Move custom transforms to each python module by `@illian01` in [PR 332](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/332)
 - Update Pad transform to receive target size of image by `@illian01` in [PR 334](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/334)
+- Rafactoring: Fix to make transform object in init by `@illian01` in [PR 339](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/339)
 
 # v0.1.2
 
