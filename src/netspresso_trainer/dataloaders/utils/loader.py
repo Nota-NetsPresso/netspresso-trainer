@@ -79,7 +79,7 @@ def create_loader(
         fp16=False,
         tf_preprocessing=False,
         use_multi_epochs_loader=False,
-        persistent_workers=True,
+        persistent_workers=False,
         worker_seeding='all',
         world_size=1,
         rank=0,
