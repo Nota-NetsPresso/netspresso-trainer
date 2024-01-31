@@ -324,3 +324,8 @@ class MosaicDetection:
         origin_img = 0.5 * origin_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         return origin_img.astype(np.uint8), origin_labels
+
+    def __repr__(self) -> str:
+        return "{}(size={}, mosaic_prob={}, affine_scale={}, degrees={}, translate={}, shear={}, enable_mixup={}, mixup_prob={}, mixup_scale={}, fill={})".format(
+            self.__class__.__name__, self.size, self.mosaic_prob, self.affine_scale, self.degrees, self.translate, self.shear, self.enable_mixup, self.mixup_prob, self.mixup_scale, self.fill
+        )
