@@ -108,15 +108,15 @@ class HSVJitter(Transform):
 @dataclass
 class MosaicDetection(Transform):
     name: str = 'mosaicdetection'
-    size: List = [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE]
+    size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
     mosaic_prob: float = 1.0
-    affine_scale: List = [0.5, 1.5]
+    affine_scale: List = field(default_factory=lambda: [0.5, 1.5])
     degrees: float = 10.0
     translate: float = 0.1
     shear: float = 2.0
     enable_mixup: bool = True
     mixup_prob: float = 1.0
-    mixup_scale: List = [0.5, 1.5]
+    mixup_scale: List = field(default_factory=lambda: [0.5, 1.5])
     fill: int = 114
 
 
