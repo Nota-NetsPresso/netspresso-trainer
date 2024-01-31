@@ -8,6 +8,8 @@ import PIL.Image as Image
 import torchvision.transforms.functional as F
 from torchvision.transforms.functional import InterpolationMode
 
+from ....loggers import START_EPOCH_ZERO_OR_ONE
+
 
 def adjust_box_anns(bbox, scale_ratio, padw, padh, w_max, h_max):
     bbox[:, 0::2] = np.clip(bbox[:, 0::2] * scale_ratio + padw, 0, w_max)
@@ -324,6 +326,9 @@ class MosaicDetection:
         origin_img = 0.5 * origin_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         return origin_img.astype(np.uint8), origin_labels
+
+    def update_before_epoch(self, cur_epoch, total_epoch):
+        pass
 
     def __repr__(self) -> str:
         return "{}(size={}, mosaic_prob={}, affine_scale={}, degrees={}, translate={}, shear={}, enable_mixup={}, mixup_prob={}, mixup_scale={}, fill={})".format(
