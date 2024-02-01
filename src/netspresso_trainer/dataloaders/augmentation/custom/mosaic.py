@@ -156,6 +156,7 @@ class MosaicDetection:
         mosaic_prob: float,
         mixup_prob: float,
         fill: int,
+        mosaic_off_epochs: int,
     ):
         self.size = size
         self.affine_scale = affine_scale
@@ -167,6 +168,7 @@ class MosaicDetection:
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
         self.fill = fill
+        self.mosaic_off_epochs = mosaic_off_epochs
 
         self.enable_mosaic = True
 
@@ -324,6 +326,12 @@ class MosaicDetection:
         origin_img = 0.5 * origin_img + 0.5 * padded_cropped_img.astype(np.float32)
 
         return origin_img.astype(np.uint8), origin_labels
+
+    def update_before_epoch(self, cur_epoch, total_epoch):
+        # import START_EPOCH_ZERO_OR_ONE produces circular import error
+        #if total_epoch + START_EPOCH_ZERO_OR_ONE - cur_epoch < self.mosaic_off_epochs:
+        if total_epoch + 1 - cur_epoch <= self.mosaic_off_epochs:
+            self.enable_mosaic = False
 
     def __repr__(self) -> str:
         return "{}(size={}, mosaic_prob={}, affine_scale={}, degrees={}, translate={}, shear={}, enable_mixup={}, mixup_prob={}, mixup_scale={}, fill={})".format(

@@ -20,6 +20,7 @@
 - Refactoring: Move custom transforms to each python module by `@illian01` in [PR 332](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/332)
 - Update Pad transform to receive target size of image by `@illian01` in [PR 334](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/334)
 - Rafactoring: Fix to make transform object in init by `@illian01` in [PR 339](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/339)
+- Add before_epoch step which does update modules like dataloader before epoch training by `@illian01` in [PR 340](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/340)
 
 # v0.1.2
 

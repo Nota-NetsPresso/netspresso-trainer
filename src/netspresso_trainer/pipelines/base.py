@@ -168,7 +168,7 @@ class BasePipeline(ABC):
                 self.loss_factory.reset_values()
                 self.metric_factory.reset_values()
 
-                self.train_one_epoch()
+                self.train_one_epoch(epoch=num_epoch)
 
                 with_valid_logging = self.epoch_with_valid_logging(num_epoch)
                 with_checkpoint_saving = self.epoch_with_checkpoint_saving(num_epoch)
@@ -209,7 +209,14 @@ class BasePipeline(ABC):
             logger.error(str(e))
             raise e
 
-    def train_one_epoch(self):
+    def before_epoch(self, epoch):
+        # Update transforms for every epoch
+        transforms = self.train_dataloader.dataset.transform.transforms
+        for transform in transforms:
+            transform.update_before_epoch(epoch, self.conf.training.epochs)
+
+    def train_one_epoch(self, epoch):
+        self.before_epoch(epoch)
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.train_step(batch)
