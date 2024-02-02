@@ -644,7 +644,7 @@ class RandomResize:
         """
         @illian01:
             Workers of dataloader are having ``self.random_reseted`` copied from main process.
-            Even if change variables ``self.random_reseted`` and ``self.resize`` at here, 
+            Even if change variables ``self.random_reseted`` and ``self.resize`` at here,
             RandomResize object of main process and other subprocess are not changed.
             Thus, dataloader workers produce different image size during an epoch.
             This effect will be weaker if ``num_workers`` is small.
