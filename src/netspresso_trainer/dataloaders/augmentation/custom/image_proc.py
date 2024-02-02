@@ -624,6 +624,48 @@ class HSVJitter:
             self.h_mag, self.s_mag, self.v_mag)
 
 
+class RandomResize:
+    visualize = True
+
+    def __init__(
+        self,
+        base_size: List,
+        stride: int,
+        random_range: int,
+        interpolation: str,
+    ):
+        self.base_size = base_size
+        self.stride = stride
+        self.random_range = random_range
+        self.resize = Resize(size=base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
+        self.random_reseted = False
+
+    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+        """
+        @illian01:
+            Workers of dataloader are having ``self.random_reseted`` copied from main process.
+            Even if change variables ``self.random_reseted`` and ``self.resize`` at here,
+            RandomResize object of main process and other subprocess are not changed.
+            Thus, dataloader workers produce different image size during an epoch.
+            This effect will be weaker if ``num_workers`` is small.
+        """
+        if not self.random_reseted:
+            delta = self.stride * random.randint(-self.random_range, self.random_range)
+            size = [self.base_size[0] + delta, self.base_size[1] + delta]
+            self.resize.size = size
+            self.random_reseted = True
+        image, label, mask, bbox = self.resize(image, label, mask, bbox, dataset)
+        return image, label, mask, bbox
+
+    def update_before_epoch(self, cur_epoch, total_epoch):
+        self.random_reseted = False # @illian01: If num_workers=0, main process value is changed.
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(base_size={0}, stride={1}, random_range={2})".format(
+            self.base_size, self.stride, self.random_range
+        )
+
+
 class Normalize:
     visualize = False
 
