@@ -65,6 +65,14 @@ class RandomVerticalFlip(Transform):
 
 
 @dataclass
+class RandomResize(Transform):
+    name: str = 'randomresize'
+    base_size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
+    stride: int = 32
+    random_range: int = 4
+    interpolation: str = 'bilinear'
+
+@dataclass
 class Resize(Transform):
     name: str = 'resize'
     size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
