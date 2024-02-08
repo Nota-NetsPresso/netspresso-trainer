@@ -267,6 +267,36 @@ Horizontally flip the given image randomly with a given probability. This augmen
   ```
 </details>
 
+### RandomResize
+
+RandomResize transforms the input image to a random size within a specified range. This random size range is determined by [`base_size[0]` - `stride` * `v`, `base_size[1]` + `stride` * `v`] with `stride` interval, where the value `v` is an integer within the range of [`-random_range`, `random_range`]. E.g. If `base_size = [256, 256]`, `stride = 32`, `random_range = 2`, possible output image sizes are `[[192, 192], [224, 224], [256, 256], [288, 288], [320, 320]]`.
+
+Since applying random resize to every image arises the difficulty of a batch handling, random resize should be applied on a per-batch basis. However, due to current implementation constraints, it's challenging to apply randomness at the batch level, so a single random size is determined per dataloader worker. The size managed by each worker changes to at the start of each epoch. Therefore, to fully benefit from RandomResize, the number of workers set by `environment.num_workers` needs to be sufficiently large.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "randomresize" to use `RandomResize` transform. |
+| `base_size` | (list) The base size of the output image after random resizing. The output size is determined based on `base_size`. |
+| `stride` | (int) The interval at which the size variation occurs. |
+| `random_range` | (int) The range for random size variation. The final size is determined in range of [`base_size[0]` - `stride` * `v`, `base_size[1]` + `stride` * `v`] with `stride` interval, where `v` is an integer within the range of [`-random_range`, `random_range`]. |
+| `interpolation` | (str) Desired interpolation type. Supporting interpolations are 'nearest', 'bilinear' and 'bicubic'. |
+
+<details>
+  <summary>RandomResize</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: randomresize
+        base_size: [256, 256]
+        stride: 32
+        random_range: 4
+        interpolation: 'bilinear'
+  ```
+</details>
+
+
 ### RandomResizedCrop
 
 Crop a random portion of image with different aspect of ratio in width and height, and resize it to a given size. This augmentation follows the [RandomResizedCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomResizedCrop.html#torchvision.transforms.RandomResizedCrop) in torchvision library.
