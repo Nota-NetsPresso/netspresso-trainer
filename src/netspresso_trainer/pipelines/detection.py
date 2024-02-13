@@ -87,19 +87,29 @@ class DetectionPipeline(BasePipeline):
         return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
-        pred = []
-        targets = []
-        for output_batch in outputs:
-            for detection, class_idx in output_batch['target']:
-                target_on_image = {}
-                target_on_image['boxes'] = detection
-                target_on_image['labels'] = class_idx
-                targets.append(target_on_image)
+        outputs = [{'target': o['target'], 'pred': o['pred']} for o in outputs] # output dict without 'images' key
+        if self.conf.distributed:
+            gathered_outputs = [None for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.gather_object(outputs, gathered_outputs if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_outputs = sum(gathered_outputs, [])
+            outputs = gathered_outputs
 
-            for detection, class_idx in output_batch['pred']:
-                pred_on_image = {}
-                pred_on_image['post_boxes'] = detection[..., :4]
-                pred_on_image['post_scores'] = detection[..., -1]
-                pred_on_image['post_labels'] = class_idx
-                pred.append(pred_on_image)
-        self.metric_factory.calc(pred, target=targets, phase=phase)
+        if self.single_gpu_or_rank_zero:
+            pred = []
+            targets = []
+            for output_batch in outputs:
+                for detection, class_idx in output_batch['target']:
+                    target_on_image = {}
+                    target_on_image['boxes'] = detection
+                    target_on_image['labels'] = class_idx
+                    targets.append(target_on_image)
+
+                for detection, class_idx in output_batch['pred']:
+                    pred_on_image = {}
+                    pred_on_image['post_boxes'] = detection[..., :4]
+                    pred_on_image['post_scores'] = detection[..., -1]
+                    pred_on_image['post_labels'] = class_idx
+                    pred.append(pred_on_image)
+            self.metric_factory.calc(pred, target=targets, phase=phase)
