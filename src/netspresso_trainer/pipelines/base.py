@@ -2,7 +2,9 @@ import copy
 import json
 import os
 from abc import ABC, abstractmethod
+from ctypes import c_int
 from dataclasses import asdict
+from multiprocessing import Value
 from pathlib import Path
 from statistics import mean
 from typing import Dict, Literal, final
@@ -72,6 +74,11 @@ class BasePipeline(ABC):
                 num_sample_images=NUM_SAMPLES,
                 result_dir=logging_dir,
             )
+
+        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
+        self.cur_epoch = Value(c_int, self.start_epoch)
+        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
+        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
 
     @final
     def _is_ready(self):
@@ -167,6 +174,7 @@ class BasePipeline(ABC):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
                 self.loss_factory.reset_values()
                 self.metric_factory.reset_values()
+                self.cur_epoch.value = num_epoch
 
                 self.train_one_epoch(epoch=num_epoch)
 
@@ -209,14 +217,7 @@ class BasePipeline(ABC):
             logger.error(str(e))
             raise e
 
-    def before_epoch(self, epoch):
-        # Update transforms for every epoch
-        transforms = self.train_dataloader.dataset.transform.transforms
-        for transform in transforms:
-            transform.update_before_epoch(epoch, self.conf.training.epochs)
-
     def train_one_epoch(self, epoch):
-        self.before_epoch(epoch)
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.train_step(batch)

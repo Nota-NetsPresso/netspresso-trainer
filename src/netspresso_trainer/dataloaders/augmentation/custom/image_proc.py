@@ -76,9 +76,6 @@ class CenterCrop(T.CenterCrop):
         # TODO: Compute mask, bbox
         return F.center_crop(image, self.size), label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size})"
 
@@ -91,9 +88,6 @@ class Identity:
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
@@ -136,9 +130,6 @@ class Resize(T.Resize):
             bbox[..., 1:4:2] *= float(target_h / h)
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3}, resize_criteria={4})".format(
             self.size, self.interpolation.value, self.max_size, self.antialias, self.resize_criteria)
@@ -163,9 +154,6 @@ class RandomHorizontalFlip:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
 
@@ -188,9 +176,6 @@ class RandomVerticalFlip:
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
@@ -238,9 +223,6 @@ class Pad:
             bbox[..., 1:4:2] += padding_top
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, fill={1}, padding_mode={2})".format(
             (self.new_h, self.new_w), self.fill, self.padding_mode
@@ -277,9 +259,6 @@ class ColorJitter(T.ColorJitter):
                     image = F.adjust_hue(image, hue_factor)
 
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
     def __repr__(self):
         return self.__class__.__name__ + \
@@ -335,9 +314,6 @@ class RandomCrop:
             bbox = bbox_candidate
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(size={0})".format((self.size_h, self.size_w))
 
@@ -392,9 +368,6 @@ class RandomResizedCrop(T.RandomResizedCrop):
             bbox[..., 1:4:2] *= float(target_h / h_cropped)
 
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
     def __repr__(self):
         interpolate_str = self.interpolation.value
@@ -458,9 +431,6 @@ class RandomErasing(T.RandomErasing):
             # TODO: Object-aware
             return image, label, mask, bbox
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
 
 class TrivialAugmentWide(torch.nn.Module):
@@ -526,9 +496,6 @@ class TrivialAugmentWide(torch.nn.Module):
         # TODO: Compute mask, bbox
         return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self) -> str:
         s = (
             f"{self.__class__.__name__}("
@@ -583,9 +550,6 @@ class AutoAugment(T.AutoAugment):
         # TODO: Compute mask, bbox
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
 
 class HSVJitter:
     visualize = True
@@ -616,9 +580,6 @@ class HSVJitter:
         image = image_hsv.convert('RGB')
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(h_mag={0}, s_mag={1}, v_mag={2})".format(
             self.h_mag, self.s_mag, self.v_mag)
@@ -638,27 +599,23 @@ class RandomResize:
         self.stride = stride
         self.random_range = random_range
         self.resize = Resize(size=base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
-        self.random_reseted = False
+        self.epoch_ = -1
 
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
         """
         @illian01:
-            Workers of dataloader are having ``self.random_reseted`` copied from main process.
-            Even if change variables ``self.random_reseted`` and ``self.resize`` at here,
-            RandomResize object of main process and other subprocess are not changed.
+            Each worker randomly reset target size for every epochs.
             Thus, dataloader workers produce different image size during an epoch.
-            This effect will be weaker if ``num_workers`` is small.
+            RandomReisze effect will be weaker if ``num_workers`` is small.
         """
-        if not self.random_reseted:
+        if self.epoch_ != dataset.cur_epoch.value:
+            self.epoch_ = dataset.cur_epoch.value
             delta = self.stride * random.randint(-self.random_range, self.random_range)
             size = [self.base_size[0] + delta, self.base_size[1] + delta]
             self.resize.size = size
             self.random_reseted = True
         image, label, mask, bbox = self.resize(image, label, mask, bbox, dataset)
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        self.random_reseted = False # @illian01: If num_workers=0, main process value is changed.
 
     def __repr__(self):
         return self.__class__.__name__ + "(base_size={0}, stride={1}, random_range={2})".format(
@@ -677,9 +634,6 @@ class Normalize:
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, label, mask, bbox
 
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
-
     def __repr__(self):
         return self.__class__.__name__ + "(mean={0}, std={1})".format(
             self.mean, self.std
@@ -697,9 +651,6 @@ class ToTensor(T.ToTensor):
             bbox = torch.as_tensor(np.array(bbox), dtype=torch.float)
 
         return image, label, mask, bbox
-
-    def update_before_epoch(self, cur_epoch, total_epoch):
-        pass
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
