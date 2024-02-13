@@ -75,7 +75,7 @@ class BasePipeline(ABC):
                 result_dir=logging_dir,
             )
 
-        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms 
+        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
         self.cur_epoch = Value(c_int, self.start_epoch)
         self.train_dataloader.dataset.cur_epoch = self.cur_epoch
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
