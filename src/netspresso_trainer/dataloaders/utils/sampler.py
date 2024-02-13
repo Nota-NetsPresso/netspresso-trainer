@@ -3,9 +3,10 @@ Based on the publicly available DeepDeblur-PyTorch repository.
 https://github.com/SeungjunNah/DeepDeblur-PyTorch/blob/master/src/data/sampler.py
 """
 import math
+
 import torch
-from torch.utils.data import Sampler
 import torch.distributed as dist
+from torch.utils.data import Sampler
 
 
 class DistributedEvalSampler(Sampler):
