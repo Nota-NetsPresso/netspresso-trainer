@@ -217,14 +217,7 @@ class BasePipeline(ABC):
             logger.error(str(e))
             raise e
 
-    def before_epoch(self, epoch):
-        # Update transforms for every epoch
-        transforms = self.train_dataloader.dataset.transform.transforms
-        for transform in transforms:
-            transform.update_before_epoch(epoch, self.conf.training.epochs)
-
     def train_one_epoch(self, epoch):
-        self.before_epoch(epoch)
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.train_step(batch)
