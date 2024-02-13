@@ -170,10 +170,8 @@ class MosaicDetection:
         self.fill = fill
         self.mosaic_off_epochs = mosaic_off_epochs
 
-        self.enable_mosaic = True
-
     def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
-        if self.enable_mosaic and random.random() < self.mosaic_prob:
+        if (self.mosaic_off_epochs <= dataset.end_epoch - dataset.cur_epoch.value) and (random.random() < self.mosaic_prob):
             mosaic_labels = []
             input_dim = self.size
             input_h, input_w = input_dim[0], input_dim[1]
@@ -328,10 +326,7 @@ class MosaicDetection:
         return origin_img.astype(np.uint8), origin_labels
 
     def update_before_epoch(self, cur_epoch, total_epoch):
-        # import START_EPOCH_ZERO_OR_ONE produces circular import error
-        #if total_epoch + START_EPOCH_ZERO_OR_ONE - cur_epoch < self.mosaic_off_epochs:
-        if total_epoch + 1 - cur_epoch <= self.mosaic_off_epochs:
-            self.enable_mosaic = False
+        pass
 
     def __repr__(self) -> str:
         return "{}(size={}, mosaic_prob={}, affine_scale={}, degrees={}, translate={}, shear={}, enable_mixup={}, mixup_prob={}, mixup_scale={}, fill={})".format(
