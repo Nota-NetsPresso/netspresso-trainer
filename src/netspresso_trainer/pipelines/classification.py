@@ -1,6 +1,7 @@
 import os
 from typing import Literal
 
+import numpy as np
 import torch
 from loguru import logger
 from omegaconf import OmegaConf
@@ -18,7 +19,7 @@ class ClassificationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        images, labels = batch
+        indices, images, labels = batch
         images = images.to(self.devices)
         labels = labels.to(self.devices)
         target = {'target': labels}
@@ -30,17 +31,28 @@ class ClassificationPipeline(BasePipeline):
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, labels, phase='train')
 
         self.loss_factory.backward()
         self.optimizer.step()
 
         if self.conf.distributed:
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
+
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            labels = labels[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                [self.metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+        else:
+            self.metric_factory.calc(pred, labels, phase='train')
 
     def valid_step(self, batch):
         self.model.eval()
-        images, labels = batch
+        indices, images, labels = batch
         images = images.to(self.devices)
         labels = labels.to(self.devices)
         target = {'target': labels}
@@ -50,21 +62,43 @@ class ClassificationPipeline(BasePipeline):
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, labels, phase='valid')
 
         if self.conf.distributed:
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
+
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            labels = labels[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                [self.metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+        else:
+            self.metric_factory.calc(pred, labels, phase='valid')
 
     def test_step(self, batch):
         self.model.eval()
-        images, _ = batch
+        indices, images, _ = batch
         images = images.to(self.devices)
 
         out = self.model(images.unsqueeze(0))
         pred = self.postprocessor(out, k=1)
 
         if self.conf.distributed:
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_pred = [g.detach().cpu().numpy() for g in gathered_pred]
+                gathered_pred = np.concatenate(gathered_pred, axis=0)
+                pred = gathered_pred
+        else:
+            pred = pred.detach().cpu().numpy()
 
         return pred
 
