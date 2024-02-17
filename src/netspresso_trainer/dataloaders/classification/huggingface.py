@@ -60,4 +60,4 @@ class ClassificationHFDataset(BaseHFDataset):
             out = self.transform(img)
         if target is None:
             target = -1
-        return out['image'], target
+        return index, out['image'], target
