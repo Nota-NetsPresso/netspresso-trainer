@@ -33,7 +33,8 @@ class MetricFactory:
         self.__call__(pred=pred, target=target, phase=phase, **kwargs)
 
     def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
-
+        if pred.size(0) == 0: # Removed dummy batch has 0 len
+            return
         metric_result_dict = self.metric_fn.calibrate(pred, target)
         phase = phase.lower()
         assert phase in PHASE_LIST, f"{phase} is not defined at our phase list ({PHASE_LIST})"
