@@ -7,6 +7,7 @@
 - Add transforms: MosaicDetection by `@illian01` in [PR 331](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/331), [PR 337](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/337)
 - Add transform: HSVJitter by `@illian01` in [PR 336](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/336)
 - Add transforms: RandomResize by `@illian01` in [PR 341](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/341), [PR 344](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/344)
+- Add model EMA (Exponential Moving Average) by `@illian01` in [PR 348](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/348)
 
 ## Bug Fixes:
 
