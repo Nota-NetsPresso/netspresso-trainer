@@ -229,6 +229,8 @@ class BasePipeline(ABC):
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.train_step(batch)
+            if self.model_ema:
+                self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
             outputs.append(out)
         self.get_metric_with_all_outputs(outputs, phase='train')
 
@@ -287,7 +289,10 @@ class BasePipeline(ABC):
         best_epoch = min(valid_losses, key=valid_losses.get)
         save_best_model = best_epoch == epoch
 
-        model = self.model.module if hasattr(self.model, 'module') else self.model
+        if self.model_ema:
+            model = self.model_ema.ema_model
+        else:
+            model = self.model.module if hasattr(self.model, 'module') else self.model
         if self.save_dtype == torch.float16:
             model = copy.deepcopy(model).type(self.save_dtype)
         logging_dir = self.train_logger.result_dir
