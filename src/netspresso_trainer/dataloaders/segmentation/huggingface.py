@@ -89,6 +89,7 @@ class SegmentationHFDataset(BaseHFDataset):
             out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
+        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 

@@ -24,4 +24,4 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
         if target is None:
             target = -1  # To be ignored at cross-entropy loss
-        return out['image'], target
+        return index, out['image'], target

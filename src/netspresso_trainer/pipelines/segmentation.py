@@ -21,6 +21,7 @@ class SegmentationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
+        indices = batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
         target = {'target': labels}
@@ -38,13 +39,25 @@ class SegmentationPipeline(BasePipeline):
 
         out = {k: v.detach() for k, v in out.items()}
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, labels, phase='train')
 
         if self.conf.distributed:
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
+
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            labels = labels[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                [self.metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+        else:
+            self.metric_factory.calc(pred, labels, phase='train')
 
     def valid_step(self, batch):
         self.model.eval()
+        indices = batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
         target = {'target': labels}
@@ -57,17 +70,26 @@ class SegmentationPipeline(BasePipeline):
         self.loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
-        self.metric_factory.calc(pred, labels, phase='valid')
 
         if self.conf.distributed:
-            torch.distributed.barrier()
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
-        output_seg = torch.max(out['pred'], dim=1)[1]  # argmax
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            labels = labels[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                [self.metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+        else:
+            self.metric_factory.calc(pred, labels, phase='valid')
 
         logs = {
             'images': images.detach().cpu().numpy(),
             'target': labels.detach().cpu().numpy(),
-            'pred': output_seg.detach().cpu().numpy()
+            'pred': pred.detach().cpu().numpy()
         }
         if 'edges' in batch:
             logs.update({
@@ -84,7 +106,7 @@ class SegmentationPipeline(BasePipeline):
 
         pred = self.postprocessor(out)
 
-        return pred
+        return pred.detach().cpu().numpy()
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass

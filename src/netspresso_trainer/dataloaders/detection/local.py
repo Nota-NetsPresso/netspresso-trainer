@@ -81,7 +81,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'],
                         'label': out['label']})
 
-
+        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 

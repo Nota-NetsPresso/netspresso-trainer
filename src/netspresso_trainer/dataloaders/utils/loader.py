@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 
 from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from .misc import expand_to_chs
+from .sampler import DistributedEvalSampler
 
 NUM_RGB_CHANNEL = 3
 
@@ -85,8 +86,10 @@ def create_loader(
         rank=0,
         kwargs=None
 ):
-
-    sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank)
+    if is_training:
+        sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank, drop_last=True)
+    else:
+        sampler = DistributedEvalSampler(dataset, num_replicas=world_size, rank=rank)
 
     loader_args = {
         'batch_size': batch_size,
@@ -95,7 +98,7 @@ def create_loader(
         'sampler': sampler,
         'collate_fn': collate_fn,
         'pin_memory': pin_memory,
-        'drop_last': is_training,
+        'drop_last': False,
         'worker_init_fn': partial(init_worker, worker_seeding=worker_seeding),
         'persistent_workers': persistent_workers
     }
