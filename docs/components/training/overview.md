@@ -8,7 +8,9 @@ Users can adjust epochs and batch size, as well as the desired optimizer and sch
 training:
   epochs: 300
   batch_size: 32 
-  ema_decay: 0.9999
+  ema:
+    name: constant_decay
+    decay: 0.9999
   optimizer:
     name: adamw
     lr: 6e-5
@@ -26,23 +28,12 @@ training:
 The batch size and epoch used in training may vary depending on the GPU and server specifications you have. A large batch size tends to consume more GPU memory, and as the number of epochs trained increases, it takes a long time to complete the training.
 Adjust these values according to your server specifications, but for successful training, it is recommended to set the batch size to at least 8.
 
-## Model EMA (Exponential Moving Average)
-
-In many cases, providing a model with averaged parameters brings performance benefits. The Exponential Moving Average (EMA) model is updated after each batch training step according to the following:
-
-```python
-ema_param = decay * ema_param + (1. - decay) * training_model_param
-```
-
-If EMA is enabled, both validation and model saving are processed with EMA model. Note that after the validation phase, the training model parameters are reverted back to the non-averaged model.
-
-
 ## Field list
 
 | Field <img width=200/> | Description |
 |---|---|
 | `training.epochs` | (int) The total number of epoch for training the model |
 | `training.batch_size` | (int) The number of samples in single batch input |
-| `training.ema_decay` | (float, optional) The decay rate for EMA. Its range must be in [0, 1.0]. If `None`, EMA is not applied. |
+| `training.ema` | (dict, optional) The configuration of EMA. Please refer to [the EMA page](./ema.md) for more details. If `None`, EMA is not applied. |
 | `training.optimizer` | (dict) The configuration of optimizer. Please refer to [the list of supporting optimizer](./optimizers.md) for more details. |
 | `training.scheduler` | (dict) The configuration of learning rate scheduler. Please refer to [the list of supporting scheduler](./schedulers.md) for more details. |

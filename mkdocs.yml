@@ -168,6 +168,7 @@ nav:
       - Transforms: components/augmentation/transforms.md
     - Training: 
       - Overview: components/training/overview.md
+      - EMA: components/training/ema.md
       - Optimizers: components/training/optimizers.md
       - Schedulers: components/training/schedulers.md
     - Model:
