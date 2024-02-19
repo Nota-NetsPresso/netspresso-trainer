@@ -24,7 +24,7 @@ from ..schedulers import build_scheduler
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
-from ..utils.model_ema import ModelEMA
+from ..utils.model_ema import build_ema
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
@@ -82,11 +82,9 @@ class BasePipeline(ABC):
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
 
         # Set model EMA
-        if self.conf.training.ema_decay:
-            self.model_ema = ModelEMA(model=self.model.module if hasattr(self.model, 'module') else self.model,
-                                      decay=self.conf.training.ema_decay)
-        else:
-            self.model_ema = None
+        self.model_ema = None
+        if self.conf.training.ema:
+            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
 
     @final
     def _is_ready(self):
