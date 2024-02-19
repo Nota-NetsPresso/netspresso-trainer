@@ -27,6 +27,7 @@ from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
+from ..utils.model_ema import ModelEMA
 
 NUM_SAMPLES = 16
 
@@ -79,6 +80,13 @@ class BasePipeline(ABC):
         self.cur_epoch = Value(c_int, self.start_epoch)
         self.train_dataloader.dataset.cur_epoch = self.cur_epoch
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
+
+        # Set model EMA
+        if self.conf.training.ema_decay:
+            self.model_ema = ModelEMA(model=self.model.module if hasattr(self.model, 'module') else self.model,
+                                      decay=self.conf.training.ema_decay)
+        else:
+            self.model_ema = None
 
     @final
     def _is_ready(self):
