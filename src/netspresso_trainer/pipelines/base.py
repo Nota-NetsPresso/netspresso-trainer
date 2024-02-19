@@ -24,10 +24,10 @@ from ..schedulers import build_scheduler
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
+from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
-from ..utils.model_ema import ModelEMA
 
 NUM_SAMPLES = 16
 
@@ -239,10 +239,7 @@ class BasePipeline(ABC):
         num_returning_samples = 0
         returning_samples = []
         outputs = []
-        if self.model_ema:
-            eval_model = self.model_ema.ema_model
-        else:
-            eval_model = self.model
+        eval_model = self.model_ema.ema_model if self.model_ema else self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.valid_step(eval_model, batch)
             if out is not None:
