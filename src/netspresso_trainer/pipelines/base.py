@@ -141,7 +141,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def valid_step(self, batch):
+    def valid_step(self, eval_model, batch):
         raise NotImplementedError
 
     @abstractmethod
@@ -239,8 +239,12 @@ class BasePipeline(ABC):
         num_returning_samples = 0
         returning_samples = []
         outputs = []
+        if self.model_ema:
+            eval_model = self.model_ema.ema_model
+        else:
+            eval_model = self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
-            out = self.valid_step(batch)
+            out = self.valid_step(eval_model, batch)
             if out is not None:
                 outputs.append(out)
                 if num_returning_samples < num_samples:
