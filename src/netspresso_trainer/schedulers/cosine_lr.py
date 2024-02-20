@@ -21,8 +21,9 @@ class CosineAnnealingLRWithCustomWarmUp(_LRScheduler):
         self,
         optimizer,
         scheduler_conf,
+        training_epochs,
     ):
-        self.T_max = scheduler_conf.total_iters
+        self.T_max = scheduler_conf.end_epoch
         self.eta_min = scheduler_conf.min_lr
         self.warmup_bias_lr = scheduler_conf.warmup_bias_lr
         self.warmup_iters = scheduler_conf.warmup_epochs
