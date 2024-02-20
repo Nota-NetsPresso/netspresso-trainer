@@ -6,8 +6,11 @@ Users can adjust epochs and batch size, as well as the desired optimizer and sch
 
 ```yaml
 training:
-  epochs: 3
+  epochs: 300
   batch_size: 32 
+  ema:
+    name: constant_decay
+    decay: 0.9999
   optimizer:
     name: adamw
     lr: 6e-5
@@ -31,5 +34,6 @@ Adjust these values according to your server specifications, but for successful 
 |---|---|
 | `training.epochs` | (int) The total number of epoch for training the model |
 | `training.batch_size` | (int) The number of samples in single batch input |
+| `training.ema` | (dict, optional) The configuration of EMA. Please refer to [the EMA page](./ema.md) for more details. If `None`, EMA is not applied. |
 | `training.optimizer` | (dict) The configuration of optimizer. Please refer to [the list of supporting optimizer](./optimizers.md) for more details. |
 | `training.scheduler` | (dict) The configuration of learning rate scheduler. Please refer to [the list of supporting scheduler](./schedulers.md) for more details. |

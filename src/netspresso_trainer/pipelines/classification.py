@@ -50,14 +50,14 @@ class ClassificationPipeline(BasePipeline):
         else:
             self.metric_factory.calc(pred, labels, phase='train')
 
-    def valid_step(self, batch):
-        self.model.eval()
+    def valid_step(self, eval_model, batch):
+        eval_model.eval()
         indices, images, labels = batch
         images = images.to(self.devices)
         labels = labels.to(self.devices)
         target = {'target': labels}
 
-        out = self.model(images)
+        out = eval_model(images)
         self.loss_factory.calc(out, target, phase='valid')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)

@@ -55,8 +55,8 @@ class SegmentationPipeline(BasePipeline):
         else:
             self.metric_factory.calc(pred, labels, phase='train')
 
-    def valid_step(self, batch):
-        self.model.eval()
+    def valid_step(self, eval_model, batch):
+        eval_model.eval()
         indices = batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
@@ -66,7 +66,7 @@ class SegmentationPipeline(BasePipeline):
             bd_gt = batch['edges']
             target['bd_gt'] = bd_gt.to(self.devices)
 
-        out = self.model(images)
+        out = eval_model(images)
         self.loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)

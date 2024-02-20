@@ -24,6 +24,7 @@ from ..schedulers import build_scheduler
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
+from ..utils.model_ema import build_ema
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
@@ -80,6 +81,11 @@ class BasePipeline(ABC):
         self.train_dataloader.dataset.cur_epoch = self.cur_epoch
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
 
+        # Set model EMA
+        self.model_ema = None
+        if self.conf.training.ema:
+            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
+
     @final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
@@ -133,7 +139,7 @@ class BasePipeline(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def valid_step(self, batch):
+    def valid_step(self, eval_model, batch):
         raise NotImplementedError
 
     @abstractmethod
@@ -221,6 +227,8 @@ class BasePipeline(ABC):
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.train_step(batch)
+            if self.model_ema:
+                self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
             outputs.append(out)
         self.get_metric_with_all_outputs(outputs, phase='train')
 
@@ -229,8 +237,9 @@ class BasePipeline(ABC):
         num_returning_samples = 0
         returning_samples = []
         outputs = []
+        eval_model = self.model_ema.ema_model if self.model_ema else self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
-            out = self.valid_step(batch)
+            out = self.valid_step(eval_model, batch)
             if out is not None:
                 outputs.append(out)
                 if num_returning_samples < num_samples:
@@ -279,7 +288,10 @@ class BasePipeline(ABC):
         best_epoch = min(valid_losses, key=valid_losses.get)
         save_best_model = best_epoch == epoch
 
-        model = self.model.module if hasattr(self.model, 'module') else self.model
+        if self.model_ema:
+            model = self.model_ema.ema_model
+        else:
+            model = self.model.module if hasattr(self.model, 'module') else self.model
         if self.save_dtype == torch.float16:
             model = copy.deepcopy(model).type(self.save_dtype)
         logging_dir = self.train_logger.result_dir

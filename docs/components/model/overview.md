@@ -16,10 +16,10 @@ model:
     optimizer_path: ~
   freeze_backbone: False
   architecture:
-    full:
-    backbone:
-    neck:
-    head:
+    full: ...
+    backbone: ...
+    neck: ...
+    head: ...
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
@@ -35,14 +35,13 @@ model:
   task: classification
   name: resnet50
   checkpoint:
-    use_pretrained: False # This field will be ignored since fx_model_path is activated
-    load_head: False # This field will be ignored since fx_model_path is activated
-    path: ~ # This field will be ignored since fx_model_path is activated
+    use_pretrained: # This field will be ignored since fx_model_path is activated
+    load_head: # This field will be ignored since fx_model_path is activated
+    path: # This field will be ignored since fx_model_path is activated
     fx_model_path: ./path_to_your_fx_model.pt
-    optimizer_path: ~ # This field will be ignored since fx_model_path is activated
+    optimizer_path: # This field will be ignored since fx_model_path is activated
   freeze_backbone: False
   architecture: # This field will be ignored since fx_model_path is activated
-    ...
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1

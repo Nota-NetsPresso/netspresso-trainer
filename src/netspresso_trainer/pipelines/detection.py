@@ -45,8 +45,8 @@ class DetectionPipeline(BasePipeline):
         }
         return dict(logs.items())
 
-    def valid_step(self, batch):
-        self.model.eval()
+    def valid_step(self, eval_model, batch):
+        eval_model.eval()
         indices, images, labels, bboxes = batch['indices'], batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices)}
@@ -58,7 +58,7 @@ class DetectionPipeline(BasePipeline):
 
         self.optimizer.zero_grad()
 
-        out = self.model(images)
+        out = eval_model(images)
         self.loss_factory.calc(out, targets, phase='valid')
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
