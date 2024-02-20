@@ -45,8 +45,9 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
         self,
         optimizer,
         scheduler_conf,
+        training_epochs,
     ):
-        total_iters = scheduler_conf.total_iters
+        total_iters = training_epochs
         iters_per_phase = scheduler_conf.iters_per_phase
 
         if iters_per_phase <= 0 or not isinstance(iters_per_phase, int):
@@ -65,7 +66,7 @@ class CosineAnnealingWarmRestartsWithCustomWarmUp(_LRScheduler):
         self.T_i, self.remain_iters = self.get_reassigned_t_i(self.T_0, self.T_i * self.T_mult, total_iters)
         self.total_iters = total_iters
         self.eta_min = scheduler_conf.min_lr
-        self.T_cur = -1 # @illian01: fix as -1 since last_epoch is set to default
+        self.T_cur = 0 # @illian01: fix as 0 since last_epoch is set to default
         self.warmup_bias_lr = scheduler_conf.warmup_bias_lr
         self.warmup_iters = scheduler_conf.warmup_epochs
         super().__init__(optimizer)
