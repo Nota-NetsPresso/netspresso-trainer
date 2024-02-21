@@ -17,6 +17,7 @@ This scheduler follows the [StepLR](https://pytorch.org/docs/stable/generated/to
 | `name` | (str) Name must be "step" to use `StepLR` scheduler. |
 | `iters_per_phase` | (int) Epoch period of learning rate decay. |
 | `gamma` | (float) Multiplicative factor of learning rate decay. |
+| `end_epoch` | (int) End epoch of this scheduler. Remained epochs will be trained with fixed learning rate. |
 
 <details>
   <summary>Step example</summary>
@@ -26,6 +27,7 @@ This scheduler follows the [StepLR](https://pytorch.org/docs/stable/generated/to
       name: step
       iters_per_phase: 1
       gamma: 0.1
+      end_epoch: 80
   ```
 </details>
 
@@ -40,6 +42,7 @@ This scheduler follows the [PolynomialLR](https://pytorch.org/docs/stable/_modul
 | `warmup_bias_lr` | (float) Starting learning rate for warmup period. |
 | `min_lr` | (float) Minimum learning rate. |
 | `power` | (float) The power of the polynomial. |
+| `end_epoch` | (int) End epoch of this scheduler. At the `end_epoch`, learning rate will be `min_lr`, and remained epochs trained with fixed learning rate. |
 
 <details>
   <summary>Polynomial with warmup example</summary>
@@ -51,6 +54,7 @@ training:
     warmup_bias_lr: 1e-5
     min_lr: 1e-6
     power: 1.0
+    end_epoch: 80
 ```
 </details>
 
@@ -64,6 +68,7 @@ This scheduler follows the [CosineAnnealingLR](https://pytorch.org/docs/stable/_
 | `warmup_epochs` | (int) The number of steps that the scheduler finishes to warmup the learning rate. |
 | `warmup_bias_lr` | (float) Starting learning rate for warmup period. |
 | `min_lr` | (float) Minimum learning rate. |
+| `end_epoch` | (int) End epoch of this scheduler. At the `end_epoch`, learning rate will be `min_lr`, and remained epochs trained with fixed learning rate. |
 
 <details>
   <summary>Cosine annealing with warmup example</summary>
@@ -74,6 +79,7 @@ training:
     warmup_epochs: 5
     warmup_bias_lr: 1e-5
     min_lr: 1e-6
+    end_epoch: 80
 ```
 </details>
 

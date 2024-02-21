@@ -38,9 +38,11 @@ class StepLR(_LRScheduler):
         self,
         optimizer,
         scheduler_conf,
+        training_epochs,
     ):
         self.step_size = scheduler_conf.iters_per_phase
         self.gamma = scheduler_conf.gamma
+        self.end_epoch = scheduler_conf.end_epoch
 
         super().__init__(optimizer)
 
@@ -49,7 +51,7 @@ class StepLR(_LRScheduler):
             warnings.warn("To get the last learning rate computed by the scheduler, "
                           "please use `get_last_lr()`.", UserWarning, stacklevel=2)
 
-        if (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
+        if (self.last_epoch > self.end_epoch) or (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
             return [group['lr'] for group in self.optimizer.param_groups]
         return [group['lr'] * self.gamma
                 for group in self.optimizer.param_groups]

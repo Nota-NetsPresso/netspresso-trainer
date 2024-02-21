@@ -39,6 +39,7 @@ class ScheduleConfig:
         "warmup_epochs": 5,
         "warmup_bias_lr": 1e-5,
         "min_lr": 0.,
+        "end_epoch": 3,
     })
 
 
