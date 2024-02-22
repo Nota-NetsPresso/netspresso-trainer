@@ -27,6 +27,7 @@
 - Revert [PR 340](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/340) and add multiprocessing.Value to handle MosaicDetection and RandomResize by `@illian01` in [PR 345](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/345)
 - Enable adjust max epoch of scheduler by `illian01` in [PR 350](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/350)
 - Remove github action about hugging face space demo by `@illian01` in [PR 351](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/351)
+- Update docs by `@illian01` in [PR 355](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/355)
 
 # v0.1.2
 
