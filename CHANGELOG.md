@@ -26,6 +26,7 @@
 - ~~Add before_epoch step which does update modules like dataloader before epoch training by `@illian01` in [PR 340](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/340)~~
 - Revert [PR 340](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/340) and add multiprocessing.Value to handle MosaicDetection and RandomResize by `@illian01` in [PR 345](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/345)
 - Enable adjust max epoch of scheduler by `illian01` in [PR 350](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/350)
+- Remove github action about hugging face space demo by `@illian01` in [PR 351](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/351)
 
 # v0.1.2
 
