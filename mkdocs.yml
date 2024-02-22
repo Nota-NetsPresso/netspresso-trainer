@@ -202,4 +202,4 @@ nav:
       - Normalizations: models/layers/normalizations.md
   - Benchmarks & Checkpoints: 
     - Benchmarks & Checkpoints: benchmarks/benchmarks.md
-  - PyNetsPresso: https://nota-netspresso.github.io/PyNetsPresso-docs/
+  - NetsPresso: https://nota-netspresso.github.io/PyNetsPresso/
