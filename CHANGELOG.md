@@ -12,7 +12,7 @@
 ## Bug Fixes:
 
 - Fix output_root_dir from fixed string to config value by `@illian01` in [PR 323](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/323)
-- Gather predicted results before compute metric and fix additional distributed evaluation inaccurate error by `@illian01` in [PR 346](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/346)
+- Gather predicted results before compute metric and fix additional distributed evaluation inaccurate error by `@illian01` in [PR 346](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/346), [PR 356](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/356)
 
 ## Breaking Changes:
 
