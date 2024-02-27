@@ -36,14 +36,28 @@ class DetectionPipeline(BasePipeline):
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
         if self.conf.distributed:
+            gathered_bboxes = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.gather_object(bboxes, gathered_bboxes if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_bboxes = sum(gathered_bboxes, [])
+                gathered_labels = sum(gathered_labels, [])
+                gathered_pred = sum(gathered_pred, [])
+                bboxes = gathered_bboxes
+                labels = gathered_labels
+                pred = gathered_pred
 
-        logs = {
-            'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                       for bbox, label in zip(bboxes, labels)],
-            'pred': pred
-        }
-        return dict(logs.items())
+        if self.single_gpu_or_rank_zero:
+            logs = {
+                'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                        for bbox, label in zip(bboxes, labels)],
+                'pred': pred
+            }
+            return dict(logs.items())
 
     def valid_step(self, eval_model, batch):
         eval_model.eval()
@@ -77,15 +91,31 @@ class DetectionPipeline(BasePipeline):
             bboxes = filtered_bboxes
             labels = filtered_labels
             pred = filtered_pred
-            torch.distributed.barrier()
 
-        logs = {
-            'images': images.detach().cpu().numpy(),
-            'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                       for bbox, label in zip(bboxes, labels)],
-            'pred': pred
-        }
-        return dict(logs.items())
+            # Gather phase
+            gathered_bboxes = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.gather_object(bboxes, gathered_bboxes if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_bboxes = sum(gathered_bboxes, [])
+                gathered_labels = sum(gathered_labels, [])
+                gathered_pred = sum(gathered_pred, [])
+                bboxes = gathered_bboxes
+                labels = gathered_labels
+                pred = gathered_pred
+
+        if self.single_gpu_or_rank_zero:
+            logs = {
+                'images': images.detach().cpu().numpy(),
+                'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
+                        for bbox, label in zip(bboxes, labels)],
+                'pred': pred
+            }
+            return dict(logs.items())
 
     def test_step(self, batch):
         self.model.eval()
@@ -103,21 +133,20 @@ class DetectionPipeline(BasePipeline):
                 if bool_idx:
                     filtered_pred.append(pred[idx])
             pred = filtered_pred
-            torch.distributed.barrier()
 
-        results = pred
-        return results
-
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
-        outputs = [{'target': o['target'], 'pred': o['pred']} for o in outputs] # output dict without 'images' key
-        if self.conf.distributed:
-            gathered_outputs = [None for _ in range(torch.distributed.get_world_size())]
-            torch.distributed.gather_object(outputs, gathered_outputs if torch.distributed.get_rank() == 0 else None, dst=0)
+            # Gather phase
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                gathered_outputs = sum(gathered_outputs, [])
-            outputs = gathered_outputs
+                gathered_pred = sum(gathered_pred, [])
+                pred = gathered_pred
 
+        if self.single_gpu_or_rank_zero:
+            results = pred
+            return results
+
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         if self.single_gpu_or_rank_zero:
             pred = []
             targets = []
