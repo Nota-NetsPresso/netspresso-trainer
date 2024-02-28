@@ -13,13 +13,18 @@ from .segmentation import (
     SegmentationDataSampler,
     SegmentationHFDataset,
 )
+from .pose_estimation import (
+    PoseEstimationCustomDataset,
+    PoseEstimationDataSampler,
+)
 
 CREATE_TRANSFORM = create_transform
 
 CUSTOM_DATASET: Dict[str, Type[BaseCustomDataset]] = {
     'classification': ClassificationCustomDataset,
     'segmentation': SegmentationCustomDataset,
-    'detection': DetectionCustomDataset
+    'detection': DetectionCustomDataset,
+    'pose_estimation': PoseEstimationCustomDataset,
 }
 
 HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
@@ -30,5 +35,6 @@ HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
 DATA_SAMPLER: Dict[str, Type[BaseDataSampler]] = {
     'classification': ClassficationDataSampler,
     'segmentation': SegmentationDataSampler,
-    'detection': DetectionDataSampler
+    'detection': DetectionDataSampler,
+    'pose_estimation': PoseEstimationDataSampler,
 }
