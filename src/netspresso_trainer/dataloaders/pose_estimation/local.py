@@ -18,6 +18,15 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
             conf_data, conf_augmentation, model_name, idx_to_class,
             split, samples, transform, with_label, **kwargs
         )
+        flattened_samples = []
+        for sample in self.samples:
+            flattened_sample = {}
+            with open(sample['label'], 'r') as f:
+                lines = f.readlines()
+                f.close()
+            flattened_sample = [{'image': sample['image'], 'label': line.strip()} for line in lines]
+            flattened_samples += flattened_sample
+        self.samples = flattened_samples
 
     def __getitem__(self, index):
         return index
