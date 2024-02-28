@@ -15,6 +15,11 @@ from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
 
+def load_custom_class_map(id_mapping: List[str]):
+    idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
+    return idx_to_class
+
+
 class PoseEstimationDataSampler(BaseDataSampler):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(PoseEstimationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
@@ -53,6 +58,9 @@ class PoseEstimationDataSampler(BaseDataSampler):
 
     def load_samples(self):
         assert self.conf_data.path.train.image is not None
+        assert self.conf_data.id_mapping is not None
+        id_mapping: Optional[list] = list(self.conf_data.id_mapping)
+        idx_to_class = load_custom_class_map(id_mapping=id_mapping)
 
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
@@ -71,7 +79,7 @@ class PoseEstimationDataSampler(BaseDataSampler):
             train_samples, valid_samples = random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
                                                         generator=torch.Generator().manual_seed(42))
 
-        return train_samples, valid_samples, test_samples, {}
+        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
 
     def load_huggingface_samples(self):
         raise NotImplementedError
