@@ -9,6 +9,7 @@ from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
 from .heads.segmentation import all_mlp_decoder
+from .heads.pose_estimation import rtmcc
 from .necks import fpn, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -38,6 +39,9 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,
         'anchor_decoupled_head': anchor_decoupled_head,
     },
+    'pose_estimation': {
+        'rtmcc': rtmcc,
+    }
 }
 
 MODEL_FULL_DICT = {
