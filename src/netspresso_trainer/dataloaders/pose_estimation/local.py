@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import List
 
+import cv2
 import numpy as np
 import PIL.Image as Image
 import torch
@@ -29,4 +30,43 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         self.samples = flattened_samples
 
     def __getitem__(self, index):
-        return index
+        img_path = Path(self.samples[index]['image'])
+        ann = self.samples[index]['label'] if 'label' in self.samples[index] else None
+
+        img = Image.open(img_path).convert('RGB')
+
+        org_img = img.copy()
+        w, h = img.size
+
+        if ann is None:
+            out = self.transform(image=img)
+            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
+
+        outputs = {}
+
+        ann = ann.split(' ')
+        bbox = ann[-4:]
+        keypoints = ann[:-4]
+
+        bbox = np.array(bbox).astype('float32')
+        keypoints = np.array(keypoints).reshape(-1, 3).astype('float32')
+
+        # TODO: Apply transforms
+        #out = self.transform(image=img, label=label, bbox=boxes, dataset=self)
+        # Altenatively, just crop and resize. This must be fixed to apply transforms
+        img = np.array(img)
+        img = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        img = cv2.resize(img, (256, 256), interpolation=cv2.INTER_LINEAR)
+        img = torch.tensor(img).to(torch.float32) / 255.0
+        img = torch.permute(img, (1, 2, 0))
+
+        outputs.update({'pixel_values': img, 'keypoints': keypoints})
+
+        outputs.update({'indices': index})
+        if self._split in ['train', 'training']:
+            return outputs
+
+        assert self._split in ['val', 'valid', 'test']
+        # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
+        outputs.update({'org_shape': (h, w)})
+        return outputs
