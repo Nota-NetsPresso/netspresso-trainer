@@ -29,6 +29,7 @@ class PoseEstimationPipeline(BasePipeline):
 
         pred = self.postprocessor(out)
 
+        keypoints = keypoints.detach().cpu().numpy()
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
