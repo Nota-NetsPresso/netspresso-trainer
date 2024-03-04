@@ -58,7 +58,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         img = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
         img = cv2.resize(img, (256, 256), interpolation=cv2.INTER_LINEAR)
         img = torch.tensor(img).to(torch.float32) / 255.0
-        img = torch.permute(img, (1, 2, 0))
+        img = torch.permute(img, (2, 0, 1))
 
         outputs.update({'pixel_values': img, 'keypoints': keypoints})
 
