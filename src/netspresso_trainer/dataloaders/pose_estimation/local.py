@@ -56,9 +56,18 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         # Altenatively, just crop and resize. This must be fixed to apply transforms
         img = np.array(img)
         img = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
+        crop_h, crop_w, _ = img.shape
         img = cv2.resize(img, (256, 256), interpolation=cv2.INTER_LINEAR)
         img = torch.tensor(img).to(torch.float32) / 255.0
         img = torch.permute(img, (2, 0, 1))
+
+        h_ratio = 256 / crop_h
+        w_ratio = 256 / crop_w
+        keypoints[:, 0] -= bbox[0]
+        keypoints[:, 0] *= w_ratio
+
+        keypoints[:, 1] -= bbox[1]
+        keypoints[:, 1] *= h_ratio
 
         outputs.update({'pixel_values': img, 'keypoints': keypoints})
 
