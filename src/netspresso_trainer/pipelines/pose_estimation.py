@@ -15,7 +15,7 @@ class PoseEstimationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        images, keypoints = batch['pixel_values'], batch['label']
+        images, keypoints = batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
