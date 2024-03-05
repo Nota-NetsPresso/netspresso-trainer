@@ -43,12 +43,12 @@ class PoseEstimationPipeline(BasePipeline):
             self.metric_factory.calc(pred, keypoints, phase='train')
 
     def valid_step(self, eval_model, batch):
-        self.model.train()
+        eval_model.eval()
         indices, images, keypoints = batch['indices'], batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
-        out = self.model(images)
+        out = eval_model(images)
         self.loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
