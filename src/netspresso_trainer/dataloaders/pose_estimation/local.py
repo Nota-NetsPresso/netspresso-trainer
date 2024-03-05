@@ -29,6 +29,18 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
             flattened_samples += flattened_sample
         self.samples = flattened_samples
 
+        # Build flip map. This is needed when try randomflip augmentation.
+        if split == 'train':
+            trasnform_names = set([transform_conf['name'] for transform_conf in conf_augmentation[split]])
+            flips = set(['randomhorizontalflip', 'randomverticalflip'])
+            if len(trasnform_names.intersection(flips)) > 0:
+                class_to_idx = {self._idx_to_class[i]['name']: i for i in self._idx_to_class}
+                self.flip_indices = np.zeros(self._num_classes).astype('int')
+                for idx in self._idx_to_class:
+                    idx_swap = self._idx_to_class[idx]['swap']
+                    assert idx_swap is not None, "To apply flip transform, keypoint swap info must be filled."
+                    self.flip_indices[idx] = class_to_idx[idx_swap] if idx_swap else -1
+
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
         ann = self.samples[index]['label'] if 'label' in self.samples[index] else None
@@ -52,7 +64,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         keypoints = np.array(keypoints).reshape(-1, 3).astype('float32')
 
         # TODO: Apply transforms
-        #out = self.transform(image=img, label=label, bbox=boxes, dataset=self)
+        out = self.transform(image=img, bbox=bbox, keypoint=keypoints, dataset=self)
         # Altenatively, just crop and resize. This must be fixed to apply transforms
         img = np.array(img)
         img = img[int(bbox[1]):int(bbox[3]), int(bbox[0]):int(bbox[2])]
