@@ -180,7 +180,8 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
-            # TODO: Compute keypoint
+            if keypoint is not None:
+                keypoint[..., 1] = h - keypoint[..., 1]
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
