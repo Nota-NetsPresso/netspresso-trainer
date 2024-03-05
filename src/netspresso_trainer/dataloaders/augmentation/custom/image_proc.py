@@ -155,7 +155,8 @@ class RandomHorizontalFlip:
                 mask = F.hflip(mask)
             if bbox is not None:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
-            # TODO: Compute keypoint
+            if keypoint is not None:
+                keypoint[..., 0] = w - keypoint[..., 0]
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
