@@ -69,6 +69,14 @@ class PoseEstimationPipeline(BasePipeline):
         else:
             self.metric_factory.calc(pred, keypoints, phase='valid')
 
+        # TODO: Return gathered samples
+        logs = {
+            'images': images.detach().cpu().numpy(),
+            'target': keypoints,
+            'pred': pred
+        }
+        return dict(logs.items())
+
     def test_step(self, batch):
         pass
 
