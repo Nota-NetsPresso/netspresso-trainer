@@ -40,8 +40,6 @@ def tab_pynetspresso(args):
                         label="Model name",
                         info="Leave empty to use same as the model filename."
                     )
-                    model_task = gr.Dropdown(label="Task", value='classification', multiselect=False,
-                                             choices=SUPPORTING_TASK_LIST)
                 model_path = gr.Textbox(label="Model path")
                 with gr.Row():
                     compress_input_batch_size = gr.Number(label="Batch size", value=1, minimum=1, maximum=1)
@@ -80,7 +78,7 @@ def tab_pynetspresso(args):
                 compression_ratio, compressed_model_dir],
         outputs=[session, result_compressed_model_path])
 
-    return session, email_input, password_input, model_name, model_task, model_path, \
+    return session, email_input, password_input, model_name, model_path, \
         compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
         compression_ratio, compressed_model_dir, result_compressed_model_path, \
         login_button, compress_button

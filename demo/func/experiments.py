@@ -13,7 +13,6 @@ COLUMN_NAME_AS = {
     "is_fx_retrain": "🦴",
     "id": "Name",
     "model": "Model",
-    "task": "Task",
     "data": "Dataset",
     "performance": "Perf",
     "primary_metric": "Metric",
@@ -190,7 +189,6 @@ class ExperimentDataFrame:
         assert filtered_df.shape[0] == 1, f"No unique experiment found with the given id: {id}"
 
         model_name = filtered_df['id'].values[0]
-        model_task = filtered_df['task'].values[0]
         model_path = filtered_df['checkpoint_path'].values[0]
 
         input_image_size: Tuple[int, int] = filtered_df['input_image_size'].values[0]
@@ -200,4 +198,4 @@ class ExperimentDataFrame:
         compress_input_height = image_height
         compress_input_width = image_width
 
-        return model_name, model_task, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width
+        return model_name, model_path, compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width

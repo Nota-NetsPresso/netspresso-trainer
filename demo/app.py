@@ -71,7 +71,7 @@ def launch_gradio(args):
                     args)
 
             with gr.Tab("PyNetsPresso", id='pynetspresso'):
-                session, email_input, password_input, model_name, model_task, model_path, \
+                session, email_input, password_input, model_name, model_path, \
                     compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
                     compression_ratio, compressed_model_dir, result_compressed_model_path, \
                     login_button, compress_button = \
@@ -79,7 +79,7 @@ def launch_gradio(args):
 
             experiment_button_compressor.click(
                 fn=experiment_df.find_compression_info_with_id, inputs=[experiment_selected],
-                outputs=[model_name, model_task, model_path, compress_input_batch_size, compress_input_channels,
+                outputs=[model_name, model_path, compress_input_batch_size, compress_input_channels,
                          compress_input_height, compress_input_width]).success(
                 fn=change_tab_to_pynetspresso, inputs=None, outputs=[tabs])
 
