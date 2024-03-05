@@ -170,7 +170,7 @@ class MosaicDetection:
         self.fill = fill
         self.mosaic_off_epochs = mosaic_off_epochs
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         if (self.mosaic_off_epochs <= dataset.end_epoch - dataset.cur_epoch.value) and (random.random() < self.mosaic_prob):
             mosaic_labels = []
             input_dim = self.size
@@ -244,10 +244,10 @@ class MosaicDetection:
             bbox = mosaic_labels[:, :4]
             label = mosaic_labels[:, -1:]
             mosaic_img = Image.fromarray(mosaic_img) # return as PIL
-            return mosaic_img, label, mask, bbox
+            return mosaic_img, label, mask, bbox, keypoint
 
         else:
-            return image, label, mask, bbox
+            return image, label, mask, bbox, keypoint
 
     def mixup(self, origin_img, origin_labels, input_dim, dataset):
         jit_factor = random.uniform(*self.mixup_scale)
