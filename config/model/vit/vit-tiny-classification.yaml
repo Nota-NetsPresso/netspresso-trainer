@@ -1,0 +1,36 @@
+model:
+  task: classification
+  name: vit_tiny
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: vit
+      params:
+        patch_size: 16
+        attention_channels: 192
+        num_blocks: 12
+        num_attention_heads: 3
+        attention_dropout_prob: 0.0
+        ffn_intermediate_channels: 768  # hidden_size * 4
+        ffn_dropout_prob: 0.1
+        use_cls_token: True
+        vocab_size: 1000
+      stage_params: ~
+    head:
+      name: fc
+      params:
+        num_layers: 1
+        intermediate_channels: ~
+        act_type: ~
+        dropout_prob: 0.
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~

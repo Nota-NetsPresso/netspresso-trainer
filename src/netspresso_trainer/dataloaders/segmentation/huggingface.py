@@ -28,18 +28,18 @@ class SegmentationHFDataset(BaseHFDataset):
             model_name,
             root,
             split,
+            transform,
             with_label
         )
 
-        self.transform = transform
         self.idx_to_class = idx_to_class
         self.samples = huggingface_dataset
 
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
 
-        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.metadata.label_image_mode).upper() \
-            if conf_data.metadata.label_image_mode is not None else 'L'
+        self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_mode).upper() \
+            if conf_data.label_image_mode is not None else 'L'
 
         self.image_feature_name = conf_data.metadata.features.image
         self.label_feature_name = conf_data.metadata.features.label
@@ -76,19 +76,20 @@ class SegmentationHFDataset(BaseHFDataset):
         w, h = img.size
 
         if label is None:
-            out = self.transform(self.conf_augmentation)(image=img)
+            out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
 
         if self.model_name == 'pidnet':
             edge = generate_edge(np.array(label))
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask, edge=edge)
+            out = self.transform(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
         else:
-            out = self.transform(self.conf_augmentation)(image=img, mask=mask)
+            out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
+        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 

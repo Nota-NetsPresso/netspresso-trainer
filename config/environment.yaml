@@ -1,2 +1,4 @@
 environment: 
+  seed: 1
   num_workers: 4 
+  gpus: 0

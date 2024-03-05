@@ -1,0 +1,84 @@
+model:
+  task: detection
+  name: mixnet_l
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mixnet
+      params:
+        stem_channels: 24
+        wid_mul: 1.3
+        dep_mul: 1.0
+        dropout_rate: 0.
+      stage_params: 
+        -
+          expansion_ratio: [1, 6, 3]
+          out_channels: [24, 32, 32]
+          num_blocks: [1, 1, 1]
+          kernel_sizes: [[3], [3, 5, 7], [3]]
+          num_exp_groups: [1, 2, 2]
+          num_poi_groups: [1, 2, 2]
+          stride: [1, 2, 1]
+          act_type: ["relu", "relu", "relu"]
+          se_reduction_ratio: [~, ~, ~]
+        -
+          expansion_ratio: [6, 6]
+          out_channels: [40, 40]
+          num_blocks: [1, 3]
+          kernel_sizes: [[3, 5, 7, 9], [3, 5]]
+          num_exp_groups: [1, 2]
+          num_poi_groups: [1, 2]
+          stride: [2, 1]
+          act_type: ["swish", "swish"]
+          se_reduction_ratio: [2, 2]
+        -
+          expansion_ratio: [6, 6, 6, 3]
+          out_channels: [80, 80, 120, 120]
+          num_blocks: [1, 3, 1, 3]
+          kernel_sizes: [[3, 5, 7], [3, 5, 7, 9], [3], [3, 5, 7, 9]]
+          num_exp_groups: [1, 2, 1, 2]
+          num_poi_groups: [1, 2, 1, 2]
+          stride: [2, 1, 1, 1]
+          act_type: ["swish", "swish", "swish", "swish"]
+          se_reduction_ratio: [4, 4, 2, 2]
+        -
+          expansion_ratio: [6, 6]
+          out_channels: [200, 200]
+          num_blocks: [1, 3]
+          kernel_sizes: [[3, 5, 7, 9], [3, 5, 7, 9]]
+          num_exp_groups: [1, 1]
+          num_poi_groups: [1, 2]
+          stride: [2, 1]
+          act_type: ["swish", "swish"]
+          se_reduction_ratio: [2, 2]
+    neck:
+      name: fpn
+      params:
+        num_outs: 4
+        start_level: 0
+        end_level: -1
+        add_extra_convs: False
+        relu_before_extra_convs: False
+    head:
+      name: anchor_decoupled_head
+      params:
+        anchor_sizes: [[32,], [64,], [128,], [256,]]
+        aspect_ratios: [0.5, 1.0, 2.0]
+        num_layers: 1
+        norm_type: batch_norm
+        # postprocessor - decode
+        topk_candidates: 1000
+        score_thresh: 0.05
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
+  losses:
+    - criterion: retinanet_loss
+      weight: ~

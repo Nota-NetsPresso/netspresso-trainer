@@ -161,31 +161,45 @@ nav:
     - Docker: docker-installation.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Components:
-    - components/index.md
+    - Overview: components/overview.md
     - Data: components/data.md
-    - Augmentation: components/augmentation.md
-    - Training: components/training.md
+    - Augmentation: 
+      - Overview: components/augmentation/overview.md
+      - Transforms: components/augmentation/transforms.md
+    - Training: 
+      - Overview: components/training/overview.md
+      - EMA: components/training/ema.md
+      - Optimizers: components/training/optimizers.md
+      - Schedulers: components/training/schedulers.md
     - Model:
-      - Common: components/model/common.md
-      - Backbones: components/model/backbones.md
-      - Task heads: components/model/heads.md
-      - Full models: components/model/fulls.md
+      - Overview: components/model/overview.md
       - Losses: components/model/losses.md
-      - Field list: components/model/field.md
     - Logging: components/logging.md
+    - Environment: components/environment.md
   - Models:
-    - models/index.md
-    - Implementations: models/implementations.md
-    - Model List:
-      - models/model-list/index.md
-      - Backbones: models/model-list/backbones.md
-      - Heads: models/model-list/heads.md
-      - Full models: models/model-list/full-models.md
-  - PyNetsPresso:
-    - pynetspresso/index.md
-    - Compressor: pynetspresso/compressor.md
-    - Launcher: pynetspresso/launcher.md
-    - torch.fx: pynetspresso/torch-fx.md
-    - Best Practice:
-      - Compress and Retrain: pynetspresso/best-practice/compress-and-retrain.md
-      - Benchmark with Jetson AGX Orin: pynetspresso/best-practice/benchmark-with-launcher.md
+    - Overview: models/overview.md
+    - Full models: 
+      - PIDNet: models/fullmodels/pidnet.md
+    - Backbones:
+      - CSPDarkNet: models/backbones/cspdarknet.md
+      - EfficientFormer: models/backbones/efficientformer.md
+      - MixNet: models/backbones/mixnet.md
+      - MixTransformer: models/backbones/mixtransformer.md
+      - MobileNetV3: models/backbones/mobilenetv3.md
+      - MobileViT: models/backbones/mobilevit.md
+      - ResNet: models/backbones/resnet.md
+      - ViT: models/backbones/vit.md
+    - Necks:
+      - FPN: models/necks/fpn.md
+      - YOLOPAFPN: models/necks/yolopafpn.md
+    - Heads:
+      - AllMLPDecoder: models/heads/allmlpdecoder.md
+      - AnchorDecoupledHead: models/heads/anchordecoupledhead.md
+      - AnchorFreeDecoupledHead: models/heads/anchorfreedecoupledhead.md
+      - FC: models/heads/fc.md  
+    - Layers:
+      - Activations: models/layers/activations.md
+      - Normalizations: models/layers/normalizations.md
+  - Benchmarks & Checkpoints: 
+    - Benchmarks & Checkpoints: benchmarks/benchmarks.md
+  - NetsPresso: https://netspresso.ai/

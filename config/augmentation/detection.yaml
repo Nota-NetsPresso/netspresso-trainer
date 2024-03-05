@@ -1,7 +1,16 @@
 augmentation:
   img_size: &img_size 512
-  transforms:
+  train:
     - 
       name: resize
-      size: *img_size
+      size: [*img_size, *img_size]
       interpolation: bilinear
+      max_size: ~
+      resize_criteria: ~
+  inference:
+    - 
+      name: resize
+      size: [*img_size, *img_size]
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: ~

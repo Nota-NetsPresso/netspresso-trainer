@@ -14,7 +14,7 @@ class BaseCSVLogger(ABC):
         self.csv_path = Path(result_dir) / CSV_FILENAME
         self.header: List = []
 
-        self._temp_row_dict = {}
+        self._clear_temp()
 
         if self.csv_path.exists():
             self.csv_path.unlink()
@@ -46,12 +46,29 @@ class BaseCSVLogger(ABC):
             f.write("\n")
 
     def _clear_temp(self):
-        self._temp_row_dict = {}
+        self._temp_row_dict = {k: None for k in self.header}
+
+    def convert_csv_string(self):
+        row_dict = self._temp_row_dict
+        return_string_list = []
+
+        for _key in self.header:
+            if row_dict[_key] is None:  # skip value
+                return_string_list.append("")
+            elif _key in ['epoch']:  # int
+                return_string_list.append(f"{row_dict[_key]:04d}")
+            elif _key in []:  # string
+                return_string_list.append(f"{row_dict[_key]}")
+            else:
+                return_string_list.append(f"{row_dict[_key]:.09f}")
+
+        return return_string_list
+
 
     def _update_with_list(self, data: List):
         if data is not None and len(data) != 0:
             with open(self.csv_path, 'a') as f:
-                f.write(",".join([f"{x:.09f}" for x in data]))
+                f.write(",".join(data))
                 f.write("\n")
         self._clear_temp()
         return
@@ -60,11 +77,13 @@ class BaseCSVLogger(ABC):
         for _key, _value in data.items():
             if _key not in self.header:
                 raise AssertionError(f"The given key ({_key}) is not in {self.header}!")
-            if _key not in self._temp_row_dict:
+            if _key not in self._temp_row_dict or self._temp_row_dict[_key] is None:
                 self._temp_row_dict[_key] = _value
 
         if set(self.header) == set(self._temp_row_dict.keys()):
-            self._update_with_list([self._temp_row_dict[_col] for _col in self.header])
+            csv_string_list = self.convert_csv_string()
+            self._update_with_list(csv_string_list)
+        self._clear_temp()
         return
 
     def update(self, data=None, **kwargs):

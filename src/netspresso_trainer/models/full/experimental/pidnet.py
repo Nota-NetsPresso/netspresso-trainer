@@ -1,7 +1,6 @@
 # ------------------------------------------------------------------------------
 # Written by Jiacong Xu (jiacong.xu@tamu.edu)
 # ------------------------------------------------------------------------------
-import logging
 import time
 from typing import Optional, List, Dict
 
@@ -17,18 +16,20 @@ use_align_corners = False
 
 
 class PIDNet(nn.Module):
-
+    task = 'segmentation'
     def __init__(
-            self, 
-            params: Optional[Dict] = None
+        self, 
+        params: Optional[Dict] = None
     ) -> None:
         super(PIDNet, self).__init__()
+        self.name = params.nick_name
+        
         num_classes = params.num_classes
         m = params.m
         n = params.n
-        planes = params.planes
-        ppm_planes = params.ppm_planes
-        head_planes = params.head_planes
+        planes = params.channels
+        ppm_planes = params.ppm_channels
+        head_planes = params.head_channels
         is_training = params.is_training
 
         self.is_training = is_training
@@ -37,10 +38,10 @@ class PIDNet(nn.Module):
         self.conv1 = nn.Sequential(
             ConvLayer(in_channels=3, out_channels=planes,
                       kernel_size=3, stride=2, padding=1,
-                      norm_type='batch_norm', act_type='relu'),
+                      norm_type='batch_norm', act_type='relu', bias=True),
             ConvLayer(in_channels=planes, out_channels=planes,
                       kernel_size=3, stride=2, padding=1,
-                      norm_type='batch_norm', act_type='relu')
+                      norm_type='batch_norm', act_type='relu', bias=True)
         )
 
         self.relu = nn.ReLU(inplace=True)
@@ -141,6 +142,10 @@ class PIDNet(nn.Module):
         layer = block(inplanes, planes, stride, downsample, expansion=expansion, no_out_act=True)
 
         return layer
+
+    @property
+    def head_list(self):
+        return ('seghead_p', 'seghead_d', 'final_layer')
 
     @property
     def device(self):

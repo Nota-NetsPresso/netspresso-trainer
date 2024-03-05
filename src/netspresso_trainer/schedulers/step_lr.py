@@ -1,10 +1,9 @@
-import logging
 import warnings
 
 import torch
+from loguru import logger
 from torch.optim.lr_scheduler import _LRScheduler
 
-logger = logging.getLogger("netspresso_trainer")
 
 class StepLR(_LRScheduler):
     """Decays the learning rate of each parameter group by gamma every
@@ -35,17 +34,24 @@ class StepLR(_LRScheduler):
         >>>     scheduler.step()
     """
 
-    def __init__(self, optimizer, iters_per_phase, gamma=0.1, last_epoch=-1, verbose=False, **kwargs):
-        self.step_size = iters_per_phase
-        self.gamma = gamma
-        super().__init__(optimizer, last_epoch, verbose)
+    def __init__(
+        self,
+        optimizer,
+        scheduler_conf,
+        training_epochs,
+    ):
+        self.step_size = scheduler_conf.iters_per_phase
+        self.gamma = scheduler_conf.gamma
+        self.end_epoch = scheduler_conf.end_epoch
+
+        super().__init__(optimizer)
 
     def get_lr(self):
         if not self._get_lr_called_within_step:
             warnings.warn("To get the last learning rate computed by the scheduler, "
                           "please use `get_last_lr()`.", UserWarning, stacklevel=2)
 
-        if (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
+        if (self.last_epoch > self.end_epoch) or (self.last_epoch == 0) or (self.last_epoch % self.step_size != 0):
             return [group['lr'] for group in self.optimizer.param_groups]
         return [group['lr'] * self.gamma
                 for group in self.optimizer.param_groups]

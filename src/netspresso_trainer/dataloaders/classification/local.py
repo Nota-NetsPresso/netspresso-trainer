@@ -20,8 +20,8 @@ class ClassificationCustomDataset(BaseCustomDataset):
         img = Image.open(img).convert('RGB')
 
         if self.transform is not None:
-            out = self.transform(conf_augmentation=self.conf_augmentation)(img)
+            out = self.transform(img)
 
         if target is None:
             target = -1  # To be ignored at cross-entropy loss
-        return out['image'], target
+        return index, out['image'], target

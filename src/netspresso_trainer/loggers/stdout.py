@@ -1,12 +1,12 @@
-import logging
-import os
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-logger = logging.getLogger("netspresso_trainer")
+from loguru import logger
 
+LOG_FILENAME = "result.log"
 
 class StdOutLogger:
-    def __init__(self, task, model, total_epochs=None) -> None:
+    def __init__(self, task, model, total_epochs=None, result_dir=None) -> None:
         super(StdOutLogger, self).__init__()
         self.task = task
         self.model_name = model

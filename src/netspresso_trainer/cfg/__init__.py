@@ -44,7 +44,6 @@ from .model import (
     ClassificationMobileNetV3ModelConfig,
     ClassificationMobileViTModelConfig,
     ClassificationResNetModelConfig,
-    ClassificationSegFormerModelConfig,
     ClassificationViTModelConfig,
     DetectionEfficientFormerModelConfig,
     DetectionYoloXModelConfig,

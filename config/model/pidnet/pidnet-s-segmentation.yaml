@@ -1,26 +1,24 @@
 model:
   task: segmentation
   name: pidnet_s
-  checkpoint: ./weights/pidnet/pidnet_s.pth
-  fx_model_checkpoint: ~
-  resume_optimizer_checkpoint: ~
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
   freeze_backbone: False
   architecture:
     full:
       name: pidnet
       m: 2
       n: 3
-      planes: 32
-      ppm_planes: 96
-      head_planes: 128
+      channels: 32
+      ppm_channels: 96
+      head_channels: 128
     backbone: ~
     head: ~
   losses:
-    - criterion: pidnet_cross_entropy
-      weight: ~
-      ignore_index: 255
-    - criterion: boundary_loss
-      weight: 20.0
-    - criterion: pidnet_cross_entropy_with_boundary
+    - criterion: pidnet_loss
       weight: ~
       ignore_index: 255

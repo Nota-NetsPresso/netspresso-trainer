@@ -1,9 +1,11 @@
+from functools import partial
+
 import cv2
 import numpy as np
 import PIL.Image as Image
 
 from ..utils.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
-from . import custom as TC
+from .custom import image_proc as TC
 from .registry import TRANSFORM_DICT
 
 EDGE_SIZE = 4
@@ -28,16 +30,30 @@ def generate_edge(label: np.ndarray) -> Image.Image:
     return Image.fromarray((edge.copy() * 255).astype(np.uint8))
 
 
-def transforms_custom_train(conf_augmentation):
+def transforms_check(transforms):
+    names = [t.name.lower() for t in transforms]
+    if 'mixing' in names:
+        if names[-1] == 'mixing':
+            return transforms[:-1]
+        else:
+            raise ValueError("Mixing transform is in the middle of transforms. This must be in the last of transforms list.")
+    return transforms
+
+
+def transforms_custom(conf_augmentation, training):
     assert conf_augmentation.img_size > 32
+    phase_conf = conf_augmentation.train if training else conf_augmentation.inference
+
     preprocess = []
-    for augment in conf_augmentation.transforms:
-        name = augment.name.lower()
-        augment_kwargs = list(augment.keys())
-        augment_kwargs.remove('name')
-        augment_kwargs = {k:augment[k] for k in augment_kwargs}
-        transform = TRANSFORM_DICT[name](**augment_kwargs)
-        preprocess.append(transform)
+    if phase_conf:
+        checked_transforms = transforms_check(phase_conf)
+        for augment in checked_transforms:
+            name = augment.name.lower()
+            augment_kwargs = list(augment.keys())
+            augment_kwargs.remove('name')
+            augment_kwargs = {k:augment[k] for k in augment_kwargs}
+            transform = TRANSFORM_DICT[name](**augment_kwargs)
+            preprocess.append(transform)
 
     preprocess = preprocess + [
         TC.ToTensor(),
@@ -46,37 +62,21 @@ def transforms_custom_train(conf_augmentation):
     return TC.Compose(preprocess)
 
 
-def transforms_custom_eval(conf_augmentation):
-    assert conf_augmentation.img_size > 32
-    preprocess = [
-        TC.Resize((conf_augmentation.img_size, conf_augmentation.img_size), interpolation='bilinear'),
-        TC.ToTensor(),
-        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    ]
-    return TC.Compose(preprocess)
-
-
-def train_transforms_pidnet(conf_augmentation):
+def train_transforms_pidnet(conf_augmentation, training):
     preprocess = []
-    for augment in conf_augmentation.transforms:
-        name = augment.name.lower()
-        augment_kwargs = list(augment.keys())
-        augment_kwargs.remove('name')
-        augment_kwargs = {k:augment[k] for k in augment_kwargs}
-        transform = TRANSFORM_DICT[name](**augment_kwargs)
-        preprocess.append(transform)
+    phase_conf = conf_augmentation.train if training else conf_augmentation.inference
+
+    if phase_conf:
+        checked_transforms = transforms_check(phase_conf)
+        for augment in checked_transforms:
+            name = augment.name.lower()
+            augment_kwargs = list(augment.keys())
+            augment_kwargs.remove('name')
+            augment_kwargs = {k:augment[k] for k in augment_kwargs}
+            transform = TRANSFORM_DICT[name](**augment_kwargs)
+            preprocess.append(transform)
 
     preprocess = preprocess + [
-        TC.ToTensor(),
-        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    ]
-    return TC.Compose(preprocess, additional_targets={'edge': 'mask'})
-
-
-def val_transforms_pidnet(conf_augmentation):
-    assert conf_augmentation.img_size > 32
-    preprocess = [
-        TC.Resize((conf_augmentation.img_size, conf_augmentation.img_size), interpolation='bilinear'),
         TC.ToTensor(),
         TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
     ]
@@ -85,5 +85,5 @@ def val_transforms_pidnet(conf_augmentation):
 
 def create_transform(model_name: str, is_training=False):
     if 'pidnet' in model_name:
-        return train_transforms_pidnet if is_training else val_transforms_pidnet
-    return transforms_custom_train if is_training else transforms_custom_eval
+        return partial(train_transforms_pidnet, training=is_training)
+    return partial(transforms_custom, training=is_training)

@@ -1,4 +1,3 @@
-import logging
 import os
 from pathlib import Path
 from typing import List
@@ -65,7 +64,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         if ann_path is None:
-            out = self.transform(self.conf_augmentation)(image=img)
+            out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
 
         outputs = {}
@@ -73,12 +72,16 @@ class DetectionCustomDataset(BaseCustomDataset):
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
-        out = self.transform(self.conf_augmentation)(image=img, bbox=np.concatenate((boxes, label), axis=-1))
-        assert out['bbox'].shape[-1] == 5  # ltrb + class_label
-        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'][..., :4],
-                        'label': torch.as_tensor(out['bbox'][..., 4], dtype=torch.int64)})
+        out = self.transform(image=img, label=label, bbox=boxes, dataset=self)
+        # Remove
+        mask = np.minimum(out['bbox'][:, 2] - out['bbox'][:, 0], out['bbox'][:, 3] - out['bbox'][:, 1]) > 1
+        out['bbox'] = out['bbox'][mask]
+        out['label'] = torch.as_tensor(out['label'].ravel(), dtype=torch.int64)
+        out['label'] = out['label'][mask]
+        outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'],
+                        'label': out['label']})
 
-
+        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 
@@ -86,3 +89,19 @@ class DetectionCustomDataset(BaseCustomDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs
+
+    def pull_item(self, index):
+        img_path = Path(self.samples[index]['image'])
+        ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
+        img = Image.open(str(img_path)).convert('RGB')
+
+        org_img = img.copy()
+        w, h = img.size
+        if ann_path is None:
+            return org_img, np.zeros(0, 1), np.zeros(0, 5)
+
+        label, boxes_yolo = get_label(Path(ann_path))
+        boxes = self.xywhn2xyxy(boxes_yolo, w, h)
+
+        return org_img, label, boxes
+

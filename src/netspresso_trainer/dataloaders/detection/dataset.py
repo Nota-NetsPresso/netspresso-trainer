@@ -20,11 +20,14 @@ def load_custom_class_map(id_mapping: List[str]):
     return idx_to_class
 
 def detection_collate_fn(original_batch):
+    indices = []
     pixel_values = []
     bbox = []
     label = []
     org_shape = []
     for data_sample in original_batch:
+        if 'indices' in data_sample:
+            indices.append(data_sample['indices'])
         if 'pixel_values' in data_sample:
             pixel_values.append(data_sample['pixel_values'])
         if 'bbox' in data_sample:
@@ -34,6 +37,9 @@ def detection_collate_fn(original_batch):
         if 'org_shape' in data_sample:
             org_shape.append(data_sample['org_shape'])
     outputs = {}
+    if len(indices) != 0:
+        indices = torch.tensor(indices, dtype=torch.long)
+        outputs.update({'indices': indices})
     if len(pixel_values) != 0:
         pixel_values = torch.stack(pixel_values, dim=0)
         outputs.update({'pixel_values': pixel_values})

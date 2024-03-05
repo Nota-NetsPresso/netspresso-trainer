@@ -1,9 +1,11 @@
 augmentation:
   img_size: &img_size ~
-  transforms:
+  train:
     - 
       name: randomresizedcrop
       size: ~
+      sclale: ~
+      ratio: ~
       interpolation: bilinear
     -
       name: randomhorizontalflip
@@ -21,7 +23,11 @@ augmentation:
     -
       name: resize
       size: ~
+      interpolation: ~
+      max_size: ~
     -
       name: pad
       padding: ~
-  mix_transforms: ~
+      fill: ~
+      padding_mode: ~
+  inference: ~

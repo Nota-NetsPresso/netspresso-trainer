@@ -1,9 +1,12 @@
 model:
   task: segmentation
   name: resnet50
-  checkpoint: ./weights/resnet/resnet50.pth
-  fx_model_checkpoint: ~
-  resume_optimizer_checkpoint: ~
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
   freeze_backbone: False
   architecture:
     full:
@@ -11,30 +14,29 @@ model:
     backbone:
       name: resnet
       params:
-        block: bottleneck
-        norm_layer: batch_norm
-        groups: 1
-        width_per_group: 64
-        zero_init_residual: False
-        expansion: ~
+        block_type: bottleneck
+        norm_type: batch_norm
       stage_params:
         - 
-          plane: 64
-          layers: 3
+          channels: 64
+          num_blocks: 3
         - 
-          plane: 128
-          layers: 4
+          channels: 128
+          num_blocks: 4
           replace_stride_with_dilation: False
         - 
-          plane: 256
-          layers: 6
+          channels: 256
+          num_blocks: 6
           replace_stride_with_dilation: False
         - 
-          plane: 512
-          layers: 3
+          channels: 512
+          num_blocks: 3
           replace_stride_with_dilation: False
     head:
       name: all_mlp_decoder
+      params:
+        intermediate_channels: 256
+        classifier_dropout_prob: 0.
   losses:
     - criterion: cross_entropy
       weight: ~

@@ -337,26 +337,28 @@ class EfficientFormer(MetaFormer):
     ) -> None:
         
         num_blocks = [stage.num_blocks for stage in stage_params]
-        hidden_sizes = [stage.hidden_sizes for stage in stage_params]
-        downsamples = [stage.downsamples for stage in stage_params]
+        hidden_sizes = [stage.channels for stage in stage_params]
 
         num_attention_heads = params.num_attention_heads
-        attention_hidden_size = params.attention_hidden_size
+        attention_hidden_size = params.attention_channels
         attention_dropout_prob = params.attention_dropout_prob
-        attention_ratio = params.attention_ratio
-        attention_bias_resolution = params.attention_bias_resolution
-        pool_size = params.pool_size
-        intermediate_ratio = params.intermediate_ratio
-        hidden_dropout_prob = params.hidden_dropout_prob
-        hidden_activation_type = params.hidden_activation_type
-        layer_norm_eps = params.layer_norm_eps
-        drop_path_rate = params.drop_path_rate
-        use_layer_scale = params.use_layer_scale
-        layer_scale_init_value = params.layer_scale_init_value
-        down_patch_size = params.down_patch_size
-        down_stride = params.down_stride
-        down_pad = params.down_pad
+        attention_ratio = params.attention_value_expansion_ratio
+        intermediate_ratio = params.ffn_intermediate_ratio
+        hidden_dropout_prob = params.ffn_dropout_prob
+        hidden_activation_type = params.ffn_act_type
         vit_num = params.vit_num
+
+        # Fix as constant
+        layer_norm_eps = 1e-5
+        layer_scale_init_value = 1e-5
+        down_patch_size = 3
+        down_stride = 2
+        down_pad = 1
+        pool_size = 3
+        downsamples = [True for _ in stage_params]
+        use_layer_scale = True
+        attention_bias_resolution = 16
+        drop_path_rate = 0.
 
         super().__init__(hidden_sizes)
         self.task = task.lower()

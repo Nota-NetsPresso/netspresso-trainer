@@ -1,4 +1,4 @@
-## Overview
+# Data
 
 NetsPresso Trainer supports learning functions for various vision tasks with your custom data. 
 In addition to data stored in a local repository, it also supports learning with data accessible through APIs such as [Hugging Face datasets](https://huggingface.co/datasets). 
@@ -10,30 +10,59 @@ On this page, we will guide you on the data format you need to learn with your c
 For image data, various extension images are supported, but we recommend one of `.jpg`, `.jpeg`, `.png`, and `.bmp`. In this case, label data used in semantic segmentation must be saved as `.png` to prevent data loss and utilize image header information. 
 The following sections introduce how to organize data for each task. 
 
+## Training with your custom datasets
+
 ### Image classification
 
-To train an image classification model using NetsPresso Trainer, **the data must be in following formats**: 
+To train an image classification model using NetsPresso Trainer, **users must organize their data according to a specified format.** We introduce two methods for recognizing classification data to NetsPresso Trainer. The following examples use the [ImageNet1K](https://image-net.org/) dataset.
+
+#### Example 1
+
+The first method is distinguishing classes through the directory names.
 
 - There must be a directory for each class to be distinguished by the classification model.
 - Each class directory must contain all the images corresponding to that class.
 - Collect directories containing images for each class under the root directory.
 - Users must know in advance which class name each class directory name corresponds to.
- 
+
 The example data directory structure for this is as follows:
 
+
+
 ```
-# TODO
+IMAGENET1K
+└── images
+    ├── train
+    │   ├── n01440764
+    │   │   ├── n01440764_10026.JPEG
+    │   │   ├── n01440764_10027.JPEG
+    │   │   └── ...
+    │   ├── n01443537
+    │   │   ├── n01443537_10007.JPEG
+    │   │   ├── n01443537_10014.JPEG
+    │   │   └── ...
+    │   └── ...
+    └── valid
+        ├── n01440764
+        │   ├── ILSVRC2012_val_00000293.JPEG
+        │   ├── ILSVRC2012_val_00002138.JPEG
+        │   └── ...
+        ├── n01443537
+        │   ├── ILSVRC2012_val_00000236.JPEG
+        │   ├── ILSVRC2012_val_00000262.JPEG
+        │   └── ...
+        └── ...
 ```
 
 An example yaml configuration for this is as follows:
 
 ```yaml
 data:
-  name: food_pic
+  name: imagenet1k
   task: classification
   format: local # local, huggingface
   path:
-    root: ./data/my_food_pics # dataset root
+    root: path_to/IMAGENET1K # dataset root
     train:
       image: train # directory for training images
       label: ~  # label for training images
@@ -44,16 +73,75 @@ data:
       image: ~  # directory for test images
       label: ~  # label for test images
   id_mapping:  # Dict[directory_name, class_name]. If None, set the directory name same with class name
-    directory_1: curry
-    directory_2: ramen
-    directory_3: rice
-    directory_4: sushi
+    n02119789: "1_kit fox"
+    n02100735: "2_English setter"
+    n02110185: "3_Siberian husky"
+    n02096294: "4_Australian terrier"
+    ...
+```
+
+#### Example 2
+
+The second method is distinguishing classes through csv format label file.
+
+- train images must be in same directory.
+- validation images must be in same directory.
+- labels for images are given by csv file. The csv file contains image file name and correspoinding class name.
+
+The example data directory structure for this is as follows:
 
 ```
+IMAGENET1K
+├── images
+│   ├── train
+│   │   ├── n01440764_10026.JPEG
+│   │   ├── n01440764_10027.JPEG
+│   │   ├── n01440764_10029.JPEG
+│   │   └── ...
+│   └── valid
+│       ├── ILSVRC2012_val_00000001.JPEG
+│       ├── ILSVRC2012_val_00000002.JPEG
+│       ├── ILSVRC2012_val_00000003.JPEG
+│       └── ...
+├── imagenet_train.csv
+└── imagenet_valid.csv
+```
+
+An example yaml configuration for this is as follows:
+
+```yaml
+data:
+  name: imagenet1k
+  task: classification
+  format: local
+  path:
+    root: path_to/IMAGENET1K # dataset root
+    train:
+      image: images/train # directory for training images
+      label: imagenet_train.csv # label for training labels
+    valid:
+      image: images/valid  # directory for valid images
+      label: imagenet_valid.csv
+    test:
+      image: ~  # directory for test images
+      label: ~  # label for test images
+  id_mapping: ~
+```
+
+An example csv label for this is as follows:
+
+| image_id             | class             |
+|----------------------|-------------------|
+| n03792972_3671.JPEG  | 728_mountain tent |
+| n04357314_4256.JPEG  | 810_sunscreen     |
+| n02965783_127.JPEG   | 576_car mirror    |
+| n04465501_16825.JPEG | 289_tractor       |
+| n09246464_5059.JPEG  | 359_cliff         |
+| ... | ... |
 
 ### Semantic segmentation
 
-To train a semantic segmentation model using NetsPresso Trainer, **the data must be in following formats**: 
+To train a semantic segmentation model using NetsPresso Trainer, **the data must be in the following formats**: 
 
 - For each training image, there must be a label file (image) indicating the original image and the class index of each pixel of the image.
 - Users must create an image and label directory under the root directory and put the corresponding files in each directory.
@@ -63,8 +151,29 @@ To train a semantic segmentation model using NetsPresso Trainer, **the data must
 The example data directory structure for this is as follows:
 
 ```
-# TODO
-
+VOC12Dataset
+├── image
+│   ├── train
+│   │   ├── 2007_000032.jpg
+│   │   ├── 2007_000039.jpg
+│   │   ├── 2007_000063.jpg
+│   │   └── ...
+│   └── val
+│       ├── 2007_000033.jpg
+│       ├── 2007_000042.jpg
+│       ├── 2007_000061.jpg
+│       └── ...
+└── mask
+    ├── train
+    │   ├── 2007_000032.png
+    │   ├── 2007_000039.png
+    │   ├── 2007_000063.png
+    │   └── ...
+    └── val
+        ├── 2007_000033.png
+        ├── 2007_000042.png
+        ├── 2007_000061.png
+        └── ...
 ```
 
 An example yaml configuration for this is as follows:
@@ -75,7 +184,7 @@ data:
   task: segmentation
   format: local
   path:
-    root: /DATA/VOC12Dataset
+    root: path_to/VOC12Dataset
     train:
       image: image/train
       label: mask/train
@@ -113,14 +222,13 @@ data:
     (0, 64, 128): tvmonitor
     (128, 64, 128): void
   pallete: ~
-
 ```
 
 ### Object detection
 
-To train an object detection model using NetsPresso Trainer, **the data must be in following formats**: 
+To train an object detection model using NetsPresso Trainer, **the data must be in the following formats**: 
 
-- For object model training, there must be a `.txt` file for each training image indicating the original image and the bounding box and class index corresponding to each bounding box of the image.
+- For object detection model training, each training image must have a corresponding `.txt` file indicating the original image and the bounding box and class index corresponding to each bounding box of the image.
 - The format of the bounding box follows the YOLO dataset format ([x_center, y_center, width, height], normalized).
 - Each `.txt` file must contain one line for each bounding box.
 - In this case, training data and validation data can be distinguished in different directories. For example, training data can be placed in train/image, train/label directories, and validation data can be placed in valid/image, valid/label directories.
@@ -129,8 +237,29 @@ To train an object detection model using NetsPresso Trainer, **the data must be 
 The example data directory structure for this is as follows: 
 
 ```
-# TODO
-
+traffic-sign
+├── images
+│   ├── train
+│   │   ├── 00000.jpg
+│   │   ├── 00001.jpg
+│   │   ├── 00003.jpg
+│   │   └── ...
+│   └── val
+│       ├── 00002.jpg
+│       ├── 00004.jpg
+│       ├── 00015.jpg
+│       └── ...
+└── labels
+    ├── train
+    │   ├── 00000.txt
+    │   ├── 00001.txt
+    │   ├── 00003.txt
+    │   └── ...
+    └── val
+        ├── 00002.txt
+        ├── 00004.txt
+        ├── 00015.txt
+        └── ...
 ```
 
 An example yaml configuration for this is as follows: 
@@ -142,7 +271,7 @@ data:
   task: detection
   format: local # local, huggingface
   path:
-    root: ../../data/traffic-sign # dataset root
+    root: path_to/traffic-sign # dataset root
     train:
       image: images/train # directory for training images
       label: labels/train # directory for training labels
@@ -157,7 +286,14 @@ data:
       label: ~
   id_mapping: ['prohibitory', 'danger', 'mandatory', 'other']  # class names
   pallete: ~
+```
 
+An example txt label for this is as follows:
+
+```
+2 0.7378676470588236 0.5125 0.030147058823529412 0.055
+2 0.3044117647058823 0.65375 0.041176470588235294 0.0725
+3 0.736764705882353 0.453125 0.04264705882352941 0.06875
 ```
 
 ## Training with Hugging Face datasets
@@ -190,36 +326,36 @@ data:
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.name` | (str) the name of dataset |
-| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection |
-| `data.format` | **`local`** as an identifier of dataset format |
-| `data.path.root` | (str) root directory of dataset |
-| `data.path.train.image` | (str) training image directory. Should be **relative** path to root directory. | 
-| `data.path.train.label` | (str) training label directory. Should be **relative** path to root directory. | 
-| `data.path.valid.image` | (str) validation image directory. Should be **relative** path to root directory. | 
-| `data.path.valid.label` | (str) validation label directory. Should be **relative** path to root directory. | 
-| `data.path.test.image` | (str) image directory for test dataset. Should be **relative** path to root directory. | 
-| `data.path.test.label` | (str) image directory for test dataset. Should be **relative** path to root directory. | 
+| `data.name` | (str) The name of dataset. |
+| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection. |
+| `data.format` | **`local`** as an identifier of dataset format. |
+| `data.path.root` | (str) Root directory of dataset. |
+| `data.path.train.image` | (str) The directory for training images. Should be **relative** path to root directory. | 
+| `data.path.train.label` | (str) The directory for training labels. Should be **relative** path to root directory. | 
+| `data.path.valid.image` | (str) The directory for validation images. Should be **relative** path to root directory. | 
+| `data.path.valid.label` | (str) The directory for validation labels. Should be **relative** path to root directory. | 
+| `data.path.test.image` | (str) The directory for test images. Should be **relative** path to root directory. | 
+| `data.path.test.label` | (str) The directory for test labels. Should be **relative** path to root directory. | 
 
 #### Classification
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.id_mapping` | (dict) key-value pair between directory name and class name. Should be a dict of {**dirname: classname**}. |
+| `data.id_mapping` | (dict) Key-value pair between directory name and class name. Should be a dict of {**dirname: classname**}. |
 
 #### Segmentation
 
 | Field <img width=200/> | Description |
 |---|---|
 | `data.label_image_mode` | (str) Image mode to convert the label. Should be one of `RGB`, `L`, and `P`. This field is not case-sensitive.
-| `data.id_mapping` | (dict, list) key-value pair between label value (`RGB`, `L`, or `P`) and class name. Should be a dict of {**label_value: classname**} or a list of class names whose indices are same with the label value (image_mode: `L` or `P`). |
+| `data.id_mapping` | (dict, list) Key-value pair between label value (`RGB`, `L`, or `P`) and class name. Should be a dict of {**label_value: classname**} or a list of class names whose indices are same with the label value (image_mode: `L` or `P`). |
 | `data.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 #### Detection
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.id_mapping` | (list) class list for each class index |
+| `data.id_mapping` | (list) Class list for each class index. |
 | `data.palette` | (dict) Color mapping for visualization. If `none`, automatically select the color for each class.  |
 
 
@@ -227,11 +363,11 @@ data:
 
 | Field <img width=200/> | Description |
 |---|---|
-| `data.name` | (str) the name of dataset |
-| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection |
-| `data.format` | **`huggingface`** as an identifier of dataset format |
-| `data.metadata.custom_cache_dir` | (str) cache directory to load and save dataset files from Hugging Face |
+| `data.name` | (str) The name of dataset. |
+| `data.task` | (str) `classification` for image classification, `segmentation` for semantic segmentation, and `detection` for object detection. |
+| `data.format` | **`huggingface`** as an identifier of dataset format. |
+| `data.metadata.custom_cache_dir` | (str) Cache directory to load and save dataset files from Hugging Face. |
 | `data.metadata.repo` | (str) Repository name. (e.g. `competitions/aiornot` represents the dataset `huggingface.co/datasets/competitions/aiornot`.) | 
-| `data.metadata.subset` | (str, optional) subset name if the dataset contains multiple versions | 
-| `data.metadata.features.image` | (str) key which represents the image at the dataset header | 
-| `data.metadata.features.label` | (str) key which represents the label at the dataset header | 
+| `data.metadata.subset` | (str, optional) Subset name if the dataset contains multiple versions. | 
+| `data.metadata.features.image` | (str) The key representing the image at the dataset header. | 
+| `data.metadata.features.label` | (str) The key representing the label at the dataset header. | 

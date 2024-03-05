@@ -1,28 +1,76 @@
-import logging
 from pathlib import Path
 from typing import Any, List, Optional, TypedDict, Union
 
 import omegaconf
 import torch
 import torch.nn as nn
+from loguru import logger
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-logger = logging.getLogger("netspresso_trainer")
+from ..utils.checkpoint import load_checkpoint
 
 FXTensorType = Union[Tensor, Proxy]
 FXTensorListType = Union[List[Tensor], List[Proxy]]
 
+DEFAULT_CACHE_DIR = Path.home() / ".cache" / f"{__name__.split('.')[0]}"  # ~/.cache/netspresso_trainer
+
+DEFAULT_WEIGHT_VERSION_DICT = {
+    'resnet18': 'imagenet1k',
+    'resnet34': 'imagenet1k',
+    'resnet50': 'imagenet1k',
+    'mobilenet_v3_small': 'imagenet1k',
+    'segformer_b0': 'undefined',
+    'mobilevit_s': 'imagenet1k',
+    'vit_tiny': 'imagenet1k',
+    'efficientformer_l1': 'imagenet1k',
+    'mixnet_s': 'imagenet1k',
+    'mixnet_m': 'imagenet1k',
+    'mixnet_l': 'imagenet1k',
+    'pidnet_s': 'cityscapes',
+    'yolox_s': 'coco',
+}
+
 MODEL_CHECKPOINT_URL_DICT = {
-    'resnet50': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50.pth",
-    'mobilenet_v3_small': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small.pth",
-    'segformer': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer.pth",
-    'mobilevit': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s.pth",
-    'vit': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit-tiny.pth",
-    'efficientformer': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_1000d.pth",
-    'mixnet_s': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s.pth",
-    'mixnet_m': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m.pth",
-    'mixnet_l': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l.pth",
+    'resnet18': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=rI_BkIYyNFBtem180CSHA5QiGjuXgxMb",
+    },
+    'resnet34': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=YV687nYQc8tj5lq6ffqPpiJ8h2e0DW6L",
+    },
+    'resnet50': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=kDZZabJz8kK.HWDtvo7VJ.HYZ7A3GcxS",
+    },
+    'mobilenet_v3_small': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=NTpIJOERdx4efzBgY7Wcca7Xe1_Vwal9",
+    },
+    'segformer_b0': {
+        'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors?versionId=aZsJLrZrAysdvqRz2WVfCrjM.0sTFs3H",
+    },
+    'mobilevit_s': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors?versionId=Kg71H367_VeSJqfzJv54At1uFcMyIf9D",
+    },
+    'vit_tiny': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors?versionId=1WC4OqtnA5gJFolvCMrOWAdmiMwpL8RO",
+    },
+    'efficientformer_l1': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=JIkKVaUF0fhkvLz2jfcY3MmbUg6MkUO6",
+    },
+    'mixnet_s': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors?versionId=n0sHuieRyTWWzwBmSAE8oSP4BL53laDP",
+    },
+    'mixnet_m': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m_imagenet1k.safetensors?versionId=cMkB57XAqu8Ro9OOWf9M6nLBPbrD2C7k",
+    },
+    'mixnet_l': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors?versionId=UZFlpK8LO_SlYbu5GnUe9Qb3srikM6mk",
+    },
+    'pidnet_s': {
+        'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8",
+    },
+    'yolox_s': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=hl3x0U.SXwT9zvB2eaentmTyogjT3UZP",
+    },
 }
 
 
@@ -33,6 +81,12 @@ class BackboneOutput(TypedDict):
 
 class ModelOutput(TypedDict):
     pred: FXTensorType
+
+
+class AnchorBasedDetectionModelOutput(ModelOutput):
+    anchors: FXTensorType
+    cls_logits: FXTensorType
+    bbox_regression: FXTensorType
 
 
 class DetectionModelOutput(ModelOutput):
@@ -55,12 +109,23 @@ class PIDNetModelOutput(ModelOutput):
     extra_d: Optional[FXTensorType]
 
 
-def download_model_checkpoint(model_checkpoint: Union[str, Path], model_name: str) -> Path:
-    checkpoint_url = MODEL_CHECKPOINT_URL_DICT[model_name]
-    model_checkpoint = Path(model_checkpoint)
+def download_model_checkpoint(
+    model_name: str,
+    task: Optional[str] = None,  # TODO: Pretrained weights can be distinguished by task
+) -> Path:
+    assert model_name in DEFAULT_WEIGHT_VERSION_DICT
+    assert model_name in MODEL_CHECKPOINT_URL_DICT
+
+    # TODO: User can select the specific weight version
+    checkpoint_weight_version = DEFAULT_WEIGHT_VERSION_DICT[model_name]
+
+    checkpoint_url = MODEL_CHECKPOINT_URL_DICT[model_name][checkpoint_weight_version]
+
+    checkpoint_filename = Path(checkpoint_url).name.split('?versionId')[0] # @illian01: Remove specified version id
+    model_checkpoint: Path = DEFAULT_CACHE_DIR / model_name / checkpoint_filename
     model_checkpoint.parent.mkdir(parents=True, exist_ok=True)
     # Safer switch: only extension, user can use the custom name for checkpoint file
-    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_url).suffix)
+    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_filename).suffix)
     if not model_checkpoint.exists():
         torch.hub.download_url_to_file(checkpoint_url, model_checkpoint)
 
@@ -69,22 +134,36 @@ def download_model_checkpoint(model_checkpoint: Union[str, Path], model_name: st
 
 def load_from_checkpoint(
     model: nn.Module,
-    model_checkpoint: Optional[Union[str, Path]]
+    model_checkpoint: Optional[Union[str, Path]],
+    load_checkpoint_head: bool,
 ) -> nn.Module:
-    if model_checkpoint is not None:
-        if not Path(model_checkpoint).exists():
-            model_name = Path(model_checkpoint).stem
-            assert model_name in MODEL_CHECKPOINT_URL_DICT, \
-                f"model_name {model_name} in path {model_checkpoint} is not valid name!"
-            model_checkpoint = download_model_checkpoint(model_checkpoint, model_name)
+    model_name = model.name
+    task = model.task
 
-        model_state_dict = torch.load(model_checkpoint, map_location='cpu')
-        missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
+    if model_checkpoint is None:
+        assert model_name is not None, "When `use_pretrain` is True, model_name should be given."
+        assert model_name in MODEL_CHECKPOINT_URL_DICT, \
+            f"model_name {model_name} in path {model_checkpoint} is not valid name!"
+        model_checkpoint = download_model_checkpoint(model_name, task)
+        logger.info(f"Pretrained model for {model_name} is loaded from: {model_checkpoint}")
 
-        if len(missing_keys) != 0:
-            logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
-        if len(unexpected_keys) != 0:
-            logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
+    model_state_dict = load_checkpoint(model_checkpoint)
+    if not load_checkpoint_head:
+        logger.info("-"*40)
+        logger.info("Head weights are not loaded because model.checkpoint.load_head is set to False")
+        head_keys = [key for key in model_state_dict if key.startswith(model.head_list)]
+        for key in head_keys:
+            del model_state_dict[key]
+
+    missing_keys, unexpected_keys = model.load_state_dict(model_state_dict, strict=False)
+
+    if not load_checkpoint_head:
+        missing_keys = [key for key in missing_keys if not key.startswith(model.head_list)]
+
+    if len(missing_keys) != 0:
+        logger.warning(f"Missing key(s) in state_dict: {missing_keys}")
+    if len(unexpected_keys) != 0:
+        logger.warning(f"Unexpected key(s) in state_dict: {unexpected_keys}")
 
     return model
 

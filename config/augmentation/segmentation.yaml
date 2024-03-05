@@ -1,9 +1,11 @@
 augmentation:
   img_size: &img_size 512
-  transforms:
+  train:
     - 
       name: randomresizedcrop
       size: *img_size
+      scale: [0.08, 1.0]
+      ratio: [0.75, 1.33]
       interpolation: bilinear
     -
       name: randomhorizontalflip
@@ -15,3 +17,10 @@ augmentation:
       saturation: 0.25
       hue: 0.1
       p: 0.5
+  inference:
+    - 
+      name: resize
+      size: [*img_size, *img_size]
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: ~

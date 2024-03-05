@@ -1,0 +1,57 @@
+model:
+  task: detection
+  name: resnet50
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: resnet
+      params:
+        block_type: bottleneck
+        norm_type: batch_norm
+      stage_params:
+        - 
+          channels: 64
+          num_blocks: 3
+        - 
+          channels: 128
+          num_blocks: 4
+          replace_stride_with_dilation: False
+        - 
+          channels: 256
+          num_blocks: 6
+          replace_stride_with_dilation: False
+        - 
+          channels: 512
+          num_blocks: 3
+          replace_stride_with_dilation: False
+    neck:
+      name: fpn
+      params:
+        num_outs: 4
+        start_level: 0
+        end_level: -1
+        add_extra_convs: False
+        relu_before_extra_convs: False
+    head:
+      name: anchor_decoupled_head
+      params:
+        anchor_sizes: [[32,], [64,], [128,], [256,]]
+        aspect_ratios: [0.5, 1.0, 2.0]
+        num_layers: 1
+        norm_type: batch_norm
+        # postprocessor - decode
+        topk_candidates: 1000
+        score_thresh: 0.05
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
+  losses:
+    - criterion: retinanet_loss
+      weight: ~

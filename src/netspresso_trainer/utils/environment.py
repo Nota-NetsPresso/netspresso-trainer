@@ -6,6 +6,7 @@ from typing import Union
 import numpy as np
 import torch
 import torch.backends.cudnn as cudnn
+import torch.distributed as dist
 import torch.nn as nn
 
 __all__ = ['set_device', 'get_device']
@@ -31,11 +32,11 @@ def set_device(seed):
     rank = 0  # global rank
     if distributed:
         assert seed is not None and cudnn.benchmark is False, "distributed training requires reproducibility"
-        torch.distributed.init_process_group(backend='nccl', init_method='env://')
-        rank = torch.distributed.get_rank()
+        dist.init_process_group(backend='nccl', init_method='env://')
+        rank = dist.get_rank()
         devices = torch.device(f'cuda:{rank}')
         torch.cuda.set_device(rank)
-        world_size = torch.distributed.get_world_size()
+        world_size = dist.get_world_size()
     assert rank >= 0
 
     return distributed, world_size, rank, devices
