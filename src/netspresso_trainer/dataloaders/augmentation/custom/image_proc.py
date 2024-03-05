@@ -33,7 +33,7 @@ class Compose:
         for t in self.transforms:
             if visualize_for_debug and not t.visualize:
                 continue
-            image, label, mask, bbox = t(image=image, label=label, mask=mask, bbox=bbox, keypoint=keypoint, dataset=dataset)
+            image, label, mask, bbox, keypoint = t(image=image, label=label, mask=mask, bbox=bbox, keypoint=keypoint, dataset=dataset)
         return image, label, mask, bbox, keypoint
 
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, visualize_for_debug=False, dataset=None, **kwargs):
