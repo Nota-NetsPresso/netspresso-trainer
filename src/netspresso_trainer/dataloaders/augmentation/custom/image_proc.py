@@ -75,7 +75,7 @@ class CenterCrop(T.CenterCrop):
         super().__init__(size)
 
     def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
-        # TODO: Compute mask, bbox
+        # TODO: Compute mask, bbox, keypoint
         return F.center_crop(image, self.size), label, mask, bbox, keypoint
 
     def __repr__(self) -> str:
@@ -130,6 +130,7 @@ class Resize(T.Resize):
             target_w, target_h = image.size # @illian01: Determine ratio according to the actual resized image
             bbox[..., 0:4:2] *= float(target_w / w)
             bbox[..., 1:4:2] *= float(target_h / h)
+        # TODO: Compute keypoint
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
@@ -154,6 +155,7 @@ class RandomHorizontalFlip:
                 mask = F.hflip(mask)
             if bbox is not None:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
+            # TODO: Compute keypoint
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
@@ -177,6 +179,7 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
+            # TODO: Compute keypoint
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
@@ -223,6 +226,7 @@ class Pad:
             padding_left, padding_top, _, _ = padding_ltrb
             bbox[..., 0:4:2] += padding_left
             bbox[..., 1:4:2] += padding_top
+        # TODO: Compute keypoint
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
@@ -314,6 +318,7 @@ class RandomCrop:
                 bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
                 _bbox_crop_count += 1
             bbox = bbox_candidate
+        # TODO: Compute keypoint
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):

@@ -244,6 +244,7 @@ class MosaicDetection:
             bbox = mosaic_labels[:, :4]
             label = mosaic_labels[:, -1:]
             mosaic_img = Image.fromarray(mosaic_img) # return as PIL
+            # TODO: Compute mask, keypoint
             return mosaic_img, label, mask, bbox, keypoint
 
         else:
