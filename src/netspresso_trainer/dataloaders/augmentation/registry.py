@@ -14,6 +14,7 @@ from .custom.image_proc import (
     RandomVerticalFlip,
     Resize,
     TrivialAugmentWide,
+    PoseTopDownAffine,
 )
 from .custom.mixing import Mixing
 from .custom.mosaic import MosaicDetection
@@ -34,4 +35,5 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'trivialaugmentwide': TrivialAugmentWide,
     'autoaugment': AutoAugment,
     'hsvjitter': HSVJitter,
+    'posetopdownaffine': PoseTopDownAffine,
 }

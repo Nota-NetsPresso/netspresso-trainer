@@ -634,6 +634,21 @@ class RandomResize:
         )
 
 
+class PoseTopDownAffine:
+    visualize = False
+
+    def __init__(
+        self,
+    ):
+        pass
+    
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        return image, label, mask, bbox, keypoint
+    
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
+
+
 class Normalize:
     visualize = False
 
