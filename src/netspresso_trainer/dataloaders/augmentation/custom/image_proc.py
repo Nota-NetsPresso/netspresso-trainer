@@ -156,6 +156,7 @@ class RandomHorizontalFlip:
             if bbox is not None:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
             if keypoint is not None:
+                keypoint = keypoint[dataset.flip_indices] # flip_indices must be defined in config (swap)
                 keypoint[..., 0] = w - keypoint[..., 0]
         return image, label, mask, bbox, keypoint
 
@@ -181,6 +182,7 @@ class RandomVerticalFlip:
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
             if keypoint is not None:
+                keypoint = keypoint[dataset.flip_indices] # flip_indices must be defined in config (swap)
                 keypoint[..., 1] = h - keypoint[..., 1]
         return image, label, mask, bbox, keypoint
 
