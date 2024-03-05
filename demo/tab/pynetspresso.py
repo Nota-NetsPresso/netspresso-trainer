@@ -52,9 +52,9 @@ def tab_pynetspresso(args):
                     minimum=0, maximum=1, value=0.5, step=0.1,
                     info="The removal ratio of the filters (e.g. 0.2 removes 20% of the filters in the model)"
                 )
-                compressed_model_path = gr.Textbox(
-                    label="Output model path",
-                    info="Leave empty to use the same model directory. The compressed model is named with the postfix (_compressed)."
+                compressed_model_dir = gr.Textbox(
+                    label="Output model directory",
+                    info="Leave empty to use the same model directory. The compressed model and its parent directory are named with the postfix (_compressed)."
                 )
 
             compress_button = gr.Button(
@@ -75,12 +75,12 @@ def tab_pynetspresso(args):
 
     compress_button.click(
         compress_with_session,
-        inputs=[session, model_name, model_task, model_path,
+        inputs=[session, model_name, model_path,
                 compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width,
-                compression_ratio, compressed_model_path],
+                compression_ratio, compressed_model_dir],
         outputs=[session, result_compressed_model_path])
 
     return session, email_input, password_input, model_name, model_task, model_path, \
         compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
-        compression_ratio, compressed_model_path, result_compressed_model_path, \
+        compression_ratio, compressed_model_dir, result_compressed_model_path, \
         login_button, compress_button

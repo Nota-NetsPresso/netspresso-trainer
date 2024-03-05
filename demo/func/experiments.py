@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
+import json
 
 import pandas as pd
 import torch
@@ -20,6 +21,10 @@ COLUMN_NAME_AS = {
     "params": "# Params",
 }
 
+def read_json(json_path):
+    with open(json_path, 'r') as f:
+        data = json.load(f)
+    return data
 
 def _is_single_task_model(conf_model: DictConfig):
     conf_model_architecture_full = conf_model.architecture.full
@@ -62,11 +67,11 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
 
     experiment_dir_list_candidate = list(experiment_dir.glob("**/version_*"))
     experiment_dir_list = [run_dir for run_dir in experiment_dir_list_candidate
-                           if (run_dir / "training_summary.ckpt").exists()]
+                           if (run_dir / "training_summary.json").exists()]
 
     experiment_list: List[ExperimentSummary] = []
     for run_dir in experiment_dir_list:
-        summary = torch.load(run_dir / "training_summary.ckpt")
+        summary = read_json(run_dir / "training_summary.json")
         hparam = OmegaConf.load(run_dir / "hparams.yaml")
 
         experiment_name = run_dir.parent.name
@@ -84,7 +89,7 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
                     "checkpoint_path":
                     [candidate for candidate in run_dir.glob("*.pt")
                      if candidate.suffix == '.pt' and 'best' in candidate.stem][0],
-                    "performance": summary['valid_metrics'][best_epoch][primary_metric],
+                    "performance": summary['valid_metrics'][str(best_epoch)][primary_metric],
                     "primary_metric": primary_metric,
                     "macs": summary['macs'],
                     "params": summary['params'],
