@@ -78,7 +78,27 @@ class PoseEstimationPipeline(BasePipeline):
         return dict(logs.items())
 
     def test_step(self, batch):
-        pass
+        self.model.eval()
+        indices, images = batch['indices'], batch['pixel_values']
+        images = images.to(self.devices)
+
+        out = self.model(images)
+
+        pred = self.postprocessor(out)
+
+        if self.conf.distributed:
+            pred = pred[indices != -1]
+
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_pred = sum(gathered_pred, [])
+                pred = gathered_pred
+
+        if self.single_gpu_or_rank_zero:
+            return pred
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass
