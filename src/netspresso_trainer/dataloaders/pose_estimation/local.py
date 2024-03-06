@@ -60,8 +60,8 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         bbox = ann[-4:]
         keypoints = ann[:-4]
 
-        bbox = np.array(bbox).astype('float32')
-        keypoints = np.array(keypoints).reshape(-1, 3).astype('float32')
+        bbox = np.array(bbox).astype('float32')[np.newaxis, ...]
+        keypoints = np.array(keypoints).reshape(-1, 3).astype('float32')[np.newaxis, ...]
 
         # TODO: Apply transforms
         out = self.transform(image=img, bbox=bbox, keypoint=keypoints, dataset=self)
