@@ -316,21 +316,23 @@ class RTMCC(nn.Module):
     ):
         super().__init__()
 
-        # TODO: Get from config
-        conv_kernel: int = 7
-        attention_channels: int = 256
-        attnetion_act_type: str = 'silu'
-        attention_pos_enc: bool = False
-        s = 128
-        expansion_factor = 2
-        dropout_rate = 0.
-        drop_path = 0.
-        use_rel_bias = False
+        conv_kernel = params.conv_kernel
+        attention_channels = params.attention_channels
+        attnetion_act_type = params.attnetion_act_type
+        attention_pos_enc = params.attention_pos_enc
+        s = params.s
+        expansion_factor = params.expansion_factor
+        dropout_rate = params.dropout_rate
+        drop_path = params.drop_path
+        use_rel_bias = params.use_rel_bias
 
+        self.simcc_split_ratio = params.simcc_split_ratio
+        self.target_size = params.target_size
+        
+        # TODO: Get from backbone info
+        flatten_dims = (self.target_size[0] // params.backbone_stride) * (self.target_size[1] // params.backbone_stride)
 
         # Define SimCC layers
-        flatten_dims = 8 * 8
-
         self.final_layer = nn.Conv2d(
             intermediate_features_dim[-1],
             num_classes,
@@ -338,12 +340,11 @@ class RTMCC(nn.Module):
             stride=1,
             padding=conv_kernel // 2)
         self.mlp = nn.Sequential(
-            #ScaleNorm(flatten_dims),
+            ScaleNorm(flatten_dims),
             nn.Linear(flatten_dims, attention_channels, bias=False))
 
-        # TODO: Get from config
-        W = 512 # int(self.input_size[0] * self.simcc_split_ratio)
-        H = 512 # int(self.input_size[1] * self.simcc_split_ratio)
+        W = int(self.target_size[1] * self.simcc_split_ratio)
+        H = int(self.target_size[0] * self.simcc_split_ratio)
 
         self.gau = RTMCCBlock(
             num_classes,
