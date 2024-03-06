@@ -635,19 +635,130 @@ class RandomResize:
 
 
 class PoseTopDownAffine:
+    """
+    Based on the mmpose implementation.
+    https://github.com/open-mmlab/mmpose
+    """
     visualize = False
 
     def __init__(
         self,
+        scale: float,
+        translate: float,
+        rotation: int,
+        size: List,
     ):
-        pass
+        self.scale = scale
+        self.translate = translate
+        self.rotation = rotation
+        self.size = size
+
+        assert len(self.size) == 2, "Target size must be a list of length 2"
+
+    def trunc_normal_(self, tensor: torch.Tensor, mean: float, std: float, low: float, high: float):
+        """
+        Copied from torch.nn.init._no_grad_trunc_normal_
+        This is instead of scipy.stats.tuncnorm (Not to add dependency)
+        """
+        # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
+        def norm_cdf(x):
+            # Computes standard normal cumulative distribution function
+            return (1. + math.erf(x / math.sqrt(2.))) / 2.
+
+        with torch.no_grad():
+            l = norm_cdf((low - mean) / std)
+            u = norm_cdf((high - mean) / std)
+
+            tensor.uniform_(2 * l - 1, 2 * u - 1)
+
+            tensor.erfinv_()
+
+            tensor.mul_(std * math.sqrt(2.))
+            tensor.add_(mean)
+
+            tensor.clamp_(min=low, max=high)
+            return tensor
+    
+    def _rotate_point(self, pt: np.ndarray, angle_rad: float):
+        """
+        Rotate a point by an angle.
+        """
+        sn, cs = np.sin(angle_rad), np.cos(angle_rad)
+        rot_mat = np.array([[cs, -sn], [sn, cs]])
+        return rot_mat @ pt
+    
+    def _get_3rd_point(self, a: np.ndarray, b: np.ndarray):
+        """
+        To calculate the affine matrix, three pairs of points are required. This
+        function is used to get the 3rd point, given 2D points a & b.
+        """
+        direction = a - b
+        c = b + np.r_[-direction[1], direction[0]]
+        return c
+
+    def get_warp_matrix(self, box_center: np.ndarray, box_wh: np.ndarray, rot: int, shift: Tuple[float, float]):
+        """
+        Calculate the affine transformation matrix that can warp the bbox area
+        in the input image to the output size.
+        """
+        assert len(box_center) == 2
+        assert len(box_wh) == 2
+        assert len(shift) == 2
+
+        shift = np.array(shift)
+        src_w, src_h = box_wh[:2]
+        dst_w, dst_h = self.size
+
+        rot_rad = np.deg2rad(rot)
+        src_dir = self._rotate_point(np.array([src_w * -0.5, 0.]), rot_rad)
+        dst_dir = np.array([dst_w * -0.5, 0.])
+
+        src = np.zeros((3, 2), dtype=np.float32)
+        src[0, :] = box_center + box_wh * shift
+        src[1, :] = box_center + src_dir + box_wh * shift
+
+        dst = np.zeros((3, 2), dtype=np.float32)
+        dst[0, :] = [dst_w * 0.5, dst_h * 0.5]
+        dst[1, :] = np.array([dst_w * 0.5, dst_h * 0.5]) + dst_dir
+
+        src[2, :] = self._get_3rd_point(src[0, :], src[1, :])
+        dst[2, :] = self._get_3rd_point(dst[0, :], dst[1, :])
+
+        warp_mat = cv2.getAffineTransform(np.float32(src), np.float32(dst))
+        return warp_mat
     
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        image = np.array(image)
+
+        # This is only for one instance (bbox)
+        bbox_ = bbox[0].reshape(2, 2).copy()
+        bbox_center = bbox_.sum(axis=0) / 2.
+        bbox_wh = bbox_[1] - bbox_[0]
+        bbox_ = bbox_.reshape(-1)
+
+        # TODO: Get random scaled box, rotation degree and shift
+        rot = 0
+        shift = (0, 0)
+        
+        # Get warping matrix
+        warp_mat = self.get_warp_matrix(bbox_center, bbox_wh, rot, shift)
+
+        # Apply affine transform
+        image = cv2.warpAffine(image, warp_mat, self.size, flags=cv2.INTER_LINEAR)
+        image = Image.fromarray(image) # return as PIL
+
+        # Compute keypoint. Note that this is only for one instance.
+        # ``keypoint.shape`` should be (1, num_keypoints, 3)
+        keypoint[..., :2] = cv2.transform(keypoint[..., :2], warp_mat)
+
+        # Now, bbox is same with image size
+        bbox_ = np.array([0, 0] + self.size[::-1]).astype('float32')
+        bbox[0] = bbox_
+
         return image, label, mask, bbox, keypoint
     
     def __repr__(self):
-        return self.__class__.__name__ + "()"
-
+        return self.__class__.__name__ + f"(scale={self.scale}, translate={self.translate}, rotation={self.rotation}, size={self.size})"
 
 class Normalize:
     visualize = False
