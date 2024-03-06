@@ -1,0 +1,25 @@
+augmentation:
+  img_size: &img_size 256
+  train:
+    -
+      name: randomhorizontalflip
+      p: 0.5
+    - 
+      name: posetopdownaffine
+      scale: [0.75, 1.25]
+      scale_prob: 1.
+      translate: 0.1
+      translate_prob: 1.
+      rotation: 60
+      rotation_prob: 1.
+      size: [*img_size, *img_size]
+  inference:
+    - 
+      name: posetopdownaffine
+      scale: [1., 1.]
+      scale_prob: 0.
+      translate: 0.
+      translate_prob: 0.
+      rotation: 0
+      rotation_prob: 0.
+      size: [*img_size, *img_size]
