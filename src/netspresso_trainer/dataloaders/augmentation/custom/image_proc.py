@@ -676,10 +676,10 @@ class PoseTopDownAffine:
         with torch.no_grad():
             tensor = torch.zeros(size).to(torch.float32)
 
-            l = norm_cdf((low - mean) / std)
-            u = norm_cdf((high - mean) / std)
+            lower = norm_cdf((low - mean) / std)
+            upper = norm_cdf((high - mean) / std)
 
-            tensor.uniform_(2 * l - 1, 2 * u - 1)
+            tensor.uniform_(2 * lower - 1, 2 * upper - 1)
 
             tensor.erfinv_()
 

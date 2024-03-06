@@ -45,7 +45,7 @@ def rope(x, dim):
         torch.arange(total_len, dtype=torch.int, device=x.device),
         spatial_shape)
 
-    for i in range(dim[-1] + 1, len(shape) - 1, 1):
+    for _ in range(dim[-1] + 1, len(shape) - 1, 1):
         position = torch.unsqueeze(position, dim=-1)
 
     half_size = shape[-1] // 2
