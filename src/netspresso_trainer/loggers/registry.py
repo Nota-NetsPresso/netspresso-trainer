@@ -1,5 +1,5 @@
 from .csv import ClassificationCSVLogger, DetectionCSVLogger, SegmentationCSVLogger
-from .visualizer import DetectionVisualizer, SegmentationVisualizer, PoseEstimationVisualizer
+from .visualizer import DetectionVisualizer, PoseEstimationVisualizer, SegmentationVisualizer
 
 CSV_LOGGER = {
     'classification': ClassificationCSVLogger,

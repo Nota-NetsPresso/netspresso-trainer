@@ -31,8 +31,8 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
 
         # Build flip map. This is needed when try randomflip augmentation.
         if split == 'train':
-            trasnform_names = set([transform_conf['name'] for transform_conf in conf_augmentation[split]])
-            flips = set(['randomhorizontalflip', 'randomverticalflip'])
+            trasnform_names = {transform_conf['name'] for transform_conf in conf_augmentation[split]}
+            flips = {'randomhorizontalflip', 'randomverticalflip'}
             if len(trasnform_names.intersection(flips)) > 0:
                 class_to_idx = {self._idx_to_class[i]['name']: i for i in self._idx_to_class}
                 self.flip_indices = np.zeros(self._num_classes).astype('int')

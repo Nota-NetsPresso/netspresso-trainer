@@ -8,8 +8,8 @@ from .base import ClassificationModel, DetectionModel, PoseEstimationModel, Segm
 from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
-from .heads.segmentation import all_mlp_decoder
 from .heads.pose_estimation import rtmcc
+from .heads.segmentation import all_mlp_decoder
 from .necks import fpn, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {

@@ -8,14 +8,14 @@ from .classification import (
     ClassificationHFDataset,
 )
 from .detection import DetectionCustomDataset, DetectionDataSampler
+from .pose_estimation import (
+    PoseEstimationCustomDataset,
+    PoseEstimationDataSampler,
+)
 from .segmentation import (
     SegmentationCustomDataset,
     SegmentationDataSampler,
     SegmentationHFDataset,
-)
-from .pose_estimation import (
-    PoseEstimationCustomDataset,
-    PoseEstimationDataSampler,
 )
 
 CREATE_TRANSFORM = create_transform

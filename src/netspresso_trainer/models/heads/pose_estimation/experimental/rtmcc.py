@@ -5,10 +5,10 @@ https://github.com/open-mmlab/mmpose
 import math
 from typing import List, Tuple, Union
 
-from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from omegaconf import DictConfig
 
 from ....op.custom import ConvLayer
 from ....op.depth import DropPath
@@ -300,10 +300,7 @@ class RTMCCBlock(nn.Module):
         """Forward function."""
 
         if self.shortcut:
-            if self.attn_type == 'cross-attn':
-                res_shortcut = x[0]
-            else:
-                res_shortcut = x
+            res_shortcut = x[0] if self.attn_type == 'cross-attn' else x
             main_branch = self.drop_path(self._forward(x))
             return self.res_scale(res_shortcut) + main_branch
         else:
@@ -329,7 +326,7 @@ class RTMCC(nn.Module):
         dropout_rate = 0.
         drop_path = 0.
         use_rel_bias = False
-        
+
 
         # Define SimCC layers
         flatten_dims = 8 * 8

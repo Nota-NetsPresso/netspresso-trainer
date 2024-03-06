@@ -34,7 +34,7 @@ class RTMCCLoss(nn.Module):
 
         self.log_softmax = nn.LogSoftmax(dim=1)
         self.kl_loss = nn.KLDivLoss(reduction='none')
-    
+
     def _map_coordinates(
         self,
         keypoints,
@@ -120,10 +120,7 @@ class RTMCCLoss(nn.Module):
 
         gt_x, gt_y, target_weights = self.gaussian_smoothng(keypoints)
 
-        if self.use_target_weight:
-            weight = target_weights.reshape(-1)
-        else:
-            weight = 1.
+        weight = target_weights.reshape(-1) if self.use_target_weight else 1.0
 
         for p, t in zip([pred_x, pred_y], [gt_x, gt_y]):
             p = p.reshape(-1, p.size(-1))

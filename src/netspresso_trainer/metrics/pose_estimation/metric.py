@@ -15,7 +15,7 @@ class PoseEstimationMetric(BaseMetric):
         # TODO: Get from config
         self.thr = 0.05
         self.input_size = (256, 256)
-    
+
     def _calc_distances(self, preds, gts, mask, norm_factor):
         N, K, _ = preds.shape
         # set mask=0 when norm_factor==0
@@ -27,7 +27,7 @@ class PoseEstimationMetric(BaseMetric):
         norm_factor[np.where(norm_factor <= 0)] = 1e6
         distances[_mask] = np.linalg.norm(((preds - gts) / norm_factor[:, None, :])[_mask], axis=-1)
         return distances.T
-    
+
     def _distance_acc(self, distances, thr):
         distance_valid = distances != -1
         num_distance_valid = distance_valid.sum()

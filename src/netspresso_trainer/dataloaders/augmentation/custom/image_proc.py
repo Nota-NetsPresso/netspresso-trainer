@@ -688,7 +688,7 @@ class PoseTopDownAffine:
 
             tensor.clamp_(min=low, max=high)
             return tensor.numpy()
-    
+
     def _rotate_point(self, pt: np.ndarray, angle_rad: float):
         """
         Rotate a point by an angle.
@@ -696,7 +696,7 @@ class PoseTopDownAffine:
         sn, cs = np.sin(angle_rad), np.cos(angle_rad)
         rot_mat = np.array([[cs, -sn], [sn, cs]])
         return rot_mat @ pt
-    
+
     def _get_3rd_point(self, a: np.ndarray, b: np.ndarray):
         """
         To calculate the affine matrix, three pairs of points are required. This
@@ -737,7 +737,7 @@ class PoseTopDownAffine:
 
         warp_mat = cv2.getAffineTransform(np.float32(src), np.float32(dst))
         return warp_mat
-    
+
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         image = np.array(image)
 
@@ -756,11 +756,11 @@ class PoseTopDownAffine:
 
         translate = self.trunc_normal_(low=-1., high=1., size=(2)) * self.translate
         translate = np.where(np.random.rand(1) < self.translate_prob, translate, 0.)
-        
+
         bbox_center = bbox_center + bbox_wh * translate
         bbox_wh = bbox_wh * scale
         rot = (self.rotation * self.trunc_normal_(low=-1., high=1., size=(1))).item()
-        
+
         # Get warping matrix
         warp_mat = self.get_warp_matrix(bbox_center, bbox_wh, rot)
 
@@ -777,7 +777,7 @@ class PoseTopDownAffine:
         bbox[0] = bbox_
 
         return image, label, mask, bbox, keypoint
-    
+
     def __repr__(self):
         return self.__class__.__name__ + f"(scale={self.scale}, translate={self.translate}, rotation={self.rotation}, size={self.size})"
 

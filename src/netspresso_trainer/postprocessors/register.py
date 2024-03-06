@@ -2,9 +2,8 @@ from typing import Dict, Type
 
 from .classification import ClassificationPostprocessor
 from .detection import DetectionPostprocessor
-from .segmentation import SegmentationPostprocessor
 from .pose_estimation import PoseEstimationPostprocessor
-
+from .segmentation import SegmentationPostprocessor
 
 POSTPROCESSOR_DICT = {
     'fc': ClassificationPostprocessor,

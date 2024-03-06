@@ -122,7 +122,7 @@ class SegmentationVisualizer:
 
 class PoseEstimationVisualizer:
     def __init__(self, class_map, pallete=None):
-        n = len(class_map)
+        len(class_map)
 
     def __call__(self, results, images=None):
         return_images = []

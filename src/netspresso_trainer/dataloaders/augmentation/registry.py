@@ -6,6 +6,7 @@ from .custom.image_proc import (
     ColorJitter,
     HSVJitter,
     Pad,
+    PoseTopDownAffine,
     RandomCrop,
     RandomErasing,
     RandomHorizontalFlip,
@@ -14,7 +15,6 @@ from .custom.image_proc import (
     RandomVerticalFlip,
     Resize,
     TrivialAugmentWide,
-    PoseTopDownAffine,
 )
 from .custom.mixing import Mixing
 from .custom.mosaic import MosaicDetection
