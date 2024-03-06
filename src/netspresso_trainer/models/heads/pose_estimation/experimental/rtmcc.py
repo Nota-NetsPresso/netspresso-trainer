@@ -328,7 +328,7 @@ class RTMCC(nn.Module):
 
         self.simcc_split_ratio = params.simcc_split_ratio
         self.target_size = params.target_size
-        
+
         # TODO: Get from backbone info
         flatten_dims = (self.target_size[0] // params.backbone_stride) * (self.target_size[1] // params.backbone_stride)
 
