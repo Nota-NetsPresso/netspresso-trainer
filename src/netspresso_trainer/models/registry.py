@@ -4,10 +4,11 @@ from typing import Callable, Dict, List, Type
 import torch.nn as nn
 
 from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, vit
-from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
+from .base import ClassificationModel, DetectionModel, PoseEstimationModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
+from .heads.pose_estimation import rtmcc
 from .heads.segmentation import all_mlp_decoder
 from .necks import fpn, yolopafpn
 
@@ -38,6 +39,9 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,
         'anchor_decoupled_head': anchor_decoupled_head,
     },
+    'pose_estimation': {
+        'rtmcc': rtmcc,
+    }
 }
 
 MODEL_FULL_DICT = {
@@ -45,10 +49,11 @@ MODEL_FULL_DICT = {
 }
 
 SUPPORTING_MODEL_LIST = list(MODEL_BACKBONE_DICT.keys()) + list(MODEL_FULL_DICT.keys())
-SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection']
+SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
     'classification': ClassificationModel,
     'segmentation': SegmentationModel,
-    'detection': DetectionModel
+    'detection': DetectionModel,
+    'pose_estimation': PoseEstimationModel,
 }

@@ -120,6 +120,24 @@ class SegmentationVisualizer:
             raise IndexError(f"gray_image.shape should be either 2 or 3, but {results.shape} were indexed.")
 
 
+class PoseEstimationVisualizer:
+    def __init__(self, class_map, pallete=None):
+        len(class_map)
+
+    def __call__(self, results, images=None):
+        return_images = []
+        for image, result in zip(images, results):
+            image = image.copy()
+            for keypoint in result:
+                x = round(keypoint[0])
+                y = round(keypoint[1])
+                image = cv2.line(image, (x, y), (x, y), color=(0, 0, 255), thickness=5)
+
+            return_images.append(image[np.newaxis, ...])
+        return_images = np.concatenate(return_images, axis=0)
+        return return_images
+
+
 def _as_image_array(img: np.ndarray):
     min_, max_ = np.amin(img), np.amax(img)
     is_int_array = img.dtype in [np.uint8, np.uint16, np.int8, np.int16, np.int32, np.int64]

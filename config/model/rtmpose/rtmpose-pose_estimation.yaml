@@ -1,0 +1,67 @@
+model:
+  task: pose_estimation
+  name: mobilenet_v3_small
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mobilenetv3
+      params: ~
+      stage_params:
+        -
+          in_channels: [16]
+          kernel_sizes: [3]
+          expanded_channels: [16]
+          out_channels: [16]
+          use_se: [True]
+          act_type: ["relu"]
+          stride: [2]
+        -
+          in_channels: [16, 24]
+          kernel_sizes: [3, 3]
+          expanded_channels: [72, 88]
+          out_channels: [24, 24]
+          use_se: [False, False]
+          act_type: ["relu", "relu"]
+          stride: [2, 1]
+        -
+          in_channels: [24, 40, 40, 40, 48]
+          kernel_sizes: [5, 5, 5, 5, 5]
+          expanded_channels: [96, 240, 240, 120, 144]
+          out_channels: [40, 40, 40, 48, 48]
+          use_se: [True, True, True, True, True]
+          act_type: ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"]
+          stride: [2, 1, 1, 1, 1]
+        -
+          in_channels: [48, 96, 96]
+          kernel_sizes: [5, 5, 5]
+          expanded_channels: [288, 576, 576]
+          out_channels: [96, 96, 96]
+          use_se: [True, True, True]
+          act_type: ["hard_swish", "hard_swish", "hard_swish"]
+          stride: [2, 1, 1]
+    neck: ~
+    head:
+      name: rtmcc
+      params:
+        conv_kernel: 7
+        attention_channels: 256
+        attention_act_type: 'silu'
+        attention_pos_enc: False
+        s: 128
+        expansion_factor: 2
+        dropout_rate: 0.
+        drop_path: 0.
+        use_rel_bias: False
+        simcc_split_ratio: 2.
+        target_size: [256, 256]
+        backbone_stride: 32
+  losses:
+    - criterion: rtmcc_loss
+      weight: ~

@@ -84,3 +84,14 @@ class DetectionModel(TaskModel):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out
+
+class PoseEstimationModel(TaskModel):
+    def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
+        super().__init__(conf_model, backbone, neck, head, freeze_backbone)
+
+    def forward(self, x, label_size=None, targets=None):
+        features: BackboneOutput = self.backbone(x)
+        if hasattr(self, 'neck'):
+            features: BackboneOutput = self.neck(features['intermediate_features'])
+        out: DetectionModelOutput = self.head(features['intermediate_features'])
+        return out

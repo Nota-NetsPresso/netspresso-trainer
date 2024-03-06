@@ -29,22 +29,22 @@ class Compose:
         self.transforms = transforms
         self.additional_targets = additional_targets
 
-    def _get_transformed(self, image, label, mask, bbox, visualize_for_debug, dataset):
+    def _get_transformed(self, image, label, mask, bbox, keypoint, visualize_for_debug, dataset):
         for t in self.transforms:
             if visualize_for_debug and not t.visualize:
                 continue
-            image, label, mask, bbox = t(image=image, label=label, mask=mask, bbox=bbox, dataset=dataset)
-        return image, label, mask, bbox
+            image, label, mask, bbox, keypoint = t(image=image, label=label, mask=mask, bbox=bbox, keypoint=keypoint, dataset=dataset)
+        return image, label, mask, bbox, keypoint
 
-    def __call__(self, image, label=None, mask=None, bbox=None, visualize_for_debug=False, dataset=None, **kwargs):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, visualize_for_debug=False, dataset=None, **kwargs):
         additional_targets_result = {k: None for k in kwargs if k in self.additional_targets}
 
-        result_image, result_label, result_mask, result_bbox = self._get_transformed(image=image, label=label, mask=mask, bbox=bbox, dataset=dataset, visualize_for_debug=visualize_for_debug)
+        result_image, result_label, result_mask, result_bbox, result_keypoint = self._get_transformed(image=image, label=label, mask=mask, bbox=bbox, keypoint=keypoint, dataset=dataset, visualize_for_debug=visualize_for_debug)
         for key in additional_targets_result:
             if self.additional_targets[key] == 'mask':
-                _, _, additional_targets_result[key], _ = self._get_transformed(image=image, label=label, mask=kwargs[key], bbox=None, dataset=dataset, visualize_for_debug=visualize_for_debug)
+                _, _, additional_targets_result[key], _, _ = self._get_transformed(image=image, label=label, mask=kwargs[key], bbox=None, keypoint=keypoint, dataset=dataset, visualize_for_debug=visualize_for_debug)
             elif self.additional_targets[key] == 'bbox':
-                _, _, _, additional_targets_result[key] = self._get_transformed(image=image, label=label, mask=None, bbox=kwargs[key], dataset=dataset, visualize_for_debug=visualize_for_debug)
+                _, _, _, additional_targets_result[key], _ = self._get_transformed(image=image, label=label, mask=None, bbox=kwargs[key], keypoint=keypoint, dataset=dataset, visualize_for_debug=visualize_for_debug)
             else:
                 del additional_targets_result[key]
 
@@ -53,6 +53,8 @@ class Compose:
             return_dict.update({'mask': result_mask})
         if bbox is not None:
             return_dict.update({'bbox': result_bbox})
+        if keypoint is not None:
+            return_dict.update({'keypoint': result_keypoint})
         return_dict.update(additional_targets_result)
         return return_dict
 
@@ -72,9 +74,9 @@ class CenterCrop(T.CenterCrop):
     ):
         super().__init__(size)
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
-        # TODO: Compute mask, bbox
-        return F.center_crop(image, self.size), label, mask, bbox
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        # TODO: Compute mask, bbox, keypoint
+        return F.center_crop(image, self.size), label, mask, bbox, keypoint
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(size={self.size})"
@@ -86,8 +88,8 @@ class Identity:
     def __init__(self):
         pass
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
-        return image, label, mask, bbox
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
@@ -110,7 +112,7 @@ class Resize(T.Resize):
         # @illian01: antialias paramter always true (always use) for PIL image, and NetsPresso Trainer uses PIL image for augmentation.
         super().__init__(size, interpolation, max_size)
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         w, h = image.size
 
         if isinstance(self.size, int) and self.resize_criteria == 'long':
@@ -128,7 +130,8 @@ class Resize(T.Resize):
             target_w, target_h = image.size # @illian01: Determine ratio according to the actual resized image
             bbox[..., 0:4:2] *= float(target_w / w)
             bbox[..., 1:4:2] *= float(target_h / h)
-        return image, label, mask, bbox
+        # TODO: Compute keypoint
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, interpolation={1}, max_size={2}, antialias={3}, resize_criteria={4})".format(
@@ -144,7 +147,7 @@ class RandomHorizontalFlip:
     ):
         self.p: float = max(0., min(1., p))
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         w, _ = image.size
         if random.random() < self.p:
             image = F.hflip(image)
@@ -152,7 +155,10 @@ class RandomHorizontalFlip:
                 mask = F.hflip(mask)
             if bbox is not None:
                 bbox[..., 2::-2] = w - bbox[..., 0:4:2]
-        return image, label, mask, bbox
+            if keypoint is not None:
+                keypoint = keypoint[:, dataset.flip_indices] # flip_indices must be defined in config (swap)
+                keypoint[..., 0] = w - keypoint[..., 0]
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
@@ -167,7 +173,7 @@ class RandomVerticalFlip:
     ):
         self.p: float = max(0., min(1., p))
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         _, h = image.size
         if random.random() < self.p:
             image = F.vflip(image)
@@ -175,7 +181,10 @@ class RandomVerticalFlip:
                 mask = F.vflip(mask)
             if bbox is not None:
                 bbox[..., 3::-2] = h - bbox[..., 1:4:2]
-        return image, label, mask, bbox
+            if keypoint is not None:
+                keypoint = keypoint[:, dataset.flip_indices] # flip_indices must be defined in config (swap)
+                keypoint[..., 1] = h - keypoint[..., 1]
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(p={0})".format(self.p)
@@ -199,7 +208,7 @@ class Pad:
         self.fill = fill
         self.padding_mode = 'constant' # @illian: Fix as constant. I think other options are not gonna used well.
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
 
@@ -221,7 +230,8 @@ class Pad:
             padding_left, padding_top, _, _ = padding_ltrb
             bbox[..., 0:4:2] += padding_left
             bbox[..., 1:4:2] += padding_top
-        return image, label, mask, bbox
+        # TODO: Compute keypoint
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0}, fill={1}, padding_mode={2})".format(
@@ -243,7 +253,7 @@ class ColorJitter(T.ColorJitter):
         super(ColorJitter, self).__init__(brightness, contrast, saturation, hue)
         self.p: float = max(0., min(1., p))
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         fn_idx, brightness_factor, contrast_factor, saturation_factor, hue_factor = \
             self.get_params(self.brightness, self.contrast, self.saturation, self.hue)
 
@@ -258,7 +268,7 @@ class ColorJitter(T.ColorJitter):
                 elif fn_id == 3 and hue_factor is not None:
                     image = F.adjust_hue(image, hue_factor)
 
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + \
@@ -297,7 +307,7 @@ class RandomCrop:
         bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
         return bbox
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
         i, j, h, w = T.RandomCrop.get_params(image, (self.size_h, self.size_w))
         image = F.crop(image, i, j, h, w)
@@ -312,7 +322,8 @@ class RandomCrop:
                 bbox_candidate = self._crop_bbox(bbox, i, j, h, w)
                 _bbox_crop_count += 1
             bbox = bbox_candidate
-        return image, label, mask, bbox
+        # TODO: Compute keypoint
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(size={0})".format((self.size_h, self.size_w))
@@ -344,7 +355,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
         bbox = bbox[area_ratio >= BBOX_CROP_KEEP_THRESHOLD, ...]
         return bbox
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         w_orig, h_orig = image.size
         i, j, h, w = self.get_params(image, self.scale, self.ratio)
         image = F.resized_crop(image, i, j, h, w, self.size, self.interpolation)
@@ -367,7 +378,7 @@ class RandomResizedCrop(T.RandomResizedCrop):
             bbox[..., 0:4:2] *= float(target_w / w_cropped)
             bbox[..., 1:4:2] *= float(target_h / h_cropped)
 
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         interpolate_str = self.interpolation.value
@@ -424,13 +435,13 @@ class RandomErasing(T.RandomErasing):
         # Return original image
         return 0, 0, img
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         if torch.rand(1) < self.p:
             x, y, v = self.get_params(image, scale=self.scale, ratio=self.ratio, value=self.value)
             image.paste(v, (y, x))
             # TODO: Object-aware
-            return image, label, mask, bbox
-        return image, label, mask, bbox
+            return image, label, mask, bbox, keypoint
+        return image, label, mask, bbox, keypoint
 
 
 class TrivialAugmentWide(torch.nn.Module):
@@ -472,7 +483,7 @@ class TrivialAugmentWide(torch.nn.Module):
             "Equalize": (torch.tensor(0.0), False),
         }
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         fill = self.fill
         channels, height, width = F.get_dimensions(image)
         if isinstance(image, Tensor):
@@ -494,7 +505,7 @@ class TrivialAugmentWide(torch.nn.Module):
             magnitude *= -1.0
 
         # TODO: Compute mask, bbox
-        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), label, mask, bbox
+        return _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill), label, mask, bbox, keypoint
 
     def __repr__(self) -> str:
         s = (
@@ -521,7 +532,7 @@ class AutoAugment(T.AutoAugment):
 
         super().__init__(policy, interpolation, fill)
 
-    def forward(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def forward(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         """
             img (PIL Image or Tensor): Image to be transformed.
 
@@ -548,7 +559,7 @@ class AutoAugment(T.AutoAugment):
                 image = _apply_op(image, op_name, magnitude, interpolation=self.interpolation, fill=fill)
 
         # TODO: Compute mask, bbox
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
 
 class HSVJitter:
@@ -564,7 +575,7 @@ class HSVJitter:
         self.s_mag = s_mag
         self.v_mag = v_mag
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         hsv_augs = np.random.uniform(-1, 1, 3) * [self.h_mag, self.s_mag, self.v_mag]  # random gains
         hsv_augs *= np.random.randint(0, 2, 3)  # random selection of h, s, v
         hsv_augs = hsv_augs.astype(np.int16)
@@ -578,7 +589,7 @@ class HSVJitter:
 
         image_hsv = Image.merge('HSV', (h, s, v))
         image = image_hsv.convert('RGB')
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(h_mag={0}, s_mag={1}, v_mag={2})".format(
@@ -601,7 +612,7 @@ class RandomResize:
         self.resize = Resize(size=base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
         self.epoch_ = -1
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         """
         @illian01:
             Each worker randomly reset target size for every epochs.
@@ -615,13 +626,160 @@ class RandomResize:
             self.resize.size = size
             self.random_reseted = True
         image, label, mask, bbox = self.resize(image, label, mask, bbox, dataset)
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(base_size={0}, stride={1}, random_range={2})".format(
             self.base_size, self.stride, self.random_range
         )
 
+
+class PoseTopDownAffine:
+    """
+    Based on the mmpose implementation.
+    https://github.com/open-mmlab/mmpose
+    """
+    visualize = False
+
+    def __init__(
+        self,
+        scale: List,
+        scale_prob: float,
+        translate: float,
+        translate_prob: float,
+        rotation: int,
+        rotation_prob: float,
+        size: List,
+    ):
+        self.scale = scale
+        self.scale_prob = scale_prob
+        self.translate = translate
+        self.translate_prob = translate_prob
+        self.rotation = rotation
+        self.rotation_prob = rotation_prob
+        self.size = size
+
+        assert len(self.size) == 2, "Target size must be a list of length 2"
+
+    def trunc_normal_(self, low: float, high: float, size: Tuple = (1)):
+        """
+        Copied from torch.nn.init._no_grad_trunc_normal_
+        This is instead of scipy.stats.tuncnorm (Not to add dependency)
+        """
+        mean = 0.
+        std = 1.
+        # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
+        def norm_cdf(x):
+            # Computes standard normal cumulative distribution function
+            return (1. + math.erf(x / math.sqrt(2.))) / 2.
+
+        with torch.no_grad():
+            tensor = torch.zeros(size).to(torch.float32)
+
+            lower = norm_cdf((low - mean) / std)
+            upper = norm_cdf((high - mean) / std)
+
+            tensor.uniform_(2 * lower - 1, 2 * upper - 1)
+
+            tensor.erfinv_()
+
+            tensor.mul_(std * math.sqrt(2.))
+            tensor.add_(mean)
+
+            tensor.clamp_(min=low, max=high)
+            return tensor.numpy()
+
+    def _rotate_point(self, pt: np.ndarray, angle_rad: float):
+        """
+        Rotate a point by an angle.
+        """
+        sn, cs = np.sin(angle_rad), np.cos(angle_rad)
+        rot_mat = np.array([[cs, -sn], [sn, cs]])
+        return rot_mat @ pt
+
+    def _get_3rd_point(self, a: np.ndarray, b: np.ndarray):
+        """
+        To calculate the affine matrix, three pairs of points are required. This
+        function is used to get the 3rd point, given 2D points a & b.
+        """
+        direction = a - b
+        c = b + np.r_[-direction[1], direction[0]]
+        return c
+
+    def get_warp_matrix(self, box_center: np.ndarray, box_wh: np.ndarray, rot: float):
+        """
+        Calculate the affine transformation matrix that can warp the bbox area
+        in the input image to the output size.
+        """
+        shift = (0, 0) # Fix as 0
+        assert len(box_center) == 2
+        assert len(box_wh) == 2
+        assert len(shift) == 2
+
+        shift = np.array(shift)
+        src_w, src_h = box_wh[:2]
+        dst_w, dst_h = self.size
+
+        rot_rad = np.deg2rad(rot)
+        src_dir = self._rotate_point(np.array([src_w * -0.5, 0.]), rot_rad)
+        dst_dir = np.array([dst_w * -0.5, 0.])
+
+        src = np.zeros((3, 2), dtype=np.float32)
+        src[0, :] = box_center + box_wh * shift
+        src[1, :] = box_center + src_dir + box_wh * shift
+
+        dst = np.zeros((3, 2), dtype=np.float32)
+        dst[0, :] = [dst_w * 0.5, dst_h * 0.5]
+        dst[1, :] = np.array([dst_w * 0.5, dst_h * 0.5]) + dst_dir
+
+        src[2, :] = self._get_3rd_point(src[0, :], src[1, :])
+        dst[2, :] = self._get_3rd_point(dst[0, :], dst[1, :])
+
+        warp_mat = cv2.getAffineTransform(np.float32(src), np.float32(dst))
+        return warp_mat
+
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        image = np.array(image)
+
+        # This is only for one instance (bbox)
+        bbox_ = bbox[0].reshape(2, 2).copy()
+        bbox_center = bbox_.sum(axis=0) / 2.
+        bbox_wh = bbox_[1] - bbox_[0]
+        bbox_ = bbox_.reshape(-1)
+
+        # Randomly scale, shift box, and get random rotation degree which is applied in affine transform
+        scale_min, scale_max = self.scale
+        mu = (scale_max + scale_min) * 0.5
+        sigma = (scale_max - scale_min) * 0.5
+        scale = self.trunc_normal_(low=-1., high=1., size=(1)) * sigma + mu
+        scale = np.where(np.random.rand(1) < self.scale_prob, scale, 1.)
+
+        translate = self.trunc_normal_(low=-1., high=1., size=(2)) * self.translate
+        translate = np.where(np.random.rand(1) < self.translate_prob, translate, 0.)
+
+        bbox_center = bbox_center + bbox_wh * translate
+        bbox_wh = bbox_wh * scale
+        rot = (self.rotation * self.trunc_normal_(low=-1., high=1., size=(1))).item()
+
+        # Get warping matrix
+        warp_mat = self.get_warp_matrix(bbox_center, bbox_wh, rot)
+
+        # Apply affine transform
+        image = cv2.warpAffine(image, warp_mat, self.size, flags=cv2.INTER_LINEAR)
+        image = Image.fromarray(image) # return as PIL
+
+        # Compute keypoint. Note that this is only for one instance.
+        # ``keypoint.shape`` should be (1, num_keypoints, 3)
+        keypoint[..., :2] = cv2.transform(keypoint[..., :2], warp_mat)
+
+        # Now, bbox is same with image size
+        bbox_ = np.array([0, 0] + self.size[::-1]).astype('float32')
+        bbox[0] = bbox_
+
+        return image, label, mask, bbox, keypoint
+
+    def __repr__(self):
+        return self.__class__.__name__ + f"(scale={self.scale}, translate={self.translate}, rotation={self.rotation}, size={self.size})"
 
 class Normalize:
     visualize = False
@@ -630,9 +788,9 @@ class Normalize:
         self.mean = mean
         self.std = std
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         image = F.normalize(image, mean=self.mean, std=self.std)
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "(mean={0}, std={1})".format(
@@ -643,14 +801,14 @@ class Normalize:
 class ToTensor(T.ToTensor):
     visualize = False
 
-    def __call__(self, image, label=None, mask=None, bbox=None, dataset=None):
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         image = F.to_tensor(image)
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
         if bbox is not None:
             bbox = torch.as_tensor(np.array(bbox), dtype=torch.float)
 
-        return image, label, mask, bbox
+        return image, label, mask, bbox, keypoint
 
     def __repr__(self):
         return self.__class__.__name__ + "()"

@@ -58,7 +58,7 @@ def load_backbone_and_head_model(
     head_module = MODEL_HEAD_DICT[task][head_name]
     if task == 'classification':
         head = head_module(num_classes=num_classes, feature_dim=backbone.feature_dim, conf_model_head=conf_model.architecture.head)
-    elif task in ['segmentation', 'detection']:
+    elif task in ['segmentation', 'detection', 'pose_estimation']:
         img_size = img_size if isinstance(img_size, (int, None)) else tuple(img_size)
         head = head_module(num_classes=num_classes,
                                 intermediate_features_dim=intermediate_features_dim,

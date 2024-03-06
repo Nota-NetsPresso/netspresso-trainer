@@ -219,6 +219,38 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             rank=conf.rank,
             kwargs=None
         )
+    elif task == 'pose_estimation':
+        collate_fn = None
+
+        train_loader = create_loader(
+            train_dataset,
+            conf.data.name,
+            logger,
+            batch_size=conf.training.batch_size,
+            is_training=True,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
+            collate_fn=collate_fn,
+            pin_memory=False,
+            world_size=conf.world_size,
+            rank=conf.rank,
+            kwargs=None
+        )
+
+        eval_loader = create_loader(
+            eval_dataset,
+            conf.data.name,
+            logger,
+            batch_size=conf.training.batch_size if not profile else 1,
+            is_training=False,
+            num_workers=conf.environment.num_workers if not profile else 1,
+            distributed=conf.distributed,
+            collate_fn=collate_fn,
+            pin_memory=False,
+            world_size=conf.world_size,
+            rank=conf.rank,
+            kwargs=None
+        )
 
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
