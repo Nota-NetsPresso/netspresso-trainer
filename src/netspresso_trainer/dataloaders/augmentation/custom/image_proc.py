@@ -643,29 +643,39 @@ class PoseTopDownAffine:
 
     def __init__(
         self,
-        scale: float,
+        scale: List,
+        scale_prob: float,
         translate: float,
+        translate_prob: float,
         rotation: int,
+        rotation_prob: float,
         size: List,
     ):
         self.scale = scale
+        self.scale_prob = scale_prob
         self.translate = translate
+        self.translate_prob = translate_prob
         self.rotation = rotation
+        self.rotation_prob = rotation_prob
         self.size = size
 
         assert len(self.size) == 2, "Target size must be a list of length 2"
 
-    def trunc_normal_(self, tensor: torch.Tensor, mean: float, std: float, low: float, high: float):
+    def trunc_normal_(self, low: float, high: float, size: Tuple = (1)):
         """
         Copied from torch.nn.init._no_grad_trunc_normal_
         This is instead of scipy.stats.tuncnorm (Not to add dependency)
         """
+        mean = 0.
+        std = 1.
         # Method based on https://people.sc.fsu.edu/~jburkardt/presentations/truncated_normal.pdf
         def norm_cdf(x):
             # Computes standard normal cumulative distribution function
             return (1. + math.erf(x / math.sqrt(2.))) / 2.
 
         with torch.no_grad():
+            tensor = torch.zeros(size).to(torch.float32)
+
             l = norm_cdf((low - mean) / std)
             u = norm_cdf((high - mean) / std)
 
@@ -677,7 +687,7 @@ class PoseTopDownAffine:
             tensor.add_(mean)
 
             tensor.clamp_(min=low, max=high)
-            return tensor
+            return tensor.numpy()
     
     def _rotate_point(self, pt: np.ndarray, angle_rad: float):
         """
@@ -696,11 +706,12 @@ class PoseTopDownAffine:
         c = b + np.r_[-direction[1], direction[0]]
         return c
 
-    def get_warp_matrix(self, box_center: np.ndarray, box_wh: np.ndarray, rot: int, shift: Tuple[float, float]):
+    def get_warp_matrix(self, box_center: np.ndarray, box_wh: np.ndarray, rot: float):
         """
         Calculate the affine transformation matrix that can warp the bbox area
         in the input image to the output size.
         """
+        shift = (0, 0) # Fix as 0
         assert len(box_center) == 2
         assert len(box_wh) == 2
         assert len(shift) == 2
@@ -736,12 +747,22 @@ class PoseTopDownAffine:
         bbox_wh = bbox_[1] - bbox_[0]
         bbox_ = bbox_.reshape(-1)
 
-        # TODO: Get random scaled box, rotation degree and shift
-        rot = 0
-        shift = (0, 0)
+        # Randomly scale, shift box, and get random rotation degree which is applied in affine transform
+        scale_min, scale_max = self.scale
+        mu = (scale_max + scale_min) * 0.5
+        sigma = (scale_max - scale_min) * 0.5
+        scale = self.trunc_normal_(low=-1., high=1., size=(1)) * sigma + mu
+        scale = np.where(np.random.rand(1) < self.scale_prob, scale, 1.)
+
+        translate = self.trunc_normal_(low=-1., high=1., size=(2)) * self.translate
+        translate = np.where(np.random.rand(1) < self.translate_prob, translate, 0.)
+        
+        bbox_center = bbox_center + bbox_wh * translate
+        bbox_wh = bbox_wh * scale
+        rot = (self.rotation * self.trunc_normal_(low=-1., high=1., size=(1))).item()
         
         # Get warping matrix
-        warp_mat = self.get_warp_matrix(bbox_center, bbox_wh, rot, shift)
+        warp_mat = self.get_warp_matrix(bbox_center, bbox_wh, rot)
 
         # Apply affine transform
         image = cv2.warpAffine(image, warp_mat, self.size, flags=cv2.INTER_LINEAR)
