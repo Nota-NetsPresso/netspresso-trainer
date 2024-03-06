@@ -28,7 +28,7 @@ class MobileNetV3(nn.Module):
         super(MobileNetV3, self).__init__()
 
         self.task = task.lower()
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
+        self.use_intermediate_features = self.task in ['segmentation', 'detection', 'pose_estimation']
         norm_type = 'batch_norm'
         act_type = 'hard_swish'
 

@@ -43,7 +43,7 @@ class ResNet(nn.Module):
 
         self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
+        self.use_intermediate_features = self.task in ['segmentation', 'detection', 'pose_estimation']
 
         if norm_layer is None:
             norm_layer = 'batch_norm'
