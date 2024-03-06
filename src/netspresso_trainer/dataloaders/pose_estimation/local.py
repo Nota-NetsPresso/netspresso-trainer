@@ -66,9 +66,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         out = self.transform(image=img, bbox=bbox, keypoint=keypoints, dataset=self)
 
         # Use only one instance keypoints
-        keypoints = out['keypoint'][0]
-
-        outputs.update({'pixel_values': img, 'keypoints': keypoints})
+        outputs.update({'pixel_values': out['image'], 'keypoints': out['keypoint'][0]})
         outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
