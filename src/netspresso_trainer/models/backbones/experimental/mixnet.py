@@ -15,7 +15,7 @@ from torchvision.ops.misc import SqueezeExcitation as SEBlock
 from ...op.registry import ACTIVATION_REGISTRY
 from ...op.custom import ConvLayer
 from ...utils import BackboneOutput
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['mixnet']
 

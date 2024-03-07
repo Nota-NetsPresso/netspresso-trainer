@@ -10,7 +10,7 @@ from torch import nn
 
 from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
 from ...utils import BackboneOutput
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['cspdarknet']
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']

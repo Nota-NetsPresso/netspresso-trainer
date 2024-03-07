@@ -51,8 +51,6 @@ MODEL_FULL_DICT = {
 SUPPORTING_MODEL_LIST = list(MODEL_BACKBONE_DICT.keys()) + list(MODEL_FULL_DICT.keys())
 SUPPORTING_TASK_LIST: List[str] = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
-USE_INTERMEDIATE_FEATURES_TASK_LIST = ['segmentation', 'detection', 'pose_estimation']
-
 TASK_MODEL_DICT: Dict[str, Type[TaskModel]] = {
     'classification': ClassificationModel,
     'segmentation': SegmentationModel,
