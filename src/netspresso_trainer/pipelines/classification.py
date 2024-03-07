@@ -35,6 +35,7 @@ class ClassificationPipeline(BasePipeline):
         self.loss_factory.backward()
         self.optimizer.step()
 
+        labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
@@ -63,6 +64,7 @@ class ClassificationPipeline(BasePipeline):
             labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
 
+        labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
@@ -94,11 +96,11 @@ class ClassificationPipeline(BasePipeline):
             torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                gathered_pred = [g.detach().cpu().numpy() for g in gathered_pred]
+                gathered_pred = [g for g in gathered_pred]
                 gathered_pred = np.concatenate(gathered_pred, axis=0)
                 pred = gathered_pred
         else:
-            pred = pred.detach().cpu().numpy()
+            pred = pred
 
         return pred
 
