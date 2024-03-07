@@ -16,9 +16,11 @@ from torch import Tensor
 from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
 from ...op.custom import ConvLayer, GlobalPool, InvertedResidual
 from ...utils import BackboneOutput, FXTensorType
+from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
+
 
 class MobileViTEmbeddings(nn.Module):
     def __init__(self, image_channels, hidden_size):
@@ -40,6 +42,7 @@ class MobileViTEmbeddings(nn.Module):
         x = self.conv(x)  # B x C x H//2 x W//2
         return x
 
+
 class MobileViTTransformerBlock(MetaFormerBlock):
     # Original: TransformerEncoder
     def __init__(self, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
@@ -51,6 +54,7 @@ class MobileViTTransformerBlock(MetaFormerBlock):
                                               attention_dropout_prob=attention_dropout_prob,
                                               use_qkv_bias=True)
         self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
+
 
 class MobileViTBlock(nn.Module):
     # Original: MobileViTBlock
@@ -252,6 +256,7 @@ class MobileViTBlock(nn.Module):
             out = self.fusion(torch.cat((x, out), dim=1))  # skip concat
         return out
 
+
 class MobileViTEncoder(MetaFormerEncoder):
     def __init__(
         self,
@@ -366,6 +371,11 @@ class MobileViT(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'MobileViT is not supported on {self.task} task now.'
+        #self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         exp_channels = min(params.output_expansion_ratio * stage_params[-1].out_channels, 960)
         hidden_sizes = [stage.out_channels for stage in stage_params] + [exp_channels]
         super().__init__(hidden_sizes)
@@ -392,6 +402,7 @@ class MobileViT(MetaFormer):
         x = self.conv_1x1_exp(x)
         feat = self.pool(x)
         return BackboneOutput(last_feature=feat)
-    
+
+
 def mobilevit(task, conf_model_backbone):
     return MobileViT(task, conf_model_backbone.params, conf_model_backbone.stage_params)

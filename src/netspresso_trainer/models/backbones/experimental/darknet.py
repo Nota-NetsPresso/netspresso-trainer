@@ -10,9 +10,10 @@ from torch import nn
 
 from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
 from ...utils import BackboneOutput
+from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['cspdarknet']
-SUPPORTING_TASK = ['detection']
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 
 class CSPDarknet(nn.Module):
@@ -24,12 +25,15 @@ class CSPDarknet(nn.Module):
         stage_params: Optional[List] = None,
         #depthwise=False,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'CSPDarknet is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         super().__init__()
+
         out_features=("dark3", "dark4", "dark5")
         assert out_features, "please provide output features of Darknet"
-
-        self.task = task.lower()
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         dep_mul = params.dep_mul
         wid_mul = params.wid_mul
