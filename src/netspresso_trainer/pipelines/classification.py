@@ -40,9 +40,6 @@ class ClassificationPipeline(BasePipeline):
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
-            # Remove dummy samples, they only come in distributed environment
-            pred = pred[indices != -1]
-            labels = labels[indices != -1]
             torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
