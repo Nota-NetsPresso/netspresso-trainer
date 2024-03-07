@@ -15,4 +15,4 @@ class ClassificationPostprocessor():
         if k:
             maxk = min(k, maxk)
         _, pred = pred.topk(maxk, 1, True, True)
-        return pred
+        return pred.detach().cpu().numpy()
