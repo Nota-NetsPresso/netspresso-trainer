@@ -94,7 +94,6 @@ class ClassificationPipeline(BasePipeline):
             torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                gathered_pred = [g for g in gathered_pred]
                 gathered_pred = np.concatenate(gathered_pred, axis=0)
                 pred = gathered_pred
         else:

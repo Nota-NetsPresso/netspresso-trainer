@@ -21,7 +21,7 @@ class SegmentationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        indices = batch['indices']
+        batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
         target = {'target': labels}
