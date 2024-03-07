@@ -130,6 +130,18 @@ class MosaicDetection(Transform):
 
 
 @dataclass
+class PoseTopDownAffine(Transform):
+    name: str = 'posetopdownaffine'
+    scale: List = field(default_factory=lambda: [0.75, 1.25])
+    scale_prob: float = 1.
+    translate: float = 0.1
+    translate_prob: float = 1.
+    rotation: int = 60
+    rotation_prob: float = 1.
+    size: List = field(default_factory=lambda: [DEFAULT_IMG_SIZE, DEFAULT_IMG_SIZE])
+
+
+@dataclass
 class ClassificationAugmentationConfig(AugmentationConfig):
     img_size: int = 256
     train: Optional[List] = field(default_factory=lambda: [

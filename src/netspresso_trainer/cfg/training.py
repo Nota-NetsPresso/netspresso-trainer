@@ -56,3 +56,8 @@ class SegmentationScheduleConfig(ScheduleConfig):
 @dataclass
 class DetectionScheduleConfig(ScheduleConfig):
     pass
+
+
+@dataclass
+class PoseEstimationScheduleConfig(ScheduleConfig):
+    pass
