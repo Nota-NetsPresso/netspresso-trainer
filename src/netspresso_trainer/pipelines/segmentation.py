@@ -21,7 +21,7 @@ class SegmentationPipeline(BasePipeline):
 
     def train_step(self, batch):
         self.model.train()
-        indices = batch['indices']
+        batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
         target = {'target': labels}
@@ -40,13 +40,11 @@ class SegmentationPipeline(BasePipeline):
         out = {k: v.detach() for k, v in out.items()}
         pred = self.postprocessor(out)
 
+        labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
-            # Remove dummy samples, they only come in distributed environment
-            pred = pred[indices != -1]
-            labels = labels[indices != -1]
             torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
@@ -71,6 +69,8 @@ class SegmentationPipeline(BasePipeline):
 
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
+        labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
@@ -88,8 +88,8 @@ class SegmentationPipeline(BasePipeline):
 
         logs = {
             'images': images.detach().cpu().numpy(),
-            'target': labels.detach().cpu().numpy(),
-            'pred': pred.detach().cpu().numpy()
+            'target': labels,
+            'pred': pred
         }
         if 'edges' in batch:
             logs.update({
@@ -106,7 +106,7 @@ class SegmentationPipeline(BasePipeline):
 
         pred = self.postprocessor(out)
 
-        return pred.detach().cpu().numpy()
+        return pred
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
         pass

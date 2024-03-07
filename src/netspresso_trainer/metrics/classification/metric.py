@@ -1,5 +1,6 @@
 from typing import List
 
+import numpy as np
 import torch
 
 from ..base import BaseMetric
@@ -10,11 +11,12 @@ TOPK_MAX = 20
 @torch.no_grad()
 def accuracy_topk(pred, target):
     """Computes the accuracy over the k top predictions for the specified values of k"""
-    batch_size = target.size(0)
-    maxk = pred.size(-1)
-    pred = pred.t()
-    correct = pred.eq(target.reshape(1, -1).expand_as(pred))
-    return lambda topk: correct[:min(topk, maxk)].reshape(-1).float().sum(0) * 100. / batch_size
+    batch_size = target.shape[0]
+    maxk = pred.shape[-1]
+    pred = pred.T
+    class_num = pred.shape[0]
+    correct = np.equal(pred, np.tile(target, (class_num, 1)))
+    return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0) * 100. / batch_size
 
 
 class ClassificationMetric(BaseMetric):
