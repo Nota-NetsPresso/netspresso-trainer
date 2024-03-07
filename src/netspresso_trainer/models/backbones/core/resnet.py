@@ -11,7 +11,7 @@ from torch import Tensor
 
 from ...op.custom import BasicBlock, Bottleneck, ConvLayer
 from ...utils import BackboneOutput
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['resnet']
 

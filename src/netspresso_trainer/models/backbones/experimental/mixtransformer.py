@@ -9,7 +9,7 @@ from ...op.base_metaformer import Image2Sequence, MetaFormer, MetaFormerBlock, M
 from ...op.custom import ConvLayer
 from ...op.registry import ACTIVATION_REGISTRY
 from ...utils import BackboneOutput
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['mixtransformer']
 

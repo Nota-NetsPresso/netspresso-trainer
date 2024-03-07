@@ -19,7 +19,7 @@ from ...op.base_metaformer import (
 )
 from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
 from ...utils import BackboneOutput
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']

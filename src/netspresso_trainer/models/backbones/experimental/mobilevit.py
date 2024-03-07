@@ -16,7 +16,7 @@ from torch import Tensor
 from ...op.base_metaformer import ChannelMLP, MetaFormer, MetaFormerBlock, MetaFormerEncoder, MultiHeadAttention
 from ...op.custom import ConvLayer, GlobalPool, InvertedResidual
 from ...utils import BackboneOutput, FXTensorType
-from ...registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['mobilevit']
 SUPPORTING_TASK = ['classification']
