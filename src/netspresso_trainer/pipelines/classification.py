@@ -61,6 +61,7 @@ class ClassificationPipeline(BasePipeline):
             labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
