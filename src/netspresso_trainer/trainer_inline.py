@@ -5,7 +5,6 @@ from typing import List, Literal, Optional, Union
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from netspresso_trainer.cfg import TrainerConfig
 from netspresso_trainer.trainer_util import (
     parse_gpu_ids,
     train_with_yaml_impl,

@@ -9,7 +9,6 @@ from typing import List, Optional, Tuple, Union
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from netspresso_trainer.cfg import TrainerConfig
 from netspresso_trainer.trainer_common import train_common
 
 from .models import SUPPORTING_TASK_LIST
