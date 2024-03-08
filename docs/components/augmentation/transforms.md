@@ -196,6 +196,38 @@ Pad an image with constant. This augmentation is based on the [Pad](https://pyto
   ```
 </details>
 
+### PoseTopDownAffine
+
+Apply affine transform based on given bounding box. This augmentation is based on the [RandomBBoxTransform](https://github.com/open-mmlab/mmpose/blob/5a3be9451bdfdad2053a90dc1199e3ff1ea1a409/mmpose/datasets/transforms/common_transforms.py) and [TopDownAffine](https://github.com/open-mmlab/mmpose/blob/5a3be9451bdfdad2053a90dc1199e3ff1ea1a409/mmpose/datasets/transforms/topdown_transforms.py) in mmpose library.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "pad" to use `Pad` transform. |
+| `scale` | (list) Randomly adjust box scale in range of [`scale[0]`, `scale[1]`] |
+| `scale_prob` | (float) The probability of applying scaling. If set to `1.0`, scale of box always randomly adjusted. |
+| `translate` | (float) Randomly adjust the offset of the box by adding translate factor * box size. The translate factor is random value in range of [`0`, `translate`]. |
+| `translate_prob` | (float) The probability of applying translate. If set to `1.0`, offset of box always randomly adjusted. |
+| `rotation` | (int) Random rotation range of affine transform. The random value determined in [`-rotation`, `rotation`]. This rotation angle is degree. |
+| `rotation_prob` | (float) The probability of applying rotation. If set to `1.0`, affine transform matrix always contains rotation value. |
+
+<details>
+  <summary>PoseTopDownAffine example</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: posetopdownaffine
+        scale: [0.75, 1.25]
+        scale_prob: 1.
+        translate: 0.1
+        translate_prob: 1.
+        rotation: 60
+        rotation_prob: 1.
+        size: [*img_size, *img_size]
+  ```
+</details>
+
 ### RandomCrop
 
 Crop the given image at a random location. This augmentation follows the [RandomCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomCrop.html#torchvision.transforms.RandomCrop) in torchvision library.
