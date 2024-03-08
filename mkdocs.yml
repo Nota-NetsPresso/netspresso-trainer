@@ -197,6 +197,7 @@ nav:
       - AnchorDecoupledHead: models/heads/anchordecoupledhead.md
       - AnchorFreeDecoupledHead: models/heads/anchorfreedecoupledhead.md
       - FC: models/heads/fc.md  
+      - RTMCC: models/heads/rtmcc.md
     - Layers:
       - Activations: models/layers/activations.md
       - Normalizations: models/layers/normalizations.md
