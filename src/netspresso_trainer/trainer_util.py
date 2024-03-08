@@ -120,7 +120,7 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
     command = [
         'python', '-m', 'torch.distributed.launch',
         f'--nproc_per_node={len(gpu_ids)}',  # GPU #
-        f"{Path(__file__).absolute().parent / 'trainer_cli_multi_gpu.py'}", *map(str, command)
+        f"{Path(__file__).absolute().parent / 'trainer_main.py'}", *map(str, command)
     ]
 
     # Run subprocess

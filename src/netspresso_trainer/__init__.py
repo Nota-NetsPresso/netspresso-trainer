@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from netspresso_trainer.trainer_cli import parse_args_netspresso, train_cli
-from netspresso_trainer.trainer_inline import train_with_yaml
+from netspresso_trainer.trainer_main import parse_args_netspresso, train_cli, train_with_yaml
 from netspresso_trainer.trainer_util import validate_config
 
 ### Starting from v0.0.9, the default train function runs with yaml configuration
