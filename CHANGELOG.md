@@ -18,6 +18,7 @@
 
 - Simplify augmentation configuration hierarchy by `@illian01` in [PR 322](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/322)
 - Add pose estimation task and RTMPose model by `@illian01` in [PR 357](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/357), [PR 366](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/366)
+- Remove pythonic config and move training initialization functions to `trainer_main.py` by `@illian01` in [PR 371](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/371)
 
 ## Other Changes:
 
