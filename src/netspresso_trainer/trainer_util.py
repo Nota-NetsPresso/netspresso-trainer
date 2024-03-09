@@ -9,7 +9,6 @@ from typing import List, Optional, Tuple, Union
 import torch
 from omegaconf import DictConfig, OmegaConf
 
-from netspresso_trainer.cfg import TrainerConfig
 from netspresso_trainer.trainer_common import train_common
 
 from .models import SUPPORTING_TASK_LIST
@@ -121,7 +120,7 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
     command = [
         'python', '-m', 'torch.distributed.launch',
         f'--nproc_per_node={len(gpu_ids)}',  # GPU #
-        f"{Path(__file__).absolute().parent / 'trainer_cli_multi_gpu.py'}", *map(str, command)
+        f"{Path(__file__).absolute().parent / 'trainer_main.py'}", *map(str, command)
     ]
 
     # Run subprocess
@@ -213,12 +212,6 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
 
-def set_struct_recursive(conf: DictConfig, value: bool) -> None:
-    OmegaConf.set_struct(conf, value)
-
-    for _, conf_value in conf.items():
-        if isinstance(conf_value, DictConfig):
-            set_struct_recursive(conf_value, value)
 
 def get_gpu_from_config(conf_environment: DictConfig) -> Optional[Union[List, int]]:
     conf_environment_gpus = str(conf_environment.gpus) if hasattr(conf_environment, 'gpus') else None
@@ -266,31 +259,6 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
                 gpus, data, augmentation, model, training, logging, environment, log_level,
                 config_summary.task, config_summary.model_name, config_summary.is_graphmodule_training, config_summary.logging_dir
             )
-        return config_summary.logging_dir
-    except Exception as e:
-        raise e
-
-def train_with_config_impl(gpus: int, config: TrainerConfig, log_level: str = LOG_LEVEL):
-
-    gpus = get_gpus_from_parser_and_config(gpus, config.environment)
-    assert isinstance(gpus, int), f"Currently, only single-GPU training is supported in this API. Your gpu(s): {gpus}"
-
-    os.environ['CUDA_VISIBLE_DEVICES'] = str(gpus)
-    torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
-
-    conf: DictConfig = OmegaConf.create(config)
-    set_struct_recursive(conf, False)
-    config_summary = validate_config(conf)
-
-    try:
-        train_common(
-            conf,
-            task=config_summary.task,
-            model_name=config_summary.model_name,
-            is_graphmodule_training=config_summary.is_graphmodule_training,
-            logging_dir=config_summary.logging_dir,
-            log_level=log_level
-        )
         return config_summary.logging_dir
     except Exception as e:
         raise e
