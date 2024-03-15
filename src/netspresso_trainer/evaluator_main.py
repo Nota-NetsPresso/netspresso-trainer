@@ -19,7 +19,6 @@ def evaluation_cli() -> None:
         data=args_parsed.data,
         augmentation=args_parsed.augmentation,
         model=args_parsed.model,
-        training=args_parsed.training,
         logging=args_parsed.logging,
         environment=args_parsed.environment,
         log_level=args_parsed.log_level

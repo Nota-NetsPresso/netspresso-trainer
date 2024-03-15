@@ -17,7 +17,6 @@ def evaluation_common(
     conf: DictConfig,
     task: str,
     model_name: str,
-    is_graphmodule_training: bool,
     logging_dir: Path,
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
 ):
@@ -32,7 +31,7 @@ def evaluation_common(
     add_file_handler(logging_dir / "result.log", distributed=conf.distributed)
 
     if not distributed or dist.get_rank() == 0:
-        logger.info(f"Task: {task} | Model: {model_name} | Training with torch.fx model? {is_graphmodule_training}")
+        logger.info(f"Task: {task} | Model: {model_name}")
         logger.info(f"Result will be saved at {logging_dir}")
 
     if conf.distributed and conf.rank != 0:

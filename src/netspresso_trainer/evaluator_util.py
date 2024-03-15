@@ -161,8 +161,7 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
 
 
 def evaluation_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
-                         model: Union[Path, str], training: Union[Path, str],
-                         logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
+                         model: Union[Path, str], logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
     conf_environment = OmegaConf.load(environment).environment
     gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
     assert isinstance(gpus, (list, int))
@@ -171,7 +170,7 @@ def evaluation_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
     torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
 
-    conf = set_arguments(data, augmentation, model, training, logging, environment)
+    conf = set_arguments(data, augmentation, model, logging, environment)
     config_summary = validate_config(conf)
 
     try:
