@@ -40,8 +40,11 @@ def evaluation_common(
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
-    # TODO: Fix as build_dataset can build only valid_dataset
     _, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    assert valid_dataset is not None, "For evaluation, valid split of dataset must be provided."
+    if not distributed or dist.get_rank() == 0:
+        logger.info(f"Summary | Dataset: <{conf.data.name}> (with {conf.data.format} format)")
+        logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
