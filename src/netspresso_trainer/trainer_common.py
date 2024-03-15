@@ -41,6 +41,7 @@ def train_common(
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
+    # Build dataloaders
     train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
     assert train_dataset is not None, "For training, train split of dataset must be provided."
     if not distributed or dist.get_rank() == 0:
@@ -57,6 +58,7 @@ def train_common(
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
 
+    # Build model
     if is_graphmodule_training:
         assert conf.model.checkpoint.fx_model_path is not None
         assert Path(conf.model.checkpoint.fx_model_path).exists()
@@ -73,18 +75,20 @@ def train_common(
     if conf.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
-    trainer = build_pipeline(conf, task, model_name, model,
+    # Build training pipeline
+    pipeline = build_pipeline(conf, task, model_name, model,
                              devices, train_dataloader, eval_dataloader,
                              class_map=train_dataset.class_map,
                              logging_dir=logging_dir,
                              is_graphmodule_training=is_graphmodule_training)
 
-    trainer.set_train()
+    pipeline.set_train()
     try:
-        trainer.train()
+        # Start train
+        pipeline.train()
 
         if test_dataset:
-            trainer.inference(test_dataset)
+            pipeline.inference(test_dataset)
     except KeyboardInterrupt:
         pass
     except Exception as e:

@@ -40,6 +40,7 @@ def evaluation_common(
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
+    # Build dataloader
     _, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
     assert valid_dataset is not None, "For evaluation, valid split of dataset must be provided."
     if not distributed or dist.get_rank() == 0:
@@ -53,6 +54,7 @@ def evaluation_common(
     train_dataloader, eval_dataloader = \
         build_dataloader(conf, task, model_name, train_dataset=None, eval_dataset=valid_dataset)
 
+    # Build model
     # TODO: Not implemented for various model types. Only support pytorch model now
     model = build_model(
         conf.model, task, valid_dataset.num_classes,
@@ -65,6 +67,7 @@ def evaluation_common(
     if conf.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
+    # Build evaluation pipeline
     pipeline = build_pipeline(conf, task, model_name, model,
                              devices, train_dataloader, eval_dataloader,
                              class_map=valid_dataset.class_map,
@@ -74,6 +77,7 @@ def evaluation_common(
     # TODO: Add set_evaluation in base pipeline
     pipeline.set_evaluation()
     try:
+        # Start evaluation
         pipeline.validate()
     except KeyboardInterrupt:
         pass
