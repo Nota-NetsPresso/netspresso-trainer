@@ -145,22 +145,24 @@ class ClassficationDataSampler(BaseDataSampler):
         return images_and_targets
 
     def load_samples(self):
-        assert self.conf_data.path.train.image is not None
         root_dir = Path(self.conf_data.path.root)
-        train_dir = root_dir / self.conf_data.path.train.image
         id_mapping: Optional[dict] = dict(self.conf_data.id_mapping) if self.conf_data.id_mapping is not None else None
-        file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=self.conf_data.path.train.label, id_mapping=id_mapping)
 
+        exists_train = self.conf_data.path.train.image is not None
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
 
+        train_samples = None
         valid_samples = None
         test_samples = None
 
-        train_samples = self.load_data(file_or_dir_to_idx, split='train')
+        if exists_train:
+            train_dir = root_dir / self.conf_data.path.train.image
+            file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=self.conf_data.path.train.label, id_mapping=id_mapping)
+            train_samples = self.load_data(file_or_dir_to_idx, split='train')
         if exists_valid:
             valid_dir = root_dir / self.conf_data.path.valid.image
-            file_or_dir_to_idx_valid, _ = load_class_map_with_id_mapping(root_dir, valid_dir, map_or_filename=self.conf_data.path.valid.label, id_mapping=id_mapping)
+            file_or_dir_to_idx_valid, idx_to_class = load_class_map_with_id_mapping(root_dir, valid_dir, map_or_filename=self.conf_data.path.valid.label, id_mapping=id_mapping)
             valid_samples = self.load_data(file_or_dir_to_idx_valid, split='valid')
         if exists_test:
             test_samples = self.load_data(file_or_dir_to_idx, split='test')
@@ -185,6 +187,7 @@ class ClassficationDataSampler(BaseDataSampler):
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
 
         label_feature_name = self.conf_data.metadata.features.label
+        # Assumed hugging face dataset always has training split
         label_feature = total_dataset['train'].features[label_feature_name]
         if isinstance(label_feature, ClassLabel):
             labels: List[str] = label_feature.names
