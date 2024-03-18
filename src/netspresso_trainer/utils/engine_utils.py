@@ -10,7 +10,6 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 
 from ..models import SUPPORTING_TASK_LIST
-from netspresso_trainer.trainer_common import train_common
 
 OUTPUT_ROOT_DIR = "./outputs"
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -197,3 +196,16 @@ def validate_train_config(conf: DictConfig) -> ConfigSummary:
     logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='training')
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
+
+
+def validate_evaluation_config(conf: DictConfig) -> ConfigSummary:
+
+    task = str(conf.model.task).lower()
+    assert task in SUPPORTING_TASK_LIST
+
+    model_name = str(conf.model.name).lower() + '_evaluation'
+
+    project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
+    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='evaluation')
+
+    return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)

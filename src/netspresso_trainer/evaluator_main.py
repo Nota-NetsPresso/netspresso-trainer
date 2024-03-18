@@ -2,13 +2,50 @@ import os
 from pathlib import Path
 from typing import List, Literal, Optional, Union
 
-from netspresso_trainer.evaluator_common import evaluation_common
-from netspresso_trainer.evaluator_util import (
-    evaluation_with_yaml_impl,
-)
-from .utils.engine_utils import parse_args_netspresso
+import torch
+from omegaconf import OmegaConf
 
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+from netspresso_trainer.evaluator_common import evaluation_common
+from netspresso_trainer.utils.engine_utils import (
+    parse_args_netspresso,
+    set_arguments,
+    get_gpus_from_parser_and_config,
+    validate_evaluation_config,
+)
+from netspresso_trainer.utils.engine_utils import LOG_LEVEL
+
+
+def evaluation_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
+                         model: Union[Path, str], logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
+    conf_environment = OmegaConf.load(environment).environment
+    gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
+    assert isinstance(gpus, (list, int))
+
+    gpu_ids_str = ','.join(map(str, gpus)) if isinstance(gpus, list) else str(gpus)
+    os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
+    torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
+
+    conf = set_arguments(data=data,
+                         augmentation=augmentation,
+                         model=model,
+                         logging=logging,
+                         environment=environment)
+    config_summary = validate_evaluation_config(conf)
+
+    try:
+        if isinstance(gpus, int):
+            evaluation_common(
+                conf,
+                task=config_summary.task,
+                model_name=config_summary.model_name,
+                logging_dir=config_summary.logging_dir,
+                log_level=log_level
+            )
+        else:
+            raise NotImplementedError
+        return config_summary.logging_dir
+    except Exception as e:
+        raise e
 
 
 def evaluation_cli() -> None:
