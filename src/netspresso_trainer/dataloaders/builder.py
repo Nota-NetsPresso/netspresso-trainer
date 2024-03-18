@@ -96,54 +96,36 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
+def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
 
     if task == 'classification':
-        transforms = getattr(conf.augmentation, 'train', None)
+        # TODO: ``phase`` should be removed later.
+        transforms = getattr(conf.augmentation, phase, None)
         if transforms:
             name = transforms[-1].name.lower()
             if name == 'mixing':
                 mix_kwargs = list(transforms[-1].keys())
                 mix_kwargs.remove('name')
                 mix_kwargs = {k:transforms[-1][k] for k in mix_kwargs}
-                mix_kwargs['num_classes'] = train_dataset.num_classes
+                mix_kwargs['num_classes'] = dataset.num_classes
                 mix_transforms = TRANSFORM_DICT[name](**mix_kwargs)
 
-                train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
-                eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
+                collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
             else:
-                train_collate_fn = None
-                eval_collate_fn = None
+                collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
         else:
-            train_collate_fn = None
-            eval_collate_fn = None
+            collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
 
-        train_loader = create_loader(
-            train_dataset,
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
             input_size=conf.augmentation.img_size,
-            batch_size=conf.training.batch_size,
+            batch_size=conf.environment.batch_size,
             is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=train_collate_fn,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
-            kwargs=None
-        )
-
-        eval_loader = create_loader(
-            eval_dataset,
-            conf.data.name,
-            logger,
-            input_size=conf.augmentation.img_size,
-            batch_size=conf.training.batch_size,
-            is_training=False,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=eval_collate_fn,
+            collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
@@ -152,30 +134,20 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
     elif task == 'segmentation':
         collate_fn = None
 
-        train_loader = create_loader(
-            train_dataset,
+        if phase == 'train':
+            batch_size = conf.environment.batch_size
+        else:
+            batch_size = conf.environment.batch_size if model_name == 'pidnet' and not conf.distributed else 1
+
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            batch_size=conf.training.batch_size,
+            batch_size=batch_size,
             is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
-            kwargs=None
-        )
-
-        eval_loader = create_loader(
-            eval_dataset,
-            conf.data.name,
-            logger,
-            batch_size=conf.training.batch_size if model_name == 'pidnet' and not conf.distributed else 1,
-            is_training=False,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=None,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
@@ -184,28 +156,17 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
     elif task == 'detection':
         collate_fn = detection_collate_fn
 
-        train_loader = create_loader(
-            train_dataset,
-            conf.data.name,
-            logger,
-            batch_size=conf.training.batch_size,
-            is_training=True,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=collate_fn,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
-            kwargs=None
-        )
+        if phase == 'train':
+            batch_size = conf.environment.batch_size
+        else:
+            batch_size = conf.environment.batch_size if not conf.distributed else 2
 
-        eval_loader = create_loader(
-            eval_dataset,
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            # TODO: support batch size 1 inference
-            batch_size=conf.training.batch_size if not conf.distributed else 2,
-            is_training=False,
+            batch_size=batch_size,
+            is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
@@ -217,11 +178,11 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
     elif task == 'pose_estimation':
         collate_fn = None
 
-        train_loader = create_loader(
-            train_dataset,
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            batch_size=conf.training.batch_size,
+            batch_size=conf.environment.batch_size,
             is_training=True,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
@@ -231,23 +192,7 @@ def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_datas
             rank=conf.rank,
             kwargs=None
         )
-
-        eval_loader = create_loader(
-            eval_dataset,
-            conf.data.name,
-            logger,
-            batch_size=conf.training.batch_size if not profile else 1,
-            is_training=False,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=collate_fn,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
-            kwargs=None
-        )
-
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
 
-    return train_loader, eval_loader
+    return dataloader
