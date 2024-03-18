@@ -78,13 +78,14 @@ def evaluation_common(
         pipeline.validate()
 
         # TODO: Replace logging with pipeline method
-        valid_losses = pipeline.loss_factory.result('valid')
-        valid_metrics = pipeline.metric_factory.result('valid')
+        if pipeline.single_gpu_or_rank_zero:
+            valid_losses = pipeline.loss_factory.result('valid')
+            valid_metrics = pipeline.metric_factory.result('valid')
 
-        pipeline.train_logger.log(
-            valid_losses=valid_losses,
-            valid_metrics=valid_metrics,
-        )
+            pipeline.train_logger.log(
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics,
+            )
     except KeyboardInterrupt:
         pass
     except Exception as e:
