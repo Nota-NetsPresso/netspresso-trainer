@@ -70,8 +70,6 @@ class DetectionPipeline(BasePipeline):
                    'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
-        self.optimizer.zero_grad()
-
         out = eval_model(images)
         self.loss_factory.calc(out, targets, phase='valid')
 
