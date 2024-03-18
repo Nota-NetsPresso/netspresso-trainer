@@ -11,33 +11,9 @@ from omegaconf import DictConfig, OmegaConf
 
 from .models import SUPPORTING_TASK_LIST
 from .evaluator_common import evaluation_common
-from .utils.engine_utils import set_arguments, get_gpus_from_parser_and_config
+from .utils.engine_utils import ConfigSummary
+from .utils.engine_utils import set_arguments, get_gpus_from_parser_and_config, get_new_logging_dir
 from .utils.engine_utils import LOG_LEVEL, OUTPUT_ROOT_DIR
-
-
-@dataclass
-class ConfigSummary:
-    task: Optional[str] = None
-    model_name: Optional[str] = None
-    logging_dir: Optional[Path] = None
-
-
-def get_new_logging_dir(output_root_dir, project_id, initialize=True):
-    version_idx = 0
-    project_dir: Path = Path(output_root_dir) / project_id
-
-    while (project_dir / f"version_{version_idx}").exists():
-        version_idx += 1
-
-    new_logging_dir: Path = project_dir / f"version_{version_idx}"
-    new_logging_dir.mkdir(exist_ok=True, parents=True)
-
-    if initialize:
-        summary_path = new_logging_dir / "evaluation_summary.json"
-        with open(summary_path, 'w') as f:
-            json.dump({"success": False}, f, indent=4)
-
-    return new_logging_dir
 
 
 def validate_config(conf: DictConfig) -> ConfigSummary:
@@ -48,9 +24,9 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
     model_name = str(conf.model.name).lower() + '_evaluation'
 
     project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
-    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id)
+    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='evaluation')
 
-    return ConfigSummary(task=task, model_name=model_name, logging_dir=logging_dir)
+    return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
 
 
 def evaluation_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],

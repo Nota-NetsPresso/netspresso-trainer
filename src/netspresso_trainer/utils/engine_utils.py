@@ -4,15 +4,24 @@ import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Literal
 
 import torch
 from omegaconf import DictConfig, OmegaConf
 
+from ..models import SUPPORTING_TASK_LIST
 from netspresso_trainer.trainer_common import train_common
 
 OUTPUT_ROOT_DIR = "./outputs"
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
+
+
+@dataclass
+class ConfigSummary:
+    task: Optional[str] = None
+    model_name: Optional[str] = None
+    is_graphmodule_training: Optional[bool] = None
+    logging_dir: Optional[Path] = None
 
 
 def str2bool(v):
@@ -133,3 +142,38 @@ def get_gpus_from_parser_and_config(
             return 0  # Try use the 'cuda:0'
         return conf_environment_gpus
     return gpus
+
+
+def get_new_logging_dir(output_root_dir, project_id, mode: Literal['training', 'evaluation', 'inference']):
+    version_idx = 0
+    project_dir: Path = Path(output_root_dir) / project_id
+
+    while (project_dir / f"version_{version_idx}").exists():
+        version_idx += 1
+
+    new_logging_dir: Path = project_dir / f"version_{version_idx}"
+    new_logging_dir.mkdir(exist_ok=True, parents=True)
+
+    summary_path = new_logging_dir / f"{mode}_summary.json"
+    with open(summary_path, 'w') as f:
+        json.dump({"success": False}, f, indent=4)
+
+    return new_logging_dir
+
+
+def validate_train_config(conf: DictConfig) -> ConfigSummary:
+    # Get information from configuration
+    is_graphmodule_training = bool(conf.model.checkpoint.fx_model_path)
+
+    task = str(conf.model.task).lower()
+    assert task in SUPPORTING_TASK_LIST
+
+    model_name = str(conf.model.name).lower()
+
+    if is_graphmodule_training:
+        model_name += "_graphmodule"
+
+    project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
+    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='training')
+
+    return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
