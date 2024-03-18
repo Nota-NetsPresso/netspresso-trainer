@@ -76,6 +76,8 @@ class BasePipeline(ABC):
                 result_dir=logging_dir,
             )
 
+        self.model_ema = None
+
     @final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
@@ -120,9 +122,8 @@ class BasePipeline(ABC):
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
 
         # Set model EMA
-        self.model_ema = None
         if self.conf.training.ema:
-            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
+            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=self.conf)
 
     def set_evaluation(self):
         assert self.model is not None
