@@ -31,7 +31,7 @@ class StdOutLogger:
             logger.info(f"learning rate: {learning_rate:.7f}")
         if elapsed_time is not None:
             logger.info(f"elapsed_time: {elapsed_time:.7f}")
-        
+
         if train_losses is not None:
             logger.info(f"training loss: {train_losses['total']:.7f}")
         if train_metrics is not None:

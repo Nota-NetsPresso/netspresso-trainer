@@ -8,12 +8,12 @@ from omegaconf import OmegaConf
 
 from netspresso_trainer.evaluator_common import evaluation_common
 from netspresso_trainer.utils.engine_utils import (
+    LOG_LEVEL,
+    get_gpus_from_parser_and_config,
     parse_args_netspresso,
     set_arguments,
-    get_gpus_from_parser_and_config,
     validate_evaluation_config,
 )
-from netspresso_trainer.utils.engine_utils import LOG_LEVEL
 
 
 def run_distributed_evaluation_script(gpu_ids, data, augmentation, model, logging, environment, log_level,

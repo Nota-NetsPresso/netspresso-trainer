@@ -148,7 +148,7 @@ class TrainingLogger():
 
     def log(self, train_losses=None, train_metrics=None, valid_losses=None, valid_metrics=None,
             train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
-        
+
         if train_losses is not None:
             train_losses = self._convert_scalar_as_readable(train_losses)
         if train_metrics is not None:

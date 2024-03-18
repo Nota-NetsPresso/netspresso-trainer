@@ -4,7 +4,7 @@ import os
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import List, Optional, Tuple, Union, Literal
+from typing import List, Literal, Optional, Tuple, Union
 
 import torch
 from omegaconf import DictConfig, OmegaConf
