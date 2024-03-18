@@ -55,8 +55,8 @@ def train_common(
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
-    train_dataloader, eval_dataloader = \
-        build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
+    train_dataloader = build_dataloader(conf, task, model_name, dataset=train_dataset, phase='train')
+    eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
     # Build model
     if is_graphmodule_training:
