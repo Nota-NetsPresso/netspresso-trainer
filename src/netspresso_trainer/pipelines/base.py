@@ -76,16 +76,6 @@ class BasePipeline(ABC):
                 result_dir=logging_dir,
             )
 
-        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
-        self.cur_epoch = Value(c_int, self.start_epoch)
-        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
-        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
-
-        # Set model EMA
-        self.model_ema = None
-        if self.conf.training.ema:
-            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
-
     @final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
@@ -123,6 +113,16 @@ class BasePipeline(ABC):
             self.start_epoch_at_one = start_epoch_at_one
             self.start_epoch = start_epoch
             logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {self.start_epoch}")
+
+        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
+        self.cur_epoch = Value(c_int, self.start_epoch)
+        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
+        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
+
+        # Set model EMA
+        self.model_ema = None
+        if self.conf.training.ema:
+            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
 
     def set_evaluation(self):
         assert self.model is not None
