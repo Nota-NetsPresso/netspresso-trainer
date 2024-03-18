@@ -4,11 +4,10 @@ from typing import List, Literal, Optional, Union
 
 from netspresso_trainer.trainer_common import train_common
 from netspresso_trainer.trainer_util import (
-    parse_args_netspresso,
-    parse_gpu_ids,
     set_arguments,
     train_with_yaml_impl,
 )
+from .utils.engine_utils import parse_args_netspresso, parse_gpu_ids
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
@@ -38,7 +37,7 @@ def train_with_yaml(
 
 
 def train_cli() -> None:
-    args_parsed = parse_args_netspresso(with_gpus=True)
+    args_parsed = parse_args_netspresso(with_gpus=True, isTrain=True)
 
     logging_dir: Path = train_with_yaml_impl(
         gpus=args_parsed.gpus,
@@ -55,7 +54,7 @@ def train_cli() -> None:
 
 
 def train_cli_without_additional_gpu_check() -> None:
-    args_parsed = parse_args_netspresso(with_gpus=False)
+    args_parsed = parse_args_netspresso(with_gpus=False, isTrain=True)
 
     conf = set_arguments(
         data=args_parsed.data,

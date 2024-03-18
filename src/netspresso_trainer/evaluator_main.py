@@ -4,15 +4,15 @@ from typing import List, Literal, Optional, Union
 
 from netspresso_trainer.evaluator_common import evaluation_common
 from netspresso_trainer.evaluator_util import (
-    parse_args_netspresso,
     evaluation_with_yaml_impl,
 )
+from .utils.engine_utils import parse_args_netspresso
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 
 def evaluation_cli() -> None:
-    args_parsed = parse_args_netspresso(with_gpus=True)
+    args_parsed = parse_args_netspresso(with_gpus=True, isTrain=False)
 
     logging_dir: Path = evaluation_with_yaml_impl(
         gpus=args_parsed.gpus,

@@ -12,10 +12,9 @@ from omegaconf import DictConfig, OmegaConf
 from netspresso_trainer.trainer_common import train_common
 
 from .models import SUPPORTING_TASK_LIST
+from .utils.engine_utils import set_arguments, get_gpus_from_parser_and_config
+from .utils.engine_utils import LOG_LEVEL, OUTPUT_ROOT_DIR
 
-OUTPUT_ROOT_DIR = "./outputs"
-
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 @dataclass
 class ConfigSummary:
@@ -23,80 +22,6 @@ class ConfigSummary:
     model_name: Optional[str] = None
     is_graphmodule_training: Optional[bool] = None
     logging_dir: Optional[Path] = None
-
-def str2bool(v):
-    return v.lower() in ("yes", "true", "t", "1")
-
-def parse_args_netspresso(with_gpus=False):
-
-    parser = argparse.ArgumentParser(description="Parser for NetsPresso configuration")
-
-    # -------- User arguments ----------------------------------------
-
-    if with_gpus:
-        parser.add_argument(
-            '--gpus', type=parse_gpu_ids, default="",
-            dest='gpus',
-            help='GPU device indices (comma-separated)')
-
-    parser.add_argument(
-        '--data', type=str, required=True,
-        dest='data',
-        help="Config for dataset information")
-
-    parser.add_argument(
-        '--augmentation', type=str, required=True,
-        dest='augmentation',
-        help="Config for data augmentation")
-
-    parser.add_argument(
-        '--model', type=str, required=True,
-        dest='model',
-        help="Config for the model architecture")
-
-    parser.add_argument(
-        '--training', type=str, required=True,
-        dest='training',
-        help="Config for training options")
-
-    parser.add_argument(
-        '--logging', type=str, default='config/logging.yaml',
-        dest='logging',
-        help="Config for logging options")
-
-    parser.add_argument(
-        '--environment', type=str, default='config/environment.yaml',
-        dest='environment',
-        help="Config for training environment (# workers, etc.)")
-
-    parser.add_argument(
-        '--log-level', choices=['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'], default=LOG_LEVEL,
-        dest='log_level',
-        help="Logging level in training process")
-
-    parser.add_argument(
-        '--task', type=str, default=None,
-        dest='task',
-        help="")
-
-    parser.add_argument(
-        '--model-name', type=str, default=None,
-        dest='model_name',
-        help="")
-
-    parser.add_argument(
-        '--is-graphmodule-training', type=str2bool, default=None,
-        dest='is_graphmodule_training',
-        help="")
-
-    parser.add_argument(
-        '--logging-dir', type=Path, default=None,
-        dest='logging_dir',
-        help="")
-
-    args_parsed, _ = parser.parse_known_args()
-
-    return args_parsed
 
 
 def run_distributed_training_script(gpu_ids, data, augmentation, model, training, logging, environment, log_level,
@@ -134,23 +59,6 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
         process.wait()
 
 
-def parse_gpu_ids(gpu_arg: str) -> Optional[Union[List, int]]:
-    """Parse comma-separated GPU IDs and return as a list of integers."""
-    if gpu_arg is None or str(gpu_arg) in ["", "None"]:
-        return None
-
-    try:
-        gpu_ids = [int(id) for id in gpu_arg.split(',')]
-
-        if len(gpu_ids) == 1:  # Single GPU
-            return gpu_ids[0]
-
-        gpu_ids = sorted(gpu_ids)
-        return gpu_ids
-    except ValueError as e:
-        raise argparse.ArgumentTypeError('Invalid GPU IDs. Please provide comma-separated integers.') from e
-
-
 def get_new_logging_dir(output_root_dir, project_id, initialize=True):
     version_idx = 0
     project_dir: Path = Path(output_root_dir) / project_id
@@ -168,32 +76,6 @@ def get_new_logging_dir(output_root_dir, project_id, initialize=True):
 
     return new_logging_dir
 
-
-def set_arguments(
-    data: Union[Path, str],
-    augmentation: Union[Path, str],
-    model: Union[Path, str],
-    training: Union[Path, str],
-    logging: Union[Path, str],
-    environment: Union[Path, str]
-) -> DictConfig:
-
-    conf_data = OmegaConf.load(data)
-    conf_augmentation = OmegaConf.load(augmentation)
-    conf_model = OmegaConf.load(model)
-    conf_training = OmegaConf.load(training)
-    conf_logging = OmegaConf.load(logging)
-    conf_environment = OmegaConf.load(environment)
-
-    conf = OmegaConf.create()
-    conf.merge_with(conf_data)
-    conf.merge_with(conf_augmentation)
-    conf.merge_with(conf_model)
-    conf.merge_with(conf_training)
-    conf.merge_with(conf_logging)
-    conf.merge_with(conf_environment)
-
-    return conf
 
 def validate_config(conf: DictConfig) -> ConfigSummary:
     # Get information from configuration
@@ -213,23 +95,6 @@ def validate_config(conf: DictConfig) -> ConfigSummary:
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
 
 
-def get_gpu_from_config(conf_environment: DictConfig) -> Optional[Union[List, int]]:
-    conf_environment_gpus = str(conf_environment.gpus) if hasattr(conf_environment, 'gpus') else None
-    return parse_gpu_ids(conf_environment_gpus)
-
-
-def get_gpus_from_parser_and_config(
-    gpus: Optional[Union[List, int]],
-    conf_environment: DictConfig
-) -> Union[List, int]:
-    conf_environment_gpus = get_gpu_from_config(conf_environment)
-    if gpus is None:
-        if conf_environment_gpus is None:
-            return 0  # Try use the 'cuda:0'
-        return conf_environment_gpus
-    return gpus
-
-
 def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
                          model: Union[Path, str], training: Union[Path, str],
                          logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
@@ -241,7 +106,12 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
     os.environ['CUDA_VISIBLE_DEVICES'] = gpu_ids_str
     torch.cuda.empty_cache()  # Reinitialize CUDA to apply the change
 
-    conf = set_arguments(data, augmentation, model, training, logging, environment)
+    conf = set_arguments(data=data,
+                         augmentation=augmentation,
+                         model=model,
+                         training=training,
+                         logging=logging,
+                         environment=environment)
     config_summary = validate_config(conf)
 
     try:
