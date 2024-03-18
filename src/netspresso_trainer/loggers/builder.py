@@ -54,8 +54,9 @@ class TrainingLogger():
         self.tensorboard_logger: Optional[TensorboardLogger] = \
             TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                               step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
+        total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
         self.stdout_logger: Optional[StdOutLogger] = \
-            StdOutLogger(task=task, model=model, total_epochs=conf.training.epochs, result_dir=self._result_dir) if self.use_stdout else None
+            StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir) if self.use_stdout else None
 
         self.netspresso_api_client = None
         if self.use_netspresso:
@@ -145,11 +146,13 @@ class TrainingLogger():
 
         raise TypeError(f"Unsupported type for image logger!!! Current type: {type(images_dict_or_list)}")
 
-    def log(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None,
+    def log(self, train_losses=None, train_metrics=None, valid_losses=None, valid_metrics=None,
             train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
-        train_losses = self._convert_scalar_as_readable(train_losses)
-        train_metrics = self._convert_scalar_as_readable(train_metrics)
-
+        
+        if train_losses is not None:
+            train_losses = self._convert_scalar_as_readable(train_losses)
+        if train_metrics is not None:
+            train_metrics = self._convert_scalar_as_readable(train_metrics)
         if valid_losses is not None:
             valid_losses = self._convert_scalar_as_readable(valid_losses)
         if valid_metrics is not None:
