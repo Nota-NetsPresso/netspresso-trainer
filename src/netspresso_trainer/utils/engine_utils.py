@@ -76,6 +76,26 @@ def parse_args_netspresso(with_gpus=False, isTrain=True):
         dest='log_level',
         help="Logging level in training process")
 
+    parser.add_argument(
+        '--task', type=str, default=None,
+        dest='task',
+        help="")
+
+    parser.add_argument(
+        '--model-name', type=str, default=None,
+        dest='model_name',
+        help="")
+
+    parser.add_argument(
+        '--is-graphmodule-training', type=str2bool, default=None,
+        dest='is_graphmodule_training',
+        help="")
+
+    parser.add_argument(
+        '--logging-dir', type=Path, default=None,
+        dest='logging_dir',
+        help="")
+
     args_parsed, _ = parser.parse_known_args()
 
     return args_parsed
