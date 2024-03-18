@@ -50,9 +50,7 @@ def evaluation_common(
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
-    # TODO: Fix as build_dataloader can build only valid_dataloader
-    train_dataloader, eval_dataloader = \
-        build_dataloader(conf, task, model_name, train_dataset=None, eval_dataset=valid_dataset)
+    eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
     # Build model
     # TODO: Not implemented for various model types. Only support pytorch model now
@@ -69,16 +67,24 @@ def evaluation_common(
 
     # Build evaluation pipeline
     pipeline = build_pipeline(conf, task, model_name, model,
-                             devices, train_dataloader, eval_dataloader,
+                             devices, eval_dataloader, eval_dataloader,
                              class_map=valid_dataset.class_map,
                              logging_dir=logging_dir,
-                             is_graphmodule_training=is_graphmodule_training)
+                             is_graphmodule_training=None)
 
-    # TODO: Add set_evaluation in base pipeline
     pipeline.set_evaluation()
     try:
         # Start evaluation
         pipeline.validate()
+
+        # TODO: Replace logging with pipeline method
+        valid_losses = pipeline.loss_factory.result('valid')
+        valid_metrics = pipeline.metric_factory.result('valid')
+
+        pipeline.train_logger.log(
+            valid_losses=valid_losses,
+            valid_metrics=valid_metrics,
+        )
     except KeyboardInterrupt:
         pass
     except Exception as e:
