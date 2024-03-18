@@ -318,7 +318,7 @@ class RTMCC(nn.Module):
 
         conv_kernel = params.conv_kernel
         attention_channels = params.attention_channels
-        attnetion_act_type = params.attnetion_act_type
+        attnetion_act_type = params.attention_act_type
         attention_pos_enc = params.attention_pos_enc
         s = params.s
         expansion_factor = params.expansion_factor
