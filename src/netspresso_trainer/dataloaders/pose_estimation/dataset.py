@@ -57,18 +57,20 @@ class PoseEstimationDataSampler(BaseDataSampler):
         return images_and_targets
 
     def load_samples(self):
-        assert self.conf_data.path.train.image is not None
         assert self.conf_data.id_mapping is not None
         id_mapping: Optional[list] = list(self.conf_data.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
 
+        exists_train = self.conf_data.path.train.image is not None
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
 
+        train_samples = None
         valid_samples = None
         test_samples = None
 
-        train_samples = self.load_data(split='train')
+        if exists_train:
+            train_samples = self.load_data(split='train')
         if exists_valid:
             valid_samples = self.load_data(split='valid')
         if exists_test:
