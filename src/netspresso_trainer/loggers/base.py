@@ -107,7 +107,7 @@ class BaseCSVLogger(ABC):
             converted_dict.update({record_key: v})
         return converted_dict
 
-    def __call__(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None):
+    def __call__(self, train_losses, train_metrics, valid_losses=None, valid_metrics=None, **kwargs):
         assert len(self.header) != 0
         assert len(self.key_map) != 0
 

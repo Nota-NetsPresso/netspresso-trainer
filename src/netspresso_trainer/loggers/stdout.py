@@ -24,7 +24,7 @@ class StdOutLogger:
     def epoch(self, value: int) -> None:
         self._epoch = int(value)
 
-    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics, learning_rate, elapsed_time):
+    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics, learning_rate, elapsed_time, **kwargs):
         logger.info(f"Epoch: {self._epoch} / {self.total_epochs}")
 
         if learning_rate is not None:

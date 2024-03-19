@@ -107,7 +107,7 @@ class TensorboardLogger:
 
     def __call__(self,
                  train_losses, train_metrics, valid_losses, valid_metrics,
-                 train_images, valid_images, learning_rate, elapsed_time,
+                 train_images, valid_images, learning_rate, elapsed_time, **kwargs
                  ) -> None:
 
         self.log_scalars_with_dict(train_losses, mode='train')

@@ -46,16 +46,17 @@ class TrainingLogger():
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
 
-        self.csv_logger: Optional[BaseCSVLogger] = \
-            CSV_LOGGER[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
-        self.image_saver: Optional[ImageSaver] = \
-            ImageSaver(model=model, result_dir=self._result_dir) if self.use_imagesaver else None
-        self.tensorboard_logger: Optional[TensorboardLogger] = \
-            TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
-                              step_per_epoch=step_per_epoch, num_sample_images=num_sample_images) if self.use_tensorboard else None
-        total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
-        self.stdout_logger: Optional[StdOutLogger] = \
-            StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir) if self.use_stdout else None
+        self.loggers = []
+        if self.use_csvlogger:
+            self.loggers.append(CSV_LOGGER[task](model=model, result_dir=self._result_dir))
+        if self.use_imagesaver:
+            self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir))
+        if self.use_tensorboard:
+            self.loggers.append(TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
+                                                  step_per_epoch=step_per_epoch, num_sample_images=num_sample_images))
+        if self.use_stdout:
+            total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
+            self.loggers.append(StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir))
 
         if task in VISUALIZER:
             pallete = conf.data.pallete if 'pallete' in conf.data else None
@@ -154,35 +155,14 @@ class TrainingLogger():
         if valid_images is not None:
             valid_images = self._convert_images_as_readable(valid_images)
 
-        if self.use_csvlogger:
-            self.csv_logger(
-                train_losses=train_losses,
-                train_metrics=train_metrics,
-                valid_losses=valid_losses,
-                valid_metrics=valid_metrics
-            )
-        if self.use_imagesaver:
-            self.image_saver(
-                train_images=train_images,
-                valid_images=valid_images
-            )
-        if self.use_tensorboard:
-            self.tensorboard_logger(
+        for logger in self.loggers:
+            logger(
                 train_losses=train_losses,
                 train_metrics=train_metrics,
                 valid_losses=valid_losses,
                 valid_metrics=valid_metrics,
                 train_images=train_images,
                 valid_images=valid_images,
-                learning_rate=learning_rate,
-                elapsed_time=elapsed_time
-            )
-        if self.use_stdout:
-            self.stdout_logger(
-                train_losses=train_losses,
-                train_metrics=train_metrics,
-                valid_losses=valid_losses,
-                valid_metrics=valid_metrics,
                 learning_rate=learning_rate,
                 elapsed_time=elapsed_time
             )
