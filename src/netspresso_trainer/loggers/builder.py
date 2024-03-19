@@ -45,7 +45,6 @@ class TrainingLogger():
         self.use_csvlogger: bool = self.conf.logging.csv
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
-        self.use_netspresso: bool = False  # TODO: NetsPresso training board
 
         self.csv_logger: Optional[BaseCSVLogger] = \
             CSV_LOGGER[task](model=model, result_dir=self._result_dir) if self.use_csvlogger else None
@@ -57,11 +56,6 @@ class TrainingLogger():
         total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
         self.stdout_logger: Optional[StdOutLogger] = \
             StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir) if self.use_stdout else None
-
-        self.netspresso_api_client = None
-        if self.use_netspresso:
-            from loggers.netspresso import ModelSearchServerHandler
-            self.netspresso_api_client: Optional[ModelSearchServerHandler] = ModelSearchServerHandler(task=task, model=model)
 
         if task in VISUALIZER:
             pallete = conf.data.pallete if 'pallete' in conf.data else None
@@ -81,8 +75,6 @@ class TrainingLogger():
             self.tensorboard_logger.epoch = self.epoch
         if self.use_stdout:
             self.stdout_logger.epoch = self.epoch
-        if self.use_netspresso:
-            self.netspresso_api_client.epoch = self.epoch
 
     @staticmethod
     def _to_numpy(tensor: torch.Tensor):
@@ -187,16 +179,6 @@ class TrainingLogger():
             )
         if self.use_stdout:
             self.stdout_logger(
-                train_losses=train_losses,
-                train_metrics=train_metrics,
-                valid_losses=valid_losses,
-                valid_metrics=valid_metrics,
-                learning_rate=learning_rate,
-                elapsed_time=elapsed_time
-            )
-        if self.use_netspresso:
-            # TODO: async handler if it takes much more time
-            self.netspresso_api_client(
                 train_losses=train_losses,
                 train_metrics=train_metrics,
                 valid_losses=valid_losses,
