@@ -6,31 +6,28 @@ from typing import List, Literal, Optional, Union
 import torch
 from omegaconf import OmegaConf
 
-from netspresso_trainer.trainer_common import train_common
+from netspresso_trainer.evaluator_common import evaluation_common
 from netspresso_trainer.utils.engine_utils import (
     LOG_LEVEL,
     get_gpus_from_parser_and_config,
     parse_args_netspresso,
-    parse_gpu_ids,
     set_arguments,
-    validate_train_config,
+    validate_evaluation_config,
 )
 
 
-def run_distributed_training_script(gpu_ids, data, augmentation, model, training, logging, environment, log_level,
-                                    task, model_name, is_graphmodule_training, logging_dir):
+def run_distributed_evaluation_script(gpu_ids, data, augmentation, model, logging, environment, log_level,
+                                      task, model_name, logging_dir):
 
     command = [
         "--data", data,
         "--augmentation", augmentation,
         "--model", model,
-        "--training", training,
         "--logging", logging,
         "--environment", environment,
         "--log-level", log_level,
         "--task", task,
         "--model-name", model_name,
-        "--is-graphmodule-training", is_graphmodule_training,
         "--logging-dir", logging_dir,
     ]
 
@@ -38,7 +35,7 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
     command = [
         'python', '-m', 'torch.distributed.launch',
         f'--nproc_per_node={len(gpu_ids)}',  # GPU #
-        f"{Path(__file__).absolute().parent / 'trainer_main.py'}", *map(str, command)
+        f"{Path(__file__).absolute().parent / 'evaluator_main.py'}", *map(str, command)
     ]
 
     # Run subprocess
@@ -52,9 +49,8 @@ def run_distributed_training_script(gpu_ids, data, augmentation, model, training
         process.wait()
 
 
-def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
-                         model: Union[Path, str], training: Union[Path, str],
-                         logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
+def evaluation_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str], augmentation: Union[Path, str],
+                         model: Union[Path, str], logging: Union[Path, str], environment: Union[Path, str], log_level: str = LOG_LEVEL):
     conf_environment = OmegaConf.load(environment).environment
     gpus = get_gpus_from_parser_and_config(gpus, conf_environment)
     assert isinstance(gpus, (list, int))
@@ -66,64 +62,37 @@ def train_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path, str
     conf = set_arguments(data=data,
                          augmentation=augmentation,
                          model=model,
-                         training=training,
                          logging=logging,
                          environment=environment)
-    config_summary = validate_train_config(conf)
+    config_summary = validate_evaluation_config(conf)
 
     try:
         if isinstance(gpus, int):
-            train_common(
+            evaluation_common(
                 conf,
                 task=config_summary.task,
                 model_name=config_summary.model_name,
-                is_graphmodule_training=config_summary.is_graphmodule_training,
                 logging_dir=config_summary.logging_dir,
                 log_level=log_level
             )
         else:
-            run_distributed_training_script(
-                gpus, data, augmentation, model, training, logging, environment, log_level,
-                config_summary.task, config_summary.model_name, config_summary.is_graphmodule_training, config_summary.logging_dir
+            run_distributed_evaluation_script(
+                gpus, data, augmentation, model, logging, environment, log_level,
+                config_summary.task, config_summary.model_name, config_summary.logging_dir
             )
         return config_summary.logging_dir
     except Exception as e:
         raise e
 
 
-def train_with_yaml(
-    data: Union[Path, str],
-    augmentation: Union[Path, str],
-    model: Union[Path, str], training: Union[Path, str],
-    logging: Union[Path, str], environment: Union[Path, str],
-    gpus: Optional[str] = None, log_level: str = LOG_LEVEL
-):
+def evaluation_cli() -> None:
+    args_parsed = parse_args_netspresso(with_gpus=True, isTrain=False)
 
-    gpus: Union[List, int] = parse_gpu_ids(gpus)
-
-    logging_dir: Path = train_with_yaml_impl(
-        gpus=gpus,
-        data=data,
-        augmentation=augmentation,
-        model=model,
-        training=training,
-        logging=logging,
-        environment=environment,
-        log_level=log_level
-    )
-
-    return logging_dir
-
-
-def train_cli() -> None:
-    args_parsed = parse_args_netspresso(with_gpus=True, isTrain=True)
-
-    logging_dir: Path = train_with_yaml_impl(
+    logging_dir: Path = evaluation_with_yaml_impl(
         gpus=args_parsed.gpus,
         data=args_parsed.data,
         augmentation=args_parsed.augmentation,
         model=args_parsed.model,
-        training=args_parsed.training,
         logging=args_parsed.logging,
         environment=args_parsed.environment,
         log_level=args_parsed.log_level
@@ -132,23 +101,21 @@ def train_cli() -> None:
     return logging_dir
 
 
-def train_cli_without_additional_gpu_check() -> None:
-    args_parsed = parse_args_netspresso(with_gpus=False, isTrain=True)
+def evaluation_cli_without_additional_gpu_check() -> None:
+    args_parsed = parse_args_netspresso(with_gpus=False, isTrain=False)
 
     conf = set_arguments(
         data=args_parsed.data,
         augmentation=args_parsed.augmentation,
         model=args_parsed.model,
-        training=args_parsed.training,
         logging=args_parsed.logging,
         environment=args_parsed.environment
     )
 
-    train_common(
+    evaluation_common(
         conf,
         task=args_parsed.task,
         model_name=args_parsed.model_name,
-        is_graphmodule_training=args_parsed.is_graphmodule_training,
         logging_dir=args_parsed.logging_dir,
         log_level=args_parsed.log_level
     )
@@ -156,4 +123,4 @@ def train_cli_without_additional_gpu_check() -> None:
 if __name__ == "__main__":
 
     # Execute by `run_distributed_training_script`
-    train_cli_without_additional_gpu_check()
+    evaluation_cli_without_additional_gpu_check()

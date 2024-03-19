@@ -76,15 +76,7 @@ class BasePipeline(ABC):
                 result_dir=logging_dir,
             )
 
-        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
-        self.cur_epoch = Value(c_int, self.start_epoch)
-        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
-        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
-
-        # Set model EMA
         self.model_ema = None
-        if self.conf.training.ema:
-            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=conf)
 
     @final
     def _is_ready(self):
@@ -123,6 +115,21 @@ class BasePipeline(ABC):
             self.start_epoch_at_one = start_epoch_at_one
             self.start_epoch = start_epoch
             logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {self.start_epoch}")
+
+        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
+        self.cur_epoch = Value(c_int, self.start_epoch)
+        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
+        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
+
+        # Set model EMA
+        if self.conf.training.ema:
+            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=self.conf)
+
+    def set_evaluation(self):
+        assert self.model is not None
+        self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
+        self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
+        self.postprocessor = build_postprocessor(self.task, self.conf.model)
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch

@@ -11,6 +11,7 @@ class StdOutLogger:
         self.task = task
         self.model_name = model
         self.total_epochs = total_epochs if total_epochs is not None else "???"
+        self.init_epoch()
 
     def init_epoch(self):
         self._epoch = 0
@@ -30,8 +31,11 @@ class StdOutLogger:
             logger.info(f"learning rate: {learning_rate:.7f}")
         if elapsed_time is not None:
             logger.info(f"elapsed_time: {elapsed_time:.7f}")
-        logger.info(f"training loss: {train_losses['total']:.7f}")
-        logger.info(f"training metric: {[(name, value) for name, value in train_metrics.items()]}")
+
+        if train_losses is not None:
+            logger.info(f"training loss: {train_losses['total']:.7f}")
+        if train_metrics is not None:
+            logger.info(f"training metric: {[(name, value) for name, value in train_metrics.items()]}")
 
         if valid_losses is not None:
             logger.info(f"validation loss: {valid_losses['total']:.7f}")

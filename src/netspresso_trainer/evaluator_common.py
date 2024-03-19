@@ -13,11 +13,10 @@ from .utils.environment import set_device
 from .utils.logger import add_file_handler, set_logger
 
 
-def train_common(
+def evaluation_common(
     conf: DictConfig,
     task: str,
     model_name: str,
-    is_graphmodule_training: bool,
     logging_dir: Path,
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
 ):
@@ -32,7 +31,7 @@ def train_common(
     add_file_handler(logging_dir / "result.log", distributed=conf.distributed)
 
     if not distributed or dist.get_rank() == 0:
-        logger.info(f"Task: {task} | Model: {model_name} | Training with torch.fx model? {is_graphmodule_training}")
+        logger.info(f"Task: {task} | Model: {model_name}")
         logger.info(f"Result will be saved at {logging_dir}")
 
     if conf.distributed and conf.rank != 0:
@@ -41,54 +40,52 @@ def train_common(
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
-    # Build dataloaders
-    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
-    assert train_dataset is not None, "For training, train split of dataset must be provided."
+    # Build dataloader
+    _, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    assert valid_dataset is not None, "For evaluation, valid split of dataset must be provided."
     if not distributed or dist.get_rank() == 0:
         logger.info(f"Summary | Dataset: <{conf.data.name}> (with {conf.data.format} format)")
-        logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
-        if valid_dataset is not None:
-            logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
-        if test_dataset is not None:
-            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
+        logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
-    train_dataloader = build_dataloader(conf, task, model_name, dataset=train_dataset, phase='train')
     eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
     # Build model
-    if is_graphmodule_training:
-        assert conf.model.checkpoint.fx_model_path is not None
-        assert Path(conf.model.checkpoint.fx_model_path).exists()
-        model = torch.load(conf.model.checkpoint.fx_model_path)
-    else:
-        model = build_model(
-            conf.model, task, train_dataset.num_classes,
-            model_checkpoint=conf.model.checkpoint.path,
-            use_pretrained=conf.model.checkpoint.use_pretrained,
-            img_size=conf.augmentation.img_size
-        )
+    # TODO: Not implemented for various model types. Only support pytorch model now
+    model = build_model(
+        conf.model, task, valid_dataset.num_classes,
+        model_checkpoint=conf.model.checkpoint.path,
+        use_pretrained=conf.model.checkpoint.use_pretrained,
+        img_size=conf.augmentation.img_size
+    )
 
     model = model.to(device=devices)
     if conf.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
-    # Build training pipeline
+    # Build evaluation pipeline
     pipeline = build_pipeline(conf, task, model_name, model,
-                             devices, train_dataloader, eval_dataloader,
-                             class_map=train_dataset.class_map,
+                             devices, eval_dataloader, eval_dataloader,
+                             class_map=valid_dataset.class_map,
                              logging_dir=logging_dir,
-                             is_graphmodule_training=is_graphmodule_training)
+                             is_graphmodule_training=None)
 
-    pipeline.set_train()
+    pipeline.set_evaluation()
     try:
-        # Start train
-        pipeline.train()
+        # Start evaluation
+        pipeline.validate()
 
-        if test_dataset:
-            pipeline.inference(test_dataset)
+        # TODO: Replace logging with pipeline method
+        if pipeline.single_gpu_or_rank_zero:
+            valid_losses = pipeline.loss_factory.result('valid')
+            valid_metrics = pipeline.metric_factory.result('valid')
+
+            pipeline.train_logger.log(
+                valid_losses=valid_losses,
+                valid_metrics=valid_metrics,
+            )
     except KeyboardInterrupt:
         pass
     except Exception as e:
