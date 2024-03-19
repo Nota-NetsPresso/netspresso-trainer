@@ -3,7 +3,7 @@ name: "\U0001F3A8 Feature request"
 about: Suggest an improvement or new feature for this repository
 title: "[Feature Request] Please write your own title"
 labels: help wanted
-assignees: deepkyu
+assignees: illian01
 
 ---
 
