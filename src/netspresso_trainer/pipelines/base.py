@@ -263,24 +263,27 @@ class BasePipeline(ABC):
             returning_samples.append(out)
         return returning_samples
 
-    def log_end_epoch(self, epoch, time_for_epoch, valid_samples=None, valid_logging=False):
-        train_losses = self.loss_factory.result('train')
-        train_metrics = self.metric_factory.result('train')
-
-        valid_losses = self.loss_factory.result('valid') if valid_logging else None
-        valid_metrics = self.metric_factory.result('valid') if valid_logging else None
-
+    def log_results(self, prefix: str, epoch=None, time_for_epoch=None, samples=None, losses=None, metrics=None):
         self.train_logger.update_epoch(epoch)
         self.train_logger.log(
-            train_losses=train_losses,
-            train_metrics=train_metrics,
-            valid_losses=valid_losses,
-            valid_metrics=valid_metrics,
-            train_images=None,
-            valid_images=valid_samples,
+            prefix=prefix,
+            samples=samples,
+            losses=losses,
+            metrics=metrics,
             learning_rate=self.learning_rate,
             elapsed_time=time_for_epoch
         )
+
+    def log_end_epoch(self, epoch, time_for_epoch, valid_samples=None, valid_logging=False):
+        train_losses = self.loss_factory.result('train')
+        train_metrics = self.metric_factory.result('train')
+        self.log_results(prefix='training', epoch=epoch, time_for_epoch=time_for_epoch,
+                         losses=train_losses, metrics=train_metrics)
+
+        if valid_logging:
+            valid_losses = self.loss_factory.result('valid') if valid_logging else None
+            valid_metrics = self.metric_factory.result('valid') if valid_logging else None
+            self.log_results(prefix='validation', samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}
         if valid_logging:
