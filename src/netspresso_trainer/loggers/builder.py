@@ -52,8 +52,9 @@ class TrainingLogger():
         if self.use_imagesaver:
             self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir))
         if self.use_tensorboard:
-            self.loggers.append(TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
-                                                  step_per_epoch=step_per_epoch, num_sample_images=num_sample_images))
+            self.tensorboard_logger = TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
+                                                        step_per_epoch=step_per_epoch, num_sample_images=num_sample_images)
+            self.loggers.append(self.tensorboard_logger)
         if self.use_stdout:
             total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
             self.loggers.append(StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir))
