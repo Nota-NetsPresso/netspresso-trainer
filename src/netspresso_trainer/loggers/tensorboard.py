@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Literal
 
 import numpy as np
 import torch
@@ -93,7 +93,17 @@ class TensorboardLogger:
         for k, v in final_metrics.items():
             self.tensorboard.add_scalar(k, v)
 
-    def __call__(self, prefix, epoch, losses, metrics, images, learning_rate, elapsed_time, **kwargs) -> None:
+    def __call__(
+        self,
+        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        epoch: Optional[int] = None,
+        images: Optional[List] = None,
+        losses : Optional[Dict] = None,
+        metrics: Optional[Dict] = None,
+        learning_rate: Optional[float] = None,
+        elapsed_time: Optional[float] = None,
+        **kwargs
+    ):
         self._epoch = epoch
         if losses is not None:
             self.log_scalars_with_dict(losses, mode=prefix)

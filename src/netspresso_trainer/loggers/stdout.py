@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union, Literal
 
 from loguru import logger
 
@@ -12,8 +12,17 @@ class StdOutLogger:
         self.model_name = model
         self.total_epochs = total_epochs if total_epochs is not None else "???"
 
-    def __call__(self, prefix, epoch, losses, metrics, learning_rate, elapsed_time, **kwargs):
-        if epoch is not None:
+    def __call__(
+        self,
+        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        epoch: Optional[int] = None,
+        losses : Optional[Dict] = None,
+        metrics: Optional[Dict] = None,
+        learning_rate: Optional[float] = None,
+        elapsed_time: Optional[float] = None,
+        **kwargs
+    ):
+        if epoch is not None and prefix == 'training':
             logger.info(f"Epoch: {epoch} / {self.total_epochs}")
 
         if learning_rate is not None:
