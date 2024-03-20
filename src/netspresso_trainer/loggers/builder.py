@@ -134,7 +134,7 @@ class TrainingLogger():
 
         raise TypeError(f"Unsupported type for image logger!!! Current type: {type(images_dict_or_list)}")
 
-    def log(self, prefix, samples=None, losses=None, metrics=None, learning_rate=None, elapsed_time=None):
+    def log(self, prefix, epoch=None, samples=None, losses=None, metrics=None, learning_rate=None, elapsed_time=None):
 
         if losses is not None:
             losses = self._convert_scalar_as_readable(losses)
@@ -146,6 +146,7 @@ class TrainingLogger():
         for logger in self.loggers:
             logger(
                 prefix=prefix,
+                epoch=epoch,
                 losses=losses,
                 metrics=metrics,
                 images=samples,

@@ -21,18 +21,6 @@ class TensorboardLogger:
         self.num_sample_images = num_sample_images
 
         self.tensorboard = SummaryWriter(self.result_dir / "tensorboard")
-        self._epoch = None
-
-    def init_epoch(self):
-        self._epoch = 0
-
-    @property
-    def epoch(self):
-        return self._epoch
-
-    @epoch.setter
-    def epoch(self, value: int) -> None:
-        self._epoch = int(value)
 
     def _as_numpy(self, value: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
         if isinstance(value, np.ndarray):
@@ -105,7 +93,8 @@ class TensorboardLogger:
         for k, v in final_metrics.items():
             self.tensorboard.add_scalar(k, v)
 
-    def __call__(self, prefix, losses, metrics, images, learning_rate, elapsed_time, **kwargs) -> None:
+    def __call__(self, prefix, epoch, losses, metrics, images, learning_rate, elapsed_time, **kwargs) -> None:
+        self._epoch = epoch
         if losses is not None:
             self.log_scalars_with_dict(losses, mode=prefix)
         if metrics is not None:

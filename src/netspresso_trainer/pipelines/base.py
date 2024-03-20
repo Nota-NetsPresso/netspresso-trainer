@@ -264,9 +264,9 @@ class BasePipeline(ABC):
         return returning_samples
 
     def log_results(self, prefix: str, epoch=None, time_for_epoch=None, learning_rate=None, samples=None, losses=None, metrics=None):
-        self.train_logger.update_epoch(epoch)
         self.train_logger.log(
             prefix=prefix,
+            epoch=epoch,
             samples=samples,
             losses=losses,
             metrics=metrics,

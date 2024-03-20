@@ -11,21 +11,10 @@ class StdOutLogger:
         self.task = task
         self.model_name = model
         self.total_epochs = total_epochs if total_epochs is not None else "???"
-        self.init_epoch()
 
-    def init_epoch(self):
-        self._epoch = 0
-
-    @property
-    def epoch(self):
-        return self._epoch
-
-    @epoch.setter
-    def epoch(self, value: int) -> None:
-        self._epoch = int(value)
-
-    def __call__(self, prefix, losses, metrics, learning_rate, elapsed_time, **kwargs):
-        logger.info(f"Epoch: {self._epoch} / {self.total_epochs}")
+    def __call__(self, prefix, epoch, losses, metrics, learning_rate, elapsed_time, **kwargs):
+        if epoch is not None:
+            logger.info(f"Epoch: {epoch} / {self.total_epochs}")
 
         if learning_rate is not None:
             logger.info(f"learning rate: {learning_rate:.7f}")
