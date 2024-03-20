@@ -68,14 +68,8 @@ class TrainingLogger():
 
     def update_epoch(self, epoch: int):
         self.epoch = epoch
-        if self.use_csvlogger:
-            self.csv_logger.epoch = self.epoch
-        if self.use_imagesaver:
-            self.image_saver.epoch = self.epoch
-        if self.use_tensorboard:
-            self.tensorboard_logger.epoch = self.epoch
-        if self.use_stdout:
-            self.stdout_logger.epoch = self.epoch
+        for logger in self.loggers:
+            logger.epoch = self.epoch
 
     @staticmethod
     def _to_numpy(tensor: torch.Tensor):
