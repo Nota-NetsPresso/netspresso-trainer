@@ -48,10 +48,6 @@ class ImageSaver:
                 filename = f"{prefix_dir}/{self._epoch:04d}_{idx:03d}_{k}.png"
                 self.save_ndarray_as_image(image, filename, dataformats='HWC') # TODO: get dataformats option from outside
 
-    def __call__(self, train_images=None, valid_images=None, **kwargs):
-        if train_images is not None:
-            self.save_result(train_images, prefix='train')
-        if valid_images is not None:
-            self.save_result(valid_images, prefix='valid')
-
-
+    def __call__(self, prefix, images=None, **kwargs):
+        if images is not None:
+            self.save_result(images, prefix=prefix)

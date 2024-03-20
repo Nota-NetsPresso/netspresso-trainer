@@ -134,30 +134,21 @@ class TrainingLogger():
 
         raise TypeError(f"Unsupported type for image logger!!! Current type: {type(images_dict_or_list)}")
 
-    def log(self, train_losses=None, train_metrics=None, valid_losses=None, valid_metrics=None,
-            train_images=None, valid_images=None, learning_rate=None, elapsed_time=None):
+    def log(self, prefix, samples=None, losses=None, metrics=None, learning_rate=None, elapsed_time=None):
 
-        if train_losses is not None:
-            train_losses = self._convert_scalar_as_readable(train_losses)
-        if train_metrics is not None:
-            train_metrics = self._convert_scalar_as_readable(train_metrics)
-        if valid_losses is not None:
-            valid_losses = self._convert_scalar_as_readable(valid_losses)
-        if valid_metrics is not None:
-            valid_metrics = self._convert_scalar_as_readable(valid_metrics)
-        if train_images is not None:
-            train_images = self._convert_images_as_readable(train_images)
-        if valid_images is not None:
-            valid_images = self._convert_images_as_readable(valid_images)
+        if losses is not None:
+            losses = self._convert_scalar_as_readable(losses)
+        if metrics is not None:
+            metrics = self._convert_scalar_as_readable(metrics)
+        if samples is not None:
+            samples = self._convert_images_as_readable(samples)
 
         for logger in self.loggers:
             logger(
-                train_losses=train_losses,
-                train_metrics=train_metrics,
-                valid_losses=valid_losses,
-                valid_metrics=valid_metrics,
-                train_images=train_images,
-                valid_images=valid_images,
+                prefix=prefix,
+                losses=losses,
+                metrics=metrics,
+                images=samples,
                 learning_rate=learning_rate,
                 elapsed_time=elapsed_time
             )

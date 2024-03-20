@@ -105,22 +105,13 @@ class TensorboardLogger:
         for k, v in final_metrics.items():
             self.tensorboard.add_scalar(k, v)
 
-    def __call__(self,
-                 train_losses, train_metrics, valid_losses, valid_metrics,
-                 train_images, valid_images, learning_rate, elapsed_time, **kwargs
-                 ) -> None:
-
-        self.log_scalars_with_dict(train_losses, mode='train')
-        self.log_scalars_with_dict(train_metrics, mode='train')
-        if train_images is not None:
-            self.log_images_with_dict(train_images, mode='train')
-
-        if valid_losses is not None:
-            self.log_scalars_with_dict(valid_losses, mode='valid')
-        if valid_metrics is not None:
-            self.log_scalars_with_dict(valid_metrics, mode='valid')
-        if isinstance(valid_images, dict):  # TODO: array with multiple dicts
-            self.log_images_with_dict(valid_images, mode='valid')
+    def __call__(self, prefix, losses, metrics, images, learning_rate, elapsed_time, **kwargs) -> None:
+        if losses is not None:
+            self.log_scalars_with_dict(losses, mode=prefix)
+        if metrics is not None:
+            self.log_scalars_with_dict(metrics, mode=prefix)
+        if isinstance(images, dict):  # TODO: array with multiple dicts
+            self.log_images_with_dict(images, mode=prefix)
 
         if learning_rate is not None:
             self.log_scalar('learning_rate', learning_rate, mode='misc')
