@@ -104,7 +104,7 @@ class TensorboardLogger:
         elapsed_time: Optional[float] = None,
         **kwargs
     ):
-        self._epoch = epoch
+        self._epoch = 0 if epoch is None else epoch
         if losses is not None:
             self.log_scalars_with_dict(losses, mode=prefix)
         if metrics is not None:
