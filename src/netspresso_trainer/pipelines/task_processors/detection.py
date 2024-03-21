@@ -8,11 +8,10 @@ from .base import BaseTaskProcessor
 
 
 class DetectionProcessor(BaseTaskProcessor):
-    def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(DetectionProcessor, self).__init__(conf, task, model_name, model, devices,
-                                                train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
-        self.num_classes = train_dataloader.dataset.num_classes
+    def __init__(self, devices):
+        super(DetectionProcessor, self).__init__(devices)
+        self.num_classes = 10 # TODO: Fix this
+        #self.num_classes = train_dataloader.dataset.num_classes
 
     def train_step(self, train_model, batch):
         train_model.train()

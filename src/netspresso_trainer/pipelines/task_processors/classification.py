@@ -12,8 +12,8 @@ MAX_SAMPLE_RESULT = 10
 
 
 class ClassificationProcessor(BaseTaskProcessor):
-    def __init__(self):
-        super(ClassificationProcessor, self).__init__()
+    def __init__(self, devices):
+        super(ClassificationProcessor, self).__init__(devices)
 
     def train_step(self, train_model, batch):
         train_model.train()

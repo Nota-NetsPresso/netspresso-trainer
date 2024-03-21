@@ -8,10 +8,8 @@ from .base import BaseTaskProcessor
 
 
 class PoseEstimationProcessor(BaseTaskProcessor):
-    def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(PoseEstimationProcessor, self).__init__(conf, task, model_name, model, devices,
-                                                train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
+    def __init__(self, devices):
+        super(PoseEstimationProcessor, self).__init__(devices)
 
     def train_step(self, train_model, batch):
         train_model.train()
