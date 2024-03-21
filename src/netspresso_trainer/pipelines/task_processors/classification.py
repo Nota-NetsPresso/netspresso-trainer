@@ -6,15 +6,15 @@ import torch
 from loguru import logger
 from omegaconf import OmegaConf
 
-from .base import BasePipeline
+from .base import BaseTaskProcessor
 
 MAX_SAMPLE_RESULT = 10
 
 
-class ClassificationPipeline(BasePipeline):
+class ClassificationProcessor(BaseTaskProcessor):
     def __init__(self, conf, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(ClassificationPipeline, self).__init__(conf, task, model_name, model, devices,
+        super(ClassificationProcessor, self).__init__(conf, task, model_name, model, devices,
                                                      train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
 
     def train_step(self, batch):

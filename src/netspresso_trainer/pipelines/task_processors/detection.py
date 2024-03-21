@@ -4,13 +4,13 @@ import numpy as np
 import torch
 from loguru import logger
 
-from .base import BasePipeline
+from .base import BaseTaskProcessor
 
 
-class DetectionPipeline(BasePipeline):
+class DetectionProcessor(BaseTaskProcessor):
     def __init__(self, conf, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(DetectionPipeline, self).__init__(conf, task, model_name, model, devices,
+        super(DetectionProcessor, self).__init__(conf, task, model_name, model, devices,
                                                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 

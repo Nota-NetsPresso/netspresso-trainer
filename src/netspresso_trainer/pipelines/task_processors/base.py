@@ -32,11 +32,11 @@ from ...utils.stats import get_params_and_macs
 NUM_SAMPLES = 16
 
 
-class BasePipeline(ABC):
+class BaseTaskProcessor(ABC):
     def __init__(self, conf, task, model_name, model, devices,
                  train_dataloader, eval_dataloader, class_map, logging_dir,
                  is_graphmodule_training=False, profile=False):
-        super(BasePipeline, self).__init__()
+        super(BaseTaskProcessor, self).__init__()
         self.conf = conf
         self.task = task
         self.model_name = model_name
