@@ -42,13 +42,10 @@ class TrainingLogger():
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
         self.use_tensorboard: bool = self.conf.logging.tensorboard
-        self.use_csvlogger: bool = self.conf.logging.csv
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
 
         self.loggers = []
-        if self.use_csvlogger:
-            self.loggers.append(CSV_LOGGER[task](model=model, result_dir=self._result_dir))
         if self.use_imagesaver:
             self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir))
         if self.use_tensorboard:
