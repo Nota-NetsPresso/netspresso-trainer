@@ -7,7 +7,7 @@ from dataclasses import asdict
 from multiprocessing import Value
 from pathlib import Path
 from statistics import mean
-from typing import Dict, Literal, final, List, Optional
+from typing import Dict, List, Literal, Optional, final
 
 import torch
 import torch.distributed as dist

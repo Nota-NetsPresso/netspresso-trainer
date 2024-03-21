@@ -75,10 +75,10 @@ def evaluation_common(
     pipeline.set_evaluation()
     try:
         # Start evaluation
-        pipeline.timer.start_record(name=f'evaluation')
+        pipeline.timer.start_record(name='evaluation')
         pipeline.validate()
-        pipeline.timer.end_record(name=f'evaluation')
-        time_for_evaluation = pipeline.timer.get(name=f'evaluation', as_pop=False)
+        pipeline.timer.end_record(name='evaluation')
+        time_for_evaluation = pipeline.timer.get(name='evaluation', as_pop=False)
 
         # TODO: Replace logging with pipeline method
         if pipeline.single_gpu_or_rank_zero:
