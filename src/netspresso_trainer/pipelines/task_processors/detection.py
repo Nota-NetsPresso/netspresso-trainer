@@ -14,8 +14,8 @@ class DetectionProcessor(BaseTaskProcessor):
                                                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
         self.num_classes = train_dataloader.dataset.num_classes
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch):
+        train_model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices),}
@@ -27,7 +27,7 @@ class DetectionProcessor(BaseTaskProcessor):
 
         self.optimizer.zero_grad()
 
-        out = self.model(images)
+        out = train_model(images)
         self.loss_factory.calc(out, targets, phase='train')
 
         self.loss_factory.backward()
@@ -115,12 +115,12 @@ class DetectionProcessor(BaseTaskProcessor):
             }
             return dict(logs.items())
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         indices, images = batch['indices'], batch['pixel_values']
         images = images.to(self.devices)
 
-        out = self.model(images.unsqueeze(0))
+        out = test_model(images.unsqueeze(0))
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 

@@ -97,12 +97,12 @@ class SegmentationProcessor(BaseTaskProcessor):
             })
         return dict(logs.items())
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         images = batch['pixel_values']
         images = images.to(self.devices)
 
-        out = self.model(images.unsqueeze(0))
+        out = test_model(images.unsqueeze(0))
 
         pred = self.postprocessor(out)
 

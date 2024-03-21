@@ -12,13 +12,11 @@ MAX_SAMPLE_RESULT = 10
 
 
 class ClassificationProcessor(BaseTaskProcessor):
-    def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(ClassificationProcessor, self).__init__(conf, task, model_name, model, devices,
-                                                     train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
+    def __init__(self):
+        super(ClassificationProcessor, self).__init__()
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch):
+        train_model.train()
         indices, images, labels = batch
         images = images.to(self.devices)
         labels = labels.to(self.devices)
@@ -26,7 +24,7 @@ class ClassificationProcessor(BaseTaskProcessor):
 
         self.optimizer.zero_grad()
 
-        out = self.model(images)
+        out = train_model(images)
         self.loss_factory.calc(out, target, phase='train')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
@@ -78,12 +76,12 @@ class ClassificationProcessor(BaseTaskProcessor):
         else:
             self.metric_factory.calc(pred, labels, phase='valid')
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         indices, images, _ = batch
         images = images.to(self.devices)
 
-        out = self.model(images.unsqueeze(0))
+        out = test_model(images.unsqueeze(0))
         pred = self.postprocessor(out, k=1)
 
         if self.conf.distributed:

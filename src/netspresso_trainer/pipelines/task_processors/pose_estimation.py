@@ -13,15 +13,15 @@ class PoseEstimationProcessor(BaseTaskProcessor):
         super(PoseEstimationProcessor, self).__init__(conf, task, model_name, model, devices,
                                                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch):
+        train_model.train()
         images, keypoints = batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
         self.optimizer.zero_grad()
 
-        out = self.model(images)
+        out = train_model(images)
         self.loss_factory.calc(out, target, phase='train')
 
         self.loss_factory.backward()
@@ -77,12 +77,12 @@ class PoseEstimationProcessor(BaseTaskProcessor):
         }
         return dict(logs.items())
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         indices, images = batch['indices'], batch['pixel_values']
         images = images.to(self.devices)
 
-        out = self.model(images)
+        out = test_model(images)
 
         pred = self.postprocessor(out)
 
