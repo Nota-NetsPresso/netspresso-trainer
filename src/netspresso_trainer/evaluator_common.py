@@ -75,16 +75,21 @@ def evaluation_common(
     pipeline.set_evaluation()
     try:
         # Start evaluation
+        pipeline.timer.start_record(name='evaluation')
         pipeline.validate()
+        pipeline.timer.end_record(name='evaluation')
+        time_for_evaluation = pipeline.timer.get(name='evaluation', as_pop=False)
 
         # TODO: Replace logging with pipeline method
         if pipeline.single_gpu_or_rank_zero:
             valid_losses = pipeline.loss_factory.result('valid')
             valid_metrics = pipeline.metric_factory.result('valid')
 
-            pipeline.train_logger.log(
-                valid_losses=valid_losses,
-                valid_metrics=valid_metrics,
+            pipeline.log_results(
+                prefix='evaluation',
+                losses=valid_losses,
+                metrics=valid_metrics,
+                elapsed_time=time_for_evaluation,
             )
     except KeyboardInterrupt:
         pass

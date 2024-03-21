@@ -7,7 +7,7 @@ from dataclasses import asdict
 from multiprocessing import Value
 from pathlib import Path
 from statistics import mean
-from typing import Dict, Literal, final
+from typing import Dict, List, Literal, Optional, final
 
 import torch
 import torch.distributed as dist
@@ -263,24 +263,42 @@ class BasePipeline(ABC):
             returning_samples.append(out)
         return returning_samples
 
-    def log_end_epoch(self, epoch, time_for_epoch, valid_samples=None, valid_logging=False):
+    def log_results(
+        self,
+        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        epoch: Optional[int] = None,
+        samples: Optional[List] = None,
+        losses : Optional[Dict] = None,
+        metrics: Optional[Dict] = None,
+        learning_rate: Optional[float] = None,
+        elapsed_time: Optional[float] = None,
+    ):
+        self.train_logger.log(
+            prefix=prefix,
+            epoch=epoch,
+            samples=samples,
+            losses=losses,
+            metrics=metrics,
+            learning_rate=learning_rate,
+            elapsed_time=elapsed_time
+        )
+
+    def log_end_epoch(
+        self,
+        epoch: int,
+        time_for_epoch: float,
+        valid_samples: Optional[List] = None,
+        valid_logging: bool = False,
+    ):
         train_losses = self.loss_factory.result('train')
         train_metrics = self.metric_factory.result('train')
+        self.log_results(prefix='training', epoch=epoch, losses=train_losses, metrics=train_metrics,
+                         learning_rate=self.learning_rate, elapsed_time=time_for_epoch)
 
-        valid_losses = self.loss_factory.result('valid') if valid_logging else None
-        valid_metrics = self.metric_factory.result('valid') if valid_logging else None
-
-        self.train_logger.update_epoch(epoch)
-        self.train_logger.log(
-            train_losses=train_losses,
-            train_metrics=train_metrics,
-            valid_losses=valid_losses,
-            valid_metrics=valid_metrics,
-            train_images=None,
-            valid_images=valid_samples,
-            learning_rate=self.learning_rate,
-            elapsed_time=time_for_epoch
-        )
+        if valid_logging:
+            valid_losses = self.loss_factory.result('valid') if valid_logging else None
+            valid_metrics = self.metric_factory.result('valid') if valid_logging else None
+            self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}
         if valid_logging:

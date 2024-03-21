@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
 
@@ -11,33 +11,26 @@ class StdOutLogger:
         self.task = task
         self.model_name = model
         self.total_epochs = total_epochs if total_epochs is not None else "???"
-        self.init_epoch()
 
-    def init_epoch(self):
-        self._epoch = 0
-
-    @property
-    def epoch(self):
-        return self._epoch
-
-    @epoch.setter
-    def epoch(self, value: int) -> None:
-        self._epoch = int(value)
-
-    def __call__(self, train_losses, train_metrics, valid_losses, valid_metrics, learning_rate, elapsed_time):
-        logger.info(f"Epoch: {self._epoch} / {self.total_epochs}")
+    def __call__(
+        self,
+        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        epoch: Optional[int] = None,
+        losses : Optional[Dict] = None,
+        metrics: Optional[Dict] = None,
+        learning_rate: Optional[float] = None,
+        elapsed_time: Optional[float] = None,
+        **kwargs
+    ):
+        if epoch is not None and prefix == 'training':
+            logger.info(f"Epoch: {epoch} / {self.total_epochs}")
 
         if learning_rate is not None:
             logger.info(f"learning rate: {learning_rate:.7f}")
         if elapsed_time is not None:
             logger.info(f"elapsed_time: {elapsed_time:.7f}")
 
-        if train_losses is not None:
-            logger.info(f"training loss: {train_losses['total']:.7f}")
-        if train_metrics is not None:
-            logger.info(f"training metric: {[(name, value) for name, value in train_metrics.items()]}")
-
-        if valid_losses is not None:
-            logger.info(f"validation loss: {valid_losses['total']:.7f}")
-        if valid_metrics is not None:
-            logger.info(f"validation metric: {[(name, value) for name, value in valid_metrics.items()]}")
+        if losses is not None:
+            logger.info(f"{prefix} loss: {losses['total']:.7f}")
+        if metrics is not None:
+            logger.info(f"{prefix} metric: {[(name, value) for name, value in metrics.items()]}")

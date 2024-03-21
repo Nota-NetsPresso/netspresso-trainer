@@ -1,6 +1,6 @@
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -21,18 +21,6 @@ class TensorboardLogger:
         self.num_sample_images = num_sample_images
 
         self.tensorboard = SummaryWriter(self.result_dir / "tensorboard")
-        self._epoch = None
-
-    def init_epoch(self):
-        self._epoch = 0
-
-    @property
-    def epoch(self):
-        return self._epoch
-
-    @epoch.setter
-    def epoch(self, value: int) -> None:
-        self._epoch = int(value)
 
     def _as_numpy(self, value: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
         if isinstance(value, np.ndarray):
@@ -105,22 +93,24 @@ class TensorboardLogger:
         for k, v in final_metrics.items():
             self.tensorboard.add_scalar(k, v)
 
-    def __call__(self,
-                 train_losses, train_metrics, valid_losses, valid_metrics,
-                 train_images, valid_images, learning_rate, elapsed_time,
-                 ) -> None:
-
-        self.log_scalars_with_dict(train_losses, mode='train')
-        self.log_scalars_with_dict(train_metrics, mode='train')
-        if train_images is not None:
-            self.log_images_with_dict(train_images, mode='train')
-
-        if valid_losses is not None:
-            self.log_scalars_with_dict(valid_losses, mode='valid')
-        if valid_metrics is not None:
-            self.log_scalars_with_dict(valid_metrics, mode='valid')
-        if isinstance(valid_images, dict):  # TODO: array with multiple dicts
-            self.log_images_with_dict(valid_images, mode='valid')
+    def __call__(
+        self,
+        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        epoch: Optional[int] = None,
+        images: Optional[List] = None,
+        losses : Optional[Dict] = None,
+        metrics: Optional[Dict] = None,
+        learning_rate: Optional[float] = None,
+        elapsed_time: Optional[float] = None,
+        **kwargs
+    ):
+        self._epoch = 0 if epoch is None else epoch
+        if losses is not None:
+            self.log_scalars_with_dict(losses, mode=prefix)
+        if metrics is not None:
+            self.log_scalars_with_dict(metrics, mode=prefix)
+        if isinstance(images, dict):  # TODO: array with multiple dicts
+            self.log_images_with_dict(images, mode=prefix)
 
         if learning_rate is not None:
             self.log_scalar('learning_rate', learning_rate, mode='misc')
