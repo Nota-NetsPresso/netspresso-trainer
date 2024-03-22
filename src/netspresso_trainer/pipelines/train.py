@@ -380,7 +380,7 @@ class TrainingPipeline(BasePipeline):
         PROFILE_WARMUP = 1
         PROFILE_ACTIVE = 10
         PROFILE_REPEAT = 1
-        _ = torch.ones(1).to(self.devices)
+        #_ = torch.ones(1).to(self.devices)
         with torch.profiler.profile(
             schedule=torch.profiler.schedule(wait=PROFILE_WAIT,
                                              warmup=PROFILE_WARMUP,
