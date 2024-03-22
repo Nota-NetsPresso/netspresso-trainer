@@ -18,37 +18,45 @@ from ..metrics import build_metrics
 from .train import NUM_SAMPLES
 
 
+def load_optimizer_checkpoint(conf, optimizer, scheduler):
+    start_epoch = 1
+    resume_optimizer_checkpoint = conf.model.checkpoint.optimizer_path
+    if resume_optimizer_checkpoint is not None:
+        resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
+        if not resume_optimizer_checkpoint.exists():
+            logger.warning(f"Traning summary checkpoint path {str(resume_optimizer_checkpoint)} is not found!"
+                            f"Skip loading the previous history and trainer will be started from the beginning")
+            return
+
+        optimizer_dict = torch.load(resume_optimizer_checkpoint, map_location='cpu')
+        optimizer_state_dict = optimizer_dict['optimizer']
+        start_epoch = optimizer_dict['last_epoch'] + 1  # Start from the next to the end of last training
+
+        optimizer.load_state_dict(optimizer_state_dict)
+        scheduler.step(epoch=start_epoch)
+
+        start_epoch = start_epoch
+        logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {start_epoch}")
+
+    return optimizer, scheduler, start_epoch
+
+
 def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
                    train_dataloader, eval_dataloader, class_map, logging_dir,
                    is_graphmodule_training, profile=False):
     assert task in SUPPORTING_TASK_LIST, f"No such task! (task: {task})"
 
+    # Build task processor
     postprocessor = build_postprocessor(task, conf.model)
     task_processor = TASK_PROCESSOR[task](postprocessor, devices, conf.distributed)
 
     if pipeline_type == 'train':
+        # Build modules for training
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
         loss_factory = build_losses(conf.model, ignore_index=None)
         metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
-        start_epoch = 1
-        resume_optimizer_checkpoint = conf.model.checkpoint.optimizer_path
-        if resume_optimizer_checkpoint is not None:
-            resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
-            if not resume_optimizer_checkpoint.exists():
-                logger.warning(f"Traning summary checkpoint path {str(resume_optimizer_checkpoint)} is not found!"
-                               f"Skip loading the previous history and trainer will be started from the beginning")
-                return
-
-            optimizer_dict = torch.load(resume_optimizer_checkpoint, map_location='cpu')
-            optimizer_state_dict = optimizer_dict['optimizer']
-            start_epoch = optimizer_dict['last_epoch'] + 1  # Start from the next to the end of last training
-
-            optimizer.load_state_dict(optimizer_state_dict)
-            scheduler.step(epoch=start_epoch)
-
-            start_epoch = start_epoch
-            logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {start_epoch}")
+        optimizer, scheduler, start_epoch = load_optimizer_checkpoint(conf, optimizer, scheduler)
 
         # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
         cur_epoch = Value(c_int, start_epoch)
@@ -60,6 +68,7 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
         if conf.training.ema:
             model_ema = build_ema(model=model.module if hasattr(model, 'module') else model, conf=conf)
 
+        # Build logger
         single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
         train_step_per_epoch = len(train_dataloader)
         train_logger = None
