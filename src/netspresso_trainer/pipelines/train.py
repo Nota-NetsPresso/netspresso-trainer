@@ -10,6 +10,8 @@ from statistics import mean
 from typing import Dict, List, Literal, Optional, final
 
 import torch
+from torch.optim.optimizer import Optimizer
+from torch.optim.lr_scheduler import _LRScheduler
 import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -19,16 +21,13 @@ from omegaconf import DictConfig
 
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
-from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
+from ..loggers import START_EPOCH_ZERO_OR_ONE
 from ..loggers.base import TrainingLogger
-from ..losses import build_losses
-from ..metrics import build_metrics
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
+from ..losses.builder import LossFactory
+from ..metrics.builder import MetricFactory
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
-from ..utils.model_ema import build_ema
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
@@ -45,13 +44,20 @@ class TrainingPipeline(BasePipeline):
         task_processor: BaseTaskProcessor,
         model_name: str,
         model: nn.Module,
+        optimizer: Optimizer,
+        scheduler: _LRScheduler,
+        loss_factory: LossFactory,
+        metric_factory: MetricFactory,
         train_dataloader: DataLoader,
         eval_dataloader: DataLoader,
         single_gpu_or_rank_zero: bool,
         is_graphmodule_training: bool,
-        profile: bool,
         logger: Optional[TrainingLogger],
+        timer: Timer,
         model_ema: Optional[ModelEMA],
+        start_epoch: int,
+        cur_epoch: c_int,
+        profile: bool,
     ):
         super(TrainingPipeline, self).__init__()
         self.conf = conf
@@ -60,30 +66,28 @@ class TrainingPipeline(BasePipeline):
         self.model_name = model_name
         self.save_dtype = next(model.parameters()).dtype
         self.model = model.float()
+        self.optimizer = optimizer
+        self.scheduler = scheduler
+        self.loss_factory = loss_factory
+        self.metric_factory = metric_factory
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
+        self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
+        self.is_graphmodule_training = is_graphmodule_training
+        self.logger = logger
+        self.timer = timer
+        self.model_ema = model_ema
+        self.start_epoch = start_epoch
+        self.cur_epoch = cur_epoch
+        self.profile = profile  # TODO: provide torch_tb_profiler for training
+
         self.training_history: Dict[int, Dict[
             Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
         ]] = {}
 
-        self.timer = Timer()
-
-        self.loss_factory = None
-        self.metric_factory = None
-        self.optimizer = None
+        # TODO: These will be removed
+        self.save_optimizer_state = True
         self.start_epoch_at_one = bool(START_EPOCH_ZERO_OR_ONE)
-        self.start_epoch = int(self.start_epoch_at_one)
-
-        self.ignore_index = None
-        self.num_classes = None
-
-        self.profile = profile  # TODO: provide torch_tb_profiler for training
-        self.is_graphmodule_training = is_graphmodule_training
-        self.save_optimizer_state = self.conf.logging.save_optimizer_state
-
-        self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
-        self.logger = logger
-        self.model_ema = model_ema
 
     @final
     def _is_ready(self):
@@ -93,39 +97,6 @@ class TrainingPipeline(BasePipeline):
         assert self.conf.logging.save_checkpoint_epoch % self.conf.logging.validation_epoch == 0, \
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
         return True
-
-    def set_train(self):
-
-        assert self.model is not None
-        self.optimizer = build_optimizer(self.model,
-                                         optimizer_conf=self.conf.training.optimizer)
-        self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
-        self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
-        self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
-        resume_optimizer_checkpoint = self.conf.model.checkpoint.optimizer_path
-        if resume_optimizer_checkpoint is not None:
-            resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
-            if not resume_optimizer_checkpoint.exists():
-                logger.warning(f"Traning summary checkpoint path {str(resume_optimizer_checkpoint)} is not found!"
-                               f"Skip loading the previous history and trainer will be started from the beginning")
-                return
-
-            optimizer_dict = torch.load(resume_optimizer_checkpoint, map_location='cpu')
-            optimizer_state_dict = optimizer_dict['optimizer']
-            start_epoch = optimizer_dict['last_epoch'] + 1  # Start from the next to the end of last training
-            start_epoch_at_one = optimizer_dict['start_epoch_at_one']
-
-            self.optimizer.load_state_dict(optimizer_state_dict)
-            self.scheduler.step(epoch=start_epoch)
-
-            self.start_epoch_at_one = start_epoch_at_one
-            self.start_epoch = start_epoch
-            logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {self.start_epoch}")
-
-        # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
-        self.cur_epoch = Value(c_int, self.start_epoch)
-        self.train_dataloader.dataset.cur_epoch = self.cur_epoch
-        self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
 
     '''
     def set_evaluation(self):
