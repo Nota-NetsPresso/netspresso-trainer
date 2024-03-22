@@ -96,7 +96,6 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
-    start_epoch_at_one: bool
     macs: Optional[int] = None
     params: Optional[int] = None
     total_train_time: Optional[float] = None

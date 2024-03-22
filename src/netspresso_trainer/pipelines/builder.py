@@ -32,7 +32,6 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
         loss_factory = build_losses(conf.model, ignore_index=None)
         metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
         start_epoch = 1
-        start_epoch_at_one = 1
         resume_optimizer_checkpoint = conf.model.checkpoint.optimizer_path
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
@@ -44,19 +43,17 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
             optimizer_dict = torch.load(resume_optimizer_checkpoint, map_location='cpu')
             optimizer_state_dict = optimizer_dict['optimizer']
             start_epoch = optimizer_dict['last_epoch'] + 1  # Start from the next to the end of last training
-            start_epoch_at_one = optimizer_dict['start_epoch_at_one']
 
             optimizer.load_state_dict(optimizer_state_dict)
             scheduler.step(epoch=start_epoch)
 
-            start_epoch_at_one = start_epoch_at_one
             start_epoch = start_epoch
             logger.info(f"Resume training from {str(resume_optimizer_checkpoint)}. Start training at epoch: {start_epoch}")
 
         # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
         cur_epoch = Value(c_int, start_epoch)
         train_dataloader.dataset.cur_epoch = cur_epoch
-        train_dataloader.dataset.end_epoch = conf.training.epochs - 1 + start_epoch_at_one
+        train_dataloader.dataset.end_epoch = conf.training.epochs
 
         # Set model EMA
         model_ema = None

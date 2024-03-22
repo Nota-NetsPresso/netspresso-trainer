@@ -21,7 +21,6 @@ from omegaconf import DictConfig
 
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
-from ..loggers import START_EPOCH_ZERO_OR_ONE
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
@@ -87,7 +86,6 @@ class TrainingPipeline(BasePipeline):
 
         # TODO: These will be removed
         self.save_optimizer_state = True
-        self.start_epoch_at_one = bool(START_EPOCH_ZERO_OR_ONE)
 
     @final
     def _is_ready(self):
@@ -108,13 +106,13 @@ class TrainingPipeline(BasePipeline):
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch
-        last_epoch = epoch == (self.conf.training.epochs + self.start_epoch_at_one - 1)
-        return (epoch % validation_freq == self.start_epoch_at_one % validation_freq) or last_epoch
+        last_epoch = epoch == self.conf.training.epochs
+        return (epoch % validation_freq == 1 % validation_freq) or last_epoch
 
     def epoch_with_checkpoint_saving(self, epoch: int):
         checkpoint_freq = self.conf.logging.save_checkpoint_epoch
-        last_epoch = epoch == (self.conf.training.epochs + self.start_epoch_at_one - 1)
-        return (epoch % checkpoint_freq == self.start_epoch_at_one % checkpoint_freq) or last_epoch
+        last_epoch = epoch == self.conf.training.epochs
+        return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
     @property
     def learning_rate(self):
@@ -142,7 +140,7 @@ class TrainingPipeline(BasePipeline):
 
         num_epoch = -1
         try:
-            for num_epoch in range(self.start_epoch, self.conf.training.epochs + self.start_epoch_at_one):
+            for num_epoch in range(self.start_epoch, self.conf.training.epochs + 1):
                 self.timer.start_record(name=f'train_epoch_{num_epoch}')
                 self.loss_factory.reset_values()
                 self.metric_factory.reset_values()
@@ -285,7 +283,7 @@ class TrainingPipeline(BasePipeline):
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
-            save_dict = {'optimizer': optimizer.state_dict(), 'start_epoch_at_one': self.start_epoch_at_one, 'last_epoch': epoch}
+            save_dict = {'optimizer': optimizer.state_dict(), 'last_epoch': epoch}
             torch.save(save_dict, optimizer_path)
             logger.debug(f"Optimizer state saved at {str(optimizer_path)}")
 
@@ -320,7 +318,6 @@ class TrainingPipeline(BasePipeline):
     def save_summary(self, end_training=False):
         training_summary = TrainingSummary(
             total_epoch=self.conf.training.epochs,
-            start_epoch_at_one=self.start_epoch_at_one,
             train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
             valid_losses={epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
                           if 'valid_losses' in record},

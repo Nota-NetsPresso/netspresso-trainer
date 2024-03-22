@@ -8,7 +8,6 @@ import netspresso_trainer
 import numpy as np
 import pandas as pd
 import torch
-from netspresso_trainer.loggers import START_EPOCH_ZERO_OR_ONE
 from netspresso_trainer.optimizers import build_optimizer
 from netspresso_trainer.schedulers import build_scheduler
 from omegaconf import OmegaConf
@@ -43,7 +42,7 @@ def get_lr_dataframe_from_config(yaml_str: str):
 
         df = pd.DataFrame({
             "lr": lr_list,
-            "epochs": list(range(START_EPOCH_ZERO_OR_ONE, total_epochs + START_EPOCH_ZERO_OR_ONE))
+            "epochs": list(range(1, total_epochs + 1))
         })
         return gr.LinePlot.update(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
     except Exception as e:

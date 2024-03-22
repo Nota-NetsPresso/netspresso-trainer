@@ -3,8 +3,6 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 
 from .base import TrainingLogger
 
-START_EPOCH_ZERO_OR_ONE = 1
-
 
 def build_logger(conf, task: str, model_name: str, step_per_epoch: int, class_map: Dict[int, str], num_sample_images: int, result_dir: Union[Path, str], epoch: Optional[int] = None):
     training_logger = TrainingLogger(conf,

@@ -15,7 +15,7 @@ import torch.nn as nn
 from loguru import logger
 from tqdm import tqdm
 
-from ...loggers import START_EPOCH_ZERO_OR_ONE, build_logger
+from ...loggers import build_logger
 from ...losses import build_losses
 from ...metrics import build_metrics
 from ...optimizers import build_optimizer
