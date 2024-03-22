@@ -4,7 +4,6 @@ from typing import Dict, List, Literal, Optional
 from omegaconf import DictConfig
 import torch.nn as nn
 
-from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 from ..loggers.base import TrainingLogger
 from ..utils.record import Timer

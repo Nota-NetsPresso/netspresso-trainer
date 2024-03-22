@@ -58,7 +58,7 @@ class TrainingPipeline(BasePipeline):
         cur_epoch: c_int,
         profile: bool,
     ):
-        super(TrainingPipeline, self).__init__(conf, task, task, task_processor, model_name, model, logger, timer)
+        super(TrainingPipeline, self).__init__(conf, task, task_processor, model_name, model, logger, timer)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.loss_factory = loss_factory
