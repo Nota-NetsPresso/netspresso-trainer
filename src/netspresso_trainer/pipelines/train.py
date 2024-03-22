@@ -129,11 +129,13 @@ class TrainingPipeline(BasePipeline):
 
         self.task_processor.set_processor(self.conf, self.optimizer, self.loss_factory, self.metric_factory, self.postprocessor, self.devices)
 
+    '''
     def set_evaluation(self):
         assert self.model is not None
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
         self.postprocessor = build_postprocessor(self.task, self.conf.model)
+    '''
 
     def epoch_with_valid_logging(self, epoch: int):
         validation_freq = self.conf.logging.validation_epoch
