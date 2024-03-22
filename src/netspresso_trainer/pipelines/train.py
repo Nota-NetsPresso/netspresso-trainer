@@ -12,11 +12,15 @@ from typing import Dict, List, Literal, Optional, final
 import torch
 import torch.distributed as dist
 import torch.nn as nn
+from torch.utils.data import DataLoader
 from loguru import logger
 from tqdm import tqdm
+from omegaconf import DictConfig
 
 from .base import BasePipeline
+from .task_processors.base import BaseTaskProcessor
 from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
+from ..loggers.base import TrainingLogger
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..optimizers import build_optimizer
@@ -33,9 +37,20 @@ NUM_SAMPLES = 16
 
 
 class TrainingPipeline(BasePipeline):
-    def __init__(self, conf, task, task_processor, model_name, model,
-                 train_dataloader, eval_dataloader, single_gpu_or_rank_zero,
-                 is_graphmodule_training=False, profile=False, logger=None):
+    def __init__(
+        self,
+        conf: DictConfig,
+        task: str,
+        task_processor: BaseTaskProcessor,
+        model_name: str,
+        model: nn.Module,
+        train_dataloader: DataLoader,
+        eval_dataloader: DataLoader,
+        single_gpu_or_rank_zero: bool,
+        is_graphmodule_training: bool = False,
+        profile: bool = False,
+        logger: Optional[TrainingLogger] = None,
+    ):
         super(TrainingPipeline, self).__init__()
         self.conf = conf
         self.task = task
