@@ -33,16 +33,15 @@ NUM_SAMPLES = 16
 
 
 class TrainingPipeline(BasePipeline):
-    def __init__(self, conf, task, task_processor, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir,
-                 is_graphmodule_training=False, profile=False):
+    def __init__(self, conf, task, task_processor, model_name, model,
+                 train_dataloader, eval_dataloader, single_gpu_or_rank_zero,
+                 is_graphmodule_training=False, profile=False, logger=None):
         super(TrainingPipeline, self).__init__()
         self.conf = conf
         self.task = task
         self.model_name = model_name
         self.save_dtype = next(model.parameters()).dtype
         self.model = model.float()
-        self.devices = devices
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
         self.train_step_per_epoch = len(train_dataloader)
@@ -66,17 +65,8 @@ class TrainingPipeline(BasePipeline):
         self.is_graphmodule_training = is_graphmodule_training
         self.save_optimizer_state = self.conf.logging.save_optimizer_state
 
-        self.single_gpu_or_rank_zero = (not self.conf.distributed) or (self.conf.distributed and dist.get_rank() == 0)
-
-        if self.single_gpu_or_rank_zero:
-            self.train_logger = build_logger(
-                self.conf, self.task, self.model_name,
-                step_per_epoch=self.train_step_per_epoch,
-                class_map=class_map,
-                num_sample_images=NUM_SAMPLES,
-                result_dir=logging_dir,
-            )
-
+        self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
+        self.logger = logger
         self.model_ema = None
 
     @final
@@ -203,7 +193,7 @@ class TrainingPipeline(BasePipeline):
             logger.info(f"Total time: {total_train_time:.2f} s")
 
             if self.single_gpu_or_rank_zero:
-                self.train_logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
+                self.logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
                 self.save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
@@ -259,7 +249,7 @@ class TrainingPipeline(BasePipeline):
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
     ):
-        self.train_logger.log(
+        self.logger.log(
             prefix=prefix,
             epoch=epoch,
             samples=samples,
@@ -305,7 +295,7 @@ class TrainingPipeline(BasePipeline):
             model = self.model.module if hasattr(self.model, 'module') else self.model
         if self.save_dtype == torch.float16:
             model = copy.deepcopy(model).type(self.save_dtype)
-        logging_dir = self.train_logger.result_dir
+        logging_dir = self.logger.result_dir
         model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
         best_model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
         optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
@@ -366,7 +356,7 @@ class TrainingPipeline(BasePipeline):
             training_summary.params = params
             training_summary.success = True
 
-        logging_dir = self.train_logger.result_dir
+        logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "training_summary.json"
 
         with open(summary_path, 'w') as f:
