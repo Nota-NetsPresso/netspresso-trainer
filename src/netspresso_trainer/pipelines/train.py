@@ -43,6 +43,8 @@ class TrainingPipeline(BasePipeline):
         task_processor: BaseTaskProcessor,
         model_name: str,
         model: nn.Module,
+        logger: Optional[TrainingLogger],
+        timer: Timer,
         optimizer: Optimizer,
         scheduler: _LRScheduler,
         loss_factory: LossFactory,
@@ -51,20 +53,12 @@ class TrainingPipeline(BasePipeline):
         eval_dataloader: DataLoader,
         single_gpu_or_rank_zero: bool,
         is_graphmodule_training: bool,
-        logger: Optional[TrainingLogger],
-        timer: Timer,
         model_ema: Optional[ModelEMA],
         start_epoch: int,
         cur_epoch: c_int,
         profile: bool,
     ):
-        super(TrainingPipeline, self).__init__()
-        self.conf = conf
-        self.task = task
-        self.task_processor = task_processor
-        self.model_name = model_name
-        self.save_dtype = next(model.parameters()).dtype
-        self.model = model.float()
+        super(TrainingPipeline, self).__init__(conf, task, task, task_processor, model_name, model, logger, timer)
         self.optimizer = optimizer
         self.scheduler = scheduler
         self.loss_factory = loss_factory
@@ -73,8 +67,6 @@ class TrainingPipeline(BasePipeline):
         self.eval_dataloader = eval_dataloader
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
         self.is_graphmodule_training = is_graphmodule_training
-        self.logger = logger
-        self.timer = timer
         self.model_ema = model_ema
         self.start_epoch = start_epoch
         self.cur_epoch = cur_epoch
@@ -211,26 +203,6 @@ class TrainingPipeline(BasePipeline):
             out = self.task_processor.test_step(self.model, batch)
             returning_samples.append(out)
         return returning_samples
-
-    def log_results(
-        self,
-        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
-        epoch: Optional[int] = None,
-        samples: Optional[List] = None,
-        losses : Optional[Dict] = None,
-        metrics: Optional[Dict] = None,
-        learning_rate: Optional[float] = None,
-        elapsed_time: Optional[float] = None,
-    ):
-        self.logger.log(
-            prefix=prefix,
-            epoch=epoch,
-            samples=samples,
-            losses=losses,
-            metrics=metrics,
-            learning_rate=learning_rate,
-            elapsed_time=elapsed_time
-        )
 
     def log_end_epoch(
         self,
