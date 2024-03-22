@@ -33,8 +33,11 @@ NUM_SAMPLES = 16
 
 
 class BaseTaskProcessor(ABC):
-    def __init__(self):
+    def __init__(self, postprocessor, devices, distributed):
         super(BaseTaskProcessor, self).__init__()
+        self.postprocessor = postprocessor
+        self.devices = devices
+        self.distributed = distributed
 
     @abstractmethod
     def train_step(self, train_model, batch):

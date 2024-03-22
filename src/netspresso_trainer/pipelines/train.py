@@ -20,7 +20,6 @@ from ..loggers import START_EPOCH_ZERO_OR_ONE, build_logger
 from ..losses import build_losses
 from ..metrics import build_metrics
 from ..optimizers import build_optimizer
-from ..postprocessors import build_postprocessor
 from ..schedulers import build_scheduler
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
@@ -97,7 +96,6 @@ class TrainingPipeline(BasePipeline):
         self.scheduler, _ = build_scheduler(self.optimizer, self.conf.training)
         self.loss_factory = build_losses(self.conf.model, ignore_index=self.ignore_index)
         self.metric_factory = build_metrics(self.task, self.conf.model, ignore_index=self.ignore_index, num_classes=self.num_classes)
-        self.postprocessor = build_postprocessor(self.task, self.conf.model)
         resume_optimizer_checkpoint = self.conf.model.checkpoint.optimizer_path
         if resume_optimizer_checkpoint is not None:
             resume_optimizer_checkpoint = Path(resume_optimizer_checkpoint)
@@ -126,8 +124,6 @@ class TrainingPipeline(BasePipeline):
         # Set model EMA
         if self.conf.training.ema:
             self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=self.conf)
-
-        self.task_processor.set_processor(self.conf, self.optimizer, self.loss_factory, self.metric_factory, self.postprocessor, self.devices)
 
     '''
     def set_evaluation(self):
@@ -223,7 +219,7 @@ class TrainingPipeline(BasePipeline):
     def train_one_epoch(self, epoch):
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
-            out = self.task_processor.train_step(self.model, batch)
+            out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory)
             if self.model_ema:
                 self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
             outputs.append(out)
@@ -236,7 +232,7 @@ class TrainingPipeline(BasePipeline):
         outputs = []
         eval_model = self.model_ema.ema_model if self.model_ema else self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
-            out = self.task_processor.valid_step(eval_model, batch)
+            out = self.task_processor.valid_step(eval_model, batch, self.loss_factory, self.metric_factory)
             if out is not None:
                 outputs.append(out)
                 if num_returning_samples < num_samples:
