@@ -102,5 +102,14 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
                                             start_epoch=start_epoch,
                                             cur_epoch=cur_epoch,
                                             profile=profile)
+    
+    elif pipeline_type == 'evaluation':
+        raise NotImplementedError
+
+    elif pipeline_type == 'inference':
+        raise NotImplementedError
+
+    else:
+        raise ValueError("``pipeline_type`` must be one of ['train', 'evaluation', 'inference'].")
 
     return pipeline
