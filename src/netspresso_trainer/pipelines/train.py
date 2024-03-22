@@ -32,6 +32,7 @@ from ..utils.model_ema import build_ema
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
+from ..utils.model_ema import ModelEMA
 
 NUM_SAMPLES = 16
 
@@ -47,23 +48,23 @@ class TrainingPipeline(BasePipeline):
         train_dataloader: DataLoader,
         eval_dataloader: DataLoader,
         single_gpu_or_rank_zero: bool,
-        is_graphmodule_training: bool = False,
-        profile: bool = False,
-        logger: Optional[TrainingLogger] = None,
+        is_graphmodule_training: bool,
+        profile: bool,
+        logger: Optional[TrainingLogger],
+        model_ema: Optional[ModelEMA],
     ):
         super(TrainingPipeline, self).__init__()
         self.conf = conf
         self.task = task
+        self.task_processor = task_processor
         self.model_name = model_name
         self.save_dtype = next(model.parameters()).dtype
         self.model = model.float()
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
-        self.train_step_per_epoch = len(train_dataloader)
         self.training_history: Dict[int, Dict[
             Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
         ]] = {}
-        self.task_processor = task_processor
 
         self.timer = Timer()
 
@@ -82,7 +83,7 @@ class TrainingPipeline(BasePipeline):
 
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
         self.logger = logger
-        self.model_ema = None
+        self.model_ema = model_ema
 
     @final
     def _is_ready(self):
@@ -125,10 +126,6 @@ class TrainingPipeline(BasePipeline):
         self.cur_epoch = Value(c_int, self.start_epoch)
         self.train_dataloader.dataset.cur_epoch = self.cur_epoch
         self.train_dataloader.dataset.end_epoch = self.conf.training.epochs - 1 + self.start_epoch_at_one
-
-        # Set model EMA
-        if self.conf.training.ema:
-            self.model_ema = build_ema(model=self.model.module if hasattr(self.model, 'module') else self.model, conf=self.conf)
 
     '''
     def set_evaluation(self):
