@@ -50,6 +50,9 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
     postprocessor = build_postprocessor(task, conf.model)
     task_processor = TASK_PROCESSOR[task](postprocessor, devices, conf.distributed)
 
+    # Build timer
+    timer = Timer()
+
     if pipeline_type == 'train':
         # Build modules for training
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
@@ -79,9 +82,6 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
                                         num_sample_images=NUM_SAMPLES,
                                         result_dir=logging_dir,)
 
-        # Build timer
-        timer = Timer()
-
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
                                             task=task,
@@ -104,7 +104,32 @@ def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
                                             profile=profile)
     
     elif pipeline_type == 'evaluation':
-        raise NotImplementedError
+        # Build modules for evaluation
+        loss_factory = build_losses(conf.model, ignore_index=None)
+        metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
+
+        # Build logger
+        single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
+        train_step_per_epoch = len(train_dataloader)
+        eval_logger = None
+        if single_gpu_or_rank_zero:
+            eval_logger = build_logger(conf, task, model_name,
+                                       step_per_epoch=train_step_per_epoch,
+                                       class_map=class_map,
+                                       num_sample_images=NUM_SAMPLES,
+                                       result_dir=logging_dir,)
+        # Build pipeline
+        pipeline = PIPELINES[pipeline_type](conf=conf,
+                                            task=task,
+                                            task_processor=task_processor,
+                                            model_name=model_name,
+                                            model=model,
+                                            logger=eval_logger,
+                                            timer=timer,
+                                            loss_factory=loss_factory,
+                                            metric_factory=metric_factory,
+                                            eval_dataloader=eval_dataloader,
+                                            single_gpu_or_rank_zero=single_gpu_or_rank_zero,)
 
     elif pipeline_type == 'inference':
         raise NotImplementedError
