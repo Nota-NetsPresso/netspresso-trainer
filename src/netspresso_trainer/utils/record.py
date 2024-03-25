@@ -118,3 +118,11 @@ class EvaluationSummary:
     params: Optional[int] = None
     total_evaluation_time: Optional[float] = None
     success: bool = False
+
+
+@dataclass
+class InferenceSummary:
+    macs: Optional[int] = None
+    params: Optional[int] = None
+    total_inference_time: Optional[float] = None
+    success: bool = False

@@ -52,14 +52,15 @@ class SegmentationDataSampler(BaseDataSampler):
         super(SegmentationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
 
     def load_data(self, split='train'):
+        assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}."
         data_root = Path(self.conf_data.path.root)
         split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
-        annotation_dir: Path = data_root / split_dir.label
+        annotation_dir: Optional[Path] = data_root / split_dir.label if split_dir.label is not None else None
         images: List[str] = []
         labels: List[str] = []
         images_and_targets: List[Dict[str, str]] = []
-        if split in ['train', 'valid']:
+        if annotation_dir is not None:
             for ext in IMG_EXTENSIONS:
                 images.extend([str(file) for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
                 # TODO: get paired data from regex pattern matching (conf_data.path.pattern)
@@ -69,13 +70,11 @@ class SegmentationDataSampler(BaseDataSampler):
             labels = sorted(labels, key=lambda k: natural_key(k))
             images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
 
-        elif split == 'test':
+        else:
             for ext in IMG_EXTENSIONS:
                 images_and_targets.extend([{'image': str(file), 'label': None}
                                            for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
             images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
-        else:
-            raise AssertionError(f"split should be either {['train', 'valid', 'test']}")
 
         return images_and_targets
 

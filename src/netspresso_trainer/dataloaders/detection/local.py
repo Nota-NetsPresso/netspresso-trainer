@@ -56,18 +56,17 @@ class DetectionCustomDataset(BaseCustomDataset):
 
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
-        ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
+        ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
         img = Image.open(str(img_path)).convert('RGB')
-
-        org_img = img.copy()
 
         w, h = img.size
 
+        outputs = {}
+        outputs.update({'indices': index})
         if ann_path is None:
             out = self.transform(image=img)
-            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
-
-        outputs = {}
+            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
+            return outputs
 
         label, boxes_yolo = get_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
@@ -81,7 +80,6 @@ class DetectionCustomDataset(BaseCustomDataset):
         outputs.update({'pixel_values': out['image'], 'bbox': out['bbox'],
                         'label': out['label']})
 
-        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 

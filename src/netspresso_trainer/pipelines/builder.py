@@ -155,7 +155,27 @@ def build_pipeline(
                                             single_gpu_or_rank_zero=single_gpu_or_rank_zero,)
 
     elif pipeline_type == 'inference':
-        raise NotImplementedError
+        test_dataloader: DataLoader = dataloaders['test']
+
+        # Build logger
+        single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
+        eval_logger = None
+        if single_gpu_or_rank_zero:
+            eval_logger = build_logger(conf, task, model_name,
+                                       step_per_epoch=0,
+                                       class_map=class_map,
+                                       num_sample_images=NUM_SAMPLES,
+                                       result_dir=logging_dir,)
+        # Build pipeline
+        pipeline = PIPELINES[pipeline_type](conf=conf,
+                                            task=task,
+                                            task_processor=task_processor,
+                                            model_name=model_name,
+                                            model=model,
+                                            logger=eval_logger,
+                                            timer=timer,
+                                            test_dataloader=test_dataloader,
+                                            single_gpu_or_rank_zero=single_gpu_or_rank_zero,)
 
     else:
         raise ValueError("``pipeline_type`` must be one of ['train', 'evaluation', 'inference'].")

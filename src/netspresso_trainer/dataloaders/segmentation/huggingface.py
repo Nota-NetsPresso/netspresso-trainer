@@ -72,12 +72,11 @@ class SegmentationHFDataset(BaseHFDataset):
             mask[class_mask] = self.label_value_to_idx[label_value]
         mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
 
-        org_img = img.copy()
         w, h = img.size
 
         if label is None:
             out = self.transform(image=img)
-            return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
+            return {'pixel_values': out['image'], 'name': img_name, 'org_shape': (h, w)}
 
         outputs = {}
 

@@ -2,6 +2,7 @@ from typing import Dict, List, Type
 
 from .base import BasePipeline
 from .evaluation import EvaluationPipeline
+from .inference import InferencePipeline
 from .task_processors.base import BaseTaskProcessor
 from .task_processors.classification import ClassificationProcessor
 from .task_processors.detection import DetectionProcessor
@@ -22,4 +23,5 @@ TASK_PROCESSOR: Dict[str, Type[BaseTaskProcessor]] = {
 PIPELINES: Dict[str, Type[BasePipeline]] = {
     'train': TrainingPipeline,
     'evaluation': EvaluationPipeline,
+    'inference': InferencePipeline,
 }

@@ -89,14 +89,32 @@ class SegmentationProcessor(BaseTaskProcessor):
 
     def test_step(self, test_model, batch):
         test_model.eval()
+        indices = batch['indices']
         images = batch['pixel_values']
         images = images.to(self.devices)
 
-        out = test_model(images.unsqueeze(0))
+        out = test_model(images)
 
         pred = self.postprocessor(out)
 
-        return pred
+        indices = indices.numpy()
+        if self.conf.distributed:
+            gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
+
+            # Remove dummy samples, they only come in distributed environment
+            pred = pred[indices != -1]
+            torch.distributed.gather_object(pred, gathered_pred if torch.distributed.get_rank() == 0 else None, dst=0)
+            torch.distributed.barrier()
+            if torch.distributed.get_rank() == 0:
+                gathered_pred = sum(gathered_pred, [])
+                pred = gathered_pred
+
+        if self.single_gpu_or_rank_zero:
+            results = {
+                'images': images.detach().cpu().numpy(),
+                'pred': pred
+            }
+            return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

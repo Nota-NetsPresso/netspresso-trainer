@@ -25,18 +25,17 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
-        ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
+        ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
         img = Image.open(img_path).convert('RGB')
-
-        org_img = img.copy()
 
         w, h = img.size
 
+        outputs = {}
+        outputs.update({'indices': index})
         if ann_path is None:
             out = self.transform(image=img)
-            return {'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)}
-
-        outputs = {}
+            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
+            return outputs
 
         label = Image.open(ann_path).convert(self.label_image_mode)
         label_array = np.array(label)
@@ -59,7 +58,6 @@ class SegmentationCustomDataset(BaseCustomDataset):
             out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
 
-        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 
