@@ -47,7 +47,6 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
 
         img = Image.open(img_path).convert('RGB')
 
-        org_img = img.copy()
         w, h = img.size
 
         outputs = {}

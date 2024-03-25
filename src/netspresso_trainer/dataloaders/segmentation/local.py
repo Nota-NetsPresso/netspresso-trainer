@@ -28,8 +28,6 @@ class SegmentationCustomDataset(BaseCustomDataset):
         ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
         img = Image.open(img_path).convert('RGB')
 
-        org_img = img.copy()
-
         w, h = img.size
 
         outputs = {}
