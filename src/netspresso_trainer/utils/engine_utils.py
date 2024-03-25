@@ -209,3 +209,16 @@ def validate_evaluation_config(conf: DictConfig) -> ConfigSummary:
     logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='evaluation')
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
+
+
+def validate_inference_config(conf: DictConfig) -> ConfigSummary:
+
+    task = str(conf.model.task).lower()
+    assert task in SUPPORTING_TASK_LIST
+
+    model_name = str(conf.model.name).lower() + '_inference'
+
+    project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
+    logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='inference')
+
+    return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
