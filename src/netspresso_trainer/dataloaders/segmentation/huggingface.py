@@ -77,7 +77,7 @@ class SegmentationHFDataset(BaseHFDataset):
 
         if label is None:
             out = self.transform(image=img)
-            return {'pixel_values': out['image'], 'name': img_name, 'org_img': org_img, 'org_shape': (h, w)}
+            return {'pixel_values': out['image'], 'name': img_name, 'org_shape': (h, w)}
 
         outputs = {}
 

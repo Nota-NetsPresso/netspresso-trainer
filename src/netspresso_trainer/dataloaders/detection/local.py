@@ -67,7 +67,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         outputs.update({'indices': index})
         if ann_path is None:
             out = self.transform(image=img)
-            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)})
+            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
             return outputs
 
         label, boxes_yolo = get_label(Path(ann_path))

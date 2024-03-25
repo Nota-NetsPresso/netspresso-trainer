@@ -36,7 +36,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
         outputs.update({'indices': index})
         if ann_path is None:
             out = self.transform(image=img)
-            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)})
+            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
             return outputs
 
         label = Image.open(ann_path).convert(self.label_image_mode)

@@ -54,7 +54,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         outputs.update({'indices': index})
         if ann is None:
             out = self.transform(image=img)
-            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_img': org_img, 'org_shape': (h, w)})
+            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
             return outputs
 
         ann = ann.split(' ')
