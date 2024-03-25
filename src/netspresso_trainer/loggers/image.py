@@ -33,7 +33,10 @@ class ImageSaver:
             if v.ndim == 3:
                 self.save_ndarray_as_image(v, f"{prefix_dir}/{epoch:04d}_{k}.png", dataformats='HWC')
             for idx, image in enumerate(v):
-                filename = f"{prefix_dir}/{epoch:04d}_{idx:03d}_{k}.png"
+                if epoch is None:
+                    filename = f"{prefix_dir}/{idx:03d}_{k}.png"
+                else:
+                    filename = f"{prefix_dir}/{epoch:04d}_{idx:03d}_{k}.png"
                 self.save_ndarray_as_image(image, filename, dataformats='HWC') # TODO: get dataformats option from outside
 
     def __call__(
