@@ -17,6 +17,8 @@ from ..utils.stats import get_params_and_macs
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
+NUM_SAMPLES = 16
+
 
 class InferencePipeline(BasePipeline):
     def __init__(
@@ -52,8 +54,9 @@ class InferencePipeline(BasePipeline):
             out = self.task_processor.test_step(self.model, batch)
             if out is not None:
                 outputs.append(out)
-                returning_samples.append(out)
-                num_returning_samples += len(out['pred'])
+                if num_returning_samples < NUM_SAMPLES: # TODO: Save all output or set by config
+                    returning_samples.append(out)
+                    num_returning_samples += len(out['pred'])
 
         self.timer.end_record(name='inference')
         if self.single_gpu_or_rank_zero:
