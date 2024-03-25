@@ -3,6 +3,7 @@ from typing import Dict, List, Literal, Optional
 
 from omegaconf import DictConfig
 import torch.nn as nn
+import torch
 
 from .task_processors.base import BaseTaskProcessor
 from ..loggers.base import TrainingLogger
@@ -29,6 +30,10 @@ class BasePipeline(ABC):
         self.model = model.float()
         self.logger = logger
         self.timer = timer
+    
+    @property
+    def sample_input(self):
+        return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
 
     def log_results(
         self,

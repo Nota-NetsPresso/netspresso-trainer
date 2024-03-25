@@ -110,10 +110,6 @@ class TrainingPipeline(BasePipeline):
     def valid_loss(self):
         return self.loss_factory.result('valid').get('total').avg
 
-    @property
-    def sample_input(self):
-        return torch.randn((1, 3, self.conf.augmentation.img_size, self.conf.augmentation.img_size))
-
     def train(self):
         if self.single_gpu_or_rank_zero:
             logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
