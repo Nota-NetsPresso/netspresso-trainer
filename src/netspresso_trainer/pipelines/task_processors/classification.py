@@ -76,7 +76,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         indices, images, _ = batch
         images = images.to(self.devices)
 
-        out = test_model(images.unsqueeze(0))
+        out = test_model(images)
         pred = self.postprocessor(out, k=1)
 
         indices = indices.numpy()

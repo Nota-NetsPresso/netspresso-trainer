@@ -118,7 +118,7 @@ class DetectionProcessor(BaseTaskProcessor):
         indices, images = batch['indices'], batch['pixel_values']
         images = images.to(self.devices)
 
-        out = test_model(images.unsqueeze(0))
+        out = test_model(images)
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
