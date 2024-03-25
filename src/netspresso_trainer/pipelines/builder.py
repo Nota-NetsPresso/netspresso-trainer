@@ -1,10 +1,14 @@
 from ctypes import c_int
 from multiprocessing import Value
 from pathlib import Path
+from typing import Dict, Union
 
 import torch
+import torch.nn as nn
 import torch.distributed as dist
+from torch.utils.data import DataLoader
 from loguru import logger
+from omegaconf import DictConfig
 
 from .registry import SUPPORTING_TASK_LIST, TASK_PROCESSOR, PIPELINES
 from ..postprocessors import build_postprocessor
@@ -41,9 +45,20 @@ def load_optimizer_checkpoint(conf, optimizer, scheduler):
     return optimizer, scheduler, start_epoch
 
 
-def build_pipeline(pipeline_type, conf, task, model_name, model, devices,
-                   train_dataloader, eval_dataloader, class_map, logging_dir,
-                   is_graphmodule_training, profile=False):
+def build_pipeline(
+    pipeline_type: str,
+    conf: DictConfig,
+    task: str,
+    model_name: str,
+    model: nn.Module,
+    devices: torch.device,
+    class_map: Dict,
+    logging_dir: Union[str, Path],
+    is_graphmodule_training: bool,
+    train_dataloader: DataLoader,
+    eval_dataloader: DataLoader,
+    profile: bool = False
+):
     assert task in SUPPORTING_TASK_LIST, f"No such task! (task: {task})"
 
     # Build task processor
