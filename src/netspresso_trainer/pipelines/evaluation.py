@@ -6,18 +6,18 @@ from typing import Dict, List, Literal, Optional, final
 
 import torch
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from loguru import logger
-from tqdm import tqdm
 from omegaconf import DictConfig
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from .base import BasePipeline
-from .task_processors.base import BaseTaskProcessor
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
-from ..utils.record import Timer, EvaluationSummary
+from ..utils.record import EvaluationSummary, Timer
 from ..utils.stats import get_params_and_macs
+from .base import BasePipeline
+from .task_processors.base import BaseTaskProcessor
 
 NUM_SAMPLES = 16
 

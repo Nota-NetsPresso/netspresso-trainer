@@ -4,21 +4,21 @@ from pathlib import Path
 from typing import Dict, Union
 
 import torch
-import torch.nn as nn
 import torch.distributed as dist
-from torch.utils.data import DataLoader
+import torch.nn as nn
 from loguru import logger
 from omegaconf import DictConfig
+from torch.utils.data import DataLoader
 
-from .registry import SUPPORTING_TASK_LIST, TASK_PROCESSOR, PIPELINES
-from ..postprocessors import build_postprocessor
 from ..loggers import build_logger
-from ..utils.model_ema import build_ema
-from ..utils.record import Timer
-from ..optimizers import build_optimizer
-from ..schedulers import build_scheduler
 from ..losses import build_losses
 from ..metrics import build_metrics
+from ..optimizers import build_optimizer
+from ..postprocessors import build_postprocessor
+from ..schedulers import build_scheduler
+from ..utils.model_ema import build_ema
+from ..utils.record import Timer
+from .registry import PIPELINES, SUPPORTING_TASK_LIST, TASK_PROCESSOR
 from .train import NUM_SAMPLES
 
 CITYSCAPE_IGNORE_INDEX = 255
@@ -69,10 +69,8 @@ def build_pipeline(
     # Build timer
     timer = Timer()
 
-    if task == 'segmentation': # TODO: Temporarily set constant value of ignore_index
-        ignore_index = CITYSCAPE_IGNORE_INDEX
-    else:
-        ignore_index = None
+    # TODO: Temporarily set constant value of ignore_index
+    ignore_index = CITYSCAPE_IGNORE_INDEX if task == 'segmentation' else None
 
     if pipeline_type == 'train':
         train_dataloader: DataLoader = dataloaders['train']
@@ -126,7 +124,7 @@ def build_pipeline(
                                             start_epoch=start_epoch,
                                             cur_epoch=cur_epoch,
                                             profile=profile)
-    
+
     elif pipeline_type == 'evaluation':
         eval_dataloader: DataLoader = dataloaders['eval']
 

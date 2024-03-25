@@ -7,26 +7,26 @@ from statistics import mean
 from typing import Dict, List, Literal, Optional, final
 
 import torch
-from torch.optim.optimizer import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
 import torch.nn as nn
-from torch.utils.data import DataLoader
 from loguru import logger
-from tqdm import tqdm
 from omegaconf import DictConfig
+from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim.optimizer import Optimizer
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
-from .base import BasePipeline
-from .task_processors.base import BaseTaskProcessor
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
 from ..utils.checkpoint import save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
+from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_macs
-from ..utils.model_ema import ModelEMA
+from .base import BasePipeline
+from .task_processors.base import BaseTaskProcessor
 
 NUM_SAMPLES = 16
 
