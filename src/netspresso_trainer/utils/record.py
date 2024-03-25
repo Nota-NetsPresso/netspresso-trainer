@@ -106,3 +106,15 @@ class TrainingSummary:
     def __post_init__(self):
         self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
         self.last_epoch = list(self.train_losses.keys())[-1]
+
+
+@dataclass
+class EvaluationSummary:
+    losses: float
+    metrics: float
+    metrics_list: List[str]
+    primary_metric: str
+    macs: Optional[int] = None
+    params: Optional[int] = None
+    total_evaluation_time: Optional[float] = None
+    success: bool = False

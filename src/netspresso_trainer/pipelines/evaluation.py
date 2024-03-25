@@ -28,7 +28,7 @@ from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.onnx import save_onnx
-from ..utils.record import Timer, TrainingSummary
+from ..utils.record import Timer, EvaluationSummary
 from ..utils.stats import get_params_and_macs
 from ..utils.model_ema import ModelEMA
 
@@ -85,7 +85,6 @@ class EvaluationPipeline(BasePipeline):
         self.timer.end_record(name='evaluation')
         time_for_evaluation = self.timer.get(name='evaluation', as_pop=False)
         self.log_end_evaluation(time_for_evaluation=time_for_evaluation, valid_samples=returning_samples)
-        self.save_summary()
 
     def log_end_evaluation(
         self,
@@ -101,6 +100,24 @@ class EvaluationPipeline(BasePipeline):
             metrics=metrics,
             elapsed_time=time_for_evaluation,
         )
+        self.save_summary(losses, metrics, time_for_evaluation)
 
-    def save_summary(self):
-        pass
+    def save_summary(self, losses, metrics, time_for_evaluation):
+        macs, params = get_params_and_macs(self.model, self.sample_input.float())
+        evaluation_summary = EvaluationSummary(
+            losses=losses,
+            metrics=metrics,
+            metrics_list=self.metric_factory.metric_names,
+            primary_metric=self.metric_factory.primary_metric,
+            macs=macs,
+            params=params,
+            total_evaluation_time=time_for_evaluation,
+            success=True,
+        )
+
+        logging_dir = self.logger.result_dir
+        summary_path = Path(logging_dir) / "evaluation_summary.json"
+
+        with open(summary_path, 'w') as f:
+            json.dump(asdict(evaluation_summary), f, indent=4)
+        logger.info(f"Model evaluation summary saved at {str(summary_path)}")
