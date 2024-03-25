@@ -49,6 +49,7 @@ class PoseEstimationProcessor(BaseTaskProcessor):
 
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
         keypoints = keypoints.detach().cpu().numpy()
         if self.conf.distributed:
             pred = pred[indices != -1]
@@ -82,6 +83,7 @@ class PoseEstimationProcessor(BaseTaskProcessor):
 
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             pred = pred[indices != -1]
 

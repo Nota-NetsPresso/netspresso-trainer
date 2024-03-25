@@ -72,6 +72,7 @@ class DetectionProcessor(BaseTaskProcessor):
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             # Remove dummy samples, they only come in distributed environment
             images = images[indices != -1]
@@ -121,6 +122,7 @@ class DetectionProcessor(BaseTaskProcessor):
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             # Remove dummy samples, they only come in distributed environment
             filtered_pred = []

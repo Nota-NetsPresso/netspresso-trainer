@@ -81,6 +81,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         out = test_model(images.unsqueeze(0))
         pred = self.postprocessor(out, k=1)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
 
