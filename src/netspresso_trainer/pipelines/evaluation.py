@@ -70,8 +70,9 @@ class EvaluationPipeline(BasePipeline):
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
 
         self.timer.end_record(name='evaluation')
-        time_for_evaluation = self.timer.get(name='evaluation', as_pop=False)
-        self.log_end_evaluation(time_for_evaluation=time_for_evaluation, valid_samples=returning_samples)
+        if self.single_gpu_or_rank_zero:
+            time_for_evaluation = self.timer.get(name='evaluation', as_pop=False)
+            self.log_end_evaluation(time_for_evaluation=time_for_evaluation, valid_samples=returning_samples)
 
     def log_end_evaluation(
         self,
