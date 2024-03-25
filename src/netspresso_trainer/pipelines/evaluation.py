@@ -1,18 +1,10 @@
-import copy
 import json
-import os
-from abc import ABC, abstractmethod
-from ctypes import c_int
 from dataclasses import asdict
-from multiprocessing import Value
 from pathlib import Path
 from statistics import mean
 from typing import Dict, List, Literal, Optional, final
 
 import torch
-from torch.optim.optimizer import Optimizer
-from torch.optim.lr_scheduler import _LRScheduler
-import torch.distributed as dist
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from loguru import logger
@@ -24,13 +16,8 @@ from .task_processors.base import BaseTaskProcessor
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
-from ..utils.checkpoint import load_checkpoint, save_checkpoint
-from ..utils.fx import save_graphmodule
-from ..utils.logger import yaml_for_logging
-from ..utils.onnx import save_onnx
 from ..utils.record import Timer, EvaluationSummary
 from ..utils.stats import get_params_and_macs
-from ..utils.model_ema import ModelEMA
 
 NUM_SAMPLES = 16
 
