@@ -140,7 +140,7 @@ class DetectionProcessor(BaseTaskProcessor):
                 pred = gathered_pred
 
         if self.single_gpu_or_rank_zero:
-            results = pred
+            results = {'images': images.detach().cpu().numpy(), 'pred': pred}
             return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
