@@ -5,8 +5,6 @@ import torch
 
 from .base import BaseTaskProcessor
 
-MAX_SAMPLE_RESULT = 10
-
 
 class ClassificationProcessor(BaseTaskProcessor):
     def __init__(self, conf, postprocessor, devices):
