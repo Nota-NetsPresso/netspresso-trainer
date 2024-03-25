@@ -10,11 +10,11 @@ from .base import BaseTaskProcessor
 
 
 class SegmentationProcessor(BaseTaskProcessor):
-    def __init__(self, devices):
-        super(SegmentationProcessor, self).__init__(devices)
+    def __init__(self, conf, postprocessor, devices):
+        super(SegmentationProcessor, self).__init__(conf, postprocessor, devices)
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
+        train_model.train()
         batch['indices']
         images = batch['pixel_values'].to(self.devices)
         labels = batch['labels'].long().to(self.devices)
@@ -24,12 +24,12 @@ class SegmentationProcessor(BaseTaskProcessor):
             bd_gt = batch['edges']
             target['bd_gt'] = bd_gt.to(self.devices)
 
-        self.optimizer.zero_grad()
-        out = self.model(images)
-        self.loss_factory.calc(out, target, phase='train')
+        optimizer.zero_grad()
+        out = train_model(images)
+        loss_factory.calc(out, target, phase='train')
 
-        self.loss_factory.backward()
-        self.optimizer.step()
+        loss_factory.backward()
+        optimizer.step()
 
         out = {k: v.detach() for k, v in out.items()}
         pred = self.postprocessor(out)
@@ -43,11 +43,11 @@ class SegmentationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, labels, phase='train')
+            metric_factory.calc(pred, labels, phase='train')
 
-    def valid_step(self, eval_model, batch):
+    def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices = batch['indices']
         images = batch['pixel_values'].to(self.devices)
@@ -59,7 +59,7 @@ class SegmentationProcessor(BaseTaskProcessor):
             target['bd_gt'] = bd_gt.to(self.devices)
 
         out = eval_model(images)
-        self.loss_factory.calc(out, target, phase='valid')
+        loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
 
@@ -76,9 +76,9 @@ class SegmentationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(labels, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, labels, phase='valid')
+            metric_factory.calc(pred, labels, phase='valid')
 
         logs = {
             'images': images.detach().cpu().numpy(),
@@ -102,5 +102,5 @@ class SegmentationProcessor(BaseTaskProcessor):
 
         return pred
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

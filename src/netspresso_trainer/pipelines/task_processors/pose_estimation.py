@@ -8,22 +8,22 @@ from .base import BaseTaskProcessor
 
 
 class PoseEstimationProcessor(BaseTaskProcessor):
-    def __init__(self, devices):
-        super(PoseEstimationProcessor, self).__init__(devices)
+    def __init__(self, conf, postprocessor, devices):
+        super(PoseEstimationProcessor, self).__init__(conf, postprocessor, devices)
 
-    def train_step(self, train_model, batch):
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
         images, keypoints = batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
-        self.optimizer.zero_grad()
+        optimizer.zero_grad()
 
         out = train_model(images)
-        self.loss_factory.calc(out, target, phase='train')
+        loss_factory.calc(out, target, phase='train')
 
-        self.loss_factory.backward()
-        self.optimizer.step()
+        loss_factory.backward()
+        optimizer.step()
 
         pred = self.postprocessor(out)
 
@@ -36,18 +36,18 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, keypoints, phase='train')
+            metric_factory.calc(pred, keypoints, phase='train')
 
-    def valid_step(self, eval_model, batch):
+    def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices, images, keypoints = batch['indices'], batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
         out = eval_model(images)
-        self.loss_factory.calc(out, target, phase='valid')
+        loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
 
@@ -63,9 +63,9 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, keypoints, phase='valid')
+            metric_factory.calc(pred, keypoints, phase='valid')
 
         # TODO: Return gathered samples
         logs = {
@@ -98,5 +98,5 @@ class PoseEstimationProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             return pred
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

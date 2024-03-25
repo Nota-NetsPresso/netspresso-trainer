@@ -12,8 +12,8 @@ MAX_SAMPLE_RESULT = 10
 
 
 class ClassificationProcessor(BaseTaskProcessor):
-    def __init__(self, postprocessor, devices, distributed):
-        super(ClassificationProcessor, self).__init__(postprocessor, devices, distributed)
+    def __init__(self, conf, postprocessor, devices):
+        super(ClassificationProcessor, self).__init__(conf, postprocessor, devices)
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
@@ -34,7 +34,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         optimizer.step()
 
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
-        if self.distributed:
+        if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
@@ -61,7 +61,7 @@ class ClassificationProcessor(BaseTaskProcessor):
 
         indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
-        if self.distributed:
+        if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
@@ -84,7 +84,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         out = test_model(images.unsqueeze(0))
         pred = self.postprocessor(out, k=1)
 
-        if self.distributed:
+        if self.conf.distributed:
             gathered_pred = [None for _ in range(torch.distributed.get_world_size())]
 
             # Remove dummy samples, they only come in distributed environment
@@ -99,5 +99,5 @@ class ClassificationProcessor(BaseTaskProcessor):
 
         return pred
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

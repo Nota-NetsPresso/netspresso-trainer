@@ -62,7 +62,7 @@ def build_pipeline(
 
     # Build task processor
     postprocessor = build_postprocessor(task, conf.model)
-    task_processor = TASK_PROCESSOR[task](postprocessor, devices, conf.distributed)
+    task_processor = TASK_PROCESSOR[task](conf, postprocessor, devices)
 
     # Build timer
     timer = Timer()
@@ -129,11 +129,10 @@ def build_pipeline(
 
         # Build logger
         single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
-        train_step_per_epoch = len(train_dataloader)
         eval_logger = None
         if single_gpu_or_rank_zero:
             eval_logger = build_logger(conf, task, model_name,
-                                       step_per_epoch=train_step_per_epoch,
+                                       step_per_epoch=0,
                                        class_map=class_map,
                                        num_sample_images=NUM_SAMPLES,
                                        result_dir=logging_dir,)

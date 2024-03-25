@@ -8,12 +8,12 @@ from .base import BaseTaskProcessor
 
 
 class DetectionProcessor(BaseTaskProcessor):
-    def __init__(self, devices):
-        super(DetectionProcessor, self).__init__(devices)
-        self.num_classes = 10 # TODO: Fix this
+    def __init__(self, conf, postprocessor, devices):
+        super(DetectionProcessor, self).__init__(conf, postprocessor, devices)
+        self.num_classes = 4 # TODO: Fix this
         #self.num_classes = train_dataloader.dataset.num_classes
 
-    def train_step(self, train_model, batch):
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
@@ -24,13 +24,13 @@ class DetectionProcessor(BaseTaskProcessor):
                    'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
-        self.optimizer.zero_grad()
+        optimizer.zero_grad()
 
         out = train_model(images)
-        self.loss_factory.calc(out, targets, phase='train')
+        loss_factory.calc(out, targets, phase='train')
 
-        self.loss_factory.backward()
-        self.optimizer.step()
+        loss_factory.backward()
+        optimizer.step()
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
@@ -58,7 +58,7 @@ class DetectionProcessor(BaseTaskProcessor):
             }
             return dict(logs.items())
 
-    def valid_step(self, eval_model, batch):
+    def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices, images, labels, bboxes = batch['indices'], batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
@@ -70,7 +70,7 @@ class DetectionProcessor(BaseTaskProcessor):
                    'num_classes': self.num_classes,}
 
         out = eval_model(images)
-        self.loss_factory.calc(out, targets, phase='valid')
+        loss_factory.calc(out, targets, phase='valid')
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
@@ -143,7 +143,7 @@ class DetectionProcessor(BaseTaskProcessor):
             results = pred
             return results
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         if self.single_gpu_or_rank_zero:
             pred = []
             targets = []
@@ -163,4 +163,4 @@ class DetectionProcessor(BaseTaskProcessor):
                     pred_on_image['post_scores'] = detection[..., -1]
                     pred_on_image['post_labels'] = class_idx
                     pred.append(pred_on_image)
-            self.metric_factory.calc(pred, target=targets, phase=phase)
+            metric_factory.calc(pred, target=targets, phase=phase)
