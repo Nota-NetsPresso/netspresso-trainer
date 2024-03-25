@@ -21,6 +21,8 @@ from ..losses import build_losses
 from ..metrics import build_metrics
 from .train import NUM_SAMPLES
 
+CITYSCAPE_IGNORE_INDEX = 255
+
 
 def load_optimizer_checkpoint(conf, optimizer, scheduler):
     start_epoch = 1
@@ -74,8 +76,12 @@ def build_pipeline(
         # Build modules for training
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
-        loss_factory = build_losses(conf.model, ignore_index=None)
-        metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
+        if task == 'segmentation': # TODO: Temporarily set constant value of ignore_index
+            ignore_index = CITYSCAPE_IGNORE_INDEX
+        else:
+            ignore_index = None
+        loss_factory = build_losses(conf.model, ignore_index=ignore_index)
+        metric_factory = build_metrics(task, conf.model, ignore_index=ignore_index, num_classes=train_dataloader.dataset.num_classes)
         optimizer, scheduler, start_epoch = load_optimizer_checkpoint(conf, optimizer, scheduler)
 
         # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
