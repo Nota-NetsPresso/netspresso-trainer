@@ -80,7 +80,7 @@ class EvaluationPipeline(BasePipeline):
                 if num_returning_samples < num_samples:
                     returning_samples.append(out)
                     num_returning_samples += len(out['pred'])
-        self.task_processor.get_metric_with_all_outputs(outputs, phase='valid')
+        self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
 
         self.timer.end_record(name='evaluation')
         time_for_evaluation = self.timer.get(name='evaluation', as_pop=False)
@@ -96,6 +96,7 @@ class EvaluationPipeline(BasePipeline):
         metrics = self.metric_factory.result('valid')
         self.log_results(
             prefix='evaluation',
+            samples=valid_samples,
             losses=losses,
             metrics=metrics,
             elapsed_time=time_for_evaluation,

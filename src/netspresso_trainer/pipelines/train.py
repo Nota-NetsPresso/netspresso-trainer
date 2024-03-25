@@ -178,7 +178,7 @@ class TrainingPipeline(BasePipeline):
             if self.model_ema:
                 self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
             outputs.append(out)
-        self.task_processor.get_metric_with_all_outputs(outputs, phase='train')
+        self.task_processor.get_metric_with_all_outputs(outputs, phase='train', metric_factory=self.metric_factory)
 
     @torch.no_grad()
     def validate(self, num_samples=NUM_SAMPLES):
@@ -193,7 +193,7 @@ class TrainingPipeline(BasePipeline):
                 if num_returning_samples < num_samples:
                     returning_samples.append(out)
                     num_returning_samples += len(out['pred'])
-        self.task_processor.get_metric_with_all_outputs(outputs, phase='valid')
+        self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
         return returning_samples
 
     @torch.no_grad()
