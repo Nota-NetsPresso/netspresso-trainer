@@ -55,8 +55,7 @@ def build_pipeline(
     class_map: Dict,
     logging_dir: Union[str, Path],
     is_graphmodule_training: bool,
-    train_dataloader: DataLoader,
-    eval_dataloader: DataLoader,
+    dataloaders: Dict[str, DataLoader],
     profile: bool = False
 ):
     assert task in SUPPORTING_TASK_LIST, f"No such task! (task: {task})"
@@ -69,6 +68,9 @@ def build_pipeline(
     timer = Timer()
 
     if pipeline_type == 'train':
+        train_dataloader: DataLoader = dataloaders['train']
+        eval_dataloader: DataLoader = dataloaders['valid']
+
         # Build modules for training
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
@@ -119,6 +121,8 @@ def build_pipeline(
                                             profile=profile)
     
     elif pipeline_type == 'evaluation':
+        eval_dataloader: DataLoader = dataloaders['eval']
+
         # Build modules for evaluation
         loss_factory = build_losses(conf.model, ignore_index=None)
         metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
