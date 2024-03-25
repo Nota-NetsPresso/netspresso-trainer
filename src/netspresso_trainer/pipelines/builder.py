@@ -69,6 +69,11 @@ def build_pipeline(
     # Build timer
     timer = Timer()
 
+    if task == 'segmentation': # TODO: Temporarily set constant value of ignore_index
+        ignore_index = CITYSCAPE_IGNORE_INDEX
+    else:
+        ignore_index = None
+
     if pipeline_type == 'train':
         train_dataloader: DataLoader = dataloaders['train']
         eval_dataloader: DataLoader = dataloaders['valid']
@@ -76,10 +81,6 @@ def build_pipeline(
         # Build modules for training
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
-        if task == 'segmentation': # TODO: Temporarily set constant value of ignore_index
-            ignore_index = CITYSCAPE_IGNORE_INDEX
-        else:
-            ignore_index = None
         loss_factory = build_losses(conf.model, ignore_index=ignore_index)
         metric_factory = build_metrics(task, conf.model, ignore_index=ignore_index, num_classes=train_dataloader.dataset.num_classes)
         optimizer, scheduler, start_epoch = load_optimizer_checkpoint(conf, optimizer, scheduler)
@@ -130,8 +131,8 @@ def build_pipeline(
         eval_dataloader: DataLoader = dataloaders['eval']
 
         # Build modules for evaluation
-        loss_factory = build_losses(conf.model, ignore_index=None)
-        metric_factory = build_metrics(task, conf.model, ignore_index=None, num_classes=None)
+        loss_factory = build_losses(conf.model, ignore_index=ignore_index)
+        metric_factory = build_metrics(task, conf.model, ignore_index=ignore_index, num_classes=eval_dataloader.dataset.num_classes)
 
         # Build logger
         single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
