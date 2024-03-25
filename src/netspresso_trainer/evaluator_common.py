@@ -66,31 +66,22 @@ def evaluation_common(
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
     # Build evaluation pipeline
-    pipeline = build_pipeline(conf, task, model_name, model,
-                             devices, eval_dataloader, eval_dataloader,
-                             class_map=valid_dataset.class_map,
-                             logging_dir=logging_dir,
-                             is_graphmodule_training=None)
+    pipeline_type = 'evaluation'
+    pipeline = build_pipeline(pipeline_type=pipeline_type,
+                              conf=conf,
+                              task=task,
+                              model_name=model_name,
+                              model=model,
+                              devices=devices,
+                              class_map=valid_dataset.class_map,
+                              logging_dir=logging_dir,
+                              is_graphmodule_training=None, # TODO: Remove is_graphmodule_training ...
+                              dataloaders={'eval': eval_dataloader})
 
-    pipeline.set_evaluation()
     try:
         # Start evaluation
-        pipeline.timer.start_record(name='evaluation')
-        pipeline.validate()
-        pipeline.timer.end_record(name='evaluation')
-        time_for_evaluation = pipeline.timer.get(name='evaluation', as_pop=False)
+        pipeline.evaluation()
 
-        # TODO: Replace logging with pipeline method
-        if pipeline.single_gpu_or_rank_zero:
-            valid_losses = pipeline.loss_factory.result('valid')
-            valid_metrics = pipeline.metric_factory.result('valid')
-
-            pipeline.log_results(
-                prefix='evaluation',
-                losses=valid_losses,
-                metrics=valid_metrics,
-                elapsed_time=time_for_evaluation,
-            )
     except KeyboardInterrupt:
         pass
     except Exception as e:

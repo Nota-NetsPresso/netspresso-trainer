@@ -76,13 +76,18 @@ def train_common(
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
     # Build training pipeline
-    pipeline = build_pipeline(conf, task, model_name, model,
-                             devices, train_dataloader, eval_dataloader,
-                             class_map=train_dataset.class_map,
-                             logging_dir=logging_dir,
-                             is_graphmodule_training=is_graphmodule_training)
+    pipeline_type = 'train'
+    pipeline = build_pipeline(pipeline_type=pipeline_type,
+                              conf=conf,
+                              task=task,
+                              model_name=model_name,
+                              model=model,
+                              devices=devices,
+                              class_map=train_dataset.class_map,
+                              logging_dir=logging_dir,
+                              is_graphmodule_training=is_graphmodule_training,
+                              dataloaders={'train': train_dataloader, 'valid': eval_dataloader},)
 
-    pipeline.set_train()
     try:
         # Start train
         pipeline.train()

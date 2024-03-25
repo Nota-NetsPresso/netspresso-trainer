@@ -2,7 +2,6 @@ logging:
   project_id: ~
   output_dir: ./outputs
   tensorboard: true
-  csv: false
   image: true
   stdout: true
   save_optimizer_state: true

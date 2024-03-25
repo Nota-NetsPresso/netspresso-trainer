@@ -1,31 +1,27 @@
 from typing import Literal
 
-import numpy as np
 import torch
-from loguru import logger
 
-from .base import BasePipeline
+from .base import BaseTaskProcessor
 
 
-class PoseEstimationPipeline(BasePipeline):
-    def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(PoseEstimationPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
+class PoseEstimationProcessor(BaseTaskProcessor):
+    def __init__(self, conf, postprocessor, devices):
+        super(PoseEstimationProcessor, self).__init__(conf, postprocessor, devices)
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
+        train_model.train()
         images, keypoints = batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
-        self.optimizer.zero_grad()
+        optimizer.zero_grad()
 
-        out = self.model(images)
-        self.loss_factory.calc(out, target, phase='train')
+        out = train_model(images)
+        loss_factory.calc(out, target, phase='train')
 
-        self.loss_factory.backward()
-        self.optimizer.step()
+        loss_factory.backward()
+        optimizer.step()
 
         pred = self.postprocessor(out)
 
@@ -38,21 +34,22 @@ class PoseEstimationPipeline(BasePipeline):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, keypoints, phase='train')
+            metric_factory.calc(pred, keypoints, phase='train')
 
-    def valid_step(self, eval_model, batch):
+    def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices, images, keypoints = batch['indices'], batch['pixel_values'], batch['keypoints']
         images = images.to(self.devices)
         target = {'keypoints': keypoints.to(self.devices)}
 
         out = eval_model(images)
-        self.loss_factory.calc(out, target, phase='valid')
+        loss_factory.calc(out, target, phase='valid')
 
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
         keypoints = keypoints.detach().cpu().numpy()
         if self.conf.distributed:
             pred = pred[indices != -1]
@@ -65,9 +62,9 @@ class PoseEstimationPipeline(BasePipeline):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [self.metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            self.metric_factory.calc(pred, keypoints, phase='valid')
+            metric_factory.calc(pred, keypoints, phase='valid')
 
         # TODO: Return gathered samples
         logs = {
@@ -77,15 +74,16 @@ class PoseEstimationPipeline(BasePipeline):
         }
         return dict(logs.items())
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         indices, images = batch['indices'], batch['pixel_values']
         images = images.to(self.devices)
 
-        out = self.model(images)
+        out = test_model(images)
 
         pred = self.postprocessor(out)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             pred = pred[indices != -1]
 
@@ -100,5 +98,5 @@ class PoseEstimationPipeline(BasePipeline):
         if self.single_gpu_or_rank_zero:
             return pred
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

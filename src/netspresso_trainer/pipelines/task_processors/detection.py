@@ -1,21 +1,18 @@
 from typing import Literal
 
-import numpy as np
 import torch
-from loguru import logger
 
-from .base import BasePipeline
+from .base import BaseTaskProcessor
 
 
-class DetectionPipeline(BasePipeline):
-    def __init__(self, conf, task, model_name, model, devices,
-                 train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs):
-        super(DetectionPipeline, self).__init__(conf, task, model_name, model, devices,
-                                                train_dataloader, eval_dataloader, class_map, logging_dir, **kwargs)
-        self.num_classes = train_dataloader.dataset.num_classes
+class DetectionProcessor(BaseTaskProcessor):
+    def __init__(self, conf, postprocessor, devices):
+        super(DetectionProcessor, self).__init__(conf, postprocessor, devices)
+        self.num_classes = 4 # TODO: Fix this
+        #self.num_classes = train_dataloader.dataset.num_classes
 
-    def train_step(self, batch):
-        self.model.train()
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
+        train_model.train()
         images, labels, bboxes = batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
         targets = [{"boxes": box.to(self.devices), "labels": label.to(self.devices),}
@@ -25,13 +22,13 @@ class DetectionPipeline(BasePipeline):
                    'img_size': images.size(-1),
                    'num_classes': self.num_classes,}
 
-        self.optimizer.zero_grad()
+        optimizer.zero_grad()
 
-        out = self.model(images)
-        self.loss_factory.calc(out, targets, phase='train')
+        out = train_model(images)
+        loss_factory.calc(out, targets, phase='train')
 
-        self.loss_factory.backward()
-        self.optimizer.step()
+        loss_factory.backward()
+        optimizer.step()
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
@@ -59,7 +56,7 @@ class DetectionPipeline(BasePipeline):
             }
             return dict(logs.items())
 
-    def valid_step(self, eval_model, batch):
+    def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices, images, labels, bboxes = batch['indices'], batch['pixel_values'], batch['label'], batch['bbox']
         images = images.to(self.devices)
@@ -71,10 +68,11 @@ class DetectionPipeline(BasePipeline):
                    'num_classes': self.num_classes,}
 
         out = eval_model(images)
-        self.loss_factory.calc(out, targets, phase='valid')
+        loss_factory.calc(out, targets, phase='valid')
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             # Remove dummy samples, they only come in distributed environment
             images = images[indices != -1]
@@ -115,15 +113,16 @@ class DetectionPipeline(BasePipeline):
             }
             return dict(logs.items())
 
-    def test_step(self, batch):
-        self.model.eval()
+    def test_step(self, test_model, batch):
+        test_model.eval()
         indices, images = batch['indices'], batch['pixel_values']
         images = images.to(self.devices)
 
-        out = self.model(images.unsqueeze(0))
+        out = test_model(images.unsqueeze(0))
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 
+        indices = indices.numpy()
         if self.conf.distributed:
             # Remove dummy samples, they only come in distributed environment
             filtered_pred = []
@@ -144,7 +143,7 @@ class DetectionPipeline(BasePipeline):
             results = pred
             return results
 
-    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid']):
+    def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         if self.single_gpu_or_rank_zero:
             pred = []
             targets = []
@@ -164,4 +163,4 @@ class DetectionPipeline(BasePipeline):
                     pred_on_image['post_scores'] = detection[..., -1]
                     pred_on_image['post_labels'] = class_idx
                     pred.append(pred_on_image)
-            self.metric_factory.calc(pred, target=targets, phase=phase)
+            metric_factory.calc(pred, target=targets, phase=phase)
