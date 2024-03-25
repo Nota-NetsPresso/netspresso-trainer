@@ -20,6 +20,10 @@ def inference_common(
     logging_dir: Path,
     log_level: Literal['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'] = 'INFO'
 ):
+    # TODO: Supports all tasks
+    inference_supports = ['classification', 'detection', 'segmentation']
+    assert task in inference_supports, f"Sorry. Inference mode only supports {inference_supports}"
+
     distributed, world_size, rank, devices = set_device(conf.environment.seed)
     logger = set_logger(level=log_level, distributed=distributed)
 
