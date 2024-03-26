@@ -43,7 +43,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
 
     def __getitem__(self, index):
         img_path = Path(self.samples[index]['image'])
-        ann = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
+        ann = self.samples[index]['label'] # TODO: Pose estimation is not assuming that label can be None now
 
         img = Image.open(img_path).convert('RGB')
 
