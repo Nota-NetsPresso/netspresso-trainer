@@ -90,10 +90,10 @@ class ClassificationProcessor(BaseTaskProcessor):
             if torch.distributed.get_rank() == 0:
                 gathered_pred = np.concatenate(gathered_pred, axis=0)
                 pred = gathered_pred
-        else:
-            pred = pred
 
-        return pred
+        if self.single_gpu_or_rank_zero:
+            results = {'images': images.detach().cpu().numpy(), 'pred': pred}
+            return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass

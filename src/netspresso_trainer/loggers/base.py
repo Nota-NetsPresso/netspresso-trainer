@@ -139,6 +139,8 @@ class TrainingLogger():
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
     ):
+        if not self.use_imagesaver: # TODO: This is uneffective way
+            samples = None
 
         if losses is not None:
             losses = self._convert_scalar_as_readable(losses)

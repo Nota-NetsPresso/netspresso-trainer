@@ -8,7 +8,7 @@
 - Add transform: HSVJitter by `@illian01` in [PR 336](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/336)
 - Add transforms: RandomResize by `@illian01` in [PR 341](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/341), [PR 344](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/344)
 - Add model EMA (Exponential Moving Average) by `@illian01` in [PR 348](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/348)
-- Add entry point for evaluation and inference by `@illian01` in [PR 374](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/374), [PR 379](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/379), [PR 381](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/381)
+- Add entry point for evaluation and inference by `@illian01` in [PR 374](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/374), [PR 379](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/379), [PR 381](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/381), [PR 383](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/383)
 
 ## Bug Fixes:
 
