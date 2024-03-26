@@ -41,21 +41,21 @@ def evaluation_common(
     conf.model.single_task_model = single_task_model
 
     # Build dataloader
-    _, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
-    assert valid_dataset is not None, "For evaluation, valid split of dataset must be provided."
+    _, _, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    assert test_dataset is not None, "For evaluation, valid split of dataset must be provided."
     if not distributed or dist.get_rank() == 0:
         logger.info(f"Summary | Dataset: <{conf.data.name}> (with {conf.data.format} format)")
-        logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+        logger.info(f"Summary | Validation dataset: {len(test_dataset)} sample(s)")
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
-    eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
+    eval_dataloader = build_dataloader(conf, task, model_name, dataset=test_dataset, phase='val')
 
     # Build model
     # TODO: Not implemented for various model types. Only support pytorch model now
     model = build_model(
-        conf.model, task, valid_dataset.num_classes,
+        conf.model, task, test_dataset.num_classes,
         model_checkpoint=conf.model.checkpoint.path,
         use_pretrained=conf.model.checkpoint.use_pretrained,
         img_size=conf.augmentation.img_size
@@ -73,10 +73,10 @@ def evaluation_common(
                               model_name=model_name,
                               model=model,
                               devices=devices,
-                              class_map=valid_dataset.class_map,
+                              class_map=test_dataset.class_map,
                               logging_dir=logging_dir,
                               is_graphmodule_training=None, # TODO: Remove is_graphmodule_training ...
-                              dataloaders={'eval': eval_dataloader})
+                              dataloaders={'test': eval_dataloader})
 
     try:
         # Start evaluation

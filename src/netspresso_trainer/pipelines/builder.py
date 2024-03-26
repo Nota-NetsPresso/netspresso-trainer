@@ -126,7 +126,7 @@ def build_pipeline(
                                             profile=profile)
 
     elif pipeline_type == 'evaluation':
-        eval_dataloader: DataLoader = dataloaders['eval']
+        eval_dataloader: DataLoader = dataloaders['test']
 
         # Build modules for evaluation
         loss_factory = build_losses(conf.model, ignore_index=ignore_index)
