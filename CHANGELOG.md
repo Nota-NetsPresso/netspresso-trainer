@@ -36,6 +36,7 @@
 - Fix postprocessor return type as numpy.ndarray by `@illian01` in [PR 365](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/365)
 - Update default asignees of issue template by `@illian01` in [PR 375](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/375)
 - Refactoring: Remove CSV logger, change logger module input format by `@illian01` in [PR 377](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/377)
+- Change ClassficationDataSampler logic by `@illian01` in [PR 382](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/382)
 
 # v0.1.2
 
