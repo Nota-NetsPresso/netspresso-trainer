@@ -71,6 +71,13 @@ class ClassificationProcessor(BaseTaskProcessor):
         else:
             metric_factory.calc(pred, labels, phase='valid')
 
+        if self.single_gpu_or_rank_zero:
+            results = {
+                'images': images.detach().cpu().numpy(),
+                'pred': pred
+            }
+            return results
+
     def test_step(self, test_model, batch):
         test_model.eval()
         indices, images, _ = batch
@@ -92,7 +99,10 @@ class ClassificationProcessor(BaseTaskProcessor):
                 pred = gathered_pred
 
         if self.single_gpu_or_rank_zero:
-            results = {'images': images.detach().cpu().numpy(), 'pred': pred}
+            results = {
+                'images': images.detach().cpu().numpy(),
+                'pred': pred
+            }
             return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
