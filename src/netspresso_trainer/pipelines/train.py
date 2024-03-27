@@ -188,14 +188,6 @@ class TrainingPipeline(BasePipeline):
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
         return returning_samples
 
-    @torch.no_grad()
-    def inference(self, test_dataset):
-        returning_samples = []
-        for _idx, batch in enumerate(tqdm(test_dataset, leave=False)):
-            out = self.task_processor.test_step(self.model, batch)
-            returning_samples.append(out)
-        return returning_samples
-
     def log_end_epoch(
         self,
         epoch: int,

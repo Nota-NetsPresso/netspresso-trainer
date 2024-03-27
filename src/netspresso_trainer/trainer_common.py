@@ -42,15 +42,13 @@ def train_common(
     conf.model.single_task_model = single_task_model
 
     # Build dataloaders
-    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    train_dataset, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
     assert train_dataset is not None, "For training, train split of dataset must be provided."
     if not distributed or dist.get_rank() == 0:
         logger.info(f"Summary | Dataset: <{conf.data.name}> (with {conf.data.format} format)")
         logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
         if valid_dataset is not None:
             logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
-        if test_dataset is not None:
-            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
@@ -92,8 +90,6 @@ def train_common(
         # Start train
         pipeline.train()
 
-        if test_dataset:
-            pipeline.inference(test_dataset)
     except KeyboardInterrupt:
         pass
     except Exception as e:
