@@ -18,7 +18,7 @@ from tqdm import tqdm
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
-from ..utils.checkpoint import save_checkpoint, load_checkpoint
+from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
@@ -247,7 +247,7 @@ class TrainingPipeline(BasePipeline):
 
         best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
         best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
-        
+
         best_model_to_save = copy.deepcopy(self.model)
         best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
 
