@@ -18,7 +18,7 @@ from tqdm import tqdm
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
-from ..utils.checkpoint import save_checkpoint
+from ..utils.checkpoint import load_checkpoint, save_checkpoint
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
@@ -151,12 +151,14 @@ class TrainingPipeline(BasePipeline):
 
             if self.single_gpu_or_rank_zero:
                 self.logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
+                self.save_best()
                 self.save_summary(end_training=True)
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
                 self.save_checkpoint(epoch=num_epoch)
+                self.save_best()
                 self.save_summary()
             raise e
         except Exception as e:
@@ -211,13 +213,6 @@ class TrainingPipeline(BasePipeline):
         self.training_history.update({epoch: summary_record})
 
     def save_checkpoint(self, epoch: int):
-
-        # Check whether the valid loss is minimum at this epoch
-        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                        if 'valid_losses' in record}
-        best_epoch = min(valid_losses, key=valid_losses.get)
-        save_best_model = best_epoch == epoch
-
         if self.model_ema:
             model = self.model_ema.ema_model
         else:
@@ -226,7 +221,6 @@ class TrainingPipeline(BasePipeline):
             model = copy.deepcopy(model).type(self.save_dtype)
         logging_dir = self.logger.result_dir
         model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        best_model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
         optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
 
         if self.save_optimizer_state:
@@ -239,29 +233,44 @@ class TrainingPipeline(BasePipeline):
             # Just save graphmodule checkpoint
             torch.save(model, model_path.with_suffix(".pt"))
             logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
-            if save_best_model:
-                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
-                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
-                torch.save(model, best_model_path.with_suffix(".pt"))
-                logger.info(f"Best model saved at {str(best_model_path.with_suffix('.pt'))}")
             return
         pytorch_model_state_dict_path = model_path.with_suffix(".safetensors")
         save_checkpoint(model.state_dict(), pytorch_model_state_dict_path)
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
-        if save_best_model:
-            pytorch_best_model_state_dict_path = best_model_path.with_suffix(".safetensors")
-            save_checkpoint(model.state_dict(), pytorch_best_model_state_dict_path)
-            logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
-            try:
-                save_onnx(model, best_model_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
-                logger.info(f"ONNX model converting and saved at {str(best_model_path.with_suffix('.onnx'))}")
+    def save_best(self):
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                if 'valid_losses' in record}
+        best_epoch = min(valid_losses, key=valid_losses.get)
 
-                save_graphmodule(model, (model_path.parent / f"{best_model_path.stem}_fx").with_suffix(".pt"))
-                logger.info(f"PyTorch FX model tracing and saved at {str(best_model_path.with_suffix('.pt'))}")
-            except Exception as e:
-                logger.error(e)
-                pass
+        logging_dir = self.logger.result_dir
+
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
+        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
+
+        best_model_to_save = copy.deepcopy(self.model)
+        best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
+
+        if self.is_graphmodule_training:
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+            logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+            torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
+            logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
+            return
+
+        pytorch_best_model_state_dict_path = best_model_save_path.with_suffix(".safetensors")
+        save_checkpoint(best_model_to_save.state_dict(), pytorch_best_model_state_dict_path)
+        logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
+
+        try:
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+            logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+
+            save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))
+            logger.info(f"PyTorch FX model tracing and saved at {str(best_model_save_path.with_suffix('.pt'))}")
+        except Exception as e:
+            logger.error(e)
+            pass
 
     def save_summary(self, end_training=False):
         training_summary = TrainingSummary(
