@@ -97,6 +97,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
 
 
 def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
+    is_training = True if phase == 'train' else False
 
     if task == 'classification':
         # TODO: ``phase`` should be removed later.
@@ -122,7 +123,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             logger,
             input_size=conf.augmentation.img_size,
             batch_size=conf.environment.batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
@@ -144,7 +145,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
@@ -166,7 +167,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
@@ -183,7 +184,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=conf.environment.batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
