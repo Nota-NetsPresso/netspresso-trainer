@@ -6,6 +6,8 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.utils.data as data
+import PIL.Image as Image
+from tqdm import tqdm
 
 
 class BaseCustomDataset(data.Dataset):
@@ -52,6 +54,9 @@ class BaseCustomDataset(data.Dataset):
     def with_label(self):
         return self._with_label
 
+    def cache_dataset(self, sampler):
+        for i in tqdm(sampler):
+            self.samples[i]['image'] = Image.open(str(self.samples[i]['image'])).convert('RGB')
 
 class BaseHFDataset(data.Dataset):
 
