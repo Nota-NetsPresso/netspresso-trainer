@@ -32,7 +32,7 @@ class BaseCustomDataset(data.Dataset):
         pass
 
     @abstractmethod
-    def cache_dataset(self, sampler):
+    def cache_dataset(self, sampler, distributed):
         pass
 
     def __len__(self):
