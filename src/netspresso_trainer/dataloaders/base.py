@@ -27,6 +27,8 @@ class BaseCustomDataset(data.Dataset):
         self._split = split
         self._with_label = with_label
 
+        self.cache = False
+
     @abstractmethod
     def __getitem__(self, index):
         pass
@@ -57,6 +59,7 @@ class BaseCustomDataset(data.Dataset):
     def cache_dataset(self, sampler):
         for i in tqdm(sampler):
             self.samples[i]['image'] = Image.open(str(self.samples[i]['image'])).convert('RGB')
+        self.cache = True
 
 class BaseHFDataset(data.Dataset):
 
