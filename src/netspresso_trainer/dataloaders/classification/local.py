@@ -21,8 +21,9 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
     def __getitem__(self, index):
         img = self.samples[index]['image']
-        target = self.samples[index]['label'] if 'label' in self.samples[index] else None
-        #img = Image.open(img).convert('RGB')
+        target = self.samples[index]['label']
+        if not self.cache:
+            img = Image.open(img).convert('RGB')
 
         if self.transform is not None:
             out = self.transform(img)
