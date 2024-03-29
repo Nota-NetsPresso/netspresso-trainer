@@ -1,7 +1,9 @@
+from functools import partial
 import os
 
 import PIL.Image as Image
 from loguru import logger
+from multiprocessing.pool import ThreadPool
 
 from ..base import BaseCustomDataset
 import torch.distributed as dist
@@ -19,9 +21,20 @@ class ClassificationCustomDataset(BaseCustomDataset):
     def cache_dataset(self, sampler, distributed):
         if (not distributed) or (distributed and dist.get_rank() == 0):
             logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
-        for i in sampler:
-            self.samples[i]['image'] = Image.open(str(self.samples[i]['image'])).convert('RGB')
-            self.cache = True
+
+        def _load(i, samples):
+            image = Image.open(str(samples[i]['image'])).convert('RGB')
+            return i, image
+
+        num_threads = 8 # TODO: Compute appropriate num_threads
+        load_imgs = ThreadPool(num_threads).imap(
+            partial(_load, samples=self.samples),
+            sampler
+        )
+        for i, image in load_imgs:
+            self.samples[i]['image'] = image
+
+        self.cache = True
 
     def __getitem__(self, index):
         img = self.samples[index]['image']
