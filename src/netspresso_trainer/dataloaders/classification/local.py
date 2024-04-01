@@ -1,12 +1,12 @@
-from functools import partial
 import os
-
-import PIL.Image as Image
-from loguru import logger
+from functools import partial
 from multiprocessing.pool import ThreadPool
 
-from ..base import BaseCustomDataset
+import PIL.Image as Image
 import torch.distributed as dist
+from loguru import logger
+
+from ..base import BaseCustomDataset
 
 
 class ClassificationCustomDataset(BaseCustomDataset):

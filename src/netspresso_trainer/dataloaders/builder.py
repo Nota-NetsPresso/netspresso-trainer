@@ -97,7 +97,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
 
 
 def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
-    is_training = True if phase == 'train' else False
+    is_training = phase == 'train'
 
     #TODO: Temporarily set ``cache_data`` as optional since this is experimental
     cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False

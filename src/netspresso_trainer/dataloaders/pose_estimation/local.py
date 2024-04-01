@@ -1,15 +1,15 @@
-from functools import partial
 import os
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import List
-from multiprocessing.pool import ThreadPool
 
 import cv2
 import numpy as np
 import PIL.Image as Image
-from loguru import logger
 import torch
 import torch.distributed as dist
+from loguru import logger
 from omegaconf import OmegaConf
 
 from ..base import BaseCustomDataset

@@ -1,11 +1,12 @@
-from functools import partial
 import os
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Literal
-from multiprocessing.pool import ThreadPool
 
 import numpy as np
 import PIL.Image as Image
+import torch.distributed as dist
 from loguru import logger
 
 from ..augmentation.transforms import generate_edge, reduce_label
@@ -67,7 +68,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
             outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
             return outputs
 
-        
+
         label_array = np.array(label)
         label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
         # if self.conf_augmentation.reduce_zero_label:

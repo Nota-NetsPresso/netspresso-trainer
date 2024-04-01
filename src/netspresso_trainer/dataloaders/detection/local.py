@@ -1,14 +1,14 @@
-from functools import partial
 import os
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import List
 
 import numpy as np
 import PIL.Image as Image
-from loguru import logger
-from multiprocessing.pool import ThreadPool
 import torch
 import torch.distributed as dist
+from loguru import logger
 from omegaconf import OmegaConf
 
 from ..base import BaseCustomDataset
@@ -85,7 +85,7 @@ class DetectionCustomDataset(BaseCustomDataset):
             img = self.samples[index]['image']
             ann = self.samples[index]['label']
         else:
-            img = Image.open(self.samples[index]['image']).convert('RGB')        
+            img = Image.open(self.samples[index]['image']).convert('RGB')
             ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
             ann = get_label(Path(ann_path)) if ann_path is not None else None
 
