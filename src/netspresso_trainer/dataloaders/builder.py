@@ -99,6 +99,9 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
 def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
     is_training = True if phase == 'train' else False
 
+    #TODO: Temporarily set ``cache_data`` as optional since this is experimental
+    cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False
+
     if task == 'classification':
         # TODO: ``phase`` should be removed later.
         transforms = getattr(conf.augmentation, phase, None)
@@ -130,6 +133,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'segmentation':
@@ -152,6 +156,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'detection':
@@ -174,6 +179,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'pose_estimation':
@@ -191,6 +197,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     else:
