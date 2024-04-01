@@ -1,9 +1,13 @@
 import os
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Literal
 
 import numpy as np
 import PIL.Image as Image
+import torch.distributed as dist
+from loguru import logger
 
 from ..augmentation.transforms import generate_edge, reduce_label
 from ..base import BaseCustomDataset
@@ -23,21 +27,48 @@ class SegmentationCustomDataset(BaseCustomDataset):
         self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_mode).upper() \
             if conf_data.label_image_mode is not None else 'L'
 
+    def cache_dataset(self, sampler, distributed):
+        if (not distributed) or (distributed and dist.get_rank() == 0):
+            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+
+        def _load(i, samples):
+            image = Image.open(Path(samples[i]['image'])).convert('RGB')
+            label = self.samples[i]['label']
+            if label is not None:
+                label = Image.open(Path(label)).convert(self.label_image_mode)
+            return i, image, label
+
+        num_threads = 8 # TODO: Compute appropriate num_threads
+        load_imgs = ThreadPool(num_threads).imap(
+            partial(_load, samples=self.samples),
+            sampler
+        )
+        for i, image, label in load_imgs:
+            self.samples[i]['image'] = image
+            self.samples[i]['label'] = label
+
+        self.cache = True
+
     def __getitem__(self, index):
-        img_path = Path(self.samples[index]['image'])
-        ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
-        img = Image.open(img_path).convert('RGB')
+        if self.cache:
+            img = self.samples[index]['image']
+            label = self.samples[index]['label']
+        else:
+            img_path = self.samples[index]['image']
+            ann_path = self.samples[index]['label']
+            img = Image.open(Path(img_path)).convert('RGB')
+            label = Image.open(Path(ann_path)).convert(self.label_image_mode) if ann_path is not None else None
 
         w, h = img.size
 
         outputs = {}
         outputs.update({'indices': index})
-        if ann_path is None:
+        if label is None:
             out = self.transform(image=img)
-            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
+            outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
             return outputs
 
-        label = Image.open(ann_path).convert(self.label_image_mode)
+
         label_array = np.array(label)
         label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
         # if self.conf_augmentation.reduce_zero_label:
@@ -53,10 +84,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
             out = self.transform(image=img, mask=mask, edge=edge)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_path.name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float()})
         else:
             out = self.transform(image=img, mask=mask)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_path.name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask']})
 
         if self._split in ['train', 'training']:
             return outputs

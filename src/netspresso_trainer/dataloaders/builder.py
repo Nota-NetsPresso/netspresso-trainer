@@ -97,6 +97,10 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
 
 
 def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
+    is_training = phase == 'train'
+
+    #TODO: Temporarily set ``cache_data`` as optional since this is experimental
+    cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False
 
     if task == 'classification':
         # TODO: ``phase`` should be removed later.
@@ -122,13 +126,14 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             logger,
             input_size=conf.augmentation.img_size,
             batch_size=conf.environment.batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'segmentation':
@@ -144,13 +149,14 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'detection':
@@ -166,13 +172,14 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'pose_estimation':
@@ -183,13 +190,14 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             conf.data.name,
             logger,
             batch_size=conf.environment.batch_size,
-            is_training=True,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     else:

@@ -25,8 +25,14 @@ class BaseCustomDataset(data.Dataset):
         self._split = split
         self._with_label = with_label
 
+        self.cache = False
+
     @abstractmethod
     def __getitem__(self, index):
+        pass
+
+    @abstractmethod
+    def cache_dataset(self, sampler, distributed):
         pass
 
     def __len__(self):
@@ -51,7 +57,6 @@ class BaseCustomDataset(data.Dataset):
     @property
     def with_label(self):
         return self._with_label
-
 
 class BaseHFDataset(data.Dataset):
 
