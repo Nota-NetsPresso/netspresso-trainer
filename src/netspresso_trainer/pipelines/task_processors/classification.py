@@ -13,20 +13,22 @@ class ClassificationProcessor(BaseTaskProcessor):
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
         indices, images, labels = batch
-        images = images.to(self.devices)
-        labels = labels.to(self.devices)
+        images = images.to(self.devices).to(self.data_type)
+        labels = labels.to(self.devices).to(self.data_type)
         target = {'target': labels}
 
         optimizer.zero_grad()
 
-        out = train_model(images)
+        with torch.cuda.amp.autocast(enabled=self.mixed_precision):
+            out = train_model(images)
         loss_factory.calc(out, target, phase='train')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
         pred = self.postprocessor(out)
 
-        loss_factory.backward()
-        optimizer.step()
+        loss_factory.backward(self.grad_scaler)
+        self.grad_scaler.step(optimizer)
+        self.grad_scaler.update()
 
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
