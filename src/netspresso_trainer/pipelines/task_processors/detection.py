@@ -25,7 +25,7 @@ class DetectionProcessor(BaseTaskProcessor):
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
             out = train_model(images)
-        loss_factory.calc(out, targets, phase='train')
+            loss_factory.calc(out, targets, phase='train')
 
         loss_factory.backward(self.grad_scaler)
         self.grad_scaler.step(optimizer)
