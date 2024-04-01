@@ -17,11 +17,13 @@ class PoseEstimationProcessor(BaseTaskProcessor):
 
         optimizer.zero_grad()
 
-        out = train_model(images)
+        with torch.cuda.amp.autocast(enabled=self.mixed_precision):
+            out = train_model(images)
         loss_factory.calc(out, target, phase='train')
 
-        loss_factory.backward()
-        optimizer.step()
+        loss_factory.backward(self.grad_scaler)
+        self.grad_scaler.step(optimizer)
+        self.grad_scaler.update()
 
         pred = self.postprocessor(out)
 
