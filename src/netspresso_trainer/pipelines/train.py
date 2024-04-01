@@ -72,10 +72,6 @@ class TrainingPipeline(BasePipeline):
             Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
         ]] = {}
 
-        #TODO: Temporarily set ``mixed_precision`` as optional since this is experimental
-        self.mixed_precision = conf.training.mixed_precision if hasattr(conf.training, 'mixed_precision') else False
-        self.grad_scaler = torch.cuda.amp.GradScaler(enabled=self.mixed_precision)
-
         # TODO: These will be removed
         self.save_optimizer_state = True
 
