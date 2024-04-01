@@ -1,11 +1,15 @@
+from functools import partial
 import os
 from pathlib import Path
 from typing import List
+from multiprocessing.pool import ThreadPool
 
 import cv2
 import numpy as np
 import PIL.Image as Image
+from loguru import logger
 import torch
+import torch.distributed as dist
 from omegaconf import OmegaConf
 
 from ..base import BaseCustomDataset
@@ -20,6 +24,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
             split, samples, transform, with_label, **kwargs
         )
         flattened_samples = []
+        # label field must be filled
         for sample in self.samples:
             flattened_sample = {}
             with open(sample['label'], 'r') as f:
@@ -41,11 +46,30 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
                     assert idx_swap is not None, "To apply flip transform, keypoint swap info must be filled."
                     self.flip_indices[idx] = class_to_idx[idx_swap] if idx_swap else -1
 
+    def cache_dataset(self, sampler, distributed):
+        if (not distributed) or (distributed and dist.get_rank() == 0):
+            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+
+        def _load(i, samples):
+            image = Image.open(Path(samples[i]['image'])).convert('RGB')
+            return i, image
+
+        num_threads = 8 # TODO: Compute appropriate num_threads
+        load_imgs = ThreadPool(num_threads).imap(
+            partial(_load, samples=self.samples),
+            sampler
+        )
+        for i, image in load_imgs:
+            self.samples[i]['image'] = image
+
+        self.cache = True
+
     def __getitem__(self, index):
-        img_path = Path(self.samples[index]['image'])
+        img = self.samples[index]['image']
         ann = self.samples[index]['label'] # TODO: Pose estimation is not assuming that label can be None now
 
-        img = Image.open(img_path).convert('RGB')
+        if not self.cache:
+            img = Image.open(Path(img)).convert('RGB')
 
         w, h = img.size
 
@@ -53,7 +77,7 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
         outputs.update({'indices': index})
         if ann is None:
             out = self.transform(image=img)
-            outputs.update({'pixel_values': out['image'], 'name': img_path.name, 'org_shape': (h, w)})
+            outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
             return outputs
 
         ann = ann.split(' ')
