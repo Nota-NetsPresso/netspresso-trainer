@@ -121,6 +121,14 @@ class CSPDarknet(nn.Module):
         self._feature_dim = predefined_out_features['dark5']
         self._intermediate_features_dim = [predefined_out_features[out_feature] for out_feature in out_features]
 
+        # Initialize
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 1e-3
+                    m.momentum = 0.03
+        self.apply(init_bn)
+
     def forward(self, x):
         outputs_dict = {}
         x = self.stem(x)
