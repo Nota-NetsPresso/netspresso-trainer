@@ -6,10 +6,9 @@ from .base import BaseTaskProcessor
 
 
 class DetectionProcessor(BaseTaskProcessor):
-    def __init__(self, conf, postprocessor, devices):
-        super(DetectionProcessor, self).__init__(conf, postprocessor, devices)
-        self.num_classes = 4 # TODO: Fix this
-        #self.num_classes = train_dataloader.dataset.num_classes
+    def __init__(self, conf, postprocessor, devices, **kwargs):
+        super(DetectionProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
+        self.num_classes = kwargs['num_classes']
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()

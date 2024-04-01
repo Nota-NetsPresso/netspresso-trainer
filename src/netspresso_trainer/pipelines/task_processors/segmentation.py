@@ -6,8 +6,8 @@ from .base import BaseTaskProcessor
 
 
 class SegmentationProcessor(BaseTaskProcessor):
-    def __init__(self, conf, postprocessor, devices):
-        super(SegmentationProcessor, self).__init__(conf, postprocessor, devices)
+    def __init__(self, conf, postprocessor, devices, **kwargs):
+        super(SegmentationProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()

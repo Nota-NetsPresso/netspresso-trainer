@@ -64,7 +64,7 @@ def build_pipeline(
 
     # Build task processor
     postprocessor = build_postprocessor(task, conf.model)
-    task_processor = TASK_PROCESSOR[task](conf, postprocessor, devices)
+    task_processor = TASK_PROCESSOR[task](conf, postprocessor, devices, num_classes=len(class_map))
 
     # Build timer
     timer = Timer()

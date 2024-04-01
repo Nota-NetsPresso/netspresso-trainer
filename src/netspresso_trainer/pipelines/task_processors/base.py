@@ -7,7 +7,7 @@ NUM_SAMPLES = 16
 
 
 class BaseTaskProcessor(ABC):
-    def __init__(self, conf, postprocessor, devices):
+    def __init__(self, conf, postprocessor, devices, **kwargs):
         super(BaseTaskProcessor, self).__init__()
         self.conf = conf
         self.postprocessor = postprocessor
