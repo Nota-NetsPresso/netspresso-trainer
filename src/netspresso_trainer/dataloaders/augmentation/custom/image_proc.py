@@ -614,22 +614,24 @@ class RandomResize:
         self.stride = stride
         self.random_range = random_range
         self.resize = Resize(size=base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
-        self.epoch_ = -1
+        self.counter = 0
+
+    def random_set(self):
+        delta = self.stride * random.randint(-self.random_range, self.random_range)
+        size = [self.base_size[0] + delta, self.base_size[1] + delta]
+        self.resize.size = size
 
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         """
         @illian01:
-            Each worker randomly reset target size for every epochs.
-            Thus, dataloader workers produce different image size during an epoch.
-            RandomReisze effect will be weaker if ``num_workers`` is small.
+            Count random resized samples.
+            If one batch completed, randomly reset target size and set counter to 0.
         """
-        if self.epoch_ != dataset.cur_epoch.value:
-            self.epoch_ = dataset.cur_epoch.value
-            delta = self.stride * random.randint(-self.random_range, self.random_range)
-            size = [self.base_size[0] + delta, self.base_size[1] + delta]
-            self.resize.size = size
-            self.random_reseted = True
-        image, label, mask, bbox = self.resize(image, label, mask, bbox, dataset)
+        if self.counter == dataset.batch_size:
+            self.random_set()
+            self.counter = 0
+        image, label, mask, bbox, keypoint = self.resize(image, label, mask, bbox, dataset)
+        self.counter += 1
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
