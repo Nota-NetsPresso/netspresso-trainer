@@ -182,7 +182,7 @@ class YOLOXLoss(nn.Module):
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
                 reg_target = outputs.new_zeros((0, 4))
-                l1_targets = outputs.new_zeros((0, 4))
+                l1_target = outputs.new_zeros((0, 4))
                 outputs.new_zeros((0, 4))
                 obj_target = outputs.new_zeros((total_num_anchors, 1))
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
