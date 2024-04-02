@@ -92,7 +92,7 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
 
     pred = torch.cat([
         (pred[..., 0:2] + grids) * strides,
-        torch.clamp(torch.exp(pred[..., 2:4]) * strides, min=torch.iinfo(torch.int32).min, max=torch.iinfo(torch.int32).max),
+        torch.exp(pred[..., 2:4]) * strides,
         pred[..., 4:]
     ], dim=-1)
 
