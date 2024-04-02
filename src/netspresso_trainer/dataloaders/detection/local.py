@@ -27,11 +27,14 @@ def exist_name(candidate, folder_iterable):
 def get_label(label_file: Path):
     target = Path(label_file).read_text()
 
-    try:
-        target_array = np.array([list(map(float, box.split(' '))) for box in target.split('\n') if box.strip()])
-    except ValueError as e:
-        print(target)
-        raise e
+    if target == '': # target label can be empty string
+        target_array = np.zeros((0, 5))
+    else:
+        try:
+            target_array = np.array([list(map(float, box.split(' '))) for box in target.split('\n') if box.strip()])
+        except ValueError as e:
+            print(target)
+            raise e
 
     label, boxes = target_array[:, 0], target_array[:, 1:]
     label = label[..., np.newaxis]
