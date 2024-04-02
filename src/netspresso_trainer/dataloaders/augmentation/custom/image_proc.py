@@ -615,7 +615,7 @@ class RandomResize:
         self.random_range = random_range
         self.resize = Resize(size=base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
         self.counter = 0
-    
+
     def random_set(self):
         delta = self.stride * random.randint(-self.random_range, self.random_range)
         size = [self.base_size[0] + delta, self.base_size[1] + delta]
