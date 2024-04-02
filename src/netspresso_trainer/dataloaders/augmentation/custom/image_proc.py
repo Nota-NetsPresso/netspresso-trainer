@@ -219,10 +219,14 @@ class Pad:
 
         w_pad_needed = max(0, self.new_w - w)
         h_pad_needed = max(0, self.new_h - h)
+        # @illian01: I think we don't need to pad in all direction.
+        padding_ltrb = [0, 0, w_pad_needed, h_pad_needed]
+        '''
         padding_ltrb = [w_pad_needed // 2,
                         h_pad_needed // 2,
                         w_pad_needed // 2 + w_pad_needed % 2,
                         h_pad_needed // 2 + h_pad_needed % 2]
+        '''
         image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
         if mask is not None:
             mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
