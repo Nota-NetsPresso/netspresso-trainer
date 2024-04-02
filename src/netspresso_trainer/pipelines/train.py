@@ -249,15 +249,16 @@ class TrainingPipeline(BasePipeline):
         best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
         best_model_to_save = copy.deepcopy(self.model)
-        best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
 
         if self.is_graphmodule_training:
+            best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
             save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
             torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
             logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
             return
 
+        best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
         pytorch_best_model_state_dict_path = best_model_save_path.with_suffix(".safetensors")
         save_checkpoint(best_model_to_save.state_dict(), pytorch_best_model_state_dict_path)
         logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
