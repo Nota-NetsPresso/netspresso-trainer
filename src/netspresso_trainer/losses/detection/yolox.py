@@ -43,13 +43,27 @@ def xyxy2cxcywh(bboxes):
 
 
 class YOLOXLoss(nn.Module):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, l1_activate_epoch, cur_epoch=None, **kwargs) -> None:
         super(YOLOXLoss, self).__init__()
+        self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = IOUloss(reduction="none")
 
+        self.l1_activate_epoch = l1_activate_epoch
+        self.cur_epoch = cur_epoch
+
+        self.use_l1 = False
+
+    def use_l1_update(self):
+        if self.cur_epoch is None:
+            return True
+        if self.cur_epoch.value >= self.l1_activate_epoch:
+            return True
+        return False
 
     def forward(self, out: List, target: Dict) -> torch.Tensor:
+        self.use_l1 = self.use_l1_update()
+
         out = out['pred']
         x_shifts = []
         y_shifts = []
@@ -81,19 +95,42 @@ class YOLOXLoss(nn.Module):
         # but our detection dataloader gives xyxy format.
         for i in range(len(target)):
             target[i]['boxes'] = xyxy2cxcywh(target[i]['boxes'])
-        total_loss, iou_loss, conf_loss, cls_loss, num_fg = self.get_losses(
+
+        # Ready for l1 loss
+        origin_preds = []
+        for o in out:
+            reg_output = o[:, :4]
+
+            batch_size = reg_output.shape[0]
+            hsize, wsize = reg_output.shape[-2:]
+            reg_output = reg_output.view(
+                batch_size, 1, 4, hsize, wsize
+            )
+            reg_output = reg_output.permute(0, 1, 3, 4, 2).reshape(
+                batch_size, -1, 4
+            )
+            origin_preds.append(reg_output.clone())
+
+        total_loss, iou_loss, conf_loss, cls_loss, l1_loss, num_fg = self.get_losses(
                     None,
                     x_shifts,
                     y_shifts,
                     expanded_strides,
                     target,
                     torch.cat(out_for_loss, 1),
-                    [],
+                    origin_preds,
                     dtype=out[0].dtype,
                 )
 
         # TODO: return as dict
         return total_loss
+
+    def get_l1_target(self, l1_target, gt, stride, x_shifts, y_shifts, eps=1e-8):
+        l1_target[:, 0] = gt[:, 0] / stride - x_shifts
+        l1_target[:, 1] = gt[:, 1] / stride - y_shifts
+        l1_target[:, 2] = torch.log(gt[:, 2] / stride + eps)
+        l1_target[:, 3] = torch.log(gt[:, 3] / stride + eps)
+        return l1_target
 
     def get_losses(
         self,
@@ -127,11 +164,12 @@ class YOLOXLoss(nn.Module):
         x_shifts = torch.cat(x_shifts, 1)  # [1, n_anchors_all]
         y_shifts = torch.cat(y_shifts, 1)  # [1, n_anchors_all]
         expanded_strides = torch.cat(expanded_strides, 1)
-        #if self.use_l1:
-        #    origin_preds = torch.cat(origin_preds, 1)
+        if self.use_l1:
+            origin_preds = torch.cat(origin_preds, 1)
 
         cls_targets = []
         reg_targets = []
+        l1_targets = []
         obj_targets = []
         fg_masks = []
 
@@ -144,6 +182,7 @@ class YOLOXLoss(nn.Module):
             if num_gt == 0:
                 cls_target = outputs.new_zeros((0, self.num_classes))
                 reg_target = outputs.new_zeros((0, 4))
+                l1_targets = outputs.new_zeros((0, 4))
                 outputs.new_zeros((0, 4))
                 obj_target = outputs.new_zeros((total_num_anchors, 1))
                 fg_mask = outputs.new_zeros(total_num_anchors).bool()
@@ -211,28 +250,28 @@ class YOLOXLoss(nn.Module):
                 ) * pred_ious_this_matching.unsqueeze(-1)
                 obj_target = fg_mask.unsqueeze(-1)
                 reg_target = gt_bboxes_per_image[matched_gt_inds]
-                #if self.use_l1:
-                #    l1_target = self.get_l1_target(
-                #        outputs.new_zeros((num_fg_img, 4)),
-                #        gt_bboxes_per_image[matched_gt_inds],
-                #        expanded_strides[0][fg_mask],
-                #        x_shifts=x_shifts[0][fg_mask],
-                #        y_shifts=y_shifts[0][fg_mask],
-                #    )
+                if self.use_l1:
+                   l1_target = self.get_l1_target(
+                       outputs.new_zeros((num_fg_img, 4)),
+                       gt_bboxes_per_image[matched_gt_inds],
+                       expanded_strides[0][fg_mask],
+                       x_shifts=x_shifts[0][fg_mask],
+                       y_shifts=y_shifts[0][fg_mask],
+                   )
 
             cls_targets.append(cls_target)
             reg_targets.append(reg_target)
             obj_targets.append(obj_target.to(dtype))
             fg_masks.append(fg_mask)
-            #if self.use_l1:
-            #    l1_targets.append(l1_target)
+            if self.use_l1:
+               l1_targets.append(l1_target)
 
         cls_targets = torch.cat(cls_targets, 0)
         reg_targets = torch.cat(reg_targets, 0)
         obj_targets = torch.cat(obj_targets, 0)
         fg_masks = torch.cat(fg_masks, 0)
-        #if self.use_l1:
-        #    l1_targets = torch.cat(l1_targets, 0)
+        if self.use_l1:
+           l1_targets = torch.cat(l1_targets, 0)
 
         num_fg = max(num_fg, 1)
         loss_iou = (
@@ -246,22 +285,17 @@ class YOLOXLoss(nn.Module):
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
             )
         ).sum() / num_fg
-        #if self.use_l1:
-        #    loss_l1 = (
-        #        self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-        #    ).sum() / num_fg
-        #else:
-        #    loss_l1 = 0.0
+        loss_l1 = self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets).sum() / num_fg if self.use_l1 else 0.0
 
         reg_weight = 5.0
-        loss = reg_weight * loss_iou + loss_obj + loss_cls# + loss_l1
+        loss = reg_weight * loss_iou + loss_obj + loss_cls + loss_l1
 
         return (
             loss,
             reg_weight * loss_iou,
             loss_obj,
             loss_cls,
-            #loss_l1,
+            loss_l1,
             num_fg / max(num_gts, 1),
         )
 
