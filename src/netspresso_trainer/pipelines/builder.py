@@ -76,17 +76,19 @@ def build_pipeline(
         train_dataloader: DataLoader = dataloaders['train']
         eval_dataloader: DataLoader = dataloaders['valid']
 
-        # Build modules for training
+        # Build optimizer and scheduler
         optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
-        loss_factory = build_losses(conf.model, ignore_index=ignore_index)
-        metric_factory = build_metrics(task, conf.model, ignore_index=ignore_index, num_classes=train_dataloader.dataset.num_classes)
         optimizer, scheduler, start_epoch = load_optimizer_checkpoint(conf, optimizer, scheduler)
 
         # Set current epoch counter and end epoch in dataloader.dataset to use in dataset.transforms
         cur_epoch = Value(c_int, start_epoch)
         train_dataloader.dataset.cur_epoch = cur_epoch
         train_dataloader.dataset.end_epoch = conf.training.epochs
+
+        # Build loss and metric modules
+        loss_factory = build_losses(conf.model, ignore_index=ignore_index, cur_epoch=cur_epoch)
+        metric_factory = build_metrics(task, conf.model, ignore_index=ignore_index, num_classes=train_dataloader.dataset.num_classes)
 
         # Set model EMA
         model_ema = None
