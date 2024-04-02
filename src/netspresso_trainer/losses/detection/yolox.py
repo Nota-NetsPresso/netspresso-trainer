@@ -43,15 +43,27 @@ def xyxy2cxcywh(bboxes):
 
 
 class YOLOXLoss(nn.Module):
-    def __init__(self, **kwargs) -> None:
+    def __init__(self, l1_activate_epoch, cur_epoch=None, **kwargs) -> None:
         super(YOLOXLoss, self).__init__()
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_loss = IOUloss(reduction="none")
 
+        self.l1_activate_epoch = l1_activate_epoch
+        self.cur_epoch = cur_epoch
+
         self.use_l1 = False
 
+    def use_l1_update(self):
+        if self.cur_epoch is None:
+            return True
+        if self.cur_epoch.value >= self.l1_activate_epoch:
+            return True
+        return False
+
     def forward(self, out: List, target: Dict) -> torch.Tensor:
+        self.use_l1 = self.use_l1_update()
+
         out = out['pred']
         x_shifts = []
         y_shifts = []
