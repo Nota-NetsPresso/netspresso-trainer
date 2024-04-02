@@ -95,12 +95,12 @@ class YOLOXLoss(nn.Module):
         # but our detection dataloader gives xyxy format.
         for i in range(len(target)):
             target[i]['boxes'] = xyxy2cxcywh(target[i]['boxes'])
-        
+
         # Ready for l1 loss
         origin_preds = []
         for o in out:
             reg_output = o[:, :4]
-            
+
             batch_size = reg_output.shape[0]
             hsize, wsize = reg_output.shape[-2:]
             reg_output = reg_output.view(
@@ -285,12 +285,7 @@ class YOLOXLoss(nn.Module):
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
             )
         ).sum() / num_fg
-        if self.use_l1:
-           loss_l1 = (
-               self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
-           ).sum() / num_fg
-        else:
-           loss_l1 = 0.0
+        loss_l1 = self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets).sum() / num_fg if self.use_l1 else 0.0
 
         reg_weight = 5.0
         loss = reg_weight * loss_iou + loss_obj + loss_cls + loss_l1
