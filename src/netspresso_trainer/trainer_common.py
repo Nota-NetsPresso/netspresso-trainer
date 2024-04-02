@@ -50,6 +50,9 @@ def train_common(
         if valid_dataset is not None:
             logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
 
+    # TODO: Temporarily set batch_size in train_dataset for RandomResize. This better to be removed later.
+    train_dataset.batch_size = conf.environment.batch_size 
+
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
