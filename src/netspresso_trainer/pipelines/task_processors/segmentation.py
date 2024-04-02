@@ -21,11 +21,14 @@ class SegmentationProcessor(BaseTaskProcessor):
             target['bd_gt'] = bd_gt.to(self.devices)
 
         optimizer.zero_grad()
-        out = train_model(images)
-        loss_factory.calc(out, target, phase='train')
 
-        loss_factory.backward()
-        optimizer.step()
+        with torch.cuda.amp.autocast(enabled=self.mixed_precision):
+            out = train_model(images)
+            loss_factory.calc(out, target, phase='train')
+
+        loss_factory.backward(self.grad_scaler)
+        self.grad_scaler.step(optimizer)
+        self.grad_scaler.update()
 
         out = {k: v.detach() for k, v in out.items()}
         pred = self.postprocessor(out)
