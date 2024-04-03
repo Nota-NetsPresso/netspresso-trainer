@@ -16,7 +16,7 @@ class MetricFactory:
 
         # TODO: This code assumes there is only one loss module. Fix here later.
         if hasattr(conf_model.losses[0], 'ignore_index'):
-            kwargs['ignore_index'] = conf_model.losses[0].ignore_index 
+            kwargs['ignore_index'] = conf_model.losses[0].ignore_index
         self.metric_fn = self.metric_cls(**kwargs)
         self._clear_epoch_start()
 
