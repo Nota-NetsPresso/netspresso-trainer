@@ -11,7 +11,7 @@ from ..common import SigmoidFocalLoss
 
 
 class RetinaNetLoss(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
         fg_iou_thresh = 0.5
         bg_iou_thresh = 0.4
