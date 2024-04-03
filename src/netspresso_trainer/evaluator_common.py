@@ -58,7 +58,6 @@ def evaluation_common(
         conf.model, task, test_dataset.num_classes,
         model_checkpoint=conf.model.checkpoint.path,
         use_pretrained=conf.model.checkpoint.use_pretrained,
-        img_size=conf.augmentation.img_size
     )
 
     model = model.to(device=devices)
