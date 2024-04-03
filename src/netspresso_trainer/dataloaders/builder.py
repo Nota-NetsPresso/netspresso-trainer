@@ -124,7 +124,6 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             dataset,
             conf.data.name,
             logger,
-            input_size=conf.augmentation.img_size,
             batch_size=conf.environment.batch_size,
             is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
