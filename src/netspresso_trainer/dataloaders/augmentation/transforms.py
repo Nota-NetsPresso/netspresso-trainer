@@ -41,7 +41,6 @@ def transforms_check(transforms):
 
 
 def transforms_custom(conf_augmentation, training):
-    assert conf_augmentation.img_size > 32
     phase_conf = conf_augmentation.train if training else conf_augmentation.inference
 
     preprocess = []
