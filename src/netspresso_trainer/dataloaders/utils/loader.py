@@ -68,7 +68,6 @@ def create_loader(
         dataset,
         dataset_name,
         logger,
-        input_size=None,
         batch_size=1,
         is_training=False,
         num_aug_repeats=0,

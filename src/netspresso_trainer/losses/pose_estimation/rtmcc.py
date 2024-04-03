@@ -17,7 +17,7 @@ from ..common import SigmoidFocalLoss
 
 
 class RTMCCLoss(nn.Module):
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
         # TODO: Get from config
         self.beta = 10.

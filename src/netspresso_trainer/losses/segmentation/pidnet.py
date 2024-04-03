@@ -135,7 +135,7 @@ class BoundaryLoss(nn.Module):
 
 
 class PIDNetLoss(nn.Module):
-    def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None):
+    def __init__(self, ignore_index=IGNORE_INDEX_NONE_VALUE, weight=None, **kwargs):
         super().__init__()
 
         self.cross_entropy_loss = PIDNetCrossEntropy(ignore_index=ignore_index)

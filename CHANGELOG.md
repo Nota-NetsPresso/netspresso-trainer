@@ -44,6 +44,7 @@
 - Change ClassficationDataSampler logic by `@illian01` in [PR 382](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/382)
 - Add YOLOX weights initialization step by `@illian01` in [PR 393](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/393)
 - Minor update: detection postprocessor, dataset, and padding strategy by `@illian01` in [PR 395](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/395)
+- Specify input size for onnx export and remove augmentation.img_size by `@illian01` in [PR 399](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/399)
 
 # v0.1.2
 
