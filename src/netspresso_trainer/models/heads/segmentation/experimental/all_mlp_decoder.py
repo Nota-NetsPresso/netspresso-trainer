@@ -15,12 +15,12 @@ class AllMLPDecoder(nn.Module):
             self,
             num_classes: int,
             intermediate_features_dim: List[int],
-            label_size: Union[Tuple[int, int], int],
             params: DictConfig,
         ):
         super().__init__()
         intermediate_channels = params.intermediate_channels
         classifier_dropout_prob = params.classifier_dropout_prob
+        self.label_size = params.resize_output
 
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
@@ -37,8 +37,6 @@ class AllMLPDecoder(nn.Module):
 
         self.dropout = nn.Dropout(classifier_dropout_prob)
         self.classifier = nn.Conv2d(intermediate_channels, num_classes, kernel_size=1)
-
-        self.label_size = (label_size, label_size) if isinstance(label_size, int) else label_size
 
     def forward(self, encoder_hidden_states: FXTensorListType):
 
@@ -69,8 +67,7 @@ class AllMLPDecoder(nn.Module):
         return ModelOutput(pred=logits)
 
 
-def all_mlp_decoder(num_classes, intermediate_features_dim, label_size, conf_model_head, **kwargs) -> AllMLPDecoder:
+def all_mlp_decoder(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> AllMLPDecoder:
     return AllMLPDecoder(num_classes,
                          intermediate_features_dim,
-                         label_size=label_size,
                          params=conf_model_head.params)
