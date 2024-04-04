@@ -9,6 +9,7 @@ class PoseEstimationMetric(BaseMetric):
     SUPPORT_METRICS: List[str] = ['pck']
 
     def __init__(self, **kwargs):
+        # TODO: Select metrics by user
         metric_names: List[str] = ['pck']
         primary_metric: str = 'pck'
 
