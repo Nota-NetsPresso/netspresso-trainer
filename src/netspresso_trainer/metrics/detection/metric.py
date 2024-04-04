@@ -165,11 +165,14 @@ def average_precisions_per_class(
 
 
 class DetectionMetric(BaseMetric):
-    metric_names: List[str] = ['map50', 'map75', 'map50_95']
-    primary_metric: str = 'map50'
+    SUPPORT_METRICS: List[str] = ['map50', 'map75', 'map50_95']
 
     def __init__(self, **kwargs):
-        super().__init__()
+        # TODO: Select metrics by user
+        metric_names: List[str] = ['map50', 'map75', 'map50_95']
+        primary_metric: str = 'map50'
+        assert set(metric_names).issubset(DetectionMetric.SUPPORT_METRICS)
+        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
 
     def calibrate(self, predictions, targets, **kwargs):
         result_dict = {k: 0. for k in self.metric_names}
@@ -209,11 +212,16 @@ class DetectionMetric(BaseMetric):
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
             average_precisions = average_precisions_per_class(*concatenated_stats)
-            result_dict['map50'] = average_precisions[:, 0].mean()
-            result_dict['map75'] = average_precisions[:, 5].mean()
-            result_dict['map50_95'] = average_precisions.mean()
+            #result_dict['map50'] = average_precisions[:, 0].mean()
+            #result_dict['map75'] = average_precisions[:, 5].mean()
+            #result_dict['map50_95'] = average_precisions.mean()
+            self.metric_meter['map50'].update(average_precisions[:, 0].mean())
+            self.metric_meter['map75'].update(average_precisions[:, 5].mean())
+            self.metric_meter['map50_95'].update(average_precisions.mean())
         else:
-            result_dict['map50'], result_dict['map75'], result_dict['map50_95'] = 0, 0, 0
-            average_precisions = []
+            #result_dict['map50'], result_dict['map75'], result_dict['map50_95'] = 0, 0, 0
+            self.metric_meter['map50'].update(0)
+            self.metric_meter['map75'].update(0)
+            self.metric_meter['map50_95'].update(0)
 
         return result_dict

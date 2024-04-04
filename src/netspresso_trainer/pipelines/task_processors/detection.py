@@ -164,4 +164,4 @@ class DetectionProcessor(BaseTaskProcessor):
                     pred_on_image['post_scores'] = detection[..., -1]
                     pred_on_image['post_labels'] = class_idx
                     pred.append(pred_on_image)
-            metric_factory.calc(pred, target=targets, phase=phase)
+            metric_factory.update(pred, target=targets, phase=phase)

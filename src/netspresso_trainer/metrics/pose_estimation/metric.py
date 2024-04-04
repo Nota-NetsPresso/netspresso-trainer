@@ -1,17 +1,20 @@
 from typing import List
 
 import numpy as np
-import torch
 
 from ..base import BaseMetric
 
 
 class PoseEstimationMetric(BaseMetric):
-    metric_names: List[str] = ['pck']
-    primary_metric: str = 'pck'
+    SUPPORT_METRICS: List[str] = ['pck']
 
     def __init__(self, **kwargs):
-        super().__init__()
+        # TODO: Select metrics by user
+        metric_names: List[str] = ['pck']
+        primary_metric: str = 'pck'
+
+        assert set(metric_names).issubset(PoseEstimationMetric.SUPPORT_METRICS)
+        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
         # TODO: Get from config
         self.thr = 0.05
         self.input_size = (256, 256)
@@ -45,8 +48,6 @@ class PoseEstimationMetric(BaseMetric):
         return acc, avg_acc, cnt
 
     def calibrate(self, pred, target, **kwargs):
-        result_dict = {k: 0. for k in self.metric_names}
-
         N, _, _ = pred.shape
 
         mask = target[..., 2] > 0
@@ -58,6 +59,4 @@ class PoseEstimationMetric(BaseMetric):
         normalize = np.tile(np.array([[self.input_size[0], self.input_size[1]]]), (N, 1))
 
         acc, avg_acc, cnt = self.keypoint_pck_accuracy(pred, target, mask, self.thr, normalize)
-        result_dict['pck'] = avg_acc
-
-        return result_dict
+        self.metric_meter['pck'].update(avg_acc)

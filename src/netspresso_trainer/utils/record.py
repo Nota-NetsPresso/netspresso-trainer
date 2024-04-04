@@ -34,6 +34,35 @@ class AverageMeter(object):
         return self._avg
 
 
+class MetricMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self, name: str, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
+        self.reset()
+
+    def reset(self):
+        self._val: float = 0.
+        self._avg: float = 0.
+        self._sum: float = 0.
+        self._count: int = 0
+
+    def update(self, val: Union[float, int], n: int = 1) -> None:
+        self._val = val
+        self._sum += val
+        self._count += n
+        self._avg = self._sum / self._count
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+    @property
+    def avg(self) -> float:
+        return self._avg
+
+
 class TimeRecode:
     def __init__(self) -> None:
         self._start = time.time()
