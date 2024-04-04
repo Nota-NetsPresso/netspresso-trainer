@@ -1,6 +1,7 @@
 from typing import Literal
 
 import torch
+import numpy as np
 
 from .base import BaseTaskProcessor
 
@@ -36,9 +37,15 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [metric_factory.update(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
-        else:
-            metric_factory.update(pred, keypoints, phase='train')
+                pred = np.concatenate(gathered_pred, axis=0)
+                keypoints = np.concatenate(gathered_labels, axis=0)
+        
+        if self.single_gpu_or_rank_zero:
+            logs = {
+                'target': keypoints,
+                'pred': pred
+            }
+            return dict(logs.items())
 
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
@@ -64,17 +71,16 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [metric_factory.update(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
-        else:
-            metric_factory.update(pred, keypoints, phase='valid')
+                pred = np.concatenate(gathered_pred, axis=0)
+                keypoints = np.concatenate(gathered_labels, axis=0)
 
-        # TODO: Return gathered samples
-        logs = {
-            'images': images.detach().cpu().numpy(),
-            'target': keypoints,
-            'pred': pred
-        }
-        return dict(logs.items())
+        if self.single_gpu_or_rank_zero:
+            logs = {
+                'images': images.detach().cpu().numpy(),
+                'target': keypoints,
+                'pred': pred
+            }
+            return dict(logs.items())            
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -102,4 +108,7 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
-        pass
+        if self.single_gpu_or_rank_zero:
+            pred = np.concatenate([output['pred']for output in outputs], axis=0)
+            keypoints = np.concatenate([output['target']for output in outputs], axis=0)
+            metric_factory.update(pred, keypoints, phase=phase)
