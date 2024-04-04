@@ -11,7 +11,6 @@ TOPK_MAX = 20
 @torch.no_grad()
 def accuracy_topk(pred, target):
     """Computes the accuracy over the k top predictions for the specified values of k"""
-    batch_size = target.shape[0]
     maxk = pred.shape[-1]
     pred = pred.T
     class_num = pred.shape[0]

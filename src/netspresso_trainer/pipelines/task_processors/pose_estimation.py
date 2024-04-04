@@ -1,7 +1,7 @@
 from typing import Literal
 
-import torch
 import numpy as np
+import torch
 
 from .base import BaseTaskProcessor
 
@@ -39,7 +39,7 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             if torch.distributed.get_rank() == 0:
                 pred = np.concatenate(gathered_pred, axis=0)
                 keypoints = np.concatenate(gathered_labels, axis=0)
-        
+
         if self.single_gpu_or_rank_zero:
             logs = {
                 'target': keypoints,
@@ -80,7 +80,7 @@ class PoseEstimationProcessor(BaseTaskProcessor):
                 'target': keypoints,
                 'pred': pred
             }
-            return dict(logs.items())            
+            return dict(logs.items())
 
     def test_step(self, test_model, batch):
         test_model.eval()

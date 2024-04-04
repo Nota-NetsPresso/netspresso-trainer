@@ -171,7 +171,7 @@ class DetectionMetric(BaseMetric):
         # TODO: Select metrics by user
         metric_names: List[str] = ['map50', 'map75', 'map50_95']
         primary_metric: str = 'map50'
-        assert set(metric_names).issubset(DetectionMetric.SUPPORT_METRICS) 
+        assert set(metric_names).issubset(DetectionMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
 
     def calibrate(self, predictions, targets, **kwargs):

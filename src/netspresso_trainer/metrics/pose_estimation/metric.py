@@ -13,7 +13,7 @@ class PoseEstimationMetric(BaseMetric):
         metric_names: List[str] = ['pck']
         primary_metric: str = 'pck'
 
-        assert set(metric_names).issubset(PoseEstimationMetric.SUPPORT_METRICS) 
+        assert set(metric_names).issubset(PoseEstimationMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
         # TODO: Get from config
         self.thr = 0.05

@@ -15,7 +15,7 @@ class SegmentationMetric(BaseMetric):
         metric_names = ['iou', 'pixel_acc']
         primary_metric = 'iou'
 
-        assert set(metric_names).issubset(SegmentationMetric.SUPPORT_METRICS) 
+        assert set(metric_names).issubset(SegmentationMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
         self.K = num_classes
