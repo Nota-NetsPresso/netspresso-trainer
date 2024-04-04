@@ -22,10 +22,7 @@ class MetricFactory:
         for phase in PHASE_LIST:
             [meter.reset() for _, meter in self.metrics[phase].metric_meter.items()]
 
-    def calc(self, pred: torch.Tensor, target: torch.Tensor, phase='train', **kwargs: Any) -> None:
-        self.__call__(pred=pred, target=target, phase=phase, **kwargs)
-
-    def __call__(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
+    def update(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
         if len(pred) == 0: # Removed dummy batch has 0 len
             return
         phase = phase.lower()

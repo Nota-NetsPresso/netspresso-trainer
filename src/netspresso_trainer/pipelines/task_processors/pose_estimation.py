@@ -36,9 +36,9 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [metric_factory.calc(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.update(g_pred, g_labels, phase='train') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            metric_factory.calc(pred, keypoints, phase='train')
+            metric_factory.update(pred, keypoints, phase='train')
 
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
@@ -64,9 +64,9 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             torch.distributed.gather_object(keypoints, gathered_labels if torch.distributed.get_rank() == 0 else None, dst=0)
             torch.distributed.barrier()
             if torch.distributed.get_rank() == 0:
-                [metric_factory.calc(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
+                [metric_factory.update(g_pred, g_labels, phase='valid') for g_pred, g_labels in zip(gathered_pred, gathered_labels)]
         else:
-            metric_factory.calc(pred, keypoints, phase='valid')
+            metric_factory.update(pred, keypoints, phase='valid')
 
         # TODO: Return gathered samples
         logs = {
