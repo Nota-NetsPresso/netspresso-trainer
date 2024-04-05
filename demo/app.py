@@ -1,6 +1,7 @@
 import argparse
 import os
 from pathlib import Path
+from urllib import request
 
 import gradio as gr
 import netspresso
@@ -14,14 +15,6 @@ __version__netspresso = netspresso.__version__
 
 
 PATH_EXAMPLE_IMAGE = os.getenv("PATH_EXAMPLE_IMAGE", default="assets/kyunghwan_cat.jpg")
-
-custom_css = \
-    """
-/* Hide sort buttons at gr.DataFrame */
-.sort-button {
-    display: none !important;
-}
-"""
 
 
 def change_tab_to_pynetspresso():
@@ -52,8 +45,18 @@ def parse_args():
     return args
 
 
+def get_snippet_from_url(url: str) -> str:
+    response = request.urlopen(url)
+    data = response.read().decode()
+    return data
+
+
 def launch_gradio(args):
-    with gr.Blocks(theme='nota-ai/theme', title="NetsPresso Trainer", css=custom_css) as demo:
+    with gr.Blocks(
+        theme='nota-ai/theme-v4',
+        title="NetsPresso Trainer",
+        css=get_snippet_from_url("https://huggingface.co/spaces/nota-ai/theme-v4/raw/main/main.css")
+    ) as demo:
         gr.Markdown("\n\n# <center>Welcome to NetsPresso Trainer!</center>\n\n")
         gr.Markdown(
             "<center>Package version: "
