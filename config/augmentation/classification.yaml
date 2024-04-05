@@ -1,9 +1,8 @@
 augmentation:
-  img_size: &img_size 256
   train:
     - 
       name: randomresizedcrop
-      size: *img_size
+      size: 256
       scale: [0.08, 1.0]
       ratio: [0.75, 1.33]
       interpolation: bilinear
@@ -18,7 +17,7 @@ augmentation:
   inference:
     - 
       name: resize
-      size: [*img_size, *img_size]
+      size: [256, 256]
       interpolation: bilinear
       max_size: ~
       resize_criteria: ~

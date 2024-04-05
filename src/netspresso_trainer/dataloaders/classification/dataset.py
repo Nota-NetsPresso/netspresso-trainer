@@ -17,44 +17,24 @@ from ..utils.misc import natural_key
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
 
-def load_class_map_with_id_mapping(root_dir, train_dir,
-                                   map_or_filename: Optional[Union[str, Path]]=None,
-                                   id_mapping: Optional[Dict[str, str]]=None):
 
-    if map_or_filename is None:  # may be labeled with directory
-        # dir ->
-        dir_list = [x.name for x in Path(train_dir).iterdir() if x.is_dir()]
-        dir_to_class = id_mapping if id_mapping is not None else {k: k for k in dir_list}  # id_mapping or identity
+def load_custom_class_map(id_mapping: List[str]):
+    idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
+    return idx_to_class
 
-        class_list = [dir_to_class[dir] for dir in dir_list]
-        class_list = sorted(class_list, key=lambda k: natural_key(k))
-        _class_to_idx = {class_name: class_idx for class_idx, class_name in enumerate(class_list)}
-        idx_to_class = {v: k for k, v in _class_to_idx.items()}
 
-        file_or_dir_to_idx = {dir: _class_to_idx[dir_to_class[dir]] for dir in dir_list}  # dir -> idx
-        return file_or_dir_to_idx, idx_to_class
-
+def load_class_map_with_id_mapping(labels_path: Optional[Union[str, Path]]):
     # Assume the `map_or_filename` is path for csv label file
-    class_map_path = Path(root_dir) / map_or_filename
-    assert class_map_path.exists(), f"Cannot locate specified class map file {class_map_path}!"
-
-    class_map_ext = class_map_path.suffix.lower()
+    assert labels_path.exists(), f"Cannot locate specified class map file {labels_path}!"
+    class_map_ext = labels_path.suffix.lower()
     assert class_map_ext == '.csv', f"Unsupported class map file extension ({class_map_ext})!"
 
-    with open(class_map_path, newline='') as csvfile:
+    with open(labels_path, newline='') as csvfile:
         reader = csv.DictReader(csvfile)
-        file_class_list = [{column: str(row[column]).strip() for column in ['image_id', 'class']}
-                           for row in reader]
+        file_to_idx = {row['image_id']: int(row['class']) for row in reader}
 
-    class_stats = Counter([x['class'] for x in file_class_list])
+    return file_to_idx
 
-    _class_to_idx = {class_name: class_idx
-                    for class_idx, class_name in enumerate(sorted(class_stats, key=lambda k: natural_key(k)))}
-    idx_to_class = {v: k for k, v in _class_to_idx.items()}
-
-    file_or_dir_to_idx = {elem['image_id']: _class_to_idx[elem['class']] for elem in file_class_list}  # file -> idx
-
-    return file_or_dir_to_idx, idx_to_class
 
 def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     image_dir = Path(image_dir)
@@ -100,7 +80,8 @@ def classification_onehot_collate_fn(original_batch, num_classes):
     indices = torch.tensor(indices, dtype=torch.long)
     images = torch.stack(images, dim=0)
     target = torch.tensor(target, dtype=torch.long)
-    target = F.one_hot(target, num_classes=num_classes).to(dtype=images.dtype)
+    if -1 not in target:
+        target = F.one_hot(target, num_classes=num_classes).to(dtype=images.dtype)
 
     outputs = (indices, images, target)
     return outputs
@@ -110,60 +91,50 @@ class ClassficationDataSampler(BaseDataSampler):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(ClassficationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
 
-    def load_data(self, file_or_dir_to_idx, split='train'):
+    def load_data(self, split='train'):
         data_root = Path(self.conf_data.path.root)
         split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
-
+        annotation_path: Optional[Path] = data_root / split_dir.label if split_dir.label is not None else None
         images_and_targets: List[Dict[str, Optional[Union[str, int]]]] = []
 
         assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}"
-        if split in ['train', 'valid']:
-
-            if is_file_dict(image_dir, file_or_dir_to_idx):
-                file_to_idx = file_or_dir_to_idx
-                for ext in IMG_EXTENSIONS:
-                    for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
-                        if file.name in file_to_idx:
-                            images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
-                            continue
-                        logger.debug(f"Found file wihtout label: {file}")
-
-            else:
-                dir_to_idx = file_or_dir_to_idx
-                for dir_name, dir_idx in dir_to_idx.items():
-                    _dir = Path(image_dir) / dir_name
-                    for ext in VALID_IMG_EXTENSIONS:
-                        images_and_targets.extend([{'image': str(file), 'label': dir_idx} for file in chain(_dir.glob(f'*{ext}'), _dir.glob(f'*{ext.upper()}'))])
-
-        else:  # split == test
+        if annotation_path is not None:
+            file_to_idx = load_class_map_with_id_mapping(annotation_path)
+            for ext in IMG_EXTENSIONS:
+                for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
+                    if file.name in file_to_idx:
+                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
+                        continue
+                    logger.debug(f"Found file without label: {file}")
+        else:
+            if split in ['train', 'valid']:
+                raise ValueError("For train and valid split, label path must be provided!")
             for ext in VALID_IMG_EXTENSIONS:
                 images_and_targets.extend([{'image': str(file), 'label': None} for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
-
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         return images_and_targets
 
     def load_samples(self):
-        assert self.conf_data.path.train.image is not None
-        root_dir = Path(self.conf_data.path.root)
-        train_dir = root_dir / self.conf_data.path.train.image
-        id_mapping: Optional[dict] = dict(self.conf_data.id_mapping) if self.conf_data.id_mapping is not None else None
-        file_or_dir_to_idx, idx_to_class = load_class_map_with_id_mapping(root_dir, train_dir, map_or_filename=self.conf_data.path.train.label, id_mapping=id_mapping)
+        assert self.conf_data.id_mapping is not None
+        id_mapping = list(self.conf_data.id_mapping)
+        idx_to_class = load_custom_class_map(id_mapping=id_mapping)
 
+        exists_train = self.conf_data.path.train.image is not None
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
 
+        train_samples = None
         valid_samples = None
         test_samples = None
 
-        train_samples = self.load_data(file_or_dir_to_idx, split='train')
+        if exists_train:
+            train_samples = self.load_data(split='train')
         if exists_valid:
-            valid_dir = root_dir / self.conf_data.path.valid.image
-            file_or_dir_to_idx_valid, _ = load_class_map_with_id_mapping(root_dir, valid_dir, map_or_filename=self.conf_data.path.valid.label, id_mapping=id_mapping)
-            valid_samples = self.load_data(file_or_dir_to_idx_valid, split='valid')
+            valid_samples = self.load_data(split='valid')
         if exists_test:
-            test_samples = self.load_data(file_or_dir_to_idx, split='test')
+            test_samples = self.load_data(split='test')
 
         if not exists_valid:
             num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
@@ -185,6 +156,7 @@ class ClassficationDataSampler(BaseDataSampler):
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
 
         label_feature_name = self.conf_data.metadata.features.label
+        # Assumed hugging face dataset always has training split
         label_feature = total_dataset['train'].features[label_feature_name]
         if isinstance(label_feature, ClassLabel):
             labels: List[str] = label_feature.names

@@ -40,10 +40,12 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
-        train_dataset = CUSTOM_DATASET[task](
-            conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
-            samples=train_samples, transform=train_transform, label_value_to_idx=label_value_to_idx
-        )
+        train_dataset = None
+        if train_samples is not None:
+            train_dataset = CUSTOM_DATASET[task](
+                conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
+                samples=train_samples, transform=train_transform, label_value_to_idx=label_value_to_idx
+            )
 
         valid_dataset = None
         if valid_samples is not None:
@@ -71,6 +73,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
         test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
+        # Assumed hugging face dataset always has training split
         train_dataset = HUGGINGFACE_DATASET[task](
             conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='train',
             huggingface_dataset=train_samples, transform=train_transform, label_value_to_idx=label_value_to_idx
@@ -90,137 +93,113 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
-    if not distributed or dist.get_rank() == 0:
-        logger.info(f"Summary | Dataset: <{conf_data.name}> (with {data_format} format)")
-        logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
-        if valid_dataset is not None:
-            logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
-        if test_dataset is not None:
-            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
-
     return train_dataset, valid_dataset, test_dataset
 
 
-def build_dataloader(conf, task: str, model_name: str, train_dataset, eval_dataset, profile=False):
+def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=False):
+    is_training = phase == 'train'
+
+    #TODO: Temporarily set ``cache_data`` as optional since this is experimental
+    cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False
 
     if task == 'classification':
-        transforms = getattr(conf.augmentation, 'train', None)
+        # TODO: ``phase`` should be removed later.
+        transforms = getattr(conf.augmentation, phase, None)
         if transforms:
             name = transforms[-1].name.lower()
             if name == 'mixing':
                 mix_kwargs = list(transforms[-1].keys())
                 mix_kwargs.remove('name')
                 mix_kwargs = {k:transforms[-1][k] for k in mix_kwargs}
-                mix_kwargs['num_classes'] = train_dataset.num_classes
+                mix_kwargs['num_classes'] = dataset.num_classes
                 mix_transforms = TRANSFORM_DICT[name](**mix_kwargs)
 
-                train_collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
-                eval_collate_fn = partial(classification_onehot_collate_fn, num_classes=train_dataset.num_classes)
+                collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
             else:
-                train_collate_fn = None
-                eval_collate_fn = None
+                collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
         else:
-            train_collate_fn = None
-            eval_collate_fn = None
+            collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
 
-        train_loader = create_loader(
-            train_dataset,
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            input_size=conf.augmentation.img_size,
-            batch_size=conf.training.batch_size,
-            is_training=True,
+            batch_size=conf.environment.batch_size,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
-            collate_fn=train_collate_fn,
+            collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
-            kwargs=None
-        )
-
-        eval_loader = create_loader(
-            eval_dataset,
-            conf.data.name,
-            logger,
-            input_size=conf.augmentation.img_size,
-            batch_size=conf.training.batch_size,
-            is_training=False,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=eval_collate_fn,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'segmentation':
         collate_fn = None
 
-        train_loader = create_loader(
-            train_dataset,
+        if phase == 'train':
+            batch_size = conf.environment.batch_size
+        else:
+            batch_size = conf.environment.batch_size if model_name == 'pidnet' and not conf.distributed else 1
+
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            batch_size=conf.training.batch_size,
-            is_training=True,
+            batch_size=batch_size,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
-            kwargs=None
-        )
-
-        eval_loader = create_loader(
-            eval_dataset,
-            conf.data.name,
-            logger,
-            batch_size=conf.training.batch_size if model_name == 'pidnet' and not conf.distributed else 1,
-            is_training=False,
-            num_workers=conf.environment.num_workers if not profile else 1,
-            distributed=conf.distributed,
-            collate_fn=None,
-            pin_memory=False,
-            world_size=conf.world_size,
-            rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
     elif task == 'detection':
         collate_fn = detection_collate_fn
 
-        train_loader = create_loader(
-            train_dataset,
+        if phase == 'train':
+            batch_size = conf.environment.batch_size
+        else:
+            batch_size = conf.environment.batch_size if not conf.distributed else 2
+
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            batch_size=conf.training.batch_size,
-            is_training=True,
+            batch_size=batch_size,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
+    elif task == 'pose_estimation':
+        collate_fn = None
 
-        eval_loader = create_loader(
-            eval_dataset,
+        dataloader = create_loader(
+            dataset,
             conf.data.name,
             logger,
-            # TODO: support batch size 1 inference
-            batch_size=conf.training.batch_size if not conf.distributed else 2,
-            is_training=False,
+            batch_size=conf.environment.batch_size,
+            is_training=is_training,
             num_workers=conf.environment.num_workers if not profile else 1,
             distributed=conf.distributed,
             collate_fn=collate_fn,
             pin_memory=False,
             world_size=conf.world_size,
             rank=conf.rank,
+            cache_data=cache_data,
             kwargs=None
         )
-
     else:
         raise AssertionError(f"Task ({task}) is not understood!")
 
-    return train_loader, eval_loader
+    return dataloader

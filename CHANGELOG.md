@@ -4,19 +4,29 @@
 
 - Add activation and dropout layer in FC by `@illian01` in [PR 325](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/325), [PR 327](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/327)
 - Add function to Resize: Match longer side with input size and keep ratio by `@illian01` in [PR 329](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/329)
-- Add transforms: MosaicDetection by `@illian01` in [PR 331](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/331), [PR 337](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/337)
+- Add transforms: MosaicDetection by `@illian01` in [PR 331](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/331), [PR 337](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/337), [PR 397](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/397)
 - Add transform: HSVJitter by `@illian01` in [PR 336](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/336)
-- Add transforms: RandomResize by `@illian01` in [PR 341](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/341), [PR 344](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/344)
+- Add transforms: RandomResize by `@illian01` in [PR 341](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/341), [PR 344](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/344), [PR 398](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/398)
 - Add model EMA (Exponential Moving Average) by `@illian01` in [PR 348](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/348)
+- Add entry point for evaluation and inference by `@illian01` in [PR 374](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/374), [PR 379](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/379), [PR 381](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/381), [PR 383](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/383)
+- Add classification visulizer by `@illian01` in [PR 384](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/384)
+- Add dataset caching feature by `@illian01` in [PR 391](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/391)
+- Add mixed precision training by `@illian01` in [PR 392](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/392)
+- Add YOLOX l1 loss activation option by `@illian01` in [PR 396](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/396)
 
 ## Bug Fixes:
 
 - Fix output_root_dir from fixed string to config value by `@illian01` in [PR 323](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/323)
 - Gather predicted results before compute metric and fix additional distributed evaluation inaccurate error by `@illian01` in [PR 346](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/346), [PR 356](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/356)
+- Fix detection score return by `@illian01` in [PR 373](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/373)
+- Fix memory leak from onnx export by `@illian01` in [PR 386](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/386), [PR 394](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/394)
+- Refactoring metric modules and fix inaccurate metric bug by `@illian01` in [PR 402](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/402)
 
 ## Breaking Changes:
 
 - Simplify augmentation configuration hierarchy by `@illian01` in [PR 322](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/322)
+- Add pose estimation task and RTMPose model by `@illian01` in [PR 357](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/357), [PR 366](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/366)
+- Remove pythonic config and move training initialization functions to `trainer_main.py` by `@illian01` in [PR 371](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/371)
 
 ## Other Changes:
 
@@ -28,6 +38,15 @@
 - Enable adjust max epoch of scheduler by `illian01` in [PR 350](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/350)
 - Remove github action about hugging face space demo by `@illian01` in [PR 351](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/351)
 - Update docs by `@illian01` in [PR 355](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/355)
+- Backbone task compatibility checking refactoring by `@illian01` in [PR 361](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/361), [PR 364](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/364)
+- Fix postprocessor return type as numpy.ndarray by `@illian01` in [PR 365](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/365)
+- Update default asignees of issue template by `@illian01` in [PR 375](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/375)
+- Refactoring: Remove CSV logger, change logger module input format by `@illian01` in [PR 377](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/377)
+- Change ClassficationDataSampler logic by `@illian01` in [PR 382](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/382)
+- Add YOLOX weights initialization step by `@illian01` in [PR 393](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/393)
+- Minor update: detection postprocessor, dataset, and padding strategy by `@illian01` in [PR 395](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/395)
+- Specify input size for onnx export and remove augmentation.img_size by `@illian01` in [PR 399](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/399)
+- Update issue and pr template by `@illian01` [PR 401](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/401)
 
 # v0.1.2
 

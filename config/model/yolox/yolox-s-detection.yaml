@@ -34,3 +34,4 @@ model:
   losses:
     - criterion: yolox_loss
       weight: ~
+      l1_activate_epoch: 1

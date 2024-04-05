@@ -11,10 +11,11 @@ from torch import Tensor
 
 from ...op.custom import BasicBlock, Bottleneck, ConvLayer
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['resnet']
 
-SUPPORTING_TASK = ['classification', 'segmentation']
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
     'basicblock': BasicBlock,
@@ -30,6 +31,11 @@ class ResNet(nn.Module):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'ResNet is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         super(ResNet, self).__init__()
 
         block: Literal['basicblock', 'bottleneck'] = params.block_type
@@ -41,9 +47,7 @@ class ResNet(nn.Module):
         width_per_group: int = 64
         expansion: Optional[int] = None
 
-        self.task = task.lower()
         block = BLOCK_FROM_LITERAL[block.lower()]
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         if norm_layer is None:
             norm_layer = 'batch_norm'

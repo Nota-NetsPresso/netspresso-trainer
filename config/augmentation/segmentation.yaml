@@ -3,7 +3,7 @@ augmentation:
   train:
     - 
       name: randomresizedcrop
-      size: *img_size
+      size: 512
       scale: [0.08, 1.0]
       ratio: [0.75, 1.33]
       interpolation: bilinear
@@ -20,7 +20,7 @@ augmentation:
   inference:
     - 
       name: resize
-      size: [*img_size, *img_size]
+      size: [512, 512]
       interpolation: bilinear
       max_size: ~
       resize_criteria: ~

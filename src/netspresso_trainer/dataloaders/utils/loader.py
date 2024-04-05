@@ -68,7 +68,6 @@ def create_loader(
         dataset,
         dataset_name,
         logger,
-        input_size=None,
         batch_size=1,
         is_training=False,
         num_aug_repeats=0,
@@ -84,12 +83,16 @@ def create_loader(
         worker_seeding='all',
         world_size=1,
         rank=0,
+        cache_data=False,
         kwargs=None
 ):
     if is_training:
         sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank, drop_last=True)
     else:
         sampler = DistributedEvalSampler(dataset, num_replicas=world_size, rank=rank)
+
+    if cache_data:
+        dataset.cache_dataset(sampler, distributed)
 
     loader_args = {
         'batch_size': batch_size,

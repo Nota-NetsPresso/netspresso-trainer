@@ -6,6 +6,7 @@ from .custom.image_proc import (
     ColorJitter,
     HSVJitter,
     Pad,
+    PoseTopDownAffine,
     RandomCrop,
     RandomErasing,
     RandomHorizontalFlip,
@@ -34,4 +35,5 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'trivialaugmentwide': TrivialAugmentWide,
     'autoaugment': AutoAugment,
     'hsvjitter': HSVJitter,
+    'posetopdownaffine': PoseTopDownAffine,
 }

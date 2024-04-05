@@ -9,9 +9,11 @@ from ...op.base_metaformer import Image2Sequence, MetaFormer, MetaFormerBlock, M
 from ...op.custom import ConvLayer
 from ...op.registry import ACTIVATION_REGISTRY
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
-SUPPORTING_TASK = ['classification', 'segmentation']
+__all__ = ['mixtransformer']
 
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 TEMP_HIDDEN_SZIE_AS_CONSTANT = 256
 
 
@@ -142,6 +144,11 @@ class MixTransformer(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'MixTransformer is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         super().__init__([stage.attention_chananels for stage in stage_params])
         self.task = task
         self.use_intermediate_features = self.task in ['segmentation', 'detection']

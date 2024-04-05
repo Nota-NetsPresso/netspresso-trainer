@@ -14,18 +14,18 @@ class LossFactory:
         self.loss_weight_dict = {}
 
         self.conf_model = conf_model
-        self._build_losses()
+        self._build_losses(**kwargs)
 
         self._dirty_backward: bool = False
         self.loss_val_per_epoch: Dict[str, Dict[str, AverageMeter]] = {}
         self._clear_epoch_start()
 
-    def _build_losses(self):
+    def _build_losses(self, **kwargs):
 
         for loss_element in self.conf_model.losses:
             criterion = loss_element.criterion
             loss_config = {k: v for k, v in loss_element.items() if k not in ['criterion', 'weight']}
-            loss = LOSS_DICT[criterion](**loss_config)
+            loss = LOSS_DICT[criterion](**loss_config, **kwargs)
 
             self.loss_func_dict.update({criterion: loss})
             loss_weight = loss_element.weight if loss_element.weight is not None else 1.0
@@ -47,10 +47,10 @@ class LossFactory:
     def _assert_argument(self, kwargs):
         pass
 
-    def backward(self):
+    def backward(self, grad_scaler: torch.cuda.amp.GradScaler):
         assert not self._dirty_backward
         self.total_loss_for_backward.requires_grad_(True)
-        self.total_loss_for_backward.mean().backward()
+        grad_scaler.scale(self.total_loss_for_backward.mean()).backward()
         self._dirty_backward = True
 
     def result(self, phase='train'):

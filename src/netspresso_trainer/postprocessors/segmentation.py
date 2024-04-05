@@ -12,4 +12,4 @@ class SegmentationPostprocessor:
     def __call__(self, outputs: ModelOutput):
         pred = outputs['pred']
         pred = torch.max(pred, dim=1)[1]  # argmax
-        return pred
+        return pred.detach().cpu().numpy()
