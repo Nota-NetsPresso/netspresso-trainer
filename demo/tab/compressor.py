@@ -11,7 +11,7 @@ PATH_PYNETSPRESSO_DOCS = os.getenv(
     "PATH_PYNETSPRESSO_DOCS", default="docs/description_pynetspresso.md")
 
 
-def tab_pynetspresso(args):
+def tab_compressor(args):
 
     session = gr.State(NetsPressoSession())
 

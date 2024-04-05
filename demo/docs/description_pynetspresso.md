@@ -1,3 +1,3 @@
-### <center>NOTE: This feature needs an internet connection</center>
+### <center>⚠️NOTE: This feature needs an internet connection</center>
 
 <br/>

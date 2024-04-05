@@ -21,16 +21,8 @@ def tab_experiments(args):
 
     def id_from_dataframe_select(df: pd.DataFrame, evt: gr.SelectData):
         return df.at[evt.index[0], COLUMN_NAME_AS["id"]]
-
     with gr.Row():
-        with gr.Column():
-            experiment_summary_plot = gr.ScatterPlot(
-                value=None,
-                x=COLUMN_NAME_AS['macs'],
-                y=COLUMN_NAME_AS['performance'],
-                tooltip=COLUMN_NAME_AS['id'],
-            )
-        with gr.Column():
+        with gr.Column(scale=1):
             with gr.Row(equal_height=True), gr.Column(scale=4), gr.Group():
                 with gr.Row():
                     experiment_select_task = gr.Dropdown(
@@ -66,12 +58,22 @@ def tab_experiments(args):
                     experiment_select_compressed_ignore
                 ])
                 experiment_button_search = gr.Button(value="Search", variant='primary')
-    with gr.Row(equal_height=True):
-        with gr.Column(scale=4):
-            experiment_selected = gr.Textbox(label="Selected checkpoint")
-        with gr.Column(scale=1):
-            experiment_button_launcher = gr.Button(value="Benchmark")
-            experiment_button_compressor = gr.Button(value="Compress", variant='primary')
+        with gr.Column(scale=2):
+            with gr.Row():
+                experiment_selected = gr.Textbox(label="Selected checkpoint")
+            with gr.Row():
+                experiment_button_launcher = gr.Button(value="Benchmark")
+                experiment_button_compressor = gr.Button(value="Compress", variant='primary')
+
+    with gr.Accordion("📊 See scatter plot", open=False):
+        gr.Markdown("Scatter plot is rendered when the filter 'task' is selected.")
+        experiment_summary_plot = gr.ScatterPlot(
+            value=None,
+            x=COLUMN_NAME_AS['macs'],
+            y=COLUMN_NAME_AS['performance'],
+            tooltip=COLUMN_NAME_AS['id'],
+        )
+
     with gr.Row(equal_height=True):
         experiment_table = gr.Dataframe(
             value=experiment_df.default,

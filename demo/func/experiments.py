@@ -33,14 +33,6 @@ def _is_single_task_model(conf_model: DictConfig):
         return False
     return True
 
-
-def _get_model_name(conf_model: DictConfig):
-    single_task_model = _is_single_task_model(conf_model)
-    conf_model_sub = conf_model.architecture.full if single_task_model else conf_model.architecture.backbone
-    model_name = conf_model_sub.name
-    return model_name
-
-
 @dataclass
 class ExperimentSummary:
     id: str
@@ -71,12 +63,16 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
     experiment_list: List[ExperimentSummary] = []
     for run_dir in experiment_dir_list:
         summary = read_json(run_dir / "training_summary.json")
+        
+        if not summary['success']:
+            continue
+        
         hparam = OmegaConf.load(run_dir / "hparams.yaml")
 
         experiment_name = run_dir.parent.name
         best_epoch = summary['best_epoch']
         primary_metric = summary['primary_metric']
-        model = _get_model_name(hparam.model)
+        model = str(hparam.model.name)
 
         experiment_list.append(
             ExperimentSummary(
@@ -94,7 +90,7 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
                     "params": summary['params'],
                     "last_epoch": summary['last_epoch'],
                     "best_epoch": best_epoch,
-                    "is_fx_retrain": (hparam.model.fx_model_checkpoint is not None)
+                    "is_fx_retrain": (hparam.model.checkpoint.fx_model_path is not None)
                 }
             )
         )

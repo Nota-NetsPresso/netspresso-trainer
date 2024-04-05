@@ -7,7 +7,7 @@ import netspresso
 import netspresso_trainer
 from tab.experiments import tab_experiments
 from tab.home.main import tab_home
-from tab.pynetspresso import tab_pynetspresso
+from tab.compressor import tab_compressor
 
 __version__netspresso_trainer = netspresso_trainer.__version__
 __version__netspresso = netspresso.__version__
@@ -25,7 +25,7 @@ custom_css = \
 
 
 def change_tab_to_pynetspresso():
-    return gr.Tabs.update(selected='pynetspresso')
+    return gr.Tabs.update(selected='compressor')
 
 
 def parse_args():
@@ -70,12 +70,12 @@ def launch_gradio(args):
                 experiment_df, experiment_selected, experiment_button_launcher, experiment_button_compressor = tab_experiments(
                     args)
 
-            with gr.Tab("PyNetsPresso", id='pynetspresso'):
+            with gr.Tab("Compressor", id='compressor'):
                 session, email_input, password_input, model_name, model_path, \
                     compress_input_batch_size, compress_input_channels, compress_input_height, compress_input_width, \
                     compression_ratio, compressed_model_dir, result_compressed_model_path, \
                     login_button, compress_button = \
-                    tab_pynetspresso(args)
+                    tab_compressor(args)
 
             experiment_button_compressor.click(
                 fn=experiment_df.find_compression_info_with_id, inputs=[experiment_selected],
