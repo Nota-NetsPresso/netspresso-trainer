@@ -89,7 +89,6 @@ class SegmentationCustomDataset(BaseCustomDataset):
             out = self.transform(image=img, mask=mask)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask']})
 
-        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 
