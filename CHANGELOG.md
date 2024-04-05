@@ -46,7 +46,8 @@
 - Add YOLOX weights initialization step by `@illian01` in [PR 393](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/393)
 - Minor update: detection postprocessor, dataset, and padding strategy by `@illian01` in [PR 395](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/395)
 - Specify input size for onnx export and remove augmentation.img_size by `@illian01` in [PR 399](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/399)
-- Update issue and pr template by `@illian01` [PR 401](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/401)
+- Update issue and pr template by `@illian01` in [PR 401](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/401)
+- Add documentation auto deploy action by `@illian01` in [PR 405](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/405)
 
 # v0.1.2
 
