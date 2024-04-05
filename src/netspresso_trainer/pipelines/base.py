@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 from typing import Dict, List, Literal, Optional
 
 import torch
-import torch.distributed as dist
 import torch.nn as nn
 from omegaconf import DictConfig
 
