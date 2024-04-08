@@ -4,7 +4,6 @@ from typing import List
 import gradio as gr
 import pandas as pd
 import torch
-from netspresso_trainer.loggers import START_EPOCH_ZERO_OR_ONE
 from netspresso_trainer.optimizers import build_optimizer
 from netspresso_trainer.schedulers import build_scheduler
 from omegaconf import OmegaConf
@@ -27,16 +26,13 @@ def get_lr_dataframe_from_config(yaml_str: str):
         conf = OmegaConf.create(yaml_str)
         model_mock = torch.nn.Linear(1, 1)
         optimizer = build_optimizer(model_mock,
-                                    opt=conf.training.opt,
-                                    lr=conf.training.lr,
-                                    wd=conf.training.weight_decay,
-                                    momentum=conf.training.momentum)
+                                    optimizer_conf=conf.training.optimizer)
         scheduler, total_epochs = build_scheduler(optimizer, conf.training)
         lr_list = _get_lr_list(optimizer, scheduler, total_epochs)
 
         df = pd.DataFrame({
             "lr": lr_list,
-            "epochs": list(range(START_EPOCH_ZERO_OR_ONE, total_epochs + START_EPOCH_ZERO_OR_ONE))
+            "epochs": list(range(1, total_epochs + 1))
         })
         return gr.LinePlot(df, x="epochs", y="lr", width=600, height=300, tooltip=["epochs", "lr"])
     except Exception as e:
