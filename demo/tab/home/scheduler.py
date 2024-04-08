@@ -7,7 +7,7 @@ from func.scheduler import get_lr_dataframe_from_config
 PATH_SCHEDULER_DOCS = os.getenv(
     "PATH_SCHEDULER_DOCS", default="docs/description_scheduler.md")
 PATH_CONFIG_ROOT = os.getenv("PATH_CONFIG_ROOT", default="config/")
-PATH_SCHEDULER_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "training/template/common.yaml"
+PATH_SCHEDULER_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "training.yaml"
 
 
 def tab_scheduler(args, task_choices, model_choices):

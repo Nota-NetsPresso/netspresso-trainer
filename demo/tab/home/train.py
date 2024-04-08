@@ -7,7 +7,7 @@ from func.main import load_model_config
 
 PATH_CONFIG_ROOT = os.getenv("PATH_CONFIG_ROOT", default="config/")
 PATH_AUG_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "augmentation/classification.yaml"
-PATH_SCHEDULER_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "training/template/common.yaml"
+PATH_SCHEDULER_EXAMPLE_CONFIG = Path(PATH_CONFIG_ROOT) / "training.yaml"
 
 
 def change_tab_to(destination=None):
