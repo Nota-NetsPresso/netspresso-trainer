@@ -13,6 +13,7 @@
 - Add dataset caching feature by `@illian01` in [PR 391](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/391)
 - Add mixed precision training by `@illian01` in [PR 392](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/392)
 - Add YOLOX l1 loss activation option by `@illian01` in [PR 396](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/396)
+- Add NetsPresso Trainer YOLOX pretrained weights by `@illian01` in [PR 406](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/406)
 
 ## Bug Fixes:
 
