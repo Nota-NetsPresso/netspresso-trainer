@@ -13,6 +13,7 @@
 - Add dataset caching feature by `@illian01` in [PR 391](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/391)
 - Add mixed precision training by `@illian01` in [PR 392](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/392)
 - Add YOLOX l1 loss activation option by `@illian01` in [PR 396](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/396)
+- Add NetsPresso Trainer YOLOX pretrained weights by `@illian01` in [PR 406](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/406)
 
 ## Bug Fixes:
 
@@ -46,7 +47,8 @@
 - Add YOLOX weights initialization step by `@illian01` in [PR 393](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/393)
 - Minor update: detection postprocessor, dataset, and padding strategy by `@illian01` in [PR 395](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/395)
 - Specify input size for onnx export and remove augmentation.img_size by `@illian01` in [PR 399](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/399)
-- Update issue and pr template by `@illian01` [PR 401](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/401)
+- Update issue and pr template by `@illian01` in [PR 401](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/401)
+- Add documentation auto deploy action by `@illian01` in [PR 405](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/405)
 
 # v0.1.2
 
