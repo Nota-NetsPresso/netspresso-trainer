@@ -63,6 +63,7 @@ Loss module for [AnchorFreeDecoupledHead](../../models/heads/anchorfreedecoupled
 |---|---|
 | `criterion` | (str) Criterion must be "yolox_loss" to use `YOLOXLoss`. |
 | `weight` | (float) Weight for this YOLOX loss. |
+| `l1_activate_epoch` | (int) Activate l1 loss at `l1_activate_epoch` epoch. |
 
 <details>
   <summary>YOLOX loss example</summary>
@@ -71,6 +72,7 @@ Loss module for [AnchorFreeDecoupledHead](../../models/heads/anchorfreedecoupled
     losses:
       - criterion: yolox_loss
         weight: ~
+        l1_activate_epoch: 1
   ```
 </details>
 
