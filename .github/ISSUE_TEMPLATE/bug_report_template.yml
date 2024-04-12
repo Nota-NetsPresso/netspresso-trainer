@@ -3,8 +3,7 @@ name: "\U0001F41E Bug report"
 description: Create a report to help us improve
 title: "[BUG] Please write your own title"
 labels: ["bug"]
-assignees:
-  - illian01
+assignees: ""
 body:
   - type: markdown
     attributes:

@@ -2,7 +2,7 @@ name: "\U0001F4DA Bug report"
 description: Create a report about documentation problem.
 title: "[Documentation] Please write your own title"
 labels: ["documentation"]
-assignees: ~
+assignees: ""
 body:
   - type: checkboxes
     attributes:
