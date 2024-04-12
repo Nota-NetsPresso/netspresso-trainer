@@ -584,15 +584,14 @@ class HSVJitter:
         hsv_augs *= np.random.randint(0, 2, 3)  # random selection of h, s, v
         hsv_augs = hsv_augs.astype(np.int16)
 
-        image_hsv = image.convert('HSV')
-        h, s, v = image_hsv.split()
+        img_hsv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2HSV).astype(np.int16)
 
-        h = h.point(lambda i: (i + hsv_augs[0]) % 180)
-        s = s.point(lambda i: np.clip(i + hsv_augs[1], 0, 255))
-        v = v.point(lambda i: np.clip(i + hsv_augs[2], 0, 255))
-
-        image_hsv = Image.merge('HSV', (h, s, v))
-        image = image_hsv.convert('RGB')
+        img_hsv[..., 0] = (img_hsv[..., 0] + hsv_augs[0]) % 180
+        img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_augs[1], 0, 255)
+        img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_augs[2], 0, 255)
+        
+        image = cv2.cvtColor(img_hsv.astype(np.uint8), cv2.COLOR_HSV2RGB)
+        image = Image.fromarray(image)
         return image, label, mask, bbox, keypoint
 
     def __repr__(self):
