@@ -589,7 +589,7 @@ class HSVJitter:
         img_hsv[..., 0] = (img_hsv[..., 0] + hsv_augs[0]) % 180
         img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_augs[1], 0, 255)
         img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_augs[2], 0, 255)
-        
+
         image = cv2.cvtColor(img_hsv.astype(np.uint8), cv2.COLOR_HSV2RGB)
         image = Image.fromarray(image)
         return image, label, mask, bbox, keypoint
