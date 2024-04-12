@@ -157,9 +157,9 @@ nav:
   - Home: index.md
   - Getting started:
     - Installation:
-      - Installation (Stable): installation.md
-      - Setup with Docker: docker-installation.md
-    - Simple use: getting-started.md
+      - Installation (Stable): getting_started/installation/installation.md
+      - Setup with Docker: getting_started/installation/docker_installation.md
+    - Simple use: getting_started/simple_use.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Components:
     - Overview: components/overview.md
