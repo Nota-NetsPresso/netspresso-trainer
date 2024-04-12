@@ -156,9 +156,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting started:
+    - Installation:
+      - Installation (Stable): installation.md
+      - Setup with Docker: docker-installation.md
     - Simple use: getting-started.md
-    - Installation: installation.md
-    - Docker: docker-installation.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Components:
     - Overview: components/overview.md
