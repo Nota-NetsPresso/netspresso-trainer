@@ -10,6 +10,12 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report! Before you get started, please search if an issue already exists for the bug you encountered
+  - type: checkboxes
+    attributes:
+      label: Have you searched existing issues?  🔎
+      options:
+        - label: I have searched and found no existing issues.
+          required: true
   - type: textarea
     id: bug-description
     attributes:
@@ -18,13 +24,6 @@ body:
       placeholder: A clear and concise description of what the bug is.
     validations:
       required: true
-  - type: checkboxes
-    attributes:
-      label: Have you searched existing issues?  🔎
-      description: Please search to see if an issue already exists for the issue you encountered.
-      options:
-        - label: I have searched and found no existing issues
-          required: true
   - type: textarea
     id: reproduction
     attributes:
@@ -52,6 +51,11 @@ body:
       render: shell
     validations:
       required: true
+  - type: checkboxes
+    attributes:
+      label: Will you help us by submitting a PR?
+      options:
+        - label: I will submit a PR about this issue.
   - type: markdown
     attributes:
       value: |

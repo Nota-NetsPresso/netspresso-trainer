@@ -1,6 +1,6 @@
 ---
 name: "\U0001F4AA Project issue (ticket)"
-about: Create a ticket to attain the goal in this project
+about: Create a ticket to attain the goal in this project.
 title: "[Sprint] Please write your own title"
 labels: enhancement
 assignees: ''
