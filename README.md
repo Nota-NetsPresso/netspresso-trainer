@@ -20,15 +20,45 @@ compress and deploy your model with <b>NetsPresso</b>!
 
 _____
 
-
 ## Table of contents
 
 <!-- toc -->
 
-- [Getting started](#getting-started)
 - [Installation](#installation)
+- [Getting started](#getting-started)
 
 <!-- tocstop -->
+
+## Installation (Stable)
+
+### Prerequisites
+
+- Python `3.8` | `3.9` | `3.10`
+- PyTorch `1.13.0` (recommended) (compatible with: `1.11.x` - `1.13.x`)
+
+### Install with pypi
+
+```bash
+pip install netspresso_trainer
+```
+
+### Install with GitHub
+
+```bash
+pip install git+https://github.com/Nota-NetsPresso/netspresso-trainer.git@master
+```
+
+To install with editable mode,
+
+```bash
+git clone -b master https://github.com/Nota-NetsPresso/netspresso-trainer.git
+pip install -e netspresso-trainer
+```
+
+### Set-up with docker
+
+Please clone this repository and refer to [`Dockerfile`](./Dockerfile) and [`docker-compose-example.yml`](./docker-compose-example.yml).  
+For docker users, we provide more detailed guide in our [Docs](https://nota-netspresso.github.io/netspresso-trainer).
 
 ## Getting started
 
@@ -69,37 +99,6 @@ netspresso-train\
 Please refer to [`scripts/example_train.sh`](./scripts/example_train.sh).
 
 NetsPresso Trainer is compatible with [NetsPresso](https://netspresso.ai/) service. We provide NetsPresso Trainer tutorial that contains whole procedure from model train to model compression and benchmark. Please refer to our [colab tutorial](https://colab.research.google.com/drive/1RBKMCPEa4x-4X31zqzTS8WgQI9TQt3e-?usp=sharing).
-
-## Installation
-
-### Prerequisites
-
-- Python `3.8` | `3.9` | `3.10`
-- PyTorch `1.13.0` (recommended) (compatible with: `1.11.x` - `1.13.x`)
-
-### Install with pypi (stable)
-
-```bash
-pip install netspresso_trainer
-```
-
-### Install with GitHub
-
-```bash
-pip install git+https://github.com:Nota-NetsPresso/netspresso-trainer.git@stable
-```
-
-To install with editable mode,
-
-```bash
-git clone https://github.com:Nota-NetsPresso/netspresso-trainer.git .
-pip install -e netspresso-trainer
-```
-
-### Set-up with docker
-
-Please clone this repository and refer to [`Dockerfile`](./Dockerfile) and [`docker-compose-example.yml`](./docker-compose-example.yml).  
-For docker users, we provide more detailed guide in our [Docs](https://nota-netspresso.github.io/netspresso-trainer).
 
 ## Tensorboard
 

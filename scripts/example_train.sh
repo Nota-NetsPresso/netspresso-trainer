@@ -104,7 +104,7 @@ netspresso-train\
 
 
 #### Multi-GPU training
-# Put the number of GPU(s) to use in training at `--nproc_per_node`
+# Put the index of GPU(s) at `--gpus`
 #### (END)
 
 # netspresso-train\
