@@ -34,6 +34,35 @@ class AverageMeter(object):
         return self._avg
 
 
+class MetricMeter(object):
+    """Computes and stores the average and current value"""
+
+    def __init__(self, name: str, fmt=':f'):
+        self.name = name
+        self.fmt = fmt
+        self.reset()
+
+    def reset(self):
+        self._val: float = 0.
+        self._avg: float = 0.
+        self._sum: float = 0.
+        self._count: int = 0
+
+    def update(self, val: Union[float, int], n: int = 1) -> None:
+        self._val = val
+        self._sum += val
+        self._count += n
+        self._avg = self._sum / self._count
+
+    def __str__(self):
+        fmtstr = '{name} {val' + self.fmt + '} ({avg' + self.fmt + '})'
+        return fmtstr.format(**self.__dict__)
+
+    @property
+    def avg(self) -> float:
+        return self._avg
+
+
 class TimeRecode:
     def __init__(self) -> None:
         self._start = time.time()
@@ -96,7 +125,6 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
-    start_epoch_at_one: bool
     macs: Optional[int] = None
     params: Optional[int] = None
     total_train_time: Optional[float] = None
@@ -107,3 +135,23 @@ class TrainingSummary:
     def __post_init__(self):
         self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
         self.last_epoch = list(self.train_losses.keys())[-1]
+
+
+@dataclass
+class EvaluationSummary:
+    losses: float
+    metrics: float
+    metrics_list: List[str]
+    primary_metric: str
+    macs: Optional[int] = None
+    params: Optional[int] = None
+    total_evaluation_time: Optional[float] = None
+    success: bool = False
+
+
+@dataclass
+class InferenceSummary:
+    macs: Optional[int] = None
+    params: Optional[int] = None
+    total_inference_time: Optional[float] = None
+    success: bool = False

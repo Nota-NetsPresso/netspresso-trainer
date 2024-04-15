@@ -1,0 +1,35 @@
+name: "\U0001F4DA Documentation"
+description: Create a report about documentation problem.
+title: "[Documentation] Please write your own title"
+labels: ["documentation"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Have you searched existing issues?  🔎
+      options:
+        - label: I have searched and found no existing issues.
+          required: true
+  - type: textarea
+    id: docs-issue-description
+    attributes:
+      label: Please describe a documentation issue.
+      description: Please write a clear and concise description.
+    validations:
+      required: true
+  - type: textarea
+    id: docs-suggestion
+    attributes:
+      label: Is there any alternative or fix suggestion to make it better?
+      description: Please write a clear and concise description.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context.
+      description: All other contexts or screenshots are welcome.
+  - type: checkboxes
+    attributes:
+      label: Will you help us by submitting a PR?
+      options:
+        - label: I will submit a PR about this issue.

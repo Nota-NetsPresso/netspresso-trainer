@@ -6,6 +6,7 @@ Based on the YOLOX implementation of Megvii.
 https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/yolo_head.py
 """
 from typing import List
+import math
 
 from omegaconf import DictConfig
 import torch
@@ -113,6 +114,26 @@ class AnchorFreeDecoupledHead(nn.Module):
                     padding=0,
                 )
             )
+
+        # Initialize
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 1e-3
+                    m.momentum = 0.03
+        self.apply(init_bn)
+        self.initialize_biases(1e-2)
+
+    def initialize_biases(self, prior_prob):
+        for conv in self.cls_preds:
+            b = conv.bias.view(1, -1)
+            b.data.fill_(-math.log((1 - prior_prob) / prior_prob))
+            conv.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
+
+        for conv in self.obj_preds:
+            b = conv.bias.view(1, -1)
+            b.data.fill_(-math.log((1 - prior_prob) / prior_prob))
+            conv.bias = torch.nn.Parameter(b.view(-1), requires_grad=True)
 
     def forward(self, xin):
         outputs = []

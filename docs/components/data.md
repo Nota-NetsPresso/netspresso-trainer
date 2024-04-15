@@ -14,81 +14,13 @@ The following sections introduce how to organize data for each task.
 
 ### Image classification
 
-To train an image classification model using NetsPresso Trainer, **users must organize their data according to a specified format.** We introduce two methods for recognizing classification data to NetsPresso Trainer. The following examples use the [ImageNet1K](https://image-net.org/) dataset.
-
-#### Example 1
-
-The first method is distinguishing classes through the directory names.
-
-- There must be a directory for each class to be distinguished by the classification model.
-- Each class directory must contain all the images corresponding to that class.
-- Collect directories containing images for each class under the root directory.
-- Users must know in advance which class name each class directory name corresponds to.
-
-The example data directory structure for this is as follows:
-
-
-
-```
-IMAGENET1K
-└── images
-    ├── train
-    │   ├── n01440764
-    │   │   ├── n01440764_10026.JPEG
-    │   │   ├── n01440764_10027.JPEG
-    │   │   └── ...
-    │   ├── n01443537
-    │   │   ├── n01443537_10007.JPEG
-    │   │   ├── n01443537_10014.JPEG
-    │   │   └── ...
-    │   └── ...
-    └── valid
-        ├── n01440764
-        │   ├── ILSVRC2012_val_00000293.JPEG
-        │   ├── ILSVRC2012_val_00002138.JPEG
-        │   └── ...
-        ├── n01443537
-        │   ├── ILSVRC2012_val_00000236.JPEG
-        │   ├── ILSVRC2012_val_00000262.JPEG
-        │   └── ...
-        └── ...
-```
-
-An example yaml configuration for this is as follows:
-
-```yaml
-data:
-  name: imagenet1k
-  task: classification
-  format: local # local, huggingface
-  path:
-    root: path_to/IMAGENET1K # dataset root
-    train:
-      image: train # directory for training images
-      label: ~  # label for training images
-    valid:
-      image: val  # directory for valid images
-      label: ~  # label for valid images
-    test:
-      image: ~  # directory for test images
-      label: ~  # label for test images
-  id_mapping:  # Dict[directory_name, class_name]. If None, set the directory name same with class name
-    n02119789: "1_kit fox"
-    n02100735: "2_English setter"
-    n02110185: "3_Siberian husky"
-    n02096294: "4_Australian terrier"
-    ...
-```
-
-#### Example 2
-
-The second method is distinguishing classes through csv format label file.
+To train an image classification model using NetsPresso Trainer, **users must organize their data according to a specified format.**
 
 - train images must be in same directory.
 - validation images must be in same directory.
-- labels for images are given by csv file. The csv file contains image file name and correspoinding class name.
+- labels for images are given by csv file. The csv file contains image file name and correspoinding class label.
 
-The example data directory structure for this is as follows:
+The example data directory structure for this is as follows. The following examples use the [ImageNet1K](https://image-net.org/) dataset.:
 
 ```
 IMAGENET1K
@@ -103,8 +35,9 @@ IMAGENET1K
 │       ├── ILSVRC2012_val_00000002.JPEG
 │       ├── ILSVRC2012_val_00000003.JPEG
 │       └── ...
-├── imagenet_train.csv
-└── imagenet_valid.csv
+└── labels
+    ├── imagenet_train.csv
+    └── imagenet_valid.csv
 ```
 
 An example yaml configuration for this is as follows:
@@ -113,30 +46,30 @@ An example yaml configuration for this is as follows:
 data:
   name: imagenet1k
   task: classification
-  format: local
+  format: local # local, huggingface
   path:
     root: path_to/IMAGENET1K # dataset root
     train:
-      image: images/train # directory for training images
-      label: imagenet_train.csv # label for training labels
+      image: train # directory for training images
+      label: imagenet_train.csv  # label for training images
     valid:
-      image: images/valid  # directory for valid images
-      label: imagenet_valid.csv
+      image: val  # directory for valid images
+      label: imagenet_valid.csv  # label for valid images
     test:
       image: ~  # directory for test images
       label: ~  # label for test images
-  id_mapping: ~
+  id_mapping: ["kit fox", "English setter", "Siberian husky", "Australian terrier", ...]
 ```
 
 An example csv label for this is as follows:
 
-| image_id             | class             |
-|----------------------|-------------------|
-| n03792972_3671.JPEG  | 728_mountain tent |
-| n04357314_4256.JPEG  | 810_sunscreen     |
-| n02965783_127.JPEG   | 576_car mirror    |
-| n04465501_16825.JPEG | 289_tractor       |
-| n09246464_5059.JPEG  | 359_cliff         |
+| image_id             | class    |
+|----------------------|----------|
+| n03792972_3671.JPEG  | 728      |
+| n04357314_4256.JPEG  | 810      |
+| n02965783_127.JPEG   | 576      |
+| n04465501_16825.JPEG | 289      |
+| n09246464_5059.JPEG  | 359      |
 | ... | ... |
 
 ### Semantic segmentation

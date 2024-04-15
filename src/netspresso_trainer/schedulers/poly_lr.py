@@ -19,9 +19,10 @@ class PolynomialLRWithWarmUp(_LRScheduler):
         self,
         optimizer,
         scheduler_conf,
+        training_epochs,
     ):
         self.warmup_iters = scheduler_conf.warmup_epochs
-        self.total_iters = scheduler_conf.total_iters
+        self.total_iters = scheduler_conf.end_epoch
         self.warmup_bias_lr = scheduler_conf.warmup_bias_lr
         self.min_lr = scheduler_conf.min_lr
         self.power = scheduler_conf.power

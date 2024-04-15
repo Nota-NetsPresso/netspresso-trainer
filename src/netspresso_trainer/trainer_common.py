@@ -41,14 +41,25 @@ def train_common(
     single_task_model = is_single_task_model(conf.model)
     conf.model.single_task_model = single_task_model
 
-    train_dataset, valid_dataset, test_dataset = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    # Build dataloaders
+    train_dataset, valid_dataset, _ = build_dataset(conf.data, conf.augmentation, task, model_name, distributed=distributed)
+    assert train_dataset is not None, "For training, train split of dataset must be provided."
+    if not distributed or dist.get_rank() == 0:
+        logger.info(f"Summary | Dataset: <{conf.data.name}> (with {conf.data.format} format)")
+        logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
+        if valid_dataset is not None:
+            logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+
+    # TODO: Temporarily set batch_size in train_dataset for RandomResize. This better to be removed later.
+    train_dataset.batch_size = conf.environment.batch_size
 
     if conf.distributed and conf.rank == 0:
         torch.distributed.barrier()
 
-    train_dataloader, eval_dataloader = \
-        build_dataloader(conf, task, model_name, train_dataset=train_dataset, eval_dataset=valid_dataset)
+    train_dataloader = build_dataloader(conf, task, model_name, dataset=train_dataset, phase='train')
+    eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
+    # Build model
     if is_graphmodule_training:
         assert conf.model.checkpoint.fx_model_path is not None
         assert Path(conf.model.checkpoint.fx_model_path).exists()
@@ -58,25 +69,29 @@ def train_common(
             conf.model, task, train_dataset.num_classes,
             model_checkpoint=conf.model.checkpoint.path,
             use_pretrained=conf.model.checkpoint.use_pretrained,
-            img_size=conf.augmentation.img_size
         )
 
     model = model.to(device=devices)
     if conf.distributed:
         model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
-    trainer = build_pipeline(conf, task, model_name, model,
-                             devices, train_dataloader, eval_dataloader,
-                             class_map=train_dataset.class_map,
-                             logging_dir=logging_dir,
-                             is_graphmodule_training=is_graphmodule_training)
+    # Build training pipeline
+    pipeline_type = 'train'
+    pipeline = build_pipeline(pipeline_type=pipeline_type,
+                              conf=conf,
+                              task=task,
+                              model_name=model_name,
+                              model=model,
+                              devices=devices,
+                              class_map=train_dataset.class_map,
+                              logging_dir=logging_dir,
+                              is_graphmodule_training=is_graphmodule_training,
+                              dataloaders={'train': train_dataloader, 'valid': eval_dataloader},)
 
-    trainer.set_train()
     try:
-        trainer.train()
+        # Start train
+        pipeline.train()
 
-        if test_dataset:
-            trainer.inference(test_dataset)
     except KeyboardInterrupt:
         pass
     except Exception as e:

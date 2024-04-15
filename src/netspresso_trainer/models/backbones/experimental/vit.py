@@ -19,9 +19,11 @@ from ...op.base_metaformer import (
 )
 from ...op.custom import ConvLayer, SinusoidalPositionalEncoding
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['vit']
 SUPPORTING_TASK = ['classification']
+
 
 class ViTEmbeddings(nn.Module):
     def __init__(self, image_channels, patch_size, hidden_size, hidden_dropout_prob, use_cls_token=True, vocab_size=1000):
@@ -72,6 +74,7 @@ class ViTEmbeddings(nn.Module):
         patch_emb = self.dropout(patch_emb)  # B x (H'*W' + 1) x C
         return patch_emb  # B x (H'*W' + 1) x C
 
+
 class ViTBlock(MetaFormerBlock):
     def __init__(self, hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) -> None:
         super().__init__(hidden_size, layer_norm_eps)
@@ -92,6 +95,7 @@ class ViTEncoder(MetaFormerEncoder):
             *[ViTBlock(hidden_size, num_attention_heads, attention_dropout_prob, intermediate_size, hidden_dropout_prob, layer_norm_eps) for _ in range(num_blocks)]
         )
 
+
 class VisionTransformer(MetaFormer):
     def __init__(
         self,
@@ -99,6 +103,11 @@ class VisionTransformer(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'ViT is not supported on {self.task} task now.'
+        #self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         patch_size = params.patch_size
         hidden_size = params.attention_channels
         num_blocks = params.num_blocks

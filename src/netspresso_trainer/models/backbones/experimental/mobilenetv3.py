@@ -11,10 +11,11 @@ from torch import Tensor
 
 from ...op.custom import ConvLayer, InvertedResidual
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
 __all__ = ['mobilenetv3']
 
-SUPPORTING_TASK = ['classification', 'segmentation']
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 
 class MobileNetV3(nn.Module):
@@ -25,10 +26,13 @@ class MobileNetV3(nn.Module):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
+        # Check task compatibility
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'MobileNetV3 is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
         super(MobileNetV3, self).__init__()
 
-        self.task = task.lower()
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
         norm_type = 'batch_norm'
         act_type = 'hard_swish'
 

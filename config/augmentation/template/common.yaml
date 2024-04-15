@@ -1,35 +1,32 @@
 augmentation:
-  img_size: &img_size ~
   train:
-    transforms:
-      - 
-        name: randomresizedcrop
-        size: ~
-        sclale: ~
-        ratio: ~
-        interpolation: bilinear
-      -
-        name: randomhorizontalflip
-        p: ~
-      -
-        name: randomverticalflip
-        p: ~
-      -
-        name: colorjitter
-        brightness: ~
-        contrast: ~
-        saturation: ~
-        hue: ~
-        p: ~
-      -
-        name: resize
-        size: ~
-        interpolation: ~
-        max_size: ~
-      -
-        name: pad
-        padding: ~
-        fill: ~
-        padding_mode: ~
-    mix_transforms: ~
+    - 
+      name: randomresizedcrop
+      size: ~
+      sclale: ~
+      ratio: ~
+      interpolation: bilinear
+    -
+      name: randomhorizontalflip
+      p: ~
+    -
+      name: randomverticalflip
+      p: ~
+    -
+      name: colorjitter
+      brightness: ~
+      contrast: ~
+      saturation: ~
+      hue: ~
+      p: ~
+    -
+      name: resize
+      size: ~
+      interpolation: ~
+      max_size: ~
+    -
+      name: pad
+      padding: ~
+      fill: ~
+      padding_mode: ~
   inference: ~

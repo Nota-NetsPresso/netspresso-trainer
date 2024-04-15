@@ -1,1 +1,1 @@
-from . import classification, detection, segmentation
+from . import classification, detection, pose_estimation, segmentation

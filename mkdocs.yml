@@ -156,9 +156,10 @@ markdown_extensions:
 nav:
   - Home: index.md
   - Getting started:
-    - Simple use: getting-started.md
-    - Installation: installation.md
-    - Docker: docker-installation.md
+    - Installation:
+      - Installation (Stable): getting_started/installation/installation.md
+      - Setup with Docker: getting_started/installation/docker_installation.md
+    - Simple use: getting_started/simple_use.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Components:
     - Overview: components/overview.md
@@ -166,9 +167,9 @@ nav:
     - Augmentation: 
       - Overview: components/augmentation/overview.md
       - Transforms: components/augmentation/transforms.md
-      - Mix transforms: components/augmentation/mixtransforms.md
     - Training: 
       - Overview: components/training/overview.md
+      - EMA: components/training/ema.md
       - Optimizers: components/training/optimizers.md
       - Schedulers: components/training/schedulers.md
     - Model:
@@ -197,9 +198,10 @@ nav:
       - AnchorDecoupledHead: models/heads/anchordecoupledhead.md
       - AnchorFreeDecoupledHead: models/heads/anchorfreedecoupledhead.md
       - FC: models/heads/fc.md  
+      - RTMCC: models/heads/rtmcc.md
     - Layers:
       - Activations: models/layers/activations.md
       - Normalizations: models/layers/normalizations.md
   - Benchmarks & Checkpoints: 
     - Benchmarks & Checkpoints: benchmarks/benchmarks.md
-  - PyNetsPresso: https://nota-netspresso.github.io/PyNetsPresso-docs/
+  - NetsPresso: https://netspresso.ai/

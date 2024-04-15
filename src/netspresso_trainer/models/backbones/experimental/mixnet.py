@@ -15,6 +15,11 @@ from torchvision.ops.misc import SqueezeExcitation as SEBlock
 from ...op.registry import ACTIVATION_REGISTRY
 from ...op.custom import ConvLayer
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
+
+__all__ = ['mixnet']
+
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ #
@@ -152,9 +157,12 @@ class MixNet(nn.Module):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ):
-        super(MixNet, self).__init__()
+        # Check task compatibility
         self.task = task.lower()
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
+        assert self.task in SUPPORTING_TASK, f'MixNet is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
+        super(MixNet, self).__init__()
 
         stem_channels = params.stem_channels
         width_multi = params.wid_mul

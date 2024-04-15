@@ -33,43 +33,43 @@ DEFAULT_WEIGHT_VERSION_DICT = {
 
 MODEL_CHECKPOINT_URL_DICT = {
     'resnet18': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=rI_BkIYyNFBtem180CSHA5QiGjuXgxMb",
     },
     'resnet34': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=YV687nYQc8tj5lq6ffqPpiJ8h2e0DW6L",
     },
     'resnet50': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=kDZZabJz8kK.HWDtvo7VJ.HYZ7A3GcxS",
     },
     'mobilenet_v3_small': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=NTpIJOERdx4efzBgY7Wcca7Xe1_Vwal9",
     },
     'segformer_b0': {
-        'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors",
+        'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors?versionId=aZsJLrZrAysdvqRz2WVfCrjM.0sTFs3H",
     },
     'mobilevit_s': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors?versionId=Kg71H367_VeSJqfzJv54At1uFcMyIf9D",
     },
     'vit_tiny': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors?versionId=1WC4OqtnA5gJFolvCMrOWAdmiMwpL8RO",
     },
     'efficientformer_l1': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=JIkKVaUF0fhkvLz2jfcY3MmbUg6MkUO6",
     },
     'mixnet_s': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors?versionId=n0sHuieRyTWWzwBmSAE8oSP4BL53laDP",
     },
     'mixnet_m': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m_imagenet1k.safetensors?versionId=cMkB57XAqu8Ro9OOWf9M6nLBPbrD2C7k",
     },
     'mixnet_l': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors?versionId=UZFlpK8LO_SlYbu5GnUe9Qb3srikM6mk",
     },
     'pidnet_s': {
-        'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors",
+        'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8",
     },
     'yolox_s': {
-        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors",
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=QRLqHKqhv8TSYBrmsQ3M8lCR8w7HEZyA",
     },
 }
 
@@ -121,11 +121,11 @@ def download_model_checkpoint(
 
     checkpoint_url = MODEL_CHECKPOINT_URL_DICT[model_name][checkpoint_weight_version]
 
-    checkpoint_filename = Path(checkpoint_url).name
+    checkpoint_filename = Path(checkpoint_url).name.split('?versionId')[0] # @illian01: Remove specified version id
     model_checkpoint: Path = DEFAULT_CACHE_DIR / model_name / checkpoint_filename
     model_checkpoint.parent.mkdir(parents=True, exist_ok=True)
     # Safer switch: only extension, user can use the custom name for checkpoint file
-    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_url).suffix)
+    model_checkpoint = model_checkpoint.with_suffix(Path(checkpoint_filename).suffix)
     if not model_checkpoint.exists():
         torch.hub.download_url_to_file(checkpoint_url, model_checkpoint)
 

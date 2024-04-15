@@ -1,0 +1,35 @@
+name: "\U0001F3A8 Feature request"
+description: Suggest an improvement or new feature for this repository.
+title: "[Feature Request] Please write your own title"
+labels: ["help wanted"]
+body:
+  - type: checkboxes
+    attributes:
+      label: Have you searched existing issues?  🔎
+      options:
+        - label: I have searched and found no existing issues.
+          required: true
+  - type: textarea
+    id: feture-request
+    attributes:
+      label: Is there any feature that you would like to add?
+      description: Please write a clear and concise description.
+    validations:
+      required: true
+  - type: textarea
+    id: implement-suggestion
+    attributes:
+      label: Is there any suggestion (or solution) to solve this issue?
+      description: Please write a clear and concise description.
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context.
+      description: All other contexts or screenshots are welcome.
+  - type: checkboxes
+    attributes:
+      label: Will you help us by submitting a PR?
+      options:
+        - label: I will submit a PR about this issue.

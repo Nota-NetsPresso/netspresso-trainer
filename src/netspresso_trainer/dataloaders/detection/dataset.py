@@ -20,11 +20,14 @@ def load_custom_class_map(id_mapping: List[str]):
     return idx_to_class
 
 def detection_collate_fn(original_batch):
+    indices = []
     pixel_values = []
     bbox = []
     label = []
     org_shape = []
     for data_sample in original_batch:
+        if 'indices' in data_sample:
+            indices.append(data_sample['indices'])
         if 'pixel_values' in data_sample:
             pixel_values.append(data_sample['pixel_values'])
         if 'bbox' in data_sample:
@@ -34,6 +37,9 @@ def detection_collate_fn(original_batch):
         if 'org_shape' in data_sample:
             org_shape.append(data_sample['org_shape'])
     outputs = {}
+    if len(indices) != 0:
+        indices = torch.tensor(indices, dtype=torch.long)
+        outputs.update({'indices': indices})
     if len(pixel_values) != 0:
         pixel_values = torch.stack(pixel_values, dim=0)
         outputs.update({'pixel_values': pixel_values})
@@ -51,14 +57,15 @@ class DetectionDataSampler(BaseDataSampler):
         super(DetectionDataSampler, self).__init__(conf_data, train_valid_split_ratio)
 
     def load_data(self, split='train'):
+        assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}."
         data_root = Path(self.conf_data.path.root)
         split_dir = self.conf_data.path[split]
         image_dir: Path = data_root / split_dir.image
-        annotation_dir: Path = data_root / split_dir.label
+        annotation_dir: Optional[Path] = data_root / split_dir.label if split_dir.label is not None else None
         images: List[str] = []
         labels: List[str] = []
         images_and_targets: List[Dict[str, str]] = []
-        if split in ['train', 'valid']:
+        if annotation_dir is not None:
             for ext in IMG_EXTENSIONS:
                 for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
                     ann_path_maybe = annotation_dir / file.with_suffix('.txt').name
@@ -72,29 +79,29 @@ class DetectionDataSampler(BaseDataSampler):
             labels = sorted(labels, key=lambda k: natural_key(k))
             images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
 
-        elif split == 'test':
+        else:
             for ext in IMG_EXTENSIONS:
                 images_and_targets.extend([{'image': str(file), 'label': None}
                                         for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
             images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
-        else:
-            raise AssertionError(f"split should be either {['train', 'valid', 'test']}")
 
         return images_and_targets
 
     def load_samples(self):
-        assert self.conf_data.path.train.image is not None
         assert self.conf_data.id_mapping is not None
         id_mapping: Optional[list] = list(self.conf_data.id_mapping)
         idx_to_class = load_custom_class_map(id_mapping=id_mapping)
 
+        exists_train = self.conf_data.path.train.image is not None
         exists_valid = self.conf_data.path.valid.image is not None
         exists_test = self.conf_data.path.test.image is not None
 
+        train_samples = None
         valid_samples = None
         test_samples = None
 
-        train_samples = self.load_data(split='train')
+        if exists_train:
+            train_samples = self.load_data(split='train')
         if exists_valid:
             valid_samples = self.load_data(split='valid')
         if exists_test:

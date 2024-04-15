@@ -35,8 +35,10 @@ Fully connected layer head for classification. You can adjust the number of laye
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "fc" to use `FC` head. |
-| `params.intermediate_channels` | (int) Dimension of intermediate fully connected layers. |
 | `params.num_layers` | (int) The number of fully connected layers. Channel of last layer is same with the number of classes. |
+| `params.intermediate_channels` | (int) Dimension of intermediate fully connected layers. This can be ignored if `num_layer` is 1. |
+| `params.act_type` | (str) Activation function for intermediate fully connected layers. This can be ignored if `num_layer` is 1. |
+| `params.dropout_prob` | (float) Dropout probability before the last classifier layer. |
 
 ## Model configuration example
 
@@ -49,8 +51,10 @@ Fully connected layer head for classification. You can adjust the number of laye
       head:
         name: fc
         params:
-          intermediate_channels: 1024
           num_layers: 2
+          intermediate_channels: 1024
+          act_type: hard_swish
+          dropout_prob: 0.2
   ```
 </details>
 

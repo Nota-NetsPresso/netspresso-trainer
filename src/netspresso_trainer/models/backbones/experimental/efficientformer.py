@@ -23,8 +23,11 @@ from ...op.base_metaformer import (
 from ...op.custom import ConvLayer
 from ...op.depth import DropPath
 from ...utils import BackboneOutput
+from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
-SUPPORTING_TASK = ['classification', 'segmentation', 'detection']
+__all__ = ['efficientformer']
+
+SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 
 class EfficientFormerStem(nn.Module):
@@ -335,7 +338,12 @@ class EfficientFormer(MetaFormer):
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
     ) -> None:
-        
+        # Check task compatibilty
+        self.task = task.lower()
+        assert self.task in SUPPORTING_TASK, f'EfficientFormer is not supported on {self.task} task now.'
+        self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+
+        # Get params
         num_blocks = [stage.num_blocks for stage in stage_params]
         hidden_sizes = [stage.channels for stage in stage_params]
 
@@ -361,8 +369,6 @@ class EfficientFormer(MetaFormer):
         drop_path_rate = 0.
 
         super().__init__(hidden_sizes)
-        self.task = task.lower()
-        self.use_intermediate_features = self.task in ['segmentation', 'detection']
 
         image_channels = 3
         self.patch_embed = EfficientFormerStem(in_channels=image_channels, out_channels=hidden_sizes[0])

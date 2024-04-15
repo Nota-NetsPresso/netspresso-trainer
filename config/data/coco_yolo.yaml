@@ -8,7 +8,7 @@ data:
       image: images/train2017 # directory for training images
       label: labels/train2017 # directory for training labels
     valid:
-      image: image/val2017  # directory for valid images
+      image: images/val2017  # directory for valid images
       label: labels/val2017  # directory for valid labels
     test:
       image: ~  # directory for test images
