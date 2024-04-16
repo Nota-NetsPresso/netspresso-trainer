@@ -15,10 +15,6 @@ from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
 
-def load_custom_class_map(id_mapping: List[str]):
-    idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
-    return {'idx_to_class': idx_to_class}
-
 def detection_collate_fn(original_batch):
     indices = []
     pixel_values = []
@@ -91,7 +87,8 @@ class DetectionDataSampler(BaseDataSampler):
         return list(self.conf_data.id_mapping)
 
     def load_class_map(self, id_mapping):
-        return load_custom_class_map(id_mapping=id_mapping)
+        idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
+        return {'idx_to_class': idx_to_class}
 
     def load_huggingface_samples(self):
         raise NotImplementedError

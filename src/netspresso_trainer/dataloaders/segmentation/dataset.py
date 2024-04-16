@@ -21,32 +21,6 @@ def as_tuple(tuple_string: str) -> Tuple:
     return tuple_value
 
 
-def load_custom_class_map(id_mapping: Union[ListConfig, DictConfig]) -> Tuple[Dict[int, str], Dict[Union[int, Tuple], int]]:
-    if isinstance(id_mapping, ListConfig):
-        assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"
-        idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
-        label_value_to_idx = {k: k for k in idx_to_class}
-        return idx_to_class, label_value_to_idx
-
-    idx_to_class: Dict[int, str] = {}
-    label_value_to_idx: Dict[Union[int, Tuple], int] = {}
-    for class_idx, (label_value, class_name) in enumerate(id_mapping.items()):
-        assert isinstance(class_name, str), "You need to format id_mapping with key for class_index, value for class_name."
-        if isinstance(label_value, (int, tuple)):
-            idx_to_class[class_idx] = class_name
-            label_value_to_idx[label_value] = class_idx
-            continue
-
-        # Check tuple string
-        assert isinstance(label_value, str) and label_value.strip().startswith("(") and label_value.strip().endswith(")"), \
-            f"Unknown type for color index! Should be one of (int, tuple-style str, tuple)... but {type(label_value)}"
-        label_value_tuple: Tuple[int, int, int] = as_tuple(label_value)
-        idx_to_class[class_idx] = class_name
-        label_value_to_idx[label_value_tuple] = class_idx
-
-    return {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
-
-
 class SegmentationDataSampler(BaseDataSampler):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(SegmentationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
@@ -82,7 +56,29 @@ class SegmentationDataSampler(BaseDataSampler):
         return self.conf_data.id_mapping
     
     def load_class_map(self, id_mapping):
-        return load_custom_class_map(id_mapping=id_mapping)
+        if isinstance(id_mapping, ListConfig):
+            assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"
+            idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
+            label_value_to_idx = {k: k for k in idx_to_class}
+            return idx_to_class, label_value_to_idx
+
+        idx_to_class: Dict[int, str] = {}
+        label_value_to_idx: Dict[Union[int, Tuple], int] = {}
+        for class_idx, (label_value, class_name) in enumerate(id_mapping.items()):
+            assert isinstance(class_name, str), "You need to format id_mapping with key for class_index, value for class_name."
+            if isinstance(label_value, (int, tuple)):
+                idx_to_class[class_idx] = class_name
+                label_value_to_idx[label_value] = class_idx
+                continue
+
+            # Check tuple string
+            assert isinstance(label_value, str) and label_value.strip().startswith("(") and label_value.strip().endswith(")"), \
+                f"Unknown type for color index! Should be one of (int, tuple-style str, tuple)... but {type(label_value)}"
+            label_value_tuple: Tuple[int, int, int] = as_tuple(label_value)
+            idx_to_class[class_idx] = class_name
+            label_value_to_idx[label_value_tuple] = class_idx
+
+        return {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
 
     def load_huggingface_samples(self):
         from datasets import load_dataset
@@ -97,7 +93,7 @@ class SegmentationDataSampler(BaseDataSampler):
 
         assert isinstance(self.conf_data.id_mapping, (ListConfig, DictConfig))
 
-        idx_to_class, label_value_to_idx = load_custom_class_map(id_mapping=self.conf_data.id_mapping)
+        misc = self.load_class_map(id_mapping=self.conf_data.id_mapping)
 
         exists_valid = 'validation' in total_dataset
         exists_test = 'test' in total_dataset
@@ -114,4 +110,4 @@ class SegmentationDataSampler(BaseDataSampler):
             splitted_datasets = train_samples.train_test_split(test_size=(1 - self.train_valid_split_ratio))
             train_samples = splitted_datasets['train']
             valid_samples = splitted_datasets['test']
-        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
+        return train_samples, valid_samples, test_samples, misc
