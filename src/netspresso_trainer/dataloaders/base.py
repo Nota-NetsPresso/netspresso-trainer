@@ -106,7 +106,7 @@ class BaseSampleLoader(ABC):
     @abstractmethod
     def load_data(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def load_id_mapping(self):
         raise NotImplementedError
@@ -114,7 +114,7 @@ class BaseSampleLoader(ABC):
     @abstractmethod
     def load_class_map(self, id_mapping):
         raise NotImplementedError
-    
+
     def load_samples(self):
         assert self.conf_data.id_mapping is not None
         id_mapping = self.load_id_mapping()

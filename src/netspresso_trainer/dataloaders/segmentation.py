@@ -2,19 +2,19 @@ from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union, Literal
+from typing import Dict, List, Literal, Optional, Tuple, Union
 
 import numpy as np
 import PIL.Image as Image
 import torch
 import torch.distributed as dist
-from omegaconf import DictConfig, ListConfig
 from loguru import logger
+from omegaconf import DictConfig, ListConfig
 
 from .augmentation.transforms import generate_edge
-from .base import BaseSampleLoader, BaseCustomDataset, BaseHFDataset
+from .base import BaseCustomDataset, BaseHFDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
-from .utils.misc import natural_key, as_tuple
+from .utils.misc import as_tuple, natural_key
 
 
 class SegmentationSampleLoader(BaseSampleLoader):
@@ -50,7 +50,7 @@ class SegmentationSampleLoader(BaseSampleLoader):
 
     def load_id_mapping(self):
         return self.conf_data.id_mapping
-    
+
     def load_class_map(self, id_mapping):
         if isinstance(id_mapping, ListConfig):
             assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"

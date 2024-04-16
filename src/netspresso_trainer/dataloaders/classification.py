@@ -1,6 +1,6 @@
 from functools import partial
-from multiprocessing.pool import ThreadPool
 from itertools import chain
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -8,9 +8,9 @@ import PIL.Image as Image
 import torch.distributed as dist
 from loguru import logger
 
-from .base import BaseSampleLoader, BaseCustomDataset, BaseHFDataset
+from .base import BaseCustomDataset, BaseHFDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
-from .utils.misc import natural_key, load_classification_class_map
+from .utils.misc import load_classification_class_map, natural_key
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
 
@@ -43,7 +43,7 @@ class ClassficationSampleLoader(BaseSampleLoader):
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         return images_and_targets
-    
+
     def load_id_mapping(self):
         return list(self.conf_data.id_mapping)
 

@@ -1,6 +1,6 @@
 from functools import partial
-from multiprocessing.pool import ThreadPool
 from itertools import chain
+from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -10,9 +10,9 @@ import torch
 import torch.distributed as dist
 from loguru import logger
 
-from .base import BaseSampleLoader, BaseCustomDataset
+from .base import BaseCustomDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
-from .utils.misc import natural_key, get_detection_label
+from .utils.misc import get_detection_label, natural_key
 
 
 class DetectionSampleLoader(BaseSampleLoader):

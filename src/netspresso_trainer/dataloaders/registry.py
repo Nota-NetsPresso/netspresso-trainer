@@ -1,7 +1,7 @@
 from typing import Callable, Dict, Type
 
 from .augmentation.transforms import create_transform
-from .base import BaseCustomDataset, BaseSampleLoader, BaseHFDataset
+from .base import BaseCustomDataset, BaseHFDataset, BaseSampleLoader
 from .classification import (
     ClassficationSampleLoader,
     ClassificationCustomDataset,
@@ -14,8 +14,8 @@ from .pose_estimation import (
 )
 from .segmentation import (
     SegmentationCustomDataset,
-    SegmentationSampleLoader,
     SegmentationHFDataset,
+    SegmentationSampleLoader,
 )
 
 CREATE_TRANSFORM = create_transform
