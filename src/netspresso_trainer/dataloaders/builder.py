@@ -1,9 +1,11 @@
 import os
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, Literal, List, Optional, Type, Union
 
+from omegaconf import DictConfig
 import torch.distributed as dist
+import torch.utils.data as data
 from loguru import logger
 
 from .augmentation.registry import TRANSFORM_DICT
@@ -13,7 +15,64 @@ from .utils.collate_fn import classification_mix_collate_fn, classification_oneh
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, distributed: bool):
+
+def dataset_mode_check(conf_data: DictConfig, mode: Literal['train', 'test']):
+    if mode == 'train':
+        if conf_data.path.test.image:
+            logger.info('For training, test split of dataset is not needed. This field will be ignored.')
+        conf_data.path.test.image = None
+        conf_data.path.test.label = None
+
+    elif mode == 'test':
+        if conf_data.path.train.image:
+            logger.info('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
+        conf_data.path.train.image = None
+        conf_data.path.train.label = None
+
+        if conf_data.path.valid.image:
+            logger.info('For test (evaluation or inference), valid split of dataset is not needed. This field will be ignored.')
+        conf_data.path.valid.image = None
+        conf_data.path.valid.label = None
+
+    else:
+        raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
+
+
+def loaded_dataset_check(
+    conf_data: DictConfig,
+    train_dataset: data.Dataset,
+    valid_dataset: data.Dataset,
+    test_dataset: data.Dataset,
+    distributed: bool,
+    mode: Literal['train', 'test']
+):
+    if mode == 'train':
+        assert train_dataset is not None, "For training, train split of dataset must be provided."
+        if not distributed or dist.get_rank() == 0:
+            logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
+            logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
+            if valid_dataset is not None:
+                logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+
+    elif mode == 'test':
+        assert test_dataset is not None, "For test, test split of dataset must be provided."
+        if not distributed or dist.get_rank() == 0:
+            logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
+            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
+
+    else:
+        raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
+
+
+def build_dataset(
+    conf_data: DictConfig,
+    conf_augmentation: DictConfig,
+    task: str,
+    model_name: str,
+    distributed: bool,
+    mode: Literal['train', 'test'],
+):
+    dataset_mode_check(conf_data=conf_data, mode=mode)
 
     if not distributed or dist.get_rank() == 0:
         logger.info('-'*40)
@@ -89,6 +148,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
+    loaded_dataset_check(conf_data, train_dataset, valid_dataset, test_dataset, mode)
     return train_dataset, valid_dataset, test_dataset
 
 
