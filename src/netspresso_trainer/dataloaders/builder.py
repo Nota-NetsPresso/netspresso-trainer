@@ -53,12 +53,14 @@ def loaded_dataset_check(
             logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
             if valid_dataset is not None:
                 logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+        assert len(train_dataset) > 0, "Training dataset has no samples. Please check your dataset path."
 
     elif mode == 'test':
         assert test_dataset is not None, "For test, test split of dataset must be provided."
         if not distributed or dist.get_rank() == 0:
             logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
             logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
+        assert len(test_dataset) > 0, "Test dataset has no samples. Please check your dataset path."
 
     else:
         raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
