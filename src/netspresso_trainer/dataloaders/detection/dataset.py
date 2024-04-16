@@ -15,39 +15,6 @@ from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
 
-def detection_collate_fn(original_batch):
-    indices = []
-    pixel_values = []
-    bbox = []
-    label = []
-    org_shape = []
-    for data_sample in original_batch:
-        if 'indices' in data_sample:
-            indices.append(data_sample['indices'])
-        if 'pixel_values' in data_sample:
-            pixel_values.append(data_sample['pixel_values'])
-        if 'bbox' in data_sample:
-            bbox.append(data_sample['bbox'])
-        if 'label' in data_sample:
-            label.append(data_sample['label'])
-        if 'org_shape' in data_sample:
-            org_shape.append(data_sample['org_shape'])
-    outputs = {}
-    if len(indices) != 0:
-        indices = torch.tensor(indices, dtype=torch.long)
-        outputs.update({'indices': indices})
-    if len(pixel_values) != 0:
-        pixel_values = torch.stack(pixel_values, dim=0)
-        outputs.update({'pixel_values': pixel_values})
-    if len(bbox) != 0:
-        outputs.update({'bbox': bbox})
-    if len(label) != 0:
-        outputs.update({'label': label})
-    if len(org_shape) != 0:
-        outputs.update({'org_shape': org_shape})
-
-    return outputs
-
 class DetectionSampleLoader(BaseSampleLoader):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(DetectionSampleLoader, self).__init__(conf_data, train_valid_split_ratio)

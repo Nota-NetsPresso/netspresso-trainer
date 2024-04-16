@@ -44,44 +44,6 @@ def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     return True
 
 
-def classification_mix_collate_fn(original_batch, mix_transforms):
-    indices = []
-    images = []
-    target = []
-    for data_sample in original_batch:
-        indices.append(data_sample[0])
-        images.append(data_sample[1])
-        target.append(data_sample[2])
-
-    indices = torch.tensor(indices, dtype=torch.long)
-    images = torch.stack(images, dim=0)
-    target = torch.tensor(target, dtype=torch.long)
-
-    images, target = mix_transforms(images, target)
-
-    outputs = (indices, images, target)
-    return outputs
-
-
-def classification_onehot_collate_fn(original_batch, num_classes):
-    indices = []
-    images = []
-    target = []
-    for data_sample in original_batch:
-        indices.append(data_sample[0])
-        images.append(data_sample[1])
-        target.append(data_sample[2])
-
-    indices = torch.tensor(indices, dtype=torch.long)
-    images = torch.stack(images, dim=0)
-    target = torch.tensor(target, dtype=torch.long)
-    if -1 not in target:
-        target = F.one_hot(target, num_classes=num_classes).to(dtype=images.dtype)
-
-    outputs = (indices, images, target)
-    return outputs
-
-
 class ClassficationSampleLoader(BaseSampleLoader):
     def __init__(self, conf_data, train_valid_split_ratio):
         super(ClassficationSampleLoader, self).__init__(conf_data, train_valid_split_ratio)

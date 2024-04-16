@@ -1,2 +1,2 @@
-from .dataset import DetectionSampleLoader, detection_collate_fn
+from .dataset import DetectionSampleLoader
 from .local import DetectionCustomDataset
