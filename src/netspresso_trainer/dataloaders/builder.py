@@ -19,18 +19,18 @@ TRAIN_VALID_SPLIT_RATIO = 0.9
 def dataset_mode_check(conf_data: DictConfig, mode: Literal['train', 'test']):
     if mode == 'train':
         if conf_data.path.test.image:
-            logger.info('For training, test split of dataset is not needed. This field will be ignored.')
+            logger.warning('For training, test split of dataset is not needed. This field will be ignored.')
         conf_data.path.test.image = None
         conf_data.path.test.label = None
 
     elif mode == 'test':
         if conf_data.path.train.image:
-            logger.info('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
+            logger.warning('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
         conf_data.path.train.image = None
         conf_data.path.train.label = None
 
         if conf_data.path.valid.image:
-            logger.info('For test (evaluation or inference), valid split of dataset is not needed. This field will be ignored.')
+            logger.warning('For test (evaluation or inference), valid split of dataset is not needed. This field will be ignored.')
         conf_data.path.valid.image = None
         conf_data.path.valid.label = None
 
