@@ -10,7 +10,7 @@ import torch
 from omegaconf import DictConfig
 from torch.utils.data import random_split
 
-from ..base import BaseDataSampler
+from ..base import BaseSampleLoader
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
@@ -48,9 +48,9 @@ def detection_collate_fn(original_batch):
 
     return outputs
 
-class DetectionDataSampler(BaseDataSampler):
+class DetectionSampleLoader(BaseSampleLoader):
     def __init__(self, conf_data, train_valid_split_ratio):
-        super(DetectionDataSampler, self).__init__(conf_data, train_valid_split_ratio)
+        super(DetectionSampleLoader, self).__init__(conf_data, train_valid_split_ratio)
 
     def load_data(self, split='train'):
         assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}."

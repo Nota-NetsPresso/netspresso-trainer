@@ -107,7 +107,7 @@ class BaseHFDataset(data.Dataset):
         return self._with_label
 
 
-class BaseDataSampler(ABC):
+class BaseSampleLoader(ABC):
     def __init__(self, conf_data, train_valid_split_ratio):
         self.conf_data = conf_data
         self.train_valid_split_ratio = train_valid_split_ratio

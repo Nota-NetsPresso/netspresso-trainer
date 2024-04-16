@@ -9,7 +9,7 @@ import torch
 from omegaconf import DictConfig, ListConfig
 from torch.utils.data import random_split
 
-from ..base import BaseDataSampler
+from ..base import BaseSampleLoader
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
@@ -21,9 +21,9 @@ def as_tuple(tuple_string: str) -> Tuple:
     return tuple_value
 
 
-class SegmentationDataSampler(BaseDataSampler):
+class SegmentationSampleLoader(BaseSampleLoader):
     def __init__(self, conf_data, train_valid_split_ratio):
-        super(SegmentationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
+        super(SegmentationSampleLoader, self).__init__(conf_data, train_valid_split_ratio)
 
     def load_data(self, split='train'):
         assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}."

@@ -11,7 +11,7 @@ from omegaconf import DictConfig
 from torch.nn import functional as F
 from torch.utils.data import random_split
 
-from ..base import BaseDataSampler
+from ..base import BaseSampleLoader
 from ..utils.constants import IMG_EXTENSIONS
 from ..utils.misc import natural_key
 
@@ -82,9 +82,9 @@ def classification_onehot_collate_fn(original_batch, num_classes):
     return outputs
 
 
-class ClassficationDataSampler(BaseDataSampler):
+class ClassficationSampleLoader(BaseSampleLoader):
     def __init__(self, conf_data, train_valid_split_ratio):
-        super(ClassficationDataSampler, self).__init__(conf_data, train_valid_split_ratio)
+        super(ClassficationSampleLoader, self).__init__(conf_data, train_valid_split_ratio)
 
     def load_data(self, split='train'):
         data_root = Path(self.conf_data.path.root)
