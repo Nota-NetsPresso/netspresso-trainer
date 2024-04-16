@@ -11,7 +11,7 @@ from loguru import logger
 
 class BaseCustomDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label, **kwargs):
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, **kwargs):
         super(BaseCustomDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
@@ -24,7 +24,6 @@ class BaseCustomDataset(data.Dataset):
         self._idx_to_class = idx_to_class
         self._num_classes = len(self._idx_to_class)
         self._split = split
-        self._with_label = with_label
 
         self.cache = False
 
@@ -55,13 +54,10 @@ class BaseCustomDataset(data.Dataset):
     def mode(self):
         return self._split
 
-    @property
-    def with_label(self):
-        return self._with_label
 
 class BaseHFDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, root, split, transform, with_label):
+    def __init__(self, conf_data, conf_augmentation, model_name, root, split, transform):
         super(BaseHFDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
@@ -69,7 +65,6 @@ class BaseHFDataset(data.Dataset):
         self.transform = transform(conf_augmentation)
         self._root = root
         self._split = split
-        self._with_label = with_label
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
@@ -101,10 +96,6 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
-
-    @property
-    def with_label(self):
-        return self._with_label
 
 
 class BaseSampleLoader(ABC):

@@ -18,10 +18,10 @@ from ..base import BaseCustomDataset
 class PoseEstimationCustomDataset(BaseCustomDataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
-                 split, samples, transform=None, with_label=True, **kwargs):
+                 split, samples, transform=None, **kwargs):
         super(PoseEstimationCustomDataset, self).__init__(
             conf_data, conf_augmentation, model_name, idx_to_class,
-            split, samples, transform, with_label, **kwargs
+            split, samples, transform, **kwargs
         )
         flattened_samples = []
         # label field must be filled

@@ -17,7 +17,6 @@ class ClassificationHFDataset(BaseHFDataset):
             split,
             huggingface_dataset,
             transform=None,
-            with_label=True,
             **kwargs
     ):
         root = conf_data.metadata.repo
@@ -28,7 +27,6 @@ class ClassificationHFDataset(BaseHFDataset):
             root,
             split,
             transform,
-            with_label
         )
         # Make sure that you additionally install `requirements-data.txt`
 

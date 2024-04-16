@@ -16,10 +16,10 @@ from ..base import BaseCustomDataset
 class SegmentationCustomDataset(BaseCustomDataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
-                 split, samples, transform=None, with_label=True, **kwargs):
+                 split, samples, transform=None, **kwargs):
         super(SegmentationCustomDataset, self).__init__(
             conf_data, conf_augmentation, model_name, idx_to_class,
-            split, samples, transform, with_label, **kwargs
+            split, samples, transform, **kwargs
         )
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]

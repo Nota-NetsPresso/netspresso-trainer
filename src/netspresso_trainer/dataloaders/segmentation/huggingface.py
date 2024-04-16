@@ -18,7 +18,6 @@ class SegmentationHFDataset(BaseHFDataset):
             split,
             huggingface_dataset,
             transform=None,
-            with_label=True,
             **kwargs
     ):
         root = conf_data.metadata.repo
@@ -29,7 +28,6 @@ class SegmentationHFDataset(BaseHFDataset):
             root,
             split,
             transform,
-            with_label
         )
 
         self.idx_to_class = idx_to_class

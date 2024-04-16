@@ -44,10 +44,10 @@ def get_label(label_file: Path):
 class DetectionCustomDataset(BaseCustomDataset):
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
-                 split, samples, transform=None, with_label=True, **kwargs):
+                 split, samples, transform=None, **kwargs):
         super(DetectionCustomDataset, self).__init__(
             conf_data, conf_augmentation, model_name, idx_to_class,
-            split, samples, transform, with_label, **kwargs
+            split, samples, transform, **kwargs,
         )
 
     @staticmethod

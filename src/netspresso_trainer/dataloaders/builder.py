@@ -38,7 +38,6 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
-        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
         train_dataset = None
         if train_samples is not None:
@@ -58,8 +57,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
-                samples=test_samples, transform=target_transform,
-                with_label=test_with_label, label_value_to_idx=label_value_to_idx
+                samples=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
     elif data_format == 'huggingface':
@@ -71,7 +69,6 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
-        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
         # Assumed hugging face dataset always has training split
         train_dataset = HUGGINGFACE_DATASET[task](
