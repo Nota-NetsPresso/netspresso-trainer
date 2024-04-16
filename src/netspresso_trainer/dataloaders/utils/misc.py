@@ -70,3 +70,10 @@ def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
     assert len(file_candidates) != 0, f"Unknown label format! Is there any something file like {file_or_dir} ?"
 
     return True
+
+
+def as_tuple(tuple_string: str) -> Tuple:
+    tuple_string = tuple_string.replace("(", "")
+    tuple_string = tuple_string.replace(")", "")
+    tuple_value = tuple(map(int, tuple_string.split(",")))
+    return tuple_value
