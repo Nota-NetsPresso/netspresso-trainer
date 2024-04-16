@@ -18,12 +18,17 @@ TRAIN_VALID_SPLIT_RATIO = 0.9
 
 def dataset_mode_check(conf_data: DictConfig, mode: Literal['train', 'test']):
     if mode == 'train':
+        train_check = (conf_data.path.train.image is not None) and (conf_data.path.train.label is not None)
+        assert train_check, "For training, train split of dataset must be provided."
+
         if conf_data.path.test.image:
             logger.warning('For training, test split of dataset is not needed. This field will be ignored.')
         conf_data.path.test.image = None
         conf_data.path.test.label = None
 
     elif mode == 'test':
+        assert conf_data.path.train.test_dataset is not None, "For test, test split of dataset must be provided."
+
         if conf_data.path.train.image:
             logger.warning('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
         conf_data.path.train.image = None
@@ -47,7 +52,6 @@ def loaded_dataset_check(
     mode: Literal['train', 'test']
 ):
     if mode == 'train':
-        assert train_dataset is not None, "For training, train split of dataset must be provided."
         if not distributed or dist.get_rank() == 0:
             logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
             logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
@@ -56,7 +60,6 @@ def loaded_dataset_check(
         assert len(train_dataset) > 0, "Training dataset has no samples. Please check your dataset path."
 
     elif mode == 'test':
-        assert test_dataset is not None, "For test, test split of dataset must be provided."
         if not distributed or dist.get_rank() == 0:
             logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
             logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
