@@ -74,11 +74,11 @@ def build_dataset(
     distributed: bool,
     mode: Literal['train', 'test'],
 ):
-    dataset_mode_check(conf_data=conf_data, mode=mode)
-
     if not distributed or dist.get_rank() == 0:
         logger.info('-'*40)
         logger.info("Loading data...")
+
+    dataset_mode_check(conf_data=conf_data, mode=mode)
 
     task = conf_data.task
 
