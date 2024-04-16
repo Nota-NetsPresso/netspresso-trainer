@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.utils.data as data
+from loguru import logger
 
 
 class BaseCustomDataset(data.Dataset):
@@ -114,10 +115,47 @@ class BaseDataSampler(ABC):
     @abstractmethod
     def load_data(self):
         raise NotImplementedError
+    
+    @abstractmethod
+    def load_id_mapping(self):
+        raise NotImplementedError
 
     @abstractmethod
-    def load_samples(self):
+    def load_class_map(self, id_mapping):
         raise NotImplementedError
+    
+    def load_samples(self):
+        assert self.conf_data.id_mapping is not None
+        id_mapping = self.load_id_mapping()
+        idx_to_class = self.load_class_map(id_mapping)
+
+        train_samples, valid_samples, test_samples = self.load_split_samples()
+        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+
+    def load_split_samples(self):
+        exists_train = self.conf_data.path.train.image is not None
+        exists_valid = self.conf_data.path.valid.image is not None
+        exists_test = self.conf_data.path.test.image is not None
+
+        train_samples = None
+        valid_samples = None
+        test_samples = None
+
+        if exists_train:
+            train_samples = self.load_data(split='train')
+        if exists_valid:
+            valid_samples = self.load_data(split='valid')
+        if exists_test:
+            test_samples = self.load_data(split='test')
+
+        if not exists_valid and exists_train:
+            logger.info(f"Validation set is not provided in config. Split automatically training set by {self.train_valid_split_ratio:.1f}:{1-self.train_valid_split_ratio:.1f}.")
+            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
+            train_samples, valid_samples = \
+                data.random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
+                                  generator=torch.Generator().manual_seed(42))
+
+        return train_samples, valid_samples, test_samples
 
     @abstractmethod
     def load_huggingface_samples(self):
