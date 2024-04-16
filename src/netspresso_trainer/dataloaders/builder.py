@@ -16,7 +16,7 @@ from .utils.collate_fn import classification_mix_collate_fn, classification_oneh
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
 
-def dataset_mode_check(conf_data: DictConfig, mode: Literal['train', 'test']):
+def dataset_path_check(conf_data: DictConfig, mode: Literal['train', 'test']):
     if mode == 'train':
         train_check = (conf_data.path.train.image is not None) and (conf_data.path.train.label is not None)
         assert train_check, "For training, train split of dataset must be provided."
@@ -81,7 +81,7 @@ def build_dataset(
         logger.info('-'*40)
         logger.info("Loading data...")
 
-    dataset_mode_check(conf_data=conf_data, mode=mode)
+    dataset_path_check(conf_data=conf_data, mode=mode)
 
     task = conf_data.task
 
