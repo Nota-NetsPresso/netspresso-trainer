@@ -1,18 +1,63 @@
-import os
 from functools import partial
 from multiprocessing.pool import ThreadPool
+from itertools import chain
 from pathlib import Path
-from typing import List
+from typing import Dict, List, Optional, Tuple, Union
 
-import cv2
 import numpy as np
 import PIL.Image as Image
-import torch
 import torch.distributed as dist
 from loguru import logger
-from omegaconf import OmegaConf
 
-from ..base import BaseCustomDataset
+from .base import BaseSampleLoader, BaseCustomDataset
+from .utils.constants import IMG_EXTENSIONS
+from .utils.misc import natural_key
+
+
+class PoseEstimationSampleLoader(BaseSampleLoader):
+    def __init__(self, conf_data, train_valid_split_ratio):
+        super(PoseEstimationSampleLoader, self).__init__(conf_data, train_valid_split_ratio)
+
+    def load_data(self, split='train'):
+        assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}."
+        data_root = Path(self.conf_data.path.root)
+        split_dir = self.conf_data.path[split]
+        image_dir: Path = data_root / split_dir.image
+        annotation_dir: Optional[Path] = data_root / split_dir.label if split_dir.label is not None else None
+        images: List[str] = []
+        labels: List[str] = []
+        images_and_targets: List[Dict[str, str]] = []
+        if annotation_dir is not None:
+            for ext in IMG_EXTENSIONS:
+                for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
+                    ann_path_maybe = annotation_dir / file.with_suffix('.txt').name
+                    if not ann_path_maybe.exists():
+                        continue
+                    images.append(str(file))
+                    labels.append(str(ann_path_maybe))
+                # TODO: get paired data from regex pattern matching (self.conf_data.path.pattern)
+
+            images = sorted(images, key=lambda k: natural_key(k))
+            labels = sorted(labels, key=lambda k: natural_key(k))
+            images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
+
+        else:
+            for ext in IMG_EXTENSIONS:
+                images_and_targets.extend([{'image': str(file), 'label': None}
+                                        for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
+            images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
+
+        return images_and_targets
+
+    def load_id_mapping(self):
+        return list(self.conf_data.id_mapping)
+
+    def load_class_map(self, id_mapping):
+        idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
+        return {'idx_to_class': idx_to_class}
+
+    def load_huggingface_samples(self):
+        raise NotImplementedError
 
 
 class PoseEstimationCustomDataset(BaseCustomDataset):
