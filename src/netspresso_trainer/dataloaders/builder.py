@@ -148,7 +148,7 @@ def build_dataset(
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
-    loaded_dataset_check(conf_data, train_dataset, valid_dataset, test_dataset, mode)
+    loaded_dataset_check(conf_data, train_dataset, valid_dataset, test_dataset, distributed, mode)
     return train_dataset, valid_dataset, test_dataset
 
 
