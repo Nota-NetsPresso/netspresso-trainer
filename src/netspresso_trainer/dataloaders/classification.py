@@ -1,47 +1,18 @@
-import csv
-import random
-from collections import Counter
+from functools import partial
+from multiprocessing.pool import ThreadPool
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import torch
+import PIL.Image as Image
+import torch.distributed as dist
 from loguru import logger
-from omegaconf import DictConfig
-from torch.nn import functional as F
-from torch.utils.data import random_split
 
-from ..base import BaseSampleLoader
-from ..utils.constants import IMG_EXTENSIONS
-from ..utils.misc import natural_key
+from .base import BaseSampleLoader, BaseCustomDataset, BaseHFDataset
+from .utils.constants import IMG_EXTENSIONS
+from .utils.misc import natural_key, load_classification_class_map
 
 VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS))
-
-
-def load_class_map_with_id_mapping(labels_path: Optional[Union[str, Path]]):
-    # Assume the `map_or_filename` is path for csv label file
-    assert labels_path.exists(), f"Cannot locate specified class map file {labels_path}!"
-    class_map_ext = labels_path.suffix.lower()
-    assert class_map_ext == '.csv', f"Unsupported class map file extension ({class_map_ext})!"
-
-    with open(labels_path, newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        file_to_idx = {row['image_id']: int(row['class']) for row in reader}
-
-    return file_to_idx
-
-
-def is_file_dict(image_dir: Union[Path, str], file_or_dir_to_idx):
-    image_dir = Path(image_dir)
-    candidate_name = list(file_or_dir_to_idx.keys())[0]
-    file_or_dir: Path = image_dir / candidate_name
-    if file_or_dir.exists():
-        return file_or_dir.is_file()
-
-    file_candidates = list(image_dir.glob(f"{candidate_name}.*"))
-    assert len(file_candidates) != 0, f"Unknown label format! Is there any something file like {file_or_dir} ?"
-
-    return True
 
 
 class ClassficationSampleLoader(BaseSampleLoader):
@@ -57,7 +28,7 @@ class ClassficationSampleLoader(BaseSampleLoader):
 
         assert split in ['train', 'valid', 'test'], f"split should be either {['train', 'valid', 'test']}"
         if annotation_path is not None:
-            file_to_idx = load_class_map_with_id_mapping(annotation_path)
+            file_to_idx = load_classification_class_map(annotation_path)
             for ext in IMG_EXTENSIONS:
                 for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
                     if file.name in file_to_idx:
@@ -121,3 +92,99 @@ class ClassficationSampleLoader(BaseSampleLoader):
             train_samples = splitted_datasets['train']
             valid_samples = splitted_datasets['test']
         return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+
+
+class ClassificationCustomDataset(BaseCustomDataset):
+
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
+                 split, samples, transform=None, **kwargs):
+        super(ClassificationCustomDataset, self).__init__(
+            conf_data, conf_augmentation, model_name, idx_to_class,
+            split, samples, transform, **kwargs
+        )
+
+    def cache_dataset(self, sampler, distributed):
+        if (not distributed) or (distributed and dist.get_rank() == 0):
+            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+
+        def _load(i, samples):
+            image = Image.open(str(samples[i]['image'])).convert('RGB')
+            return i, image
+
+        num_threads = 8 # TODO: Compute appropriate num_threads
+        load_imgs = ThreadPool(num_threads).imap(
+            partial(_load, samples=self.samples),
+            sampler
+        )
+        for i, image in load_imgs:
+            self.samples[i]['image'] = image
+
+        self.cache = True
+
+    def __getitem__(self, index):
+        img = self.samples[index]['image']
+        target = self.samples[index]['label']
+        if not self.cache:
+            img = Image.open(img).convert('RGB')
+
+        if self.transform is not None:
+            out = self.transform(img)
+
+        if target is None:
+            target = -1  # To be ignored at cross-entropy loss
+        return index, out['image'], target
+
+
+class ClassificationHFDataset(BaseHFDataset):
+
+    def __init__(
+            self,
+            conf_data,
+            conf_augmentation,
+            model_name,
+            idx_to_class,
+            split,
+            huggingface_dataset,
+            transform=None,
+            **kwargs
+    ):
+        root = conf_data.metadata.repo
+        super(ClassificationHFDataset, self).__init__(
+            conf_data,
+            conf_augmentation,
+            model_name,
+            root,
+            split,
+            transform,
+        )
+        # Make sure that you additionally install `requirements-data.txt`
+
+        self.samples = huggingface_dataset
+        self.idx_to_class = idx_to_class
+        self.class_to_idx = {v: k for k, v in self.idx_to_class.items()}
+
+        self.image_feature_name = conf_data.metadata.features.image
+        self.label_feature_name = conf_data.metadata.features.label
+
+    @property
+    def num_classes(self):
+        return len(self.idx_to_class)
+
+    @property
+    def class_map(self):
+        return self.idx_to_class
+
+    def __len__(self):
+        return self.samples.num_rows
+
+    def __getitem__(self, index):
+        img: Image.Image = self.samples[index][self.image_feature_name]
+        target: Union[int, str] = self.samples[index][self.label_feature_name] if self.label_feature_name in self.samples[index] else None
+        if isinstance(target, str):
+            target: int = self.class_to_idx[target]
+
+        if self.transform is not None:
+            out = self.transform(img)
+        if target is None:
+            target = -1
+        return index, out['image'], target
