@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add dataset validation step and refactoring data modules by `@illian01` in [PR 417](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/417)
 
 ## Bug Fixes:
 
