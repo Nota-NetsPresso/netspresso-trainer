@@ -27,7 +27,7 @@ def natural_key(string_):
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_.lower())]
 
 
-def get_label(label_file: Path):
+def get_detection_label(label_file: Path):
     target = Path(label_file).read_text()
 
     if target == '': # target label can be empty string

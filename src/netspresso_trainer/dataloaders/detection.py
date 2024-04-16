@@ -12,7 +12,7 @@ from loguru import logger
 
 from .base import BaseSampleLoader, BaseCustomDataset
 from .utils.constants import IMG_EXTENSIONS
-from .utils.misc import natural_key, get_label
+from .utils.misc import natural_key, get_detection_label
 
 
 class DetectionSampleLoader(BaseSampleLoader):
@@ -89,7 +89,7 @@ class DetectionCustomDataset(BaseCustomDataset):
             image = Image.open(Path(samples[i]['image'])).convert('RGB')
             label = self.samples[i]['label']
             if label is not None:
-                label = get_label(Path(label))
+                label = get_detection_label(Path(label))
             return i, image, label
 
         num_threads = 8 # TODO: Compute appropriate num_threads
@@ -110,7 +110,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         else:
             img = Image.open(self.samples[index]['image']).convert('RGB')
             ann_path = Path(self.samples[index]['label']) if self.samples[index]['label'] is not None else None
-            ann = get_label(Path(ann_path)) if ann_path is not None else None
+            ann = get_detection_label(Path(ann_path)) if ann_path is not None else None
 
         w, h = img.size
 
@@ -150,7 +150,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         if ann_path is None:
             return org_img, np.zeros(0, 1), np.zeros(0, 5)
 
-        label, boxes_yolo = get_label(Path(ann_path))
+        label, boxes_yolo = get_detection_label(Path(ann_path))
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         return org_img, label, boxes
