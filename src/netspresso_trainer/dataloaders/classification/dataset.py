@@ -20,7 +20,7 @@ VALID_IMG_EXTENSIONS = IMG_EXTENSIONS + tuple((x.upper() for x in IMG_EXTENSIONS
 
 def load_custom_class_map(id_mapping: List[str]):
     idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
-    return idx_to_class
+    return {'idx_to_class': idx_to_class}
 
 
 def load_class_map_with_id_mapping(labels_path: Optional[Union[str, Path]]):
@@ -115,34 +115,12 @@ class ClassficationDataSampler(BaseDataSampler):
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         return images_and_targets
+    
+    def load_id_mapping(self):
+        return list(self.conf_data.id_mapping)
 
-    def load_samples(self):
-        assert self.conf_data.id_mapping is not None
-        id_mapping = list(self.conf_data.id_mapping)
-        idx_to_class = load_custom_class_map(id_mapping=id_mapping)
-
-        exists_train = self.conf_data.path.train.image is not None
-        exists_valid = self.conf_data.path.valid.image is not None
-        exists_test = self.conf_data.path.test.image is not None
-
-        train_samples = None
-        valid_samples = None
-        test_samples = None
-
-        if exists_train:
-            train_samples = self.load_data(split='train')
-        if exists_valid:
-            valid_samples = self.load_data(split='valid')
-        if exists_test:
-            test_samples = self.load_data(split='test')
-
-        if not exists_valid and exists_train:
-            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
-            train_samples, valid_samples = \
-                random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
-                                generator=torch.Generator().manual_seed(42))
-
-        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+    def load_class_map(self, id_mapping):
+        return load_custom_class_map(id_mapping=id_mapping)
 
     def load_huggingface_samples(self):
         from datasets import ClassLabel, load_dataset

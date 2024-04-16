@@ -44,7 +44,7 @@ def load_custom_class_map(id_mapping: Union[ListConfig, DictConfig]) -> Tuple[Di
         idx_to_class[class_idx] = class_name
         label_value_to_idx[label_value_tuple] = class_idx
 
-    return idx_to_class, label_value_to_idx
+    return {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
 
 
 class SegmentationDataSampler(BaseDataSampler):
@@ -78,32 +78,11 @@ class SegmentationDataSampler(BaseDataSampler):
 
         return images_and_targets
 
-    def load_samples(self):
-        assert isinstance(self.conf_data.id_mapping, (ListConfig, DictConfig))
-
-        idx_to_class, label_value_to_idx = load_custom_class_map(id_mapping=self.conf_data.id_mapping)
-
-        exists_train = self.conf_data.path.train.image is not None
-        exists_valid = self.conf_data.path.valid.image is not None
-        exists_test = self.conf_data.path.test.image is not None
-
-        train_samples = None
-        valid_samples = None
-        test_samples = None
-
-        if exists_train:
-            train_samples = self.load_data(split='train')
-        if exists_valid:
-            valid_samples = self.load_data(split='valid')
-        if exists_test:
-            test_samples = self.load_data(split='test')
-
-        if not exists_valid:
-            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
-            train_samples, valid_samples = random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
-                                                        generator=torch.Generator().manual_seed(42))
-
-        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
+    def load_id_mapping(self):
+        return self.conf_data.id_mapping
+    
+    def load_class_map(self, id_mapping):
+        return load_custom_class_map(id_mapping=id_mapping)
 
     def load_huggingface_samples(self):
         from datasets import load_dataset

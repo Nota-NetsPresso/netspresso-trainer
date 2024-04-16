@@ -127,10 +127,10 @@ class BaseDataSampler(ABC):
     def load_samples(self):
         assert self.conf_data.id_mapping is not None
         id_mapping = self.load_id_mapping()
-        idx_to_class = self.load_class_map(id_mapping)
+        misc = self.load_class_map(id_mapping)
 
         train_samples, valid_samples, test_samples = self.load_split_samples()
-        return train_samples, valid_samples, test_samples, {'idx_to_class': idx_to_class}
+        return train_samples, valid_samples, test_samples, misc
 
     def load_split_samples(self):
         exists_train = self.conf_data.path.train.image is not None

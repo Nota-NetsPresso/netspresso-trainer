@@ -17,7 +17,7 @@ from ..utils.misc import natural_key
 
 def load_custom_class_map(id_mapping: List[str]):
     idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
-    return idx_to_class
+    return {'idx_to_class': idx_to_class}
 
 def detection_collate_fn(original_batch):
     indices = []
