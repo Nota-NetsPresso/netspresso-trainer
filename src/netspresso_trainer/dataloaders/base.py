@@ -6,11 +6,12 @@ from pathlib import Path
 import numpy as np
 import torch
 import torch.utils.data as data
+from loguru import logger
 
 
 class BaseCustomDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, with_label, **kwargs):
+    def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class, split, samples, transform, **kwargs):
         super(BaseCustomDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
@@ -23,7 +24,6 @@ class BaseCustomDataset(data.Dataset):
         self._idx_to_class = idx_to_class
         self._num_classes = len(self._idx_to_class)
         self._split = split
-        self._with_label = with_label
 
         self.cache = False
 
@@ -54,13 +54,10 @@ class BaseCustomDataset(data.Dataset):
     def mode(self):
         return self._split
 
-    @property
-    def with_label(self):
-        return self._with_label
 
 class BaseHFDataset(data.Dataset):
 
-    def __init__(self, conf_data, conf_augmentation, model_name, root, split, transform, with_label):
+    def __init__(self, conf_data, conf_augmentation, model_name, root, split, transform):
         super(BaseHFDataset, self).__init__()
         self.conf_data = conf_data
         self.conf_augmentation = conf_augmentation
@@ -68,7 +65,6 @@ class BaseHFDataset(data.Dataset):
         self.transform = transform(conf_augmentation)
         self._root = root
         self._split = split
-        self._with_label = with_label
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
@@ -101,12 +97,8 @@ class BaseHFDataset(data.Dataset):
     def mode(self):
         return self._split
 
-    @property
-    def with_label(self):
-        return self._with_label
 
-
-class BaseDataSampler(ABC):
+class BaseSampleLoader(ABC):
     def __init__(self, conf_data, train_valid_split_ratio):
         self.conf_data = conf_data
         self.train_valid_split_ratio = train_valid_split_ratio
@@ -116,8 +108,45 @@ class BaseDataSampler(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def load_samples(self):
+    def load_id_mapping(self):
         raise NotImplementedError
+
+    @abstractmethod
+    def load_class_map(self, id_mapping):
+        raise NotImplementedError
+
+    def load_samples(self):
+        assert self.conf_data.id_mapping is not None
+        id_mapping = self.load_id_mapping()
+        misc = self.load_class_map(id_mapping)
+
+        train_samples, valid_samples, test_samples = self.load_split_samples()
+        return train_samples, valid_samples, test_samples, misc
+
+    def load_split_samples(self):
+        exists_train = self.conf_data.path.train.image is not None
+        exists_valid = self.conf_data.path.valid.image is not None
+        exists_test = self.conf_data.path.test.image is not None
+
+        train_samples = None
+        valid_samples = None
+        test_samples = None
+
+        if exists_train:
+            train_samples = self.load_data(split='train')
+        if exists_valid:
+            valid_samples = self.load_data(split='valid')
+        if exists_test:
+            test_samples = self.load_data(split='test')
+
+        if not exists_valid and exists_train:
+            logger.info(f"Validation set is not provided in config. Split automatically training set by {self.train_valid_split_ratio:.1f}:{1-self.train_valid_split_ratio:.1f}.")
+            num_train_splitted = int(len(train_samples) * self.train_valid_split_ratio)
+            train_samples, valid_samples = \
+                data.random_split(train_samples, [num_train_splitted, len(train_samples) - num_train_splitted],
+                                  generator=torch.Generator().manual_seed(42))
+
+        return train_samples, valid_samples, test_samples
 
     @abstractmethod
     def load_huggingface_samples(self):
