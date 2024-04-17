@@ -31,7 +31,9 @@ class FPN(nn.Module):
         self.upsample_interpolation = params.upsample_interpolation
 
         self.lateral_conv_type = params.lateral_conv_type
+        self.num_lateral_conv = params.num_lateral_conv
         self.fpn_conv_type = params.fpn_conv_type
+        self.num_fpn_conv = params.num_fpn_conv
         self.norm_type = params.norm_type
         self.act_type = params.act_type
 
@@ -51,10 +53,17 @@ class FPN(nn.Module):
         lateral_convlayer = BLOCK_FROM_LITERAL[self.lateral_conv_type]
         fpn_convlayer = BLOCK_FROM_LITERAL[self.fpn_conv_type]
         for i in range(self.num_ins):
-            l_conv = lateral_convlayer(in_channels=self.in_channels[i], out_channels=self.out_channels,
-                                       kernel_size=1, stride=1, norm_type=self.norm_type, act_type=self.act_type)
-            fpn_conv = fpn_convlayer(in_channels=self.out_channels, out_channels=self.out_channels,
-                                     kernel_size=3, stride=1)
+            l_conv = []
+            for _ in range(self.num_lateral_conv):
+                l_conv += [lateral_convlayer(in_channels=self.in_channels[i], out_channels=self.out_channels,
+                                             kernel_size=1, stride=1, norm_type=self.norm_type, act_type=self.act_type)]
+            l_conv = nn.Sequential(*l_conv)
+
+            fpn_conv = []
+            for _ in range(self.num_fpn_conv):
+                fpn_conv += [fpn_convlayer(in_channels=self.out_channels, out_channels=self.out_channels,
+                                           kernel_size=3, stride=1)]
+            fpn_conv = nn.Sequential(*fpn_conv)
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
