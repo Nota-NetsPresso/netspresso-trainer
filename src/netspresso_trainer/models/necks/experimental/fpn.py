@@ -76,7 +76,8 @@ class FPN(nn.Module):
                     in_channels = self.in_channels[self.num_ins - 1]
                 else:
                     in_channels = self.out_channels
-                extra_fpn_conv = nn.Conv2d(in_channels, self.out_channels, kernel_size=3, stride=2, padding=1)
+                extra_fpn_conv = fpn_convlayer(in_channels=in_channels, out_channels=self.out_channels,
+                                               kernel_size=3, stride=2)
                 self.fpn_convs.append(extra_fpn_conv)
 
         self._intermediate_features_dim = [self.out_channels for _ in range(self.num_outs)]
