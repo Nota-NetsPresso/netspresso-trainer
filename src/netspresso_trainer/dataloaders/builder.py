@@ -57,13 +57,13 @@ def loaded_dataset_check(
             logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
             if valid_dataset is not None:
                 logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
-        assert len(train_dataset) > 0, "Training dataset has no samples. Please check your dataset path."
+        assert len(train_dataset) > 0, "Training dataset has no samples. Please check your dataset configuration."
 
     elif mode == 'test':
         if not distributed or dist.get_rank() == 0:
             logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
             logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
-        assert len(test_dataset) > 0, "Test dataset has no samples. Please check your dataset path."
+        assert len(test_dataset) > 0, "Test dataset has no samples. Please check your dataset configuration."
 
     else:
         raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
@@ -81,8 +81,6 @@ def build_dataset(
         logger.info('-'*40)
         logger.info("Loading data...")
 
-    dataset_path_check(conf_data=conf_data, mode=mode)
-
     task = conf_data.task
 
     assert task in DATA_SAMPLER, f"Data sampler for {task} is not yet supported!"
@@ -95,6 +93,8 @@ def build_dataset(
     assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
 
     if data_format == 'local':
+        dataset_path_check(conf_data=conf_data, mode=mode)
+
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
         data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
 
