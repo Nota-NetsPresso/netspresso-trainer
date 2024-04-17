@@ -14,8 +14,6 @@ class FPN(nn.Module):
         intermediate_features_dim: List[int],
         params: DictConfig,
     ):
-        upsample_cfg = {'mode': 'nearest'}
-        self.upsample_cfg = upsample_cfg.copy()
         super(FPN, self).__init__()
 
         self.in_channels = intermediate_features_dim
@@ -24,6 +22,7 @@ class FPN(nn.Module):
         self.num_outs = params.num_outs
         self.relu_before_extra_convs = params.relu_before_extra_convs
         self.add_extra_convs = params.add_extra_convs
+        self.upsample_interpolation = params.upsample_interpolation
 
         assert self.num_outs >= self.num_ins
 
@@ -88,16 +87,9 @@ class FPN(nn.Module):
         # build top-down path
         used_backbone_levels = len(laterals)
         for i in range(used_backbone_levels - 1, 0, -1):
-            # In some cases, fixing `scale factor` (e.g. 2) is preferred, but
-            #  it cannot co-exist with `size` in `F.interpolate`.
-            if 'scale_factor' in self.upsample_cfg:
-                # fix runtime error of "+=" inplace operation in PyTorch 1.10
-                laterals[i - 1] = laterals[i - 1] + F.interpolate(
-                    laterals[i], **self.upsample_cfg)
-            else:
-                prev_shape = laterals[i - 1].shape[2:]
-                laterals[i - 1] = laterals[i - 1] + F.interpolate(
-                    laterals[i], size=prev_shape, **self.upsample_cfg)
+            prev_shape = laterals[i - 1].shape[2:]
+            laterals[i - 1] = laterals[i - 1] + F.interpolate(
+                laterals[i], size=prev_shape, mode=self.upsample_interpolation)
 
         # build outputs
         # part 1: from original levels
