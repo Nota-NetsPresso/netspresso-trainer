@@ -1,10 +1,16 @@
-from typing import List
+from typing import List, Dict, Type
 
 from omegaconf import DictConfig
 import torch.nn as nn
 import torch.nn.functional as F
 
 from ...utils import BackboneOutput
+from ...op.custom import ConvLayer, SeparableConvLayer
+
+BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
+    'conv': ConvLayer,
+    'separable_conv': SeparableConvLayer,
+}
 
 
 class FPN(nn.Module):
@@ -24,6 +30,11 @@ class FPN(nn.Module):
         self.add_extra_convs = params.add_extra_convs
         self.upsample_interpolation = params.upsample_interpolation
 
+        self.lateral_conv_type = params.lateral_conv_type
+        self.fpn_conv_type = params.fpn_conv_type
+        self.norm_type = params.norm_type
+        self.act_type = params.act_type
+
         assert self.num_outs >= self.num_ins
 
         self.add_extra_convs = self.add_extra_convs
@@ -37,26 +48,13 @@ class FPN(nn.Module):
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
+        lateral_convlayer = BLOCK_FROM_LITERAL[self.lateral_conv_type]
+        fpn_convlayer = BLOCK_FROM_LITERAL[self.fpn_conv_type]
         for i in range(self.num_ins):
-            l_conv = nn.Conv2d(self.in_channels[i], self.out_channels, kernel_size=1, stride=1, padding=0)
-            # ConvModule(
-            #     in_channels[i],
-            #     out_channels,
-            #     1,
-            #     conv_cfg=conv_cfg,
-            #     norm_cfg=norm_cfg if not self.no_norm_on_lateral else None,
-            #     act_cfg=act_cfg,
-            #     inplace=False)
-            fpn_conv = nn.Conv2d(self.out_channels, self.out_channels, kernel_size=3, stride=1, padding=1)
-            # ConvModule(
-            #     out_channels,
-            #     out_channels,
-            #     3,
-            #     padding=1,
-            #     conv_cfg=conv_cfg,
-            #     norm_cfg=norm_cfg,
-            #     act_cfg=act_cfg,
-            #     inplace=False)
+            l_conv = lateral_convlayer(in_channels=self.in_channels[i], out_channels=self.out_channels,
+                                       kernel_size=1, stride=1, norm_type=self.norm_type, act_type=self.act_type)
+            fpn_conv = fpn_convlayer(in_channels=self.out_channels, out_channels=self.out_channels,
+                                     kernel_size=3, stride=1)
 
             self.lateral_convs.append(l_conv)
             self.fpn_convs.append(fpn_conv)
