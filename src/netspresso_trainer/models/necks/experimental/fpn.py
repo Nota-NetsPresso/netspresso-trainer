@@ -25,19 +25,8 @@ class FPN(nn.Module):
         self.relu_before_extra_convs = params.relu_before_extra_convs
         self.add_extra_convs = params.add_extra_convs
 
-        start_level = params.start_level
-        end_level = params.end_level
+        assert self.num_outs >= self.num_ins
 
-        if end_level == -1 or end_level == self.num_ins - 1:
-            self.backbone_end_level = self.num_ins
-            assert self.num_outs >= self.num_ins - start_level
-        else:
-            # if end_level is not the last level, no extra level is allowed
-            self.backbone_end_level = end_level + 1
-            assert end_level < self.num_ins
-            assert self.num_outs == end_level - start_level + 1
-        self.start_level = start_level
-        self.end_level = end_level
         self.add_extra_convs = self.add_extra_convs
         assert isinstance(self.add_extra_convs, (str, bool))
         if isinstance(self.add_extra_convs, str):
@@ -49,7 +38,7 @@ class FPN(nn.Module):
         self.lateral_convs = nn.ModuleList()
         self.fpn_convs = nn.ModuleList()
 
-        for i in range(self.start_level, self.backbone_end_level):
+        for i in range(self.num_ins):
             l_conv = nn.Conv2d(self.in_channels[i], self.out_channels, kernel_size=1, stride=1, padding=0)
             # ConvModule(
             #     in_channels[i],
@@ -74,11 +63,11 @@ class FPN(nn.Module):
             self.fpn_convs.append(fpn_conv)
 
         # add extra conv layers (e.g., RetinaNet)
-        extra_levels = self.num_outs - self.backbone_end_level + self.start_level
+        extra_levels = self.num_outs - self.num_ins
         if self.add_extra_convs and extra_levels >= 1:
             for i in range(extra_levels):
                 if i == 0 and self.add_extra_convs == 'on_input':
-                    in_channels = self.in_channels[self.backbone_end_level - 1]
+                    in_channels = self.in_channels[self.num_ins - 1]
                 else:
                     in_channels = self.out_channels
                 extra_fpn_conv = nn.Conv2d(in_channels, self.out_channels, kernel_size=3, stride=2, padding=1)
@@ -92,7 +81,7 @@ class FPN(nn.Module):
 
         # build laterals
         laterals = [
-            lateral_conv(inputs[i + self.start_level])
+            lateral_conv(inputs[i])
             for i, lateral_conv in enumerate(self.lateral_convs)
         ]
 
