@@ -121,6 +121,36 @@ class ConvLayer(nn.Module):
         return f"{self.block}"
 
 
+class SeparableConvLayer(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = 1,
+        dilation: Optional[Union[int, Tuple[int, int]]] = 1,
+        padding: Optional[Union[int, Tuple[int, int]]] = None,
+        bias: bool = False,
+        padding_mode: Optional[str] = 'zeros',
+        use_norm: bool = True,
+        norm_type: Optional[str] = None,
+        use_act: bool = True,
+        act_type: Optional[str] = None,
+    ) -> None:
+        super().__init__()
+        self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
+                                   kernel_size=kernel_size, stride=stride, dilation=dilation,
+                                   padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
+        self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x = self.depthwise(x)
+        x = self.pointwise(x)
+        return x
+
+
 @torch.fx.wrap
 def tensor_slice(tensor: Tensor, dim, index):
     return tensor.select(dim, index)
