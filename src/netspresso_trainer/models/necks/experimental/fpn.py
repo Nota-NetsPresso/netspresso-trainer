@@ -1,3 +1,7 @@
+"""
+This code is modified version of mmdetection.
+https://github.com/open-mmlab/mmdetection/blob/main/mmdet/models/necks/fpn.py
+"""
 from typing import List, Dict, Type
 
 from omegaconf import DictConfig
