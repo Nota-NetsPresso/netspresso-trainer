@@ -2,27 +2,37 @@
 Based on the Darknet implementation of Megvii.
 https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/darknet.py
 """
-from typing import Dict, Optional, List
+
+from typing import Dict, Optional, List, Type
 
 from omegaconf import DictConfig
 import torch
 from torch import nn
 
-from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
+from ...op.custom import (
+    ConvLayer,
+    CSPLayer,
+    Focus,
+    SPPBottleneck,
+    Bottleneck,
+    BasicBlock,
+    DarknetBlock,
+)
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
-__all__ = ['cspdarknet']
-SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
+__all__ = ["cspdarknet"]
+SUPPORTING_TASK = ["classification", "segmentation", "detection", "pose_estimation"]
 
 
 BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
-    'basicblock': BasicBlock,
-    'bottleneck': Bottleneck,
-    'darknetblock': DarknetBlock
+    "basicblock": BasicBlock,
+    "bottleneck": Bottleneck,
+    "darknetblock": DarknetBlock,
 }
 
-DARKNET_SUPPORTED_BLOCKS = ['bottleneck']
+DARKNET_SUPPORTED_BLOCKS = ["bottleneck"]
+
 
 class CSPDarknet(nn.Module):
 
@@ -194,7 +204,9 @@ class Darknet(nn.Module):
         ), f"Darknet is not supported on {self.task} task now."
         assert stage_params, "please provide stage params of Darknet"
         assert len(stage_params) >= 2
-        assert params.block_type.lower() in DARKNET_SUPPORTED_BLOCKS, "Block type not supported"
+        assert (
+            params.block_type.lower() in DARKNET_SUPPORTED_BLOCKS
+        ), "Block type not supported"
         self.use_intermediate_features = (
             self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
         )
@@ -237,8 +249,7 @@ class Darknet(nn.Module):
             num_layers = len(stage_param.in_channels)
             hidden_expansion = stage_param.hidden_expansion
 
-
-            for j in range(num_layers-1):
+            for j in range(num_layers - 1):
                 in_ch = stage_param.in_channels[j]
                 out_ch = stage_param.out_channels[j]
                 kernel_size = stage_param.kernel_sizes[j]
@@ -259,7 +270,7 @@ class Darknet(nn.Module):
                     )
                     layers.append(conv_layer)
 
-            for _ in range(stage_param.num_blocks[-1]): 
+            for _ in range(stage_param.num_blocks[-1]):
                 in_ch = stage_param.in_channels[-1]
                 out_ch = stage_param.out_channels[-1]
                 use_group = stage_param.use_group[-1]
@@ -269,30 +280,27 @@ class Darknet(nn.Module):
                     act_type=act_type,
                     no_out_act=True,
                     expansion=1,
-                    groups = in_ch,
-                    base_width= 64 * hidden_expansion/out_ch
+                    groups=in_ch,
+                    base_width=64 * hidden_expansion / out_ch,
                 )
 
                 layers.append(darknet_block)
             setattr(self, f"stage_{i+1}", nn.Sequential(*layers))
             predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels[-1]
 
-
         self._feature_dim = predefined_out_features[f"stage_{self.num_layers-1}"]
-
 
         intermediate_out_features = []
         for i in range(params.num_feat_layers - 1):
-            stage_num = (self.num_layers - (i+2))
+            stage_num = self.num_layers - (i + 2)
             intermediate_out_features.append(f"stage_{stage_num}")
 
-
         self._intermediate_features_dim = [
-            predefined_out_features[out_feature] for out_feature in intermediate_out_features
+            predefined_out_features[out_feature]
+            for out_feature in intermediate_out_features
         ]
 
-        self.out_features = ('stage_5', 'stage_6')
-
+        self.out_features = ("stage_5", "stage_6")
 
         # Initialize
         def init_bn(M):
@@ -303,7 +311,6 @@ class Darknet(nn.Module):
 
         self.apply(init_bn)
 
-
     def forward(self, x):
         outputs_dict = {}
         x = self.stem(x)
@@ -312,7 +319,6 @@ class Darknet(nn.Module):
         for i in range(1, self.num_layers):
             x = getattr(self, f"stage_{i}")(x)
             outputs_dict[f"stage_{i}"] = x
-
 
         if self.use_intermediate_features:
             all_hidden_states = [
