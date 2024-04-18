@@ -22,6 +22,8 @@ BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
     'darknetblock': DarknetBlock
 }
 
+DARKNET_SUPPORTED_BLOCKS = ['bottleneck']
+
 class CSPDarknet(nn.Module):
 
     def __init__(
@@ -174,7 +176,8 @@ def cspdarknet(task, conf_model_backbone) -> CSPDarknet:
 
 class Darknet(nn.Module):
     """
-    yolov3-based backbone
+    Consists of a stem layer and multiple stage layers.
+    Stage layers are named as stage_{i} starting from stage_1
     """
 
     num_layers: int
@@ -184,22 +187,23 @@ class Darknet(nn.Module):
         task: str,
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
-        # depthwise=False,
     ) -> None:
         self.task = task.lower()
         assert (
             self.task in SUPPORTING_TASK
-        ), f"CSPDarknet is not supported on {self.task} task now."
+        ), f"Darknet is not supported on {self.task} task now."
         assert stage_params, "please provide stage params of Darknet"
         assert len(stage_params) >= 2
+        assert params.block_type.lower() in DARKNET_SUPPORTED_BLOCKS, "Block type not supported"
         self.use_intermediate_features = (
             self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
         )
+
         self.num_layers = len(stage_params)
 
         super().__init__()
 
-        # TODO: set act_type inpalce to true?
+        # TODO: Check if inplace activation should be used
         act_type = params.act_type
         norm_type = params.norm_type
         block_type = params.block_type
@@ -259,41 +263,19 @@ class Darknet(nn.Module):
                 in_ch = stage_param.in_channels[-1]
                 out_ch = stage_param.out_channels[-1]
                 use_group = stage_param.use_group[-1]
-                # groups = in_ch if stage_param.use_group[-1] else 1
-                # use_act = stage_param.use_act[-1]
                 darknet_block = Block(
                     in_ch,
                     out_ch,
-                    # shortcut=True,
                     act_type=act_type,
                     no_out_act=True,
                     expansion=1,
                     groups = in_ch,
-                    # groups = in_ch if use_group else 1,
                     base_width= 64 * hidden_expansion/out_ch
                 )
 
                 layers.append(darknet_block)
             setattr(self, f"stage_{i+1}", nn.Sequential(*layers))
             predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels[-1]
-
-        # print(self.stem)
-
-        # print("------------------- 1 ---------------------")
-        # print(self.stage_1)
-        # print("------------------- 2 ---------------------")
-        # print(self.stage_2)
-        # print("------------------- 3 ---------------------")
-        # print(self.stage_3)
-        # print("------------------- 4 ---------------------")
-        # print(self.stage_4)
-        # print("------------------- 5 ---------------------")
-        # print(self.stage_5)
-        # print("------------------- 6 ---------------------")
-        # print(self.stage_6)
-        # print("-------------------------------------------")
-
-        # exit()
 
 
         self._feature_dim = predefined_out_features[f"stage_{self.num_layers-1}"]
@@ -309,24 +291,18 @@ class Darknet(nn.Module):
             predefined_out_features[out_feature] for out_feature in intermediate_out_features
         ]
 
-        # self.out_features = intermediate_out_features + predefined_out_features[f"stage_{self.num_layers-1}"]
         self.out_features = ('stage_5', 'stage_6')
 
 
         # Initialize
         def init_bn(M):
             for m in M.modules():
-                # print("###############")
-                # print(m)
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
 
         self.apply(init_bn)
 
-        # exit()
-        # print(self._feature_dim)
-        # print(self._intermediate_features_dim)
 
     def forward(self, x):
         outputs_dict = {}
@@ -344,7 +320,7 @@ class Darknet(nn.Module):
             ]
             return BackboneOutput(intermediate_features=all_hidden_states)
 
-        # TODO: Check this part
+        # TODO: Check if classification head is needed
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
 
