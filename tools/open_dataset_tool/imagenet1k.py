@@ -43,7 +43,7 @@ if __name__ == '__main__':
     ap.close()
 
     print('Extracting training images from each class tar file.')
-    tar_files = os.listdir()
+    tar_files = os.listdir(tmp2extract)
     for extract_file in tqdm(tar_files):
         extract_file = tmp2extract / (extract_file + '.tar')
         ap = tarfile.open(extract_file)
