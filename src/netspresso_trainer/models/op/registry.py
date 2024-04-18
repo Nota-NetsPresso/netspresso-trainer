@@ -16,4 +16,5 @@ ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
     'silu': nn.SiLU,
     'swish': nn.SiLU,
     'hard_swish': nn.Hardswish,
+    'relu6': nn.ReLU6,
 }

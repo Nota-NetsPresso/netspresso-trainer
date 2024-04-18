@@ -1,6 +1,6 @@
 # from .core import *
 from .core.resnet import resnet
-from .experimental.darknet import cspdarknet
+from .experimental.darknet import cspdarknet, darknet
 from .experimental.efficientformer import efficientformer
 from .experimental.mixnet import mixnet
 from .experimental.mixtransformer import mixtransformer
