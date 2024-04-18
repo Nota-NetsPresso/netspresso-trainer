@@ -231,7 +231,7 @@ class Darknet(nn.Module):
 
             layers = []
             num_layers = len(stage_param.in_channels)
-            expension = stage_param.expension
+            hidden_expansion = stage_param.hidden_expansion
 
 
             for j in range(num_layers-1):
@@ -270,7 +270,7 @@ class Darknet(nn.Module):
                     expansion=1,
                     groups = in_ch,
                     # groups = in_ch if use_group else 1,
-                    base_width= 64 * expension/out_ch
+                    base_width= 64 * hidden_expansion/out_ch
                 )
 
                 layers.append(darknet_block)
