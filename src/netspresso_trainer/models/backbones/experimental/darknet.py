@@ -256,21 +256,19 @@ class Darknet(nn.Module):
                 stride = stage_param.stride[j]
                 use_act = stage_param.use_act[j]
                 use_group = stage_param.use_group[j]
-                num_block = stage_param.num_blocks[j]
 
-                for _ in range(num_block):
-                    conv_layer = ConvLayer(
-                        in_ch,
-                        out_ch,
-                        kernel_size,
-                        stride,
-                        use_act=use_act,
-                        act_type=act_type if use_act else None,
-                        groups=in_ch if use_group else 1,
-                    )
-                    layers.append(conv_layer)
+                conv_layer = ConvLayer(
+                    in_ch,
+                    out_ch,
+                    kernel_size,
+                    stride,
+                    use_act=use_act,
+                    act_type=act_type if use_act else None,
+                    groups=in_ch if use_group else 1,
+                )
+                layers.append(conv_layer)
 
-            for _ in range(stage_param.num_blocks[-1]):
+            for _ in range(stage_param.num_blocks):
                 in_ch = stage_param.in_channels[-1]
                 out_ch = stage_param.out_channels[-1]
                 use_group = stage_param.use_group[-1]

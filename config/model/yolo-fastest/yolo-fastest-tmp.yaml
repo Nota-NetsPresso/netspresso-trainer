@@ -32,7 +32,7 @@ model:
           stride: [1, 1, 1, 1]
           use_act: [True, True, False, False]
           use_group: [False, True, False, False]
-          num_blocks: [1, 1, 1, 1]
+          num_blocks: 1
           hidden_expansion: 2
         - # stage_2
           in_channels: [4, 24, 24, 8]
@@ -41,7 +41,7 @@ model:
           stride: [1, 2, 1, 1]
           use_act: [True, True, False, False]
           use_group: [False, False, False, False]
-          num_blocks: [1, 1, 1, 2]
+          num_blocks: 2
           hidden_expansion: 4
         - # stage_3
           in_channels: [8, 32, 32, 8]
@@ -50,7 +50,7 @@ model:
           stride: [1, 2, 1, 1]
           use_act: [True, True, False, False]
           use_group: [False, True, False, False]
-          num_blocks: [1, 1, 1, 2]
+          num_blocks: 2
           hidden_expansion: 6
         - # stage_4
           in_channels: [8, 48, 48, 16]
@@ -59,7 +59,7 @@ model:
           stride: [1, 2, 1, 1]
           use_act: [True, True, False, False]
           use_group: [False, True, False, False]
-          num_blocks: [1, 1, 1, 4]
+          num_blocks: 4
           hidden_expansion: 6
         - # stage_5
           in_channels: [16, 96, 96, 24]
@@ -68,7 +68,7 @@ model:
           stride: [1, 2, 1, 1]
           use_act: [True, True, False, False]
           use_group: [False, True, False, False]
-          num_blocks: [1, 1, 1, 4]
+          num_blocks: 4
           hidden_expansion: 5.6666
         - # stage_6
           in_channels: [24, 136, 136, 48]
@@ -77,7 +77,7 @@ model:
           stride: [1, 2, 1, 1]
           use_act: [True, True, True, False]
           use_group: [False, True, False, False]
-          num_blocks: [1, 1, 1, 5]
+          num_blocks: 5
           hidden_expansion: 4.6666
     neck:
       name: identity
