@@ -1,0 +1,82 @@
+from typing import List
+
+from omegaconf import DictConfig
+import torch
+import torch.nn as nn
+
+from ....op.custom import ConvLayer
+from ....utils import AnchorBasedDetectionModelOutput
+from .detection import AnchorGenerator
+
+
+class YoloV3Head(nn.Module):
+    
+    num_layers: int
+
+    def __init__(
+        self,
+        intermediate_features_dim: List[int],
+        params: DictConfig,
+    ):
+        super().__init__()
+        in_channels = intermediate_features_dim[0]
+
+        anchors = params.anchors
+        num_layers = len(anchors)
+
+        self.num_layers = num_layers
+
+        norm_type = params.norm_type
+        use_act = False
+        kernel_size = 1
+
+        for i in range(num_layers):
+            in_channels = params.in_channels[i]
+            out_channels = params.out_channels[i]
+
+            conv_norm = ConvLayer(
+                in_channels=in_channels,
+                out_channels=in_channels,
+                kernel_size=kernel_size,
+                norm_type=norm_type,
+                use_act=use_act,
+            )
+            conv = ConvLayer(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                use_norm=False,
+                use_act=use_act,
+            )
+
+            layer = nn.Sequential(conv_norm, conv)
+
+            setattr(self, f"layer_{i+1}", layer)
+
+
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 1e-3
+                    m.momentum = 0.03
+
+        self.apply(init_bn)
+
+
+    def forward(self, inputs: List[torch.Tensor]):
+
+        x1, x2 = inputs
+        out1 = self.layer_1(x1)
+        out2 = self.layer_2(x2)
+
+        return out1, out2
+
+
+
+def yolov3_head(
+    intermediate_features_dim, conf_model_head, **kwargs
+) -> YoloV3Head:
+    return YoloV3Head(
+        intermediate_features_dim=intermediate_features_dim,
+        params=conf_model_head.params,
+    )
