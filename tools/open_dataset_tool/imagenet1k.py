@@ -45,7 +45,7 @@ if __name__ == '__main__':
     print('Extracting training images from each class tar file.')
     tar_files = os.listdir(tmp2extract)
     for extract_file in tqdm(tar_files):
-        extract_file = tmp2extract / (extract_file + '.tar')
+        extract_file = tmp2extract / (extract_file)
         ap = tarfile.open(extract_file)
         ap.extractall(train_image_dir)
         ap.close()
@@ -92,11 +92,6 @@ if __name__ == '__main__':
 
         cls_to_name[cls_num] = cls_name
         id_to_cls[cls_id] = cls_num
-
-    try:
-        shutil.rmtree(devkit_extracted)
-    except OSError as e:
-        print(e)
     print('Done!')
 
     # Build train label csv file
@@ -125,6 +120,11 @@ if __name__ == '__main__':
     valid_csv = pd.DataFrame({'image_id': sorted(os.listdir(imagenet_path / 'images' / 'valid')), 'class': labels})
     valid_csv.to_csv(valid_label_dir / 'imagenet_valid.csv', mode='w', index=False)
     print('Done!')
+
+    try:
+        shutil.rmtree(devkit_extracted)
+    except OSError as e:
+        print(e)
 
     # Build id_mapping
     print('Building id_mapping ...')
