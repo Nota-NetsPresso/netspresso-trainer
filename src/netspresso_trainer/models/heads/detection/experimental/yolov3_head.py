@@ -10,7 +10,7 @@ from .detection import AnchorGenerator
 
 
 class YoloV3Head(nn.Module):
-    
+
     num_layers: int
 
     def __init__(
@@ -53,7 +53,6 @@ class YoloV3Head(nn.Module):
 
             setattr(self, f"layer_{i+1}", layer)
 
-
         def init_bn(M):
             for m in M.modules():
                 if isinstance(m, nn.BatchNorm2d):
@@ -61,7 +60,6 @@ class YoloV3Head(nn.Module):
                     m.momentum = 0.03
 
         self.apply(init_bn)
-
 
     def forward(self, inputs: List[torch.Tensor]):
 
@@ -72,10 +70,7 @@ class YoloV3Head(nn.Module):
         return out1, out2
 
 
-
-def yolov3_head(
-    intermediate_features_dim, conf_model_head, **kwargs
-) -> YoloV3Head:
+def yolov3_head(intermediate_features_dim, conf_model_head, **kwargs) -> YoloV3Head:
     return YoloV3Head(
         intermediate_features_dim=intermediate_features_dim,
         params=conf_model_head.params,
