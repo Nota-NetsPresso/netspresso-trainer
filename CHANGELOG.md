@@ -15,6 +15,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Save training summary at every end of epochs by `@illian01` in [PR 420](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/420)
+- Refacotring: rename postprocessors/register.py to registry.py by `@aychun` in [PR 424](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/424)
 
 # v0.2.0
 
