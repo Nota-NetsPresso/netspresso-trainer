@@ -10,7 +10,7 @@ import torch
 from tqdm import tqdm
 
 DEFAULT_DATA_DIR = './data'
-DOWNLOAD_DIR = './data/auto_downloaded'
+DOWNLOAD_DIR = './data/download'
 CIFAR100_URL = 'https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz'
 
 
