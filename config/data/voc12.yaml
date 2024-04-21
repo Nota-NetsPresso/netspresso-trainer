@@ -3,16 +3,16 @@ data:
   task: segmentation
   format: local
   path:
-    root: /DATA/VOC12Dataset
+    root: ./data/voc2012_seg # dataset root
     train:
-      image: image/train
-      label: mask/train
+      image: images/train # directory for training images
+      label: labels/train # directory for training labels
     valid:
-      image: image/val
-      label: mask/val
+      image: images/valid # directory for valid images
+      label: labels/valid # directory for valid labels
     test:
-      image: ~  # directory for test images
-      label: ~  # directory for test labels
+      image: ~
+      label: ~
     pattern:
       image: ~
       label: ~
