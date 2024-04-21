@@ -23,6 +23,8 @@ ImageNet1K dataset cannot be automatically downloaded. You should download datas
 
 And, run `imagenet1k.py` python file with your dataset directorty and downloaded files path as arguments. After executing scripts, you can use [pre-defined configuration]().
 
+*(`imagenet1k.py` needs scipy library which is in [requirements-optional.txt](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/requirements-optional.txt))*
+
 ```bash
 python ./tools/open_dataset_tool/imagenet1k.py --dir ./data --train-images ./data/download/ILSVRC2012_img_train.tar --valid-images ./data/download/ILSVRC2012_img_val.tar --devkit ./data/download/ILSVRC2012_devkit_t12.tar.gz
 ```
