@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import os
 import tarfile
+import shutil
 
 import cv2
 import numpy as np
@@ -58,7 +59,7 @@ if __name__ == '__main__':
 
     # Re-format train split
     train_image_dir = data_dir / 'images' / 'train'
-    train_label_dir = data_dir / 'labels' / 'train'
+    train_label_dir = data_dir / 'labels'
 
     os.makedirs(train_image_dir, exist_ok=True)
     os.makedirs(train_label_dir, exist_ok=True)
@@ -77,7 +78,7 @@ if __name__ == '__main__':
 
     # Re-format valid split
     valid_image_dir = data_dir / 'images' / 'valid'
-    valid_label_dir = data_dir / 'labels' / 'valid'
+    valid_label_dir = data_dir / 'labels'
 
     os.makedirs(valid_image_dir, exist_ok=True)
     os.makedirs(valid_label_dir, exist_ok=True)
@@ -93,3 +94,8 @@ if __name__ == '__main__':
     val_labels = cifar_test[b'fine_labels']
     val_label_csv = pd.DataFrame({'image_id': val_names, 'class': val_labels})
     val_label_csv.to_csv(valid_label_dir / 'cifar100_val.csv', mode='w', index=False)
+
+    try:
+        shutil.rmtree(extracted_dir)
+    except OSError as e:
+        print(e)
