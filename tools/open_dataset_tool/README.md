@@ -1,6 +1,6 @@
 ## Dataset preparation (Local)
 
-If you are interested in utilizing well-known open datasets, you can exploit them by following the instructions.
+If you are interested in utilizing open datasets, you can exploit them by following the instructions.
 
 ### Image classification
 
