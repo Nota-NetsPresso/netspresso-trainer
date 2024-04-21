@@ -13,6 +13,7 @@ from tqdm import tqdm
 DEFAULT_DATA_DIR = './data'
 DOWNLOAD_DIR = './data/download'
 CIFAR100_URL = 'https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz'
+CIFAR100_CLASSES = ['apple', 'aquarium_fish', 'baby', 'bear', 'beaver', 'bed', 'bee', 'beetle', 'bicycle', 'bottle', 'bowl', 'boy', 'bridge', 'bus', 'butterfly', 'camel', 'can', 'castle', 'caterpillar', 'cattle', 'chair', 'chimpanzee', 'clock', 'cloud', 'cockroach', 'couch', 'crab', 'crocodile', 'cup', 'dinosaur', 'dolphin', 'elephant', 'flatfish', 'forest', 'fox', 'girl', 'hamster', 'house', 'kangaroo', 'keyboard', 'lamp', 'lawn_mower', 'leopard', 'lion', 'lizard', 'lobster', 'man', 'maple_tree', 'motorcycle', 'mountain', 'mouse', 'mushroom', 'oak_tree', 'orange', 'orchid', 'otter', 'palm_tree', 'pear', 'pickup_truck', 'pine_tree', 'plain', 'plate', 'poppy', 'porcupine', 'possum', 'rabbit', 'raccoon', 'ray', 'road', 'rocket', 'rose', 'sea', 'seal', 'shark', 'shrew', 'skunk', 'skyscraper', 'snail', 'snake', 'spider', 'squirrel', 'streetcar', 'sunflower', 'sweet_pepper', 'table', 'tank', 'telephone', 'television', 'tiger', 'tractor', 'train', 'trout', 'tulip', 'turtle', 'wardrobe', 'whale', 'willow_tree', 'wolf', 'woman', 'worm']
 
 
 def unpickle(file):
@@ -94,6 +95,12 @@ if __name__ == '__main__':
     val_labels = cifar_test[b'fine_labels']
     val_label_csv = pd.DataFrame({'image_id': val_names, 'class': val_labels})
     val_label_csv.to_csv(valid_label_dir / 'cifar100_val.csv', mode='w', index=False)
+
+    # Build id_mapping
+    id_mapping = CIFAR100_CLASSES
+    with open(data_dir / 'id_mapping', 'w') as f:
+        f.write('\n'.join(id_mapping))
+        f.close()
 
     try:
         shutil.rmtree(extracted_dir)
