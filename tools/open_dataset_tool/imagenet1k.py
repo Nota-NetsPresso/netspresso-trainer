@@ -96,7 +96,7 @@ if __name__ == '__main__':
 
     # Build train label csv file
     print('Building train label csv file ...')
-    train_label_dir = imagenet_path / 'labels' / 'train'
+    train_label_dir = imagenet_path / 'labels'
     os.makedirs(train_label_dir, exist_ok=True)
 
     samples = os.listdir(imagenet_path / 'images' / 'train')
@@ -110,7 +110,7 @@ if __name__ == '__main__':
 
     # Build valid label csv file
     print('Building valid label csv file ...')
-    valid_label_dir = imagenet_path / 'labels' / 'valid'
+    valid_label_dir = imagenet_path / 'labels'
     os.makedirs(valid_label_dir, exist_ok=True)
 
     with open(devkit_extracted / 'data' / 'ILSVRC2012_validation_ground_truth.txt') as f:
