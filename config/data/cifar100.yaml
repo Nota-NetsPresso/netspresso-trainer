@@ -6,10 +6,10 @@ data:
     root: ./data/cifar-100 # dataset root
     train:
       image: images/train # directory for training images
-      label: labels/cifar100_train.csv # label for training labels
+      label: labels/cifar100_train.csv # directory for training labels or csv file
     valid:
       image: images/valid # directory for valid images
-      label: labels/cifar100_val.csv # durectory for valid labels
+      label: labels/cifar100_val.csv # directory for valid labels or csv file
     test:
       image: ~
       label: ~
