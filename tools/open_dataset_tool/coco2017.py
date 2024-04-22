@@ -27,6 +27,14 @@ def txtywh2cxcywh(top_left_x, top_left_y, width, height):
     return cx, cy, w, h
 
 
+def cxcywh2cxcywhn(cx, cy, w, h, img_w, img_h):
+    cx = cx / img_w
+    cy = cy / img_h
+    w = w / img_w
+    h = h / img_h
+    return cx, cy, w, h
+
+
 if __name__ == '__main__':
     # Set argument (data directory)
     parser = argparse.ArgumentParser(description="Parser for coco2017 dataset downloader.")
@@ -59,18 +67,25 @@ if __name__ == '__main__':
 
     # Unzip train images
     print('Unzip training images zip file ...')
-    train_images_dir = coco2017_path / 'images'
-    shutil.unpack_archive(train_images_download_path, train_images_dir, "zip")
+    images_dir = coco2017_path / 'images'
+    shutil.unpack_archive(train_images_download_path, images_dir, "zip")
     print('Rename train2017 to train')
-    os.rename(train_images_dir / 'train2017', train_images_dir / 'train')
+    try: # Remove already exists one
+        shutil.rmtree(images_dir / 'train')
+    except OSError as e:
+        print(e)
+    os.rename(images_dir / 'train2017', images_dir / 'train')
     print('Done!')
 
     # Unzip valid images
     print('Unzip training images zip file ...')
-    valid_images_dir = coco2017_path / 'images'
-    shutil.unpack_archive(valid_images_download_path, valid_images_dir, "zip")
+    shutil.unpack_archive(valid_images_download_path, images_dir, "zip")
     print('Rename val2017 to valid')
-    os.rename(train_images_dir / 'val2017', train_images_dir / 'valid')
+    try: # Remove already exists one
+        shutil.rmtree(images_dir / 'valid')
+    except OSError as e:
+        print(e)
+    os.rename(images_dir / 'val2017', images_dir / 'valid')
     print('Done!')
 
     # Unzip annotation zip file
@@ -94,6 +109,7 @@ if __name__ == '__main__':
         CLASS91_LABEL_TO_NAME[item['id']] = item['name']
 
     train_annotations = {image_info['id']: [image_info['file_name']] for image_info in train_ann_json['images']}
+    train_imgid_to_info = {info['id']: info for info in train_ann_json['images']}
     for ann in tqdm(train_ann_json['annotations']):
         image_id = ann['image_id']
         
@@ -103,6 +119,7 @@ if __name__ == '__main__':
         # TODO: Support various box type e.g. xyxy
         top_left_x, top_left_y, width, height  = ann['bbox']
         cx, cy, w, h = txtywh2cxcywh(top_left_x, top_left_y, width, height)
+        cx, cy, w, h = cxcywh2cxcywhn(cx, cy, w, h, train_imgid_to_info[image_id]['width'], train_imgid_to_info[image_id]['height'])
 
         instance = [label, cx, cy, w, h]
         train_annotations[image_id].append(instance)
@@ -128,6 +145,7 @@ if __name__ == '__main__':
         valid_ann_json = json.load(f)
 
     valid_annotations = {image_info['id']: [image_info['file_name']] for image_info in valid_ann_json['images']}
+    valid_imgid_to_info = {info['id']: info for info in valid_ann_json['images']}
     for ann in tqdm(valid_ann_json['annotations']):
         image_id = ann['image_id']
         
@@ -137,6 +155,7 @@ if __name__ == '__main__':
         # TODO: Support various box type e.g. xyxy
         top_left_x, top_left_y, width, height  = ann['bbox']
         cx, cy, w, h = txtywh2cxcywh(top_left_x, top_left_y, width, height)
+        cx, cy, w, h = cxcywh2cxcywhn(cx, cy, w, h, valid_imgid_to_info[image_id]['width'], valid_imgid_to_info[image_id]['height'])
 
         instance = [label, cx, cy, w, h]
         valid_annotations[image_id].append(instance)
