@@ -1,0 +1,11 @@
+data:
+  name: cifar100
+  task: classification
+  format: huggingface
+  metadata:
+    custom_cache_dir: ./data/huggingface 
+    repo: cifar100
+    subset: ~
+    features:
+      image: img
+      label: fine_label
