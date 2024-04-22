@@ -27,7 +27,7 @@ def dataset_path_check(conf_data: DictConfig, mode: Literal['train', 'test']):
         conf_data.path.test.label = None
 
     elif mode == 'test':
-        assert conf_data.path.train.test_dataset is not None, "For test, test split of dataset must be provided."
+        assert conf_data.path.test.image is not None, "For test, test split of dataset must be provided."
 
         if conf_data.path.train.image:
             logger.warning('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
