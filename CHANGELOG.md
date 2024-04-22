@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix test directory check line by `@illian01` in [PR 428](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/428)
 
 ## Breaking Changes:
 
