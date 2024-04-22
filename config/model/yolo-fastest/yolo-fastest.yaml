@@ -96,9 +96,7 @@ model:
         anchors:
           - [12,18, 37,49, 52,132]  # P4/16
           - [115,73, 119,199, 242,238]  # P5/32]
-        strides: [16, 32]
-        out_channels: [33, 33]
-        # aspect_ratios: [0.5, 1.0, 2.0]
+        # strides: [16, 32]
         num_layers: 2
         norm_type: batch_norm
         topk_candidates: 1000

@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from omegaconf import DictConfig
@@ -19,20 +20,22 @@ class YoloV3Head(nn.Module):
         params: DictConfig,
     ):
         super().__init__()
-        in_channels = intermediate_features_dim[0]
 
+    
         anchors = params.anchors
         num_layers = len(anchors)
 
         self.num_layers = num_layers
 
+        out_channels = num_anchors * (5 + num_classes)
         norm_type = params.norm_type
         use_act = False
         kernel_size = 1
 
+
         for i in range(num_layers):
-            in_channels = params.in_channels[i]
-            out_channels = params.out_channels[i]
+
+            in_channels = intermediate_features_dim[i]
 
             conv_norm = ConvLayer(
                 in_channels=in_channels,
@@ -70,8 +73,11 @@ class YoloV3Head(nn.Module):
         return out1, out2
 
 
-def yolov3_head(intermediate_features_dim, conf_model_head, **kwargs) -> YoloV3Head:
-    return YoloV3Head(
+def yolo_fastest_head(
+    num_classes, intermediate_features_dim, conf_model_head, **kwargs
+) -> YoloFastestHead:
+    return YoloFastestHead(
+        num_classes=num_classes,
         intermediate_features_dim=intermediate_features_dim,
         params=conf_model_head.params,
     )
