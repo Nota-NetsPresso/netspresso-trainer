@@ -10,7 +10,7 @@ from ....utils import AnchorBasedDetectionModelOutput
 from .detection import AnchorGenerator
 
 
-class YoloV3Head(nn.Module):
+class YoloFastestHead(nn.Module):
 
     num_layers: int
 
@@ -21,7 +21,6 @@ class YoloV3Head(nn.Module):
     ):
         super().__init__()
 
-    
         anchors = params.anchors
         num_layers = len(anchors)
 
@@ -31,7 +30,6 @@ class YoloV3Head(nn.Module):
         norm_type = params.norm_type
         use_act = False
         kernel_size = 1
-
 
         for i in range(num_layers):
 
