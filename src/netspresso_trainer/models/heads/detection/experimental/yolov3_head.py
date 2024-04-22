@@ -5,6 +5,7 @@ from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
+
 from ....op.custom import ConvLayer
 from ....utils import AnchorBasedDetectionModelOutput
 from .detection import AnchorGenerator
@@ -16,12 +17,14 @@ class YoloFastestHead(nn.Module):
 
     def __init__(
         self,
+        num_classes: int,
         intermediate_features_dim: List[int],
         params: DictConfig,
     ):
         super().__init__()
 
         anchors = params.anchors
+        num_anchors = len(anchors[0]) // 2
         num_layers = len(anchors)
 
         self.num_layers = num_layers
@@ -56,6 +59,7 @@ class YoloFastestHead(nn.Module):
 
         def init_bn(M):
             for m in M.modules():
+
                 if isinstance(m, nn.BatchNorm2d):
                     m.eps = 1e-3
                     m.momentum = 0.03
