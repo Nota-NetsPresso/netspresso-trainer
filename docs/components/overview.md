@@ -17,7 +17,7 @@ This component section describes in detail the six configuration modules which a
 
 ### Use SOTA models fully compatible with NetsPresso
 
-NetsPresso Trainer provides reimplemented SOTA models that ensure compatibility with NetsPresso. This allows users to avoid expending resources on changing model formats for model compression and device deployment. Therefore, the users can easily exploit SOTA models to their applications.
+NetsPresso Trainer provides reimplemented SOTA models that ensure compatibility with NetsPresso. This allows users to avoid expending resources on changing model formats for model compression and device deployment. Therefore, the users can easily utilize SOTA models to their applications.
 
 ### Easily trainable with yaml configuration
 

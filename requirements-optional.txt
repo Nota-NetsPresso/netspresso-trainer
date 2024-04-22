@@ -5,3 +5,4 @@ requests
 albumentations
 pymongo[srv]==3.8.0
 torch_tb_profiler
+scipy
