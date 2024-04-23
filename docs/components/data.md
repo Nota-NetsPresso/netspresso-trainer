@@ -30,11 +30,8 @@ This structure should be reflected in your configuration file under the respecti
 | `data.format` | **`local`** as an identifier of dataset format. |
 | `data.path.root` | (str) Root directory of dataset. |
 | `data.path.train.image` | (str) The directory for training images. Should be **relative** path to root directory. | 
-| `data.path.train.label` | (str) The directory for training labels or label file (depends on the task). This should be **relative** path to root directory. | 
 | `data.path.valid.image` | (str) The directory for validation images. Should be **relative** path to root directory. | 
-| `data.path.valid.label` | (str) The directory for validation labels or label file (depends on the task). This should be **relative** path to root directory. | 
 | `data.path.test.image` | (str) The directory for test images. Should be **relative** path to root directory. | 
-| `data.path.test.label` | (str) The directory for test labels or label file (depends on the task). This should be **relative** path to root directory. | 
 
 ### Image classification
 
@@ -47,9 +44,9 @@ To train an image classification model using NetsPresso Trainer, **users must or
 | Field <img width=200/> | Description |
 |---|---|
 | `data.id_mapping` | (list) Class list for each class index.  |
-| `data.path.train.label` | (str) For classificaiton, label field must be path of .csv file. This should be **relative** path to root directory. | 
-| `data.path.valid.label` | (str) For classificaiton, label field must be path of .csv file. This should be **relative** path to root directory. | 
-| `data.path.test.label` | (str) For classificaiton, label field must be path of .csv file. This should be **relative** path to root directory. | 
+| `data.path.train.label` | (str) For classificaiton, label field must be path of `.csv` file. This should be **relative** path to root directory. | 
+| `data.path.valid.label` | (str) For classificaiton, label field must be path of `.csv` file. This should be **relative** path to root directory. | 
+| `data.path.test.label` | (str) For classificaiton, label field must be path of `.csv` file. This should be **relative** path to root directory. | 
 
 <details>
   <summary>Data hierarchy example - ImageNet1K</summary>

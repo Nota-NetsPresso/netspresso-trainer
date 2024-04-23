@@ -1,6 +1,6 @@
 # Data preparation (Hugging Face)
 
-The Hugging Face datasets offers a vast array of datasets to support various tasks, making them readily accessible through a user-friendly API. Provided datasets in Hugging Face datasets are typically structured into `training`, `validation`, and `testing` sets. This structure allows NetsPresso Trainer to utilize various datasets with yaml configuration.
+The Hugging Face datasets offers a vast array of datasets to support various tasks, making them readily accessible through a user-friendly API. Provided datasets by Hugging Face datasets are typically structured into `training`, `validation`, and `testing` sets. This structure allows NetsPresso Trainer to utilize various datasets with yaml configuration.
 
 To explore official Hugging Face datasets catalogue, please refer to the [hugging Face datasets page](https://huggingface.co/datasets).
 
@@ -36,9 +36,9 @@ data:
 
 ## Agreement the conditions to access the datasets
 
-Some datasets are publicly available, but require a agreement to use. For example, if you want to use [ImageNet1K](https://huggingface.co/datasets/imagenet-1k) in Hugging Face datasets, you have to log in to Hugging Face homepage and agree on the conditions.
+Some datasets are publicly available, but may require a agreement to be used. For instance, to use [ImageNet1K](https://huggingface.co/datasets/imagenet-1k) in Hugging Face datasets, you have to log in to Hugging Face homepage and accpet the conditions.
 
-Make sure to agree the conditions at Hugging Face website, and log in to huggingface-cli before you start.
+Make sure that you agreed to the conditions on Hugging Face website, and log in to `huggingface-cli` before you start.
 
 ```bash
 huggingface-cli login
@@ -66,7 +66,7 @@ data:
 
 ## Set features
 
-You can check features of dataset in Hugging Face homepage. If you see [CIFAR100](https://huggingface.co/datasets/cifar100), there are three features in the dataset which are `img`, `fine_label`, `coarse_label`. Since image data is named as `img` and 100-class label is named as `fine_label`, we fill out data configuration as below.
+You should check features of dataset in Hugging Face homepage. If you see [CIFAR100](https://huggingface.co/datasets/cifar100), there are three features in the dataset which are `img`, `fine_label`, `coarse_label`. In this dataset, the image data is denoted by `img` and the labels for the 100 classes are represented by `fine_label`. Given this structure, the data configuration should be filled out as below.
 
 ```yaml
 data:

@@ -39,8 +39,8 @@ Place your images on proper path.
 
 Set labels on proper path.
 
-- For image classification, you may need image files and a corresponding label file (usually in csv format).
-- For semantic segmentation and object detection, organize your images and label files (could be masks or box annotations) in corresponding folders.
+- For image classification, you may need csv format label files.
+- For semantic segmentation and object detection, organize your label files (could be masks or box annotations) in corresponding folders.
 
 ```text
 /my_dataset
@@ -69,7 +69,7 @@ Set labels on proper path.
 
 ### Set configuration file
 
-Define the paths to your datasets in the configuration file to tell NetsPresso Trainer where to find the data. Here is example for classification:
+Define the paths to your datasets in the configuration file to tell NetsPresso Trainer where to find the data. Finally, you can complete data configuration by adding some metadata like `id_mapping`. Here is example for classification:
 
 ```yaml
 data:
@@ -94,7 +94,7 @@ For detailed definition of data configuration, please refer to [components/data]
 
 ## Open datasets
 
-If you are interested in utilizing open datasets, you can use them by following the instructions. These instructions automatically set dataset as local custom datasets format.
+If you are interested in using open datasets, follow the instructions below to seamlessly integrate them into the local custom datasets format.
 
 ### Image classification
 
