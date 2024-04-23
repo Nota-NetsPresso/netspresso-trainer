@@ -17,14 +17,9 @@ model:
         norm_type: batch_norm
         act_type: relu6
         num_feat_layers: 2
+        stem_stride: 2
+        stem_out_channels: 8
       stage_params:
-        - # stem 
-          in_channels: 3
-          out_channels: 8
-          kernel_sizes: 3
-          stride: 2
-          use_act: True
-          use_norm: True
         - # stage_1
           in_channels: [8, 8, 8, 4]
           out_channels: [8, 8, 4, 4]
