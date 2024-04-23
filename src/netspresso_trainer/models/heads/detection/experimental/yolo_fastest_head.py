@@ -10,7 +10,7 @@ from ....op.custom import ConvLayer
 from ....utils import AnchorBasedDetectionModelOutput
 from .detection import AnchorGenerator
 
-
+# TODO: Expand features to make it fully compatible with Yolov3 head and change the name to Yolov3Head
 class YoloFastestHead(nn.Module):
 
     num_layers: int
