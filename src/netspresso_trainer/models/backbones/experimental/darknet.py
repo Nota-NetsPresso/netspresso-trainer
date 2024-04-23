@@ -219,31 +219,25 @@ class Darknet(nn.Module):
         act_type = params.act_type
         norm_type = params.norm_type
         block_type = params.block_type
+        stem_stride = params.stem_stride
+        stem_out_channels = params.stem_out_channels
 
         Block = BLOCK_FROM_LITERAL[block_type.lower()]
         predefined_out_features = dict()
 
         # build the stem layer
-        stem_stage = stage_params[0]
-
-        stem_act = None
-        stem_norm = None
-        if stem_stage.use_act:
-            stem_act = act_type
-        if stem_stage.use_norm:
-            stem_norm = norm_type
-
+        # TODO:
         self.stem = ConvLayer(
-            stem_stage.in_channels,
-            stem_stage.out_channels,
-            stem_stage.kernel_sizes,
-            stem_stage.stride,
-            act_type=stem_act,
-            norm_type=stem_norm,
+            in_channels=3,
+            out_channels=stem_out_channels,
+            kernel_size=3,
+            stride=stem_stride,
+            act_type=act_type,
+            norm_type=norm_type,
         )
 
         # build rest of the layers
-        for i, stage_param in enumerate(stage_params[1:]):
+        for i, stage_param in enumerate(stage_params):
 
             layers = []
             num_layers = len(stage_param.in_channels)
@@ -314,7 +308,7 @@ class Darknet(nn.Module):
         x = self.stem(x)
         outputs_dict["stem"] = x
 
-        for i in range(1, self.num_layers):
+        for i in range(1, self.num_layers + 1):
             x = getattr(self, f"stage_{i}")(x)
             outputs_dict[f"stage_{i}"] = x
 
