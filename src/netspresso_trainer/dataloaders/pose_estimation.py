@@ -50,6 +50,7 @@ class PoseEstimationSampleLoader(BaseSampleLoader):
         return images_and_targets
 
     def load_id_mapping(self):
+        # TODO: Get id_mapping from txt file
         return list(self.conf_data.id_mapping)
 
     def load_class_map(self, id_mapping):
