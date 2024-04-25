@@ -129,7 +129,7 @@ if __name__ == '__main__':
     # Build id_mapping
     print('Building id_mapping ...')
     id_mapping = [cls_to_name[i] for i in range(1000)]
-    with open(imagenet_path / 'id_mapping', 'w') as f:
+    with open(imagenet_path / 'id_mapping.txt', 'w') as f:
         f.write('\n'.join(id_mapping))
         f.close()
     print('Done!')

@@ -98,7 +98,7 @@ if __name__ == '__main__':
 
     # Build id_mapping
     id_mapping = CIFAR100_CLASSES
-    with open(data_dir / 'id_mapping', 'w') as f:
+    with open(data_dir / 'id_mapping.txt', 'w') as f:
         f.write('\n'.join(id_mapping))
         f.close()
 
