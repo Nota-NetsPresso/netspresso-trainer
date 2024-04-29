@@ -631,9 +631,11 @@ class DarknetBlock(nn.Module):
                 stride=1,
                 dilation=1,
                 norm_type=norm_type,
-                depthwise_use_act=True,
-                depthwise_act_type=act_type,
-                pointwise_use_act=False,
+                act_type=act_type,
+                no_out_act=True,
+                # depthwise_use_act=True,
+                # depthwise_act_type=act_type,
+                # pointwise_use_act=False,
             )
         else:
             self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
@@ -660,20 +662,28 @@ class SeparableConvLayer(nn.Module):
         padding_mode: Optional[str] = 'zeros',
         use_norm: bool = True,
         norm_type: Optional[str] = None,
-        depthwise_use_act: bool = True,
-        pointwise_use_act: bool = True,
-        depthwise_act_type: Optional[str] = None,
-        pointwise_act_type: Optional[str] = None,
-    ) -> None:
+        use_act: bool = True,
+        act_type: Optional[str] = None,
+        no_out_act: bool = False
+        # depthwise_use_act: bool = True,
+        # pointwise_use_act: bool = True,
+        # depthwise_act_type: Optional[str] = None,
+        # pointwise_act_type: Optional[str] = None,
+        ) -> None:
         super().__init__()
         self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
                                    kernel_size=kernel_size, stride=stride, dilation=dilation,
                                    padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
-                                   use_norm=use_norm, norm_type=norm_type, use_act=depthwise_use_act, act_type=depthwise_act_type,)
+                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
         self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                   use_norm=use_norm, norm_type=norm_type, use_act=pointwise_use_act, act_type=pointwise_act_type,)
+                                   use_norm=use_norm, norm_type=norm_type, use_act=False)
+        
+        self.final_act = nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]()
 
+        
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         x = self.depthwise(x)
         x = self.pointwise(x)
+        x = self.final_act(x)
+
         return x
