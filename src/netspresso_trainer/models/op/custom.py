@@ -631,7 +631,6 @@ class DarknetBlock(nn.Module):
                 stride=1,
                 dilation=1,
                 norm_type=norm_type,
-                skip_connection=False,
                 depthwise_use_act=True,
                 depthwise_act_type=act_type,
                 pointwise_use_act=False,
