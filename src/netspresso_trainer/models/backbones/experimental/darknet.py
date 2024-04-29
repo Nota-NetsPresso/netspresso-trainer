@@ -31,8 +31,7 @@ BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
     "darknetblock": DarknetBlock,
 }
 
-DARKNET_SUPPORTED_BLOCKS = ["bottleneck"]
-
+DARKNET_SUPPORTED_BLOCKS = ['bottleneck', "darknetblock"]
 
 class CSPDarknet(nn.Module):
 
@@ -235,6 +234,7 @@ class Darknet(nn.Module):
                               norm_type=norm_type)
 
         # build rest of the layers
+        # TODO: make it compatiable with Yolov3
         for i, stage_param in enumerate(stage_params):
 
             layers = []
@@ -244,16 +244,17 @@ class Darknet(nn.Module):
             for j in range(num_layers - 1):
                 in_ch = stage_param.in_channels[j]
                 out_ch = stage_param.out_channels[j]
-                kernel_size = stage_param.kernel_sizes[j]
-                stride = stage_param.stride[j]
-                use_act = stage_param.use_act[j]
-                use_group = stage_param.use_group[j]
+
+                stride = 2 if j == 1 else 1
+                kernel_size = 3 if j == 1 else 1
+                use_group = True if j == 1 else False
+                use_act = True if j in [0, 1] else False
 
                 conv_layer = ConvLayer(
-                    in_ch,
-                    out_ch,
-                    kernel_size,
-                    stride,
+                    in_channels=in_ch,
+                    out_channels=out_ch,
+                    kernel_size=kernel_size,
+                    stride=stride,
                     use_act=use_act,
                     act_type=act_type if use_act else None,
                     groups=in_ch if use_group else 1,
@@ -263,15 +264,14 @@ class Darknet(nn.Module):
             for _ in range(stage_param.num_blocks):
                 in_ch = stage_param.in_channels[-1]
                 out_ch = stage_param.out_channels[-1]
-                use_group = stage_param.use_group[-1]
                 darknet_block = Block(
-                    in_ch,
-                    out_ch,
-                    act_type=act_type,
-                    no_out_act=True,
-                    expansion=1,
-                    groups=in_ch,
-                    base_width=64 * hidden_expansion / out_ch,
+                    in_channels=in_ch,
+                    out_channels=out_ch,
+                    shortcut=True,
+                    expansion=hidden_expansion,
+                    depthwise=True,
+                    norm_type=norm_type,
+                    act_type=act_type
                 )
 
                 layers.append(darknet_block)

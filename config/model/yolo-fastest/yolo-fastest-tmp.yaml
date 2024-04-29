@@ -13,7 +13,7 @@ model:
     backbone:
       name: darknet
       params: 
-        block_type: bottleneck
+        block_type: darknetblock
         norm_type: batch_norm
         act_type: relu6
         num_feat_layers: 2
@@ -23,55 +23,31 @@ model:
         - # stage_1
           in_channels: [8, 8, 8, 4]
           out_channels: [8, 8, 4, 4]
-          kernel_sizes: [1, 3, 1, 1]           # unnecessary bottleneck kernel size? 
-          stride: [1, 1, 1, 1]
-          use_act: [True, True, False, False]
-          use_group: [False, True, False, False]
           num_blocks: 1
           hidden_expansion: 2
         - # stage_2
           in_channels: [4, 24, 24, 8]
           out_channels: [24, 24, 8, 8]
-          kernel_sizes: [1, 3, 1, 1]
-          stride: [1, 2, 1, 1]
-          use_act: [True, True, False, False]
-          use_group: [False, False, False, False]
           num_blocks: 2
           hidden_expansion: 4
         - # stage_3
           in_channels: [8, 32, 32, 8]
           out_channels: [32, 32, 8, 8]
-          kernel_sizes: [1, 3, 1, 1]
-          stride: [1, 2, 1, 1]
-          use_act: [True, True, False, False]
-          use_group: [False, True, False, False]
           num_blocks: 2
           hidden_expansion: 6
         - # stage_4
           in_channels: [8, 48, 48, 16]
           out_channels: [48, 48, 16, 16]
-          kernel_sizes: [1, 3, 1, 1]
-          stride: [1, 2, 1, 1]
-          use_act: [True, True, False, False]
-          use_group: [False, True, False, False]
           num_blocks: 4
           hidden_expansion: 6
         - # stage_5
           in_channels: [16, 96, 96, 24]
           out_channels: [96, 96, 24, 24]
-          kernel_sizes: [1, 3, 1, 1]
-          stride: [1, 2, 1, 1]
-          use_act: [True, True, False, False]
-          use_group: [False, True, False, False]
           num_blocks: 4
           hidden_expansion: 5.6666
         - # stage_6
           in_channels: [24, 136, 136, 48]
           out_channels: [136, 136, 48, 48]
-          kernel_sizes: [1, 3, 1, 1]
-          stride: [1, 2, 1, 1]
-          use_act: [True, True, True, False]
-          use_group: [False, True, False, False]
           num_blocks: 5
           hidden_expansion: 4.6666
     neck:
