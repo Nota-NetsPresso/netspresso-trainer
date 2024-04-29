@@ -613,15 +613,33 @@ class DarknetBlock(nn.Module):
         out_channels,
         shortcut=True,
         expansion=0.5,
-        #depthwise=False,
+        depthwise=False,
+        norm_type: Optional[str] = 'batch_norm',
         act_type="silu",
     ):
+        
         super().__init__()
         hidden_channels = int(out_channels * expansion)
+
         self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
-                                kernel_size=1, stride=1, act_type=act_type)
-        self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                kernel_size=3, stride=1, act_type=act_type)
+                                kernel_size=1, stride=1, act_type=act_type, norm_type=norm_type)
+        if depthwise: 
+            self.conv2 = SeparableConvLayer(
+                in_channels=hidden_channels,
+                out_channels=out_channels,
+                kernel_size=3,
+                stride=1,
+                dilation=1,
+                norm_type=norm_type,
+                skip_connection=False,
+                depthwise_use_act=True,
+                depthwise_act_type=act_type,
+                pointwise_use_act=False,
+            )
+        else:
+            self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
+                                    kernel_size=3, stride=1, act_type=act_type)
+
         self.use_add = shortcut and in_channels == out_channels
 
     def forward(self, x):
@@ -629,3 +647,34 @@ class DarknetBlock(nn.Module):
         if self.use_add:
             y = y + x
         return y
+
+class SeparableConvLayer(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = 1,
+        dilation: Optional[Union[int, Tuple[int, int]]] = 1,
+        padding: Optional[Union[int, Tuple[int, int]]] = None,
+        bias: bool = False,
+        padding_mode: Optional[str] = 'zeros',
+        use_norm: bool = True,
+        norm_type: Optional[str] = None,
+        depthwise_use_act: bool = True,
+        pointwise_use_act: bool = True,
+        depthwise_act_type: Optional[str] = None,
+        pointwise_act_type: Optional[str] = None,
+    ) -> None:
+        super().__init__()
+        self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
+                                   kernel_size=kernel_size, stride=stride, dilation=dilation,
+                                   padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=depthwise_use_act, act_type=depthwise_act_type,)
+        self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=pointwise_use_act, act_type=pointwise_act_type,)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x = self.depthwise(x)
+        x = self.pointwise(x)
+        return x
