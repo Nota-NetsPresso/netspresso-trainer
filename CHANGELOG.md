@@ -3,10 +3,12 @@
 ## New Features:
 
 - Add dataset validation step and refactoring data modules by `@illian01` in [PR 417](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/417), [PR 419](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/419)
+- Add various dataset examples including automatic open dataset format converter by `@illian01` in [PR 430](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/430)
+- Allow using text file path for the `id_mapping` field (for classification and detection) by `@illian01` in [PR 432](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/432)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix test directory check line by `@illian01` in [PR 428](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/428)
 
 ## Breaking Changes:
 
@@ -15,6 +17,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Save training summary at every end of epochs by `@illian01` in [PR 420](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/420)
+- Refacotring: rename postprocessors/register.py to registry.py by `@aychun` in [PR 424](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/424)
 
 # v0.2.0
 

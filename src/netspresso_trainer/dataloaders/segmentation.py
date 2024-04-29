@@ -56,7 +56,7 @@ class SegmentationSampleLoader(BaseSampleLoader):
             assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"
             idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
             label_value_to_idx = {k: k for k in idx_to_class}
-            return idx_to_class, label_value_to_idx
+            return {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
 
         idx_to_class: Dict[int, str] = {}
         label_value_to_idx: Dict[Union[int, Tuple], int] = {}

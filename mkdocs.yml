@@ -160,6 +160,9 @@ nav:
       - Installation (Stable): getting_started/installation/installation.md
       - Setup with Docker: getting_started/installation/docker_installation.md
     - Simple use: getting_started/simple_use.md
+    - Dataset preparation:
+      - Local dataset: getting_started/dataset_preparation/local.md
+      - Hugging Face dataset: getting_started/dataset_preparation/huggingface.md
     - Asking a question: https://github.com/Nota-NetsPresso/netspresso-trainer/issues
   - Components:
     - Overview: components/overview.md

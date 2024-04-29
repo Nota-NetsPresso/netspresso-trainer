@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
@@ -9,6 +10,7 @@ import PIL.Image as Image
 import torch
 import torch.distributed as dist
 from loguru import logger
+from omegaconf import ListConfig
 
 from .base import BaseCustomDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
@@ -51,7 +53,22 @@ class DetectionSampleLoader(BaseSampleLoader):
         return images_and_targets
 
     def load_id_mapping(self):
-        return list(self.conf_data.id_mapping)
+        root_path = Path(self.conf_data.path.root)
+
+        if isinstance(self.conf_data.id_mapping, ListConfig):
+            return list(self.conf_data.id_mapping)
+
+        elif isinstance(self.conf_data.id_mapping, str):
+            id_mapping_path = root_path / self.conf_data.id_mapping
+            if not os.path.isfile(id_mapping_path):
+                raise ValueError(f"Cannot find file {id_mapping_path}")
+
+            with open(id_mapping_path, 'r') as f:
+                lines = f.readlines()
+            return [line.strip() for line in lines]
+
+        else:
+            raise ValueError(f"Unsupported id_mapping value {self.conf_data.id_mapping}")
 
     def load_class_map(self, id_mapping):
         idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
