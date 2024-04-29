@@ -306,7 +306,7 @@ class Darknet(nn.Module):
         x = self.stem(x)
         outputs_dict["stem"] = x
 
-        for i in range(1, self.num_layers):
+        for i in range(1, self.num_layers + 1):
             x = getattr(self, f"stage_{i}")(x)
             outputs_dict[f"stage_{i}"] = x
 

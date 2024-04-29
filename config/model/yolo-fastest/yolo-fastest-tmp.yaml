@@ -86,7 +86,7 @@ model:
         act_type: relu6
     head:
       # name: anchor_decoupled_head
-      name: yolo-fast-head
+      name: yolo_fastest_head
       params:
         anchors:
           - [12,18, 37,49, 52,132]  # P4/16
