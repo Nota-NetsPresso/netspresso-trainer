@@ -13,7 +13,10 @@ model:
     backbone:
       name: darknet
       params: 
+        # stage_stem_block_type: Bottleneck 
+        stage_stem_block_type: darknetblock
         block_type: darknetblock
+        depthwise: True
         norm_type: batch_norm
         act_type: relu6
         num_feat_layers: 2
@@ -21,35 +24,29 @@ model:
         stem_out_channels: 8
       stage_params:
         - # stage_1
-          in_channels: [8, 8, 8, 4]
-          out_channels: [8, 8, 4, 4]
-          num_blocks: 1
-          hidden_expansion: 2
+          out_channels: 4
+          num_blocks: 1       # not the stage stem block  
+          darknet_expansions: [1, 2]
         - # stage_2
-          in_channels: [4, 24, 24, 8]
-          out_channels: [24, 24, 8, 8]
+          out_channels: 8
           num_blocks: 2
-          hidden_expansion: 4
+          darknet_expansions: [6, 4]
         - # stage_3
-          in_channels: [8, 32, 32, 8]
-          out_channels: [32, 32, 8, 8]
+          out_channels: 8
           num_blocks: 2
-          hidden_expansion: 6
+          darknet_expansions: [4, 6]
         - # stage_4
-          in_channels: [8, 48, 48, 16]
-          out_channels: [48, 48, 16, 16]
+          out_channels: 8
           num_blocks: 4
-          hidden_expansion: 6
+          darknet_expansions: [6, 6]
         - # stage_5
-          in_channels: [16, 96, 96, 24]
-          out_channels: [96, 96, 24, 24]
+          out_channels: 24
           num_blocks: 4
-          hidden_expansion: 5.6666
+          darknet_expansions: [6, 5.6666]
         - # stage_6
-          in_channels: [24, 136, 136, 48]
-          out_channels: [136, 136, 48, 48]
+          out_channels: 48
           num_blocks: 5
-          hidden_expansion: 4.6666
+          darknet_expansions: [5.6666, 4.6666]
     neck:
       name: identity
       params:

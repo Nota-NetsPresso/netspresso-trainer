@@ -189,7 +189,7 @@ class Darknet(nn.Module):
     Stage layers are named as stage_{i} starting from stage_1
     """
 
-    num_layers: int
+    num_stages: int
 
     def __init__(
         self,
@@ -210,79 +210,93 @@ class Darknet(nn.Module):
             self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
         )
 
-        self.num_layers = len(stage_params)
+        self.num_stages = len(stage_params)
 
         super().__init__()
 
         # TODO: Check if inplace activation should be used
         act_type = params.act_type
         norm_type = params.norm_type
+        stage_stem_block_type = params.stage_stem_block_type
         block_type = params.block_type
         stem_stride = params.stem_stride
         stem_out_channels = params.stem_out_channels
+        depthwise = params.depthwise
 
+        StageStemBlock = BLOCK_FROM_LITERAL[stage_stem_block_type.lower()]
         Block = BLOCK_FROM_LITERAL[block_type.lower()]
         predefined_out_features = dict()
 
         # build the stem layer
-        # TODO:
-        self.stem = ConvLayer(in_channels=3,
-                              out_channels=stem_out_channels,
-                              kernel_size=3,
-                              stride=stem_stride,
-                              act_type=act_type,
-                              norm_type=norm_type)
+        self.stem = ConvLayer(
+            in_channels=3,
+            out_channels=stem_out_channels,
+            kernel_size=3,
+            stride=stem_stride,
+            act_type=act_type,
+            norm_type=norm_type,
+        )
+
+        prev_out_channels = stem_out_channels
 
         # build rest of the layers
         # TODO: make it compatiable with Yolov3
         for i, stage_param in enumerate(stage_params):
 
             layers = []
-            num_layers = len(stage_param.in_channels)
-            hidden_expansion = stage_param.hidden_expansion
+            hidden_expansions = stage_param.darknet_expansions
+            out_channels = stage_param.out_channels
 
-            for j in range(num_layers - 1):
-                in_ch = stage_param.in_channels[j]
-                out_ch = stage_param.out_channels[j]
+            if len(hidden_expansions) == 2:
+                # (conv): Conv2d(8, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+                # stage_expansion = 6
+                stage_stem_expansion = hidden_expansions[0]
+                block_expansion = hidden_expansions[1]
 
-                stride = 2 if j == 1 else 1
-                kernel_size = 3 if j == 1 else 1
-                use_group = True if j == 1 else False
-                use_act = True if j in [0, 1] else False
+            # TODO: Implement
+            else:
+                raise NotImplementedError
+        
+            stage_stem_block = StageStemBlock(
+            # stage_stem_block = YoloFastestBlock(
+                in_channels=prev_out_channels,
+                out_channels=out_channels,
+                shortcut=False,
+                expansion=stage_stem_expansion,
+                depthwise=True,
+                act_type=act_type,
+                norm_type=norm_type,
+                no_out_act=False, 
+                is_stem_stage=True
+            )
 
-                conv_layer = ConvLayer(
-                    in_channels=in_ch,
-                    out_channels=out_ch,
-                    kernel_size=kernel_size,
-                    stride=stride,
-                    use_act=use_act,
-                    act_type=act_type if use_act else None,
-                    groups=in_ch if use_group else 1,
-                )
-                layers.append(conv_layer)
+            layers.append(stage_stem_block)
+            prev_out_channels = out_channels
 
             for _ in range(stage_param.num_blocks):
-                in_ch = stage_param.in_channels[-1]
-                out_ch = stage_param.out_channels[-1]
+
+                in_ch = prev_out_channels
+                out_ch = in_ch
                 darknet_block = Block(
                     in_channels=in_ch,
                     out_channels=out_ch,
                     shortcut=True,
-                    expansion=hidden_expansion,
-                    depthwise=True,
+                    expansion=block_expansion,
+                    depthwise=depthwise,
                     norm_type=norm_type,
-                    act_type=act_type
+                    act_type=act_type,
+                    no_out_act=True,
                 )
 
                 layers.append(darknet_block)
             setattr(self, f"stage_{i+1}", nn.Sequential(*layers))
-            predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels[-1]
+            predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels
 
-        self._feature_dim = predefined_out_features[f"stage_{self.num_layers-1}"]
+        self._feature_dim = predefined_out_features[f"stage_{self.num_stages-1}"]
 
         intermediate_out_features = []
         for i in range(params.num_feat_layers - 1):
-            stage_num = self.num_layers - (i + 2)
+            stage_num = (self.num_stages - (i+2))
             intermediate_out_features.append(f"stage_{stage_num}")
 
         self._intermediate_features_dim = [
@@ -300,13 +314,14 @@ class Darknet(nn.Module):
                     m.momentum = 0.03
 
         self.apply(init_bn)
+        return 
 
     def forward(self, x):
         outputs_dict = {}
         x = self.stem(x)
         outputs_dict["stem"] = x
 
-        for i in range(1, self.num_layers + 1):
+        for i in range(1, self.num_stages + 1):
             x = getattr(self, f"stage_{i}")(x)
             outputs_dict[f"stage_{i}"] = x
 
@@ -332,6 +347,17 @@ class Darknet(nn.Module):
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
+    
+    def __print_layers(self): 
+        # print(self.stage_1)
+
+        # return 
+        print("----------- STEM STAGE -----------")
+        print(self.stem)
+        print("----------------------------------")
+        for i in range(self.num_stages):
+            print(f"------------- STAGE {i+1} ------------")
+            print(getattr(self, f"stage_{i+1}"))
 
 
 def darknet(task, conf_model_backbone) -> Darknet:

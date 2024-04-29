@@ -616,10 +616,16 @@ class DarknetBlock(nn.Module):
         depthwise=False,
         norm_type: Optional[str] = 'batch_norm',
         act_type="silu",
+        no_out_act=False,
+        is_stem_stage=False
     ):
         
         super().__init__()
-        hidden_channels = int(out_channels * expansion)
+
+        if is_stem_stage:
+            hidden_channels = round(in_channels * expansion)
+        else:
+            hidden_channels = round(out_channels * expansion)
 
         self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
                                 kernel_size=1, stride=1, act_type=act_type, norm_type=norm_type)
@@ -632,14 +638,14 @@ class DarknetBlock(nn.Module):
                 dilation=1,
                 norm_type=norm_type,
                 act_type=act_type,
-                no_out_act=True,
+                no_out_act=no_out_act,
                 # depthwise_use_act=True,
                 # depthwise_act_type=act_type,
                 # pointwise_use_act=False,
             )
         else:
             self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                    kernel_size=3, stride=1, act_type=act_type)
+                                    kernel_size=3, stride=1, act_type=act_type, norm_type=norm_type)
 
         self.use_add = shortcut and in_channels == out_channels
 
