@@ -292,19 +292,18 @@ class Darknet(nn.Module):
             setattr(self, f"stage_{i+1}", nn.Sequential(*layers))
             predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels
 
+        # feature layers
+        self.out_features = []
+        first_feat_layer = self.num_stages - params.num_feat_layers + 1
+        for i in range(params.num_feat_layers):
+            layer_str = f'stage_{first_feat_layer + i}'
+            self.out_features.append(layer_str)
+
         self._feature_dim = predefined_out_features[f"stage_{self.num_stages-1}"]
 
-        intermediate_out_features = []
-        for i in range(params.num_feat_layers - 1):
-            stage_num = self.num_stages - (i + 2)
-            intermediate_out_features.append(f"stage_{stage_num}")
-
         self._intermediate_features_dim = [
-            predefined_out_features[out_feature]
-            for out_feature in intermediate_out_features
+            predefined_out_features[out_feature] for out_feature in self.out_features
         ]
-
-        self.out_features = ("stage_5", "stage_6")
 
         # Initialize
         def init_bn(M):
