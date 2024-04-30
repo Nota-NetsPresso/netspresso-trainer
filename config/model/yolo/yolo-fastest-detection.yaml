@@ -48,15 +48,24 @@ model:
           num_blocks: 5
           darknet_expansions: [2.84, 4.67]   # expands to 224 channels
     neck:
-      name: identity
+      # name: identity
+      # params:
+      #   # # num_outs: 4
+      #   # # start_level: 0
+      #   # # end_level: -1
+      #   # # add_extra_convs: False
+      #   # # relu_before_extra_convs: False
+      #   # dep_mul: 0.33
+      #   # act_type: relu6
+      name: yolov3fpn
       params:
-        # num_outs: 4
-        # start_level: 0
-        # end_level: -1
-        # add_extra_convs: False
-        # relu_before_extra_convs: False
-        dep_mul: 0.33
-        act_type: relu6
+        out_channels: [48, 24]
+        kernel_size: 5
+        double_channel: False
+        share_fpn_block: False
+        depthwise: True
+        norm_type: batch_norm
+        act_type: leaky_relu
     head:
       # name: anchor_decoupled_head
       name: yolo_fastest_head
@@ -64,11 +73,7 @@ model:
         anchors:
           - [12,18, 37,49, 52,132]  # P4/16
           - [115,73, 119,199, 242,238]  # P5/32]
-        strides: [16, 32]
-        in_channels: [128, 96]        # parallel # TODO: use intermidiate features dim .. 
-        out_channels: [33, 33]
-        # aspect_ratios: [0.5, 1.0, 2.0]
-        num_layers: 2
+        # strides: [16, 32]
         norm_type: batch_norm
         topk_candidates: 1000
         score_thresh: 0.0
