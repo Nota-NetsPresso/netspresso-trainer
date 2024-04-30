@@ -633,6 +633,7 @@ class DarknetBlock(nn.Module):
             norm_type=norm_type,
         )
         if depthwise:
+
             self.conv2 = SeparableConvLayer(
                 in_channels=hidden_channels,
                 out_channels=out_channels,

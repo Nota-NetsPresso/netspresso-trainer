@@ -23,11 +23,10 @@ __all__ = ["cspdarknet"]
 SUPPORTING_TASK = ["classification", "segmentation", "detection", "pose_estimation"]
 
 
-BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
-    'darknetblock': DarknetBlock
-}
+BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {"darknetblock": DarknetBlock}
 
-DARKNET_SUPPORTED_BLOCKS = ['bottleneck', "darknetblock"]
+DARKNET_SUPPORTED_BLOCKS = ["darknetblock"]
+
 
 class CSPDarknet(nn.Module):
 
@@ -253,7 +252,6 @@ class Darknet(nn.Module):
                 raise NotImplementedError
 
             stage_stem_block = StageStemBlock(
-            # stage_stem_block = YoloFastestBlock(
                 in_channels=prev_out_channels,
                 out_channels=out_channels,
                 shortcut=False,
@@ -261,7 +259,7 @@ class Darknet(nn.Module):
                 depthwise=True,
                 act_type=act_type,
                 norm_type=norm_type,
-                no_out_act=False, 
+                no_out_act=False,
                 depthwise_stride=2,
             )
 
@@ -291,7 +289,7 @@ class Darknet(nn.Module):
         self.out_features = []
         first_feat_layer = self.num_stages - params.num_feat_layers + 1
         for i in range(params.num_feat_layers):
-            layer_str = f'stage_{first_feat_layer + i}'
+            layer_str = f"stage_{first_feat_layer + i}"
             self.out_features.append(layer_str)
 
         self._feature_dim = predefined_out_features[f"stage_{self.num_stages-1}"]
