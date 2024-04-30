@@ -57,8 +57,8 @@ if __name__ == '__main__':
     train_image_dir = voc2012_path / 'images' / 'train'
     train_label_dir = voc2012_path / 'labels' / 'train'
     
-    os.makedirs(train_image_dir)
-    os.makedirs(train_label_dir)
+    os.makedirs(train_image_dir, exist_ok=True)
+    os.makedirs(train_label_dir, exist_ok=True)
     for sample in train_samples:
         shutil.move(img_src / (sample + '.jpg'), train_image_dir / (sample + '.jpg'))
         shutil.move(label_src / (sample + '.png'), train_label_dir / (sample + '.png'))
@@ -73,8 +73,8 @@ if __name__ == '__main__':
     valid_image_dir = voc2012_path / 'images' / 'valid'
     valid_label_dir = voc2012_path / 'labels' / 'valid'
 
-    os.makedirs(valid_image_dir)
-    os.makedirs(valid_label_dir)
+    os.makedirs(valid_image_dir, exist_ok=True)
+    os.makedirs(valid_label_dir, exist_ok=True)
     for sample in valid_samples:
         shutil.move(img_src / (sample + '.jpg'), valid_image_dir / (sample + '.jpg'))
         shutil.move(label_src / (sample + '.png'), valid_label_dir / (sample + '.png'))
