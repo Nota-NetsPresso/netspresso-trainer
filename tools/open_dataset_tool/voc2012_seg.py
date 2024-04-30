@@ -13,6 +13,30 @@ from tqdm import tqdm
 DEFAULT_DATA_DIR = './data'
 DOWNLOAD_DIR = './data/download'
 VOC2012_URL = 'http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar'
+VOC2012_ID_MAPPING_RGB = {
+    (0, 0, 0): 'background',
+    (128, 0, 0): 'aeroplane',
+    (0, 128, 0): 'bicycle',
+    (128, 128, 0): 'bird',
+    (0, 0, 128): 'boat',
+    (128, 0, 128): 'bottle',
+    (0, 128, 128): 'bus',
+    (128, 128, 128): 'car',
+    (64, 0, 0): 'cat',
+    (192, 0, 0): 'chair',
+    (64, 128, 0): 'cow',
+    (192, 128, 0): 'diningtable',
+    (64, 0, 128): 'dog',
+    (192, 0, 128): 'horse',
+    (64, 128, 128): 'motorbike',
+    (192, 128, 128): 'person',
+    (0, 64, 0): 'pottedplant',
+    (128, 64, 0): 'sheep',
+    (0, 192, 0): 'sofa',
+    (128, 192, 0): 'train',
+    (0, 64, 128): 'tvmonitor',
+    (128, 64, 128): 'void',
+}
 
 
 def unpickle(file):
@@ -79,6 +103,15 @@ if __name__ == '__main__':
         shutil.move(img_src / (sample + '.jpg'), valid_image_dir / (sample + '.jpg'))
         shutil.move(label_src / (sample + '.png'), valid_label_dir / (sample + '.png'))
     
+    # Build id_mapping
+    text = ''
+    for color, label in VOC2012_ID_MAPPING_RGB.items():
+        text += f'{color}:{label}\n'
+    
+    with open(voc2012_path / 'rgb_id_mapping.txt', 'w') as f:
+        f.write(text)
+        f.close()
+
     try:
         shutil.rmtree(voc2012_path / 'VOCdevkit')
     except OSError as e:
