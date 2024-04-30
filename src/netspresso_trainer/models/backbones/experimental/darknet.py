@@ -256,7 +256,7 @@ class Darknet(nn.Module):
             # TODO: Implement
             else:
                 raise NotImplementedError
-        
+
             stage_stem_block = StageStemBlock(
             # stage_stem_block = YoloFastestBlock(
                 in_channels=prev_out_channels,
@@ -266,8 +266,8 @@ class Darknet(nn.Module):
                 depthwise=True,
                 act_type=act_type,
                 norm_type=norm_type,
-                no_out_act=False, 
-                is_stem_stage=True
+                no_out_act=False,
+                is_stem_stage=True,
             )
 
             layers.append(stage_stem_block)
@@ -296,7 +296,7 @@ class Darknet(nn.Module):
 
         intermediate_out_features = []
         for i in range(params.num_feat_layers - 1):
-            stage_num = (self.num_stages - (i+2))
+            stage_num = self.num_stages - (i + 2)
             intermediate_out_features.append(f"stage_{stage_num}")
 
         self._intermediate_features_dim = [
@@ -314,7 +314,7 @@ class Darknet(nn.Module):
                     m.momentum = 0.03
 
         self.apply(init_bn)
-        return 
+        return
 
     def forward(self, x):
         outputs_dict = {}
@@ -347,17 +347,6 @@ class Darknet(nn.Module):
 
     def task_support(self, task):
         return task.lower() in SUPPORTING_TASK
-    
-    def __print_layers(self): 
-        # print(self.stage_1)
-
-        # return 
-        print("----------- STEM STAGE -----------")
-        print(self.stem)
-        print("----------------------------------")
-        for i in range(self.num_stages):
-            print(f"------------- STAGE {i+1} ------------")
-            print(getattr(self, f"stage_{i+1}"))
 
 
 def darknet(task, conf_model_backbone) -> Darknet:
