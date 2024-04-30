@@ -61,7 +61,7 @@ class DetectionSampleLoader(BaseSampleLoader):
         elif isinstance(self.conf_data.id_mapping, str):
             id_mapping_path = root_path / self.conf_data.id_mapping
             if not os.path.isfile(id_mapping_path):
-                raise ValueError(f"Cannot find file {id_mapping_path}")
+                raise FileNotFoundError(f"File not found: {id_mapping_path}")
 
             with open(id_mapping_path, 'r') as f:
                 lines = f.readlines()
