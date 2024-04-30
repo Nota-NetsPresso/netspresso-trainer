@@ -15,7 +15,6 @@ model:
       params: 
         # stage_stem_block_type: Bottleneck 
         stage_stem_block_type: darknetblock
-        block_type: darknetblock
         depthwise: True
         norm_type: batch_norm
         act_type: relu6

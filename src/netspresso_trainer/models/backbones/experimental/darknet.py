@@ -199,7 +199,7 @@ class Darknet(nn.Module):
         assert stage_params, "please provide stage params of Darknet"
         assert len(stage_params) >= 2
         assert (
-            params.block_type.lower() in DARKNET_SUPPORTED_BLOCKS
+            params.stage_stem_block_type.lower() in DARKNET_SUPPORTED_BLOCKS
         ), "Block type not supported"
         self.use_intermediate_features = (
             self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
@@ -213,13 +213,11 @@ class Darknet(nn.Module):
         act_type = params.act_type
         norm_type = params.norm_type
         stage_stem_block_type = params.stage_stem_block_type
-        block_type = params.block_type
         stem_stride = params.stem_stride
         stem_out_channels = params.stem_out_channels
         depthwise = params.depthwise
 
         StageStemBlock = BLOCK_FROM_LITERAL[stage_stem_block_type.lower()]
-        Block = BLOCK_FROM_LITERAL[block_type.lower()]
         predefined_out_features = dict()
 
         # build the stem layer
@@ -256,7 +254,7 @@ class Darknet(nn.Module):
                 out_channels=out_channels,
                 shortcut=False,
                 expansion=stage_stem_expansion,
-                depthwise=True,
+                depthwise=depthwise,
                 act_type=act_type,
                 norm_type=norm_type,
                 no_out_act=False,
@@ -270,7 +268,7 @@ class Darknet(nn.Module):
 
                 in_ch = prev_out_channels
                 out_ch = in_ch
-                darknet_block = Block(
+                darknet_block = DarknetBlock(
                     in_channels=in_ch,
                     out_channels=out_ch,
                     shortcut=True,
