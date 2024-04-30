@@ -38,13 +38,8 @@ model:
       name: fpn
       params:
         num_outs: 4
-        upsample_interpolation: nearest
-        lateral_conv_type: conv
-        num_lateral_conv: 1
-        fpn_conv_type: separable_conv
-        num_fpn_conv: 2
-        norm_type: batch_norm
-        act_type: relu
+        start_level: 0
+        end_level: -1
         add_extra_convs: False
         relu_before_extra_convs: False
     head:
