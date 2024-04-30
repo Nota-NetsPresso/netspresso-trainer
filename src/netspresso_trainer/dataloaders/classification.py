@@ -4,6 +4,7 @@ from itertools import chain
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+import json
 
 import PIL.Image as Image
 import torch.distributed as dist
@@ -58,8 +59,8 @@ class ClassficationSampleLoader(BaseSampleLoader):
                 FileNotFoundError(f"File not found: {id_mapping_path}")
 
             with open(id_mapping_path, 'r') as f:
-                lines = f.readlines()
-            return [line.strip() for line in lines]
+                id_mapping = json.load(f)
+            return id_mapping
 
         else:
             raise ValueError(f"Unsupported id_mapping value {self.conf_data.id_mapping}")

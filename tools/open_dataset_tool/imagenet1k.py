@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import tarfile
 import shutil
+import json
 
 import scipy
 import cv2
@@ -129,7 +130,7 @@ if __name__ == '__main__':
     # Build id_mapping
     print('Building id_mapping ...')
     id_mapping = [cls_to_name[i] for i in range(1000)]
-    with open(imagenet_path / 'id_mapping.txt', 'w') as f:
-        f.write('\n'.join(id_mapping))
-        f.close()
+    with open(imagenet_path / 'id_mapping.json', 'w') as f:
+        json.dump(id_mapping, f)
+
     print('Done!')

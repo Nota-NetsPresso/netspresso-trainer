@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 import tarfile
 import shutil
+import json
 
 import cv2
 import numpy as np
@@ -97,10 +98,8 @@ if __name__ == '__main__':
     val_label_csv.to_csv(valid_label_dir / 'cifar100_val.csv', mode='w', index=False)
 
     # Build id_mapping
-    id_mapping = CIFAR100_CLASSES
-    with open(data_dir / 'id_mapping.txt', 'w') as f:
-        f.write('\n'.join(id_mapping))
-        f.close()
+    with open(data_dir / 'id_mapping.json', 'w') as f:
+        json.dump(CIFAR100_CLASSES, f)
 
     try:
         shutil.rmtree(extracted_dir)
