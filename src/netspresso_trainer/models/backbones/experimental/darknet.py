@@ -248,8 +248,7 @@ class Darknet(nn.Module):
             out_channels = stage_param.out_channels
 
             if len(hidden_expansions) == 2:
-                # (conv): Conv2d(8, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
-                # stage_expansion = 6
+                # stage_stem_expansion is defined as hidden_ch // output_ch
                 stage_stem_expansion = hidden_expansions[0]
                 block_expansion = hidden_expansions[1]
 

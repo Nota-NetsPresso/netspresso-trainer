@@ -25,28 +25,28 @@ model:
       stage_params:
         - # stage_1
           out_channels: 4
-          num_blocks: 1       # not the stage stem block  
-          darknet_expansions: [1, 2]
+          num_blocks: 1                     # not the stage stem block  
+          darknet_expansions: [2, 2]
         - # stage_2
           out_channels: 8
           num_blocks: 2
-          darknet_expansions: [6, 4]
+          darknet_expansions: [3, 4]
         - # stage_3
           out_channels: 8
           num_blocks: 2
           darknet_expansions: [4, 6]
         - # stage_4
-          out_channels: 8
+          out_channels: 16
           num_blocks: 4
-          darknet_expansions: [6, 6]
+          darknet_expansions: [3, 6]
         - # stage_5
           out_channels: 24
           num_blocks: 4
-          darknet_expansions: [6, 5.6666]
+          darknet_expansions: [4, 5.67]      # expands to 136 channels 
         - # stage_6
           out_channels: 48
           num_blocks: 5
-          darknet_expansions: [5.6666, 4.6666]
+          darknet_expansions: [2.84, 4.67]   # expands to 224 channels
     neck:
       name: identity
       params:

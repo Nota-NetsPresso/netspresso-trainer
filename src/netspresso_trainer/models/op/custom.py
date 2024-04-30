@@ -622,10 +622,7 @@ class DarknetBlock(nn.Module):
 
         super().__init__()
 
-        if is_stem_stage:
-            hidden_channels = round(in_channels * expansion)
-        else:
-            hidden_channels = round(out_channels * expansion)
+        hidden_channels = int(out_channels * expansion)
 
         self.conv1 = ConvLayer(
             in_channels=in_channels,
@@ -645,9 +642,6 @@ class DarknetBlock(nn.Module):
                 norm_type=norm_type,
                 act_type=act_type,
                 no_out_act=no_out_act,
-                # depthwise_use_act=True,
-                # depthwise_act_type=act_type,
-                # pointwise_use_act=False,
             )
         else:
             self.conv2 = ConvLayer(
@@ -684,10 +678,6 @@ class SeparableConvLayer(nn.Module):
         use_act: bool = True,
         act_type: Optional[str] = None,
         no_out_act: bool = False,
-        # depthwise_use_act: bool = True,
-        # pointwise_use_act: bool = True,
-        # depthwise_act_type: Optional[str] = None,
-        # pointwise_act_type: Optional[str] = None,
     ) -> None:
         super().__init__()
         self.depthwise = ConvLayer(
