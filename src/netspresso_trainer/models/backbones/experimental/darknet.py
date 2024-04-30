@@ -14,9 +14,7 @@ from ...op.custom import (
     CSPLayer,
     Focus,
     SPPBottleneck,
-    Bottleneck,
-    BasicBlock,
-    DarknetBlock,
+    DarknetBlock
 )
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
@@ -26,9 +24,7 @@ SUPPORTING_TASK = ["classification", "segmentation", "detection", "pose_estimati
 
 
 BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {
-    "basicblock": BasicBlock,
-    "bottleneck": Bottleneck,
-    "darknetblock": DarknetBlock,
+    'darknetblock': DarknetBlock
 }
 
 DARKNET_SUPPORTED_BLOCKS = ['bottleneck', "darknetblock"]
