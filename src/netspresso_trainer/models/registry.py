@@ -7,7 +7,7 @@ from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobi
 from .base import ClassificationModel, DetectionModel, PoseEstimationModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
-from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
+from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head, yolo_fastest_head
 from .heads.pose_estimation import rtmcc
 from .heads.segmentation import all_mlp_decoder
 from .necks import fpn, yolopafpn, yolov3fpn
@@ -39,6 +39,7 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
     'detection': {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,
         'anchor_decoupled_head': anchor_decoupled_head,
+        'yolo_fastest_head': yolo_fastest_head,
     },
     'pose_estimation': {
         'rtmcc': rtmcc,
