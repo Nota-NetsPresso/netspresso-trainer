@@ -617,7 +617,7 @@ class DarknetBlock(nn.Module):
         norm_type: Optional[str] = "batch_norm",
         act_type="silu",
         no_out_act=False,
-        is_stem_stage=False,
+        depthwise_stride: Optional[int] = None,
     ):
 
         super().__init__()
@@ -640,7 +640,7 @@ class DarknetBlock(nn.Module):
                 in_channels=hidden_channels,
                 out_channels=out_channels,
                 kernel_size=3,
-                stride=1,
+                stride=depthwise_stride if depthwise_stride else 1,
                 dilation=1,
                 norm_type=norm_type,
                 act_type=act_type,

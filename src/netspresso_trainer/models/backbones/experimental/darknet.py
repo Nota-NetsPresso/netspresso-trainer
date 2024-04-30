@@ -266,8 +266,8 @@ class Darknet(nn.Module):
                 depthwise=True,
                 act_type=act_type,
                 norm_type=norm_type,
-                no_out_act=False,
-                is_stem_stage=True,
+                no_out_act=False, 
+                depthwise_stride=2,
             )
 
             layers.append(stage_stem_block)
