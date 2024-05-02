@@ -144,6 +144,18 @@ COCO 2017 dataset will be automatically downloaded to `./data/download`. After e
 python ./tools/open_dataset_tool/coco2017.py --dir ./data
 ```
 
+### Pose estimation
+
+#### WFLW
+
+Run `wflw.py` python file with your dataset directory as an argument.
+
+WFLW dataset will be automatically downloaded to `./data/download`. After executing scripts, you can use  [pre-defined configuration](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/data/local/wflw.yaml).
+
+```bash
+python ./tools/open_dataset_tool/wflw.py --dir ./data
+```
+
 ## Run NetsPresso Trainer
 
 Now you can run NetsPresso Trainer with your local dataset!

@@ -174,9 +174,8 @@ if __name__ == '__main__':
 
     # Build id_mapping
     id_mapping = [CLASS80_LABEL_TO_NAME[i] for i in range(80)]
-    with open(coco2017_path / 'id_mapping.txt', 'w') as f:
-        f.write('\n'.join(id_mapping))
-        f.close()
+    with open(coco2017_path / 'id_mapping.json', 'w') as f:
+        json.dump(id_mapping, f)
 
     try:
         shutil.rmtree(coco2017_path / 'annotations')

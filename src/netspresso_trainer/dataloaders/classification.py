@@ -1,3 +1,4 @@
+import json
 import os
 from functools import partial
 from itertools import chain
@@ -55,11 +56,11 @@ class ClassficationSampleLoader(BaseSampleLoader):
         elif isinstance(self.conf_data.id_mapping, str):
             id_mapping_path = root_path / self.conf_data.id_mapping
             if not os.path.isfile(id_mapping_path):
-                raise ValueError(f"Cannot find file {id_mapping_path}")
+                FileNotFoundError(f"File not found: {id_mapping_path}")
 
             with open(id_mapping_path, 'r') as f:
-                lines = f.readlines()
-            return [line.strip() for line in lines]
+                id_mapping = json.load(f)
+            return id_mapping
 
         else:
             raise ValueError(f"Unsupported id_mapping value {self.conf_data.id_mapping}")
