@@ -119,6 +119,10 @@ If you are interested in utilizing open datasets, you can use them by following 
 
 - [COCO 2017](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/tools/open_dataset_tool/coco2017.py)
 
+### Pose estimation
+
+- [WFLW](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/tools/open_dataset_tool/wflw.py)
+
 ## Dataset preparation (Huggingface)
 
 NetsPresso Trainer is also compatible with huggingface dataset. To use datasets of huggingface, please check [instructions in our documentations](https://nota-netspresso.github.io/netspresso-trainer/getting_started/dataset_preparation/huggingface/). This enables to utilize a wide range of pre-built datasets which are beneficial for various training scenarios.
