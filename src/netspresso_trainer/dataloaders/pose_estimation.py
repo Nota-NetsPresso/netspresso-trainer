@@ -3,11 +3,13 @@ from itertools import chain
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+import json
 
 import numpy as np
 import PIL.Image as Image
 import torch.distributed as dist
 from loguru import logger
+from omegaconf import ListConfig
 
 from .base import BaseCustomDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
@@ -50,8 +52,17 @@ class PoseEstimationSampleLoader(BaseSampleLoader):
         return images_and_targets
 
     def load_id_mapping(self):
-        # TODO: Get id_mapping from txt file
-        return list(self.conf_data.id_mapping)
+        root_path = Path(self.conf_data.path.root)
+
+        if isinstance(self.conf_data.id_mapping, ListConfig):
+            return list(self.conf_data.id_mapping)
+        elif isinstance(self.conf_data.id_mapping, str):
+            id_mapping_path = root_path / self.conf_data.id_mapping
+            with open(id_mapping_path, 'r') as f:
+                id_mapping = json.load(f)
+            return id_mapping
+        else:
+            raise ValueError(f"Invalid id_mapping type: {type(self.conf_data.id_mapping)}")
 
     def load_class_map(self, id_mapping):
         idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
