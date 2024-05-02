@@ -9,6 +9,7 @@
 ## Bug Fixes:
 
 - Fix test directory check line by `@illian01` in [PR 428](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/428)
+- Fix Dockerfile installation commandline `@cbpark-nota` in [PR 434](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/434)
 
 ## Breaking Changes:
 
