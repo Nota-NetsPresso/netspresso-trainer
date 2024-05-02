@@ -10,5 +10,6 @@ training:
     nesterov: False
   scheduler:
     name: step
-    ites_per_phase: 30
+    iters_per_phase: 30
     gamma: 0.1
+    end_epoch: 90
