@@ -1,0 +1,86 @@
+model:
+  task: detection
+  name: yolo_fastest
+  checkpoint:
+    use_pretrained: False
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: darknet
+      params: 
+        # stage_stem_block_type: Bottleneck 
+        stage_stem_block_type: darknetblock
+        depthwise: True
+        norm_type: batch_norm
+        act_type: relu6
+        num_feat_layers: 2
+        stem_stride: 2
+        stem_out_channels: 8
+      stage_params:
+        - # stage_1
+          out_channels: 4
+          num_blocks: 1                     # not the stage stem block  
+          darknet_expansions: [2, 2]
+        - # stage_2
+          out_channels: 8
+          num_blocks: 2
+          darknet_expansions: [3, 4]
+        - # stage_3
+          out_channels: 8
+          num_blocks: 2
+          darknet_expansions: [4, 6]
+        - # stage_4
+          out_channels: 16
+          num_blocks: 4
+          darknet_expansions: [3, 6]
+        - # stage_5
+          out_channels: 24
+          num_blocks: 4
+          darknet_expansions: [4, 5.67]      # expands to 136 channels 
+        - # stage_6
+          out_channels: 48
+          num_blocks: 5
+          darknet_expansions: [2.84, 4.67]   # expands to 224 channels
+    neck:
+      # name: identity
+      # params:
+      #   # # num_outs: 4
+      #   # # start_level: 0
+      #   # # end_level: -1
+      #   # # add_extra_convs: False
+      #   # # relu_before_extra_convs: False
+      #   # dep_mul: 0.33
+      #   # act_type: relu6
+      name: yolov3fpn
+      params:
+        out_channels: [48, 24]
+        kernel_size: 5
+        double_channel: False
+        share_fpn_block: False
+        depthwise: True
+        norm_type: batch_norm
+        act_type: leaky_relu
+    head:
+      # name: anchor_decoupled_head
+      name: yolo_fastest_head
+      params:
+        anchors:
+          - [12,18, 37,49, 52,132]  # P4/16
+          - [115,73, 119,199, 242,238]  # P5/32]
+        # strides: [16, 32]
+        norm_type: batch_norm
+        topk_candidates: 1000
+        score_thresh: 0.0
+        # postprocessor - nms
+        nms_thresh: 0.45
+        class_agnostic: False
+  losses:
+      - criterion: yolo_fastest_loss
+        # cls_weight: 1.0
+        # obj_weight: 1.0
+        weight: 1.0

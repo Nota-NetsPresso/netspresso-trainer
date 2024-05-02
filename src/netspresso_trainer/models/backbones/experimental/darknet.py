@@ -2,18 +2,30 @@
 Based on the Darknet implementation of Megvii.
 https://github.com/Megvii-BaseDetection/YOLOX/blob/main/yolox/models/darknet.py
 """
-from typing import Dict, Optional, List
+
+from typing import Dict, Optional, List, Type
 
 from omegaconf import DictConfig
 import torch
 from torch import nn
 
-from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
+from ...op.custom import (
+    ConvLayer,
+    CSPLayer,
+    Focus,
+    SPPBottleneck,
+    DarknetBlock
+)
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
-__all__ = ['cspdarknet']
-SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
+__all__ = ["cspdarknet"]
+SUPPORTING_TASK = ["classification", "segmentation", "detection", "pose_estimation"]
+
+
+BLOCK_FROM_LITERAL: Dict[str, Type[nn.Module]] = {"darknetblock": DarknetBlock}
+
+DARKNET_SUPPORTED_BLOCKS = ["darknetblock"]
 
 
 class CSPDarknet(nn.Module):
@@ -165,3 +177,167 @@ class CSPDarknet(nn.Module):
 
 def cspdarknet(task, conf_model_backbone) -> CSPDarknet:
     return CSPDarknet(task, conf_model_backbone.params, conf_model_backbone.stage_params)
+
+class Darknet(nn.Module):
+    """
+    Consists of a stem layer and multiple stage layers.
+    Stage layers are named as stage_{i} starting from stage_1
+    """
+
+    num_stages: int
+
+    def __init__(
+        self,
+        task: str,
+        params: Optional[DictConfig] = None,
+        stage_params: Optional[List] = None,
+    ) -> None:
+        self.task = task.lower()
+        assert (
+            self.task in SUPPORTING_TASK
+        ), f"Darknet is not supported on {self.task} task now."
+        assert stage_params, "please provide stage params of Darknet"
+        assert len(stage_params) >= 2
+        assert (
+            params.stage_stem_block_type.lower() in DARKNET_SUPPORTED_BLOCKS
+        ), "Block type not supported"
+        self.use_intermediate_features = (
+            self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+        )
+
+        self.num_stages = len(stage_params)
+
+        super().__init__()
+
+        # TODO: Check if inplace activation should be used
+        act_type = params.act_type
+        norm_type = params.norm_type
+        stage_stem_block_type = params.stage_stem_block_type
+        stem_stride = params.stem_stride
+        stem_out_channels = params.stem_out_channels
+        depthwise = params.depthwise
+
+        StageStemBlock = BLOCK_FROM_LITERAL[stage_stem_block_type.lower()]
+        predefined_out_features = dict()
+
+        # build the stem layer
+        self.stem = ConvLayer(
+            in_channels=3,
+            out_channels=stem_out_channels,
+            kernel_size=3,
+            stride=stem_stride,
+            act_type=act_type,
+            norm_type=norm_type,
+        )
+
+        prev_out_channels = stem_out_channels
+
+        # build rest of the layers
+        # TODO: make it compatiable with Yolov3
+        for i, stage_param in enumerate(stage_params):
+
+            layers = []
+            hidden_expansions = stage_param.darknet_expansions
+            out_channels = stage_param.out_channels
+
+            if len(hidden_expansions) == 2:
+                # stage_stem_expansion is defined as hidden_ch // output_ch
+                stage_stem_expansion = hidden_expansions[0]
+                block_expansion = hidden_expansions[1]
+
+            # TODO: Implement
+            else:
+                raise NotImplementedError
+
+            stage_stem_block = StageStemBlock(
+                in_channels=prev_out_channels,
+                out_channels=out_channels,
+                shortcut=False,
+                expansion=stage_stem_expansion,
+                depthwise=depthwise,
+                act_type=act_type,
+                norm_type=norm_type,
+                no_out_act=False,
+                depthwise_stride=2,
+            )
+
+            layers.append(stage_stem_block)
+            prev_out_channels = out_channels
+
+            for _ in range(stage_param.num_blocks):
+
+                in_ch = prev_out_channels
+                out_ch = in_ch
+                darknet_block = DarknetBlock(
+                    in_channels=in_ch,
+                    out_channels=out_ch,
+                    shortcut=True,
+                    expansion=block_expansion,
+                    depthwise=depthwise,
+                    norm_type=norm_type,
+                    act_type=act_type,
+                    no_out_act=True,
+                )
+
+                layers.append(darknet_block)
+            setattr(self, f"stage_{i+1}", nn.Sequential(*layers))
+            predefined_out_features[f"stage_{i+1}"] = stage_param.out_channels
+
+        # feature layers
+        self.out_features = []
+        first_feat_layer = self.num_stages - params.num_feat_layers + 1
+        for i in range(params.num_feat_layers):
+            layer_str = f"stage_{first_feat_layer + i}"
+            self.out_features.append(layer_str)
+
+        self._feature_dim = predefined_out_features[f"stage_{self.num_stages-1}"]
+
+        self._intermediate_features_dim = [
+            predefined_out_features[out_feature] for out_feature in self.out_features
+        ]
+
+        # Initialize
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 1e-3
+                    m.momentum = 0.03
+
+        self.apply(init_bn)
+        return
+
+    def forward(self, x):
+        outputs_dict = {}
+        x = self.stem(x)
+        outputs_dict["stem"] = x
+
+        for i in range(1, self.num_stages + 1):
+            x = getattr(self, f"stage_{i}")(x)
+            outputs_dict[f"stage_{i}"] = x
+
+        if self.use_intermediate_features:
+            all_hidden_states = [
+                outputs_dict[out_name] for out_name in self.out_features
+            ]
+            return BackboneOutput(intermediate_features=all_hidden_states)
+
+        # TODO: Check if classification head is needed
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+
+        return BackboneOutput(last_feature=x)
+
+    @property
+    def feature_dim(self):
+        return self._feature_dim
+
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
+
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
+
+
+def darknet(task, conf_model_backbone) -> Darknet:
+    return Darknet(task, conf_model_backbone.params, conf_model_backbone.stage_params)
