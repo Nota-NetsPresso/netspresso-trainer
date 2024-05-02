@@ -1,9 +1,9 @@
+import json
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-import json
 
 import numpy as np
 import PIL.Image as Image

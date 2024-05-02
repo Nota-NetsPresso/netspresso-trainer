@@ -1,10 +1,10 @@
+import json
 import os
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
-import json
 
 import PIL.Image as Image
 import torch.distributed as dist
