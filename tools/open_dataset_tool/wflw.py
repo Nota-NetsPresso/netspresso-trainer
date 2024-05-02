@@ -258,7 +258,7 @@ if __name__ == '__main__':
     for key, val in KEYPOINT_INFO.items():
         swap = val['swap']
         if swap == '':
-            swap = key
+            swap = val['name']
         
         id_mapping.append(dict(name=val['name'], skeleton=None, swap=swap))
 
