@@ -2,24 +2,20 @@ augmentation:
   train:
     - 
       name: randomresizedcrop
-      size: 512
+      size: 256
       scale: [0.08, 1.0]
       ratio: [0.75, 1.33]
       interpolation: bilinear
-    -
+    - 
       name: randomhorizontalflip
-      p: 0.5
-    -
-      name: colorjitter
-      brightness: 0.25
-      contrast: 0.25
-      saturation: 0.25
-      hue: 0.1
       p: 0.5
   inference:
     - 
       name: resize
-      size: [512, 512]
+      size: [256, 256]
       interpolation: bilinear
       max_size: ~
       resize_criteria: ~
+    - 
+      name: centercrop
+      size: 224

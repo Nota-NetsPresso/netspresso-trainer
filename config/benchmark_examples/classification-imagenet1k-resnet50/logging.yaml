@@ -1,0 +1,10 @@
+logging:
+  project_id: ~
+  output_dir: ./outputs
+  tensorboard: true
+  image: true
+  stdout: true
+  save_optimizer_state: true
+  onnx_input_size: [224, 224]
+  validation_epoch: &validation_epoch 10
+  save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.

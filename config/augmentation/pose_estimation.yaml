@@ -1,5 +1,4 @@
 augmentation:
-  img_size: &img_size 256
   train:
     -
       name: randomhorizontalflip

@@ -1,0 +1,14 @@
+training:
+  epochs: 90
+  mixed_precision: False
+  ema: ~
+  optimizer:
+    name: sgd
+    lr: 0.1
+    momentum: 0.9
+    weight_decay: 0.0001
+    nesterov: False
+  scheduler:
+    name: step
+    ites_per_phase: 30
+    gamma: 0.1
