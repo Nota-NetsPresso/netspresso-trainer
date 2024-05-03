@@ -1,4 +1,4 @@
-from .register import POSTPROCESSOR_DICT
+from .registry import POSTPROCESSOR_DICT
 
 
 def build_postprocessor(task: str, conf_model):

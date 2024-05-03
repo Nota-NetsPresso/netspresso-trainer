@@ -137,10 +137,10 @@ class TrainingPipeline(BasePipeline):
                                        time_for_epoch=time_for_epoch,
                                        valid_samples=valid_samples,
                                        valid_logging=with_valid_logging)
+                    self.save_summary()
                     if with_checkpoint_saving:
                         assert with_valid_logging
                         self.save_checkpoint(epoch=num_epoch)
-                        self.save_summary()
                     logger.info("-" * 40)
 
                 self.scheduler.step()  # call after reporting the current `learning_rate`

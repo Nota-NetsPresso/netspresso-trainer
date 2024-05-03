@@ -23,6 +23,7 @@ class BaseTaskProcessor(ABC):
             self.mixed_precision = False
         if self.mixed_precision:
             if self.single_gpu_or_rank_zero:
+                logger.info("-" * 40)
                 logger.info("Mixed precision training activated.")
             self.data_type = torch.float16
         else:

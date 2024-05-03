@@ -1,0 +1,21 @@
+data:
+  name: voc2012
+  task: segmentation
+  format: local
+  path:
+    root: ./data/voc2012_seg
+    train:
+      image: images/train # directory for training images
+      label: labels/train # directory for training labels
+    valid:
+      image: images/valid # directory for valid images
+      label: labels/valid # directory for valid labels
+    test:
+      image: ~
+      label: ~
+    pattern:
+      image: ~
+      label: ~
+  label_image_mode: L
+  id_mapping: id_mapping.json
+  #id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']

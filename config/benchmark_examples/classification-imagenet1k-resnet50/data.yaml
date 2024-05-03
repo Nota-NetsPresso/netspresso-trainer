@@ -1,0 +1,16 @@
+data:
+  name: IMAGENET1K
+  task: classification
+  format: local # local, huggingface
+  path:
+    root: ./data/imagenet1k # dataset root
+    train:
+      image: images/train # directory for training images
+      label: labels/imagenet_train.csv # directory for training labels or csv file
+    valid:
+      image: images/valid # directory for valid images
+      label: labels/imagenet_valid.csv # directory for valid labels or csv file
+    test:
+      image: ~
+      label: ~
+  id_mapping: id_mapping.json

@@ -1,0 +1,38 @@
+augmentation:
+  train:
+    - 
+      name: randomresizedcrop
+      size: 176
+      scale: [0.08, 1.0]
+      ratio: [0.75, 1.33]
+      interpolation: bilinear
+    - 
+      name: randomhorizontalflip
+      p: 0.5
+    - 
+      name: trivialaugmentwide
+      num_magnitude_bins: 31
+      interpolation: 'bilinear'
+      fill: ~
+    -
+      name: randomerasing
+      p: 0.1
+      scale: [0.02, 0.33]
+      ratio: [0.3, 3.3]
+      value: 0
+      inplace: False
+    -
+      name: mixing
+      mixup: [0.2, 1.0]
+      cutmix: [1.0, 1.0]
+      inplace: false
+  inference:
+    - 
+      name: resize
+      size: [232, 232]
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: ~
+    - 
+      name: centercrop
+      size: 224

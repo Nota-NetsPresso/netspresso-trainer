@@ -1,0 +1,20 @@
+data:
+  name: traffic_sign_yolo
+  task: detection
+  format: local # local, huggingface
+  path:
+    root: ../data/traffic-sign # dataset root
+    train:
+      image: images/train # directory for training images
+      label: labels/train # directory for training labels
+    valid:
+      image: images/val  # directory for valid images
+      label: labels/val  # directory for valid labels
+    test:
+      image: images/val #images/val
+      label: labels/val #labels/val  # directory for valid labels
+    pattern:
+      image: ~
+      label: ~
+  id_mapping: ['prohibitory', 'danger', 'mandatory', 'other']  # class names
+  pallete: ~

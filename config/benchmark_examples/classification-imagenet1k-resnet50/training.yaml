@@ -1,0 +1,16 @@
+training:
+  epochs: 600
+  mixed_precision: False
+  ema: ~
+  optimizer:
+    name: sgd
+    lr: 0.5
+    momentum: 0.9
+    weight_decay: 2e-5
+    nesterov: False
+  scheduler:
+    name: cosine_no_sgdr
+    warmup_epochs: 5
+    warmup_bias_lr: 1e-5
+    min_lr: 0.
+    end_epoch: 600

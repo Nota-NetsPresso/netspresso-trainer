@@ -16,6 +16,30 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v0.2.1
+
+## New Features:
+
+- Add dataset validation step and refactoring data modules by `@illian01` in [PR 417](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/417), [PR 419](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/419)
+- Add various dataset examples including automatic open dataset format converter by `@illian01` in [PR 430](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/430)
+- Allow using text file path for the `id_mapping` field by `@illian01` in [PR 432](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/432), [PR 435](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/435)
+
+## Bug Fixes:
+
+- Fix test directory check line by `@illian01` in [PR 428](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/428)
+- Fix Dockerfile installation commandline `@cbpark-nota` in [PR 434](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/434)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Save training summary at every end of epochs by `@illian01` in [PR 420](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/420)
+- Refacotring: rename postprocessors/register.py to registry.py by `@aychun` in [PR 424](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/424)
+- Add example configuration set by `@illian01` in [PR 438](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/438)
+- Documentation: fix simple use config file path by `@cbpark-nota` in [PR 437](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/437)
+
 # v0.2.0
 
 ## New Features:

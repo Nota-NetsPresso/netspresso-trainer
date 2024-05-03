@@ -1,0 +1,21 @@
+augmentation:
+  train:
+    - 
+      name: randomresizedcrop
+      size: 256
+      scale: [0.08, 1.0]
+      ratio: [0.75, 1.33]
+      interpolation: bilinear
+    - 
+      name: randomhorizontalflip
+      p: 0.5
+  inference:
+    - 
+      name: resize
+      size: [256, 256]
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: ~
+    - 
+      name: centercrop
+      size: 224

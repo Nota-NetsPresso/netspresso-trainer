@@ -1,5 +1,6 @@
 training:
   epochs: 30
+  mixed_precision: False
   ema: ~
   optimizer:
     name: adamw

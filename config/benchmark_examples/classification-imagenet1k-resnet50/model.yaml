@@ -1,0 +1,44 @@
+model:
+  task: classification
+  name: resnet50
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: resnet
+      params:
+        block_type: bottleneck
+        norm_type: batch_norm
+      stage_params:
+        - 
+          channels: 64
+          num_blocks: 3
+        - 
+          channels: 128
+          num_blocks: 4
+          replace_stride_with_dilation: False
+        - 
+          channels: 256
+          num_blocks: 6
+          replace_stride_with_dilation: False
+        - 
+          channels: 512
+          num_blocks: 3
+          replace_stride_with_dilation: False
+    head:
+      name: fc
+      params:
+        num_layers: 1
+        intermediate_channels: ~
+        act_type: ~
+        dropout_prob: 0.
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~

@@ -24,3 +24,5 @@ For example,
 ```
 - Added a new feature by `@myusername` in [PR 2023](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/2023)
 ```
+
+Please enable **Allow edits and access to secrets by maintainers** so that our maintainers can update the `CHANGELOG.md`.

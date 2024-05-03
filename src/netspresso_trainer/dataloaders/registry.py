@@ -1,21 +1,21 @@
 from typing import Callable, Dict, Type
 
 from .augmentation.transforms import create_transform
-from .base import BaseCustomDataset, BaseDataSampler, BaseHFDataset
+from .base import BaseCustomDataset, BaseHFDataset, BaseSampleLoader
 from .classification import (
-    ClassficationDataSampler,
+    ClassficationSampleLoader,
     ClassificationCustomDataset,
     ClassificationHFDataset,
 )
-from .detection import DetectionCustomDataset, DetectionDataSampler
+from .detection import DetectionCustomDataset, DetectionSampleLoader
 from .pose_estimation import (
     PoseEstimationCustomDataset,
-    PoseEstimationDataSampler,
+    PoseEstimationSampleLoader,
 )
 from .segmentation import (
     SegmentationCustomDataset,
-    SegmentationDataSampler,
     SegmentationHFDataset,
+    SegmentationSampleLoader,
 )
 
 CREATE_TRANSFORM = create_transform
@@ -32,9 +32,9 @@ HUGGINGFACE_DATASET: Dict[str, Type[BaseHFDataset]] = {
     'segmentation': SegmentationHFDataset
 }
 
-DATA_SAMPLER: Dict[str, Type[BaseDataSampler]] = {
-    'classification': ClassficationDataSampler,
-    'segmentation': SegmentationDataSampler,
-    'detection': DetectionDataSampler,
-    'pose_estimation': PoseEstimationDataSampler,
+DATA_SAMPLER: Dict[str, Type[BaseSampleLoader]] = {
+    'classification': ClassficationSampleLoader,
+    'segmentation': SegmentationSampleLoader,
+    'detection': DetectionSampleLoader,
+    'pose_estimation': PoseEstimationSampleLoader,
 }

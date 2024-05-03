@@ -1,21 +1,82 @@
 import os
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Optional, Type, Union
+from typing import Dict, List, Literal, Optional, Type, Union
 
 import torch.distributed as dist
+import torch.utils.data as data
 from loguru import logger
+from omegaconf import DictConfig
 
 from .augmentation.registry import TRANSFORM_DICT
-from .classification import classification_mix_collate_fn, classification_onehot_collate_fn
-from .detection import detection_collate_fn
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
+from .utils.collate_fn import classification_mix_collate_fn, classification_onehot_collate_fn, detection_collate_fn
 from .utils.loader import create_loader
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
 
-def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, distributed: bool):
 
+def dataset_path_check(conf_data: DictConfig, mode: Literal['train', 'test']):
+    if mode == 'train':
+        train_check = (conf_data.path.train.image is not None) and (conf_data.path.train.label is not None)
+        assert train_check, "For training, train split of dataset must be provided."
+
+        if conf_data.path.test.image:
+            logger.warning('For training, test split of dataset is not needed. This field will be ignored.')
+        conf_data.path.test.image = None
+        conf_data.path.test.label = None
+
+    elif mode == 'test':
+        assert conf_data.path.test.image is not None, "For test, test split of dataset must be provided."
+
+        if conf_data.path.train.image:
+            logger.warning('For test (evaluation or inference), train split of dataset is not needed. This field will be ignored.')
+        conf_data.path.train.image = None
+        conf_data.path.train.label = None
+
+        if conf_data.path.valid.image:
+            logger.warning('For test (evaluation or inference), valid split of dataset is not needed. This field will be ignored.')
+        conf_data.path.valid.image = None
+        conf_data.path.valid.label = None
+
+    else:
+        raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
+
+
+def loaded_dataset_check(
+    conf_data: DictConfig,
+    train_dataset: data.Dataset,
+    valid_dataset: data.Dataset,
+    test_dataset: data.Dataset,
+    distributed: bool,
+    mode: Literal['train', 'test']
+):
+    if mode == 'train':
+        if not distributed or dist.get_rank() == 0:
+            logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
+            logger.info(f"Summary | Training dataset: {len(train_dataset)} sample(s)")
+            if valid_dataset is not None:
+                logger.info(f"Summary | Validation dataset: {len(valid_dataset)} sample(s)")
+        assert len(train_dataset) > 0, "Training dataset has no samples. Please check your dataset configuration."
+
+    elif mode == 'test':
+        if not distributed or dist.get_rank() == 0:
+            logger.info(f"Summary | Dataset: <{conf_data.name}> (with {conf_data.format} format)")
+            logger.info(f"Summary | Test dataset: {len(test_dataset)} sample(s)")
+        assert len(test_dataset) > 0, "Test dataset has no samples. Please check your dataset configuration."
+
+    else:
+        raise ValueError(f"mode of build_dataset cannot be {mode}. Must be one of ['train', 'test'].")
+
+
+def build_dataset(
+    conf_data: DictConfig,
+    conf_augmentation: DictConfig,
+    task: str,
+    model_name: str,
+    distributed: bool,
+    mode: Literal['train', 'test'],
+):
     if not distributed or dist.get_rank() == 0:
         logger.info('-'*40)
         logger.info("Loading data...")
@@ -32,13 +93,14 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
     assert data_format in ['local', 'huggingface'], f"No such data format named {data_format} in {['local', 'huggingface']}!"
 
     if data_format == 'local':
+        dataset_path_check(conf_data=conf_data, mode=mode)
+
         assert task in CUSTOM_DATASET, f"Local dataset for {task} is not yet supported!"
         data_sampler = DATA_SAMPLER[task](conf_data, train_valid_split_ratio=TRAIN_VALID_SPLIT_RATIO)
 
         train_samples, valid_samples, test_samples, misc = data_sampler.load_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
-        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
         train_dataset = None
         if train_samples is not None:
@@ -58,8 +120,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         if test_samples is not None:
             test_dataset = CUSTOM_DATASET[task](
                 conf_data, conf_augmentation, model_name, idx_to_class=idx_to_class, split='test',
-                samples=test_samples, transform=target_transform,
-                with_label=test_with_label, label_value_to_idx=label_value_to_idx
+                samples=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
     elif data_format == 'huggingface':
@@ -71,7 +132,6 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
         train_samples, valid_samples, test_samples, misc = data_sampler.load_huggingface_samples()
         idx_to_class = misc['idx_to_class'] if 'idx_to_class' in misc else None
         label_value_to_idx = misc['label_value_to_idx'] if 'label_value_to_idx' in misc else None
-        test_with_label = misc['test_with_label'] if 'test_with_label' in misc else None
 
         # Assumed hugging face dataset always has training split
         train_dataset = HUGGINGFACE_DATASET[task](
@@ -93,6 +153,7 @@ def build_dataset(conf_data, conf_augmentation, task: str, model_name: str, dist
                 huggingface_dataset=test_samples, transform=target_transform, label_value_to_idx=label_value_to_idx
             )
 
+    loaded_dataset_check(conf_data, train_dataset, valid_dataset, test_dataset, distributed, mode)
     return train_dataset, valid_dataset, test_dataset
 
 
