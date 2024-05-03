@@ -7,6 +7,7 @@ training:
     lr: 0.5
     momentum: 0.9
     weight_decay: 2e-5
+    nesterov: False
   scheduler:
     name: cosine_no_sgdr
     warmup_epochs: 5
