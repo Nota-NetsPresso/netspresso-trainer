@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.2.1
+
+## New Features:
+
 - Add dataset validation step and refactoring data modules by `@illian01` in [PR 417](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/417), [PR 419](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/419)
 - Add various dataset examples including automatic open dataset format converter by `@illian01` in [PR 430](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/430)
 - Allow using text file path for the `id_mapping` field by `@illian01` in [PR 432](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/432), [PR 435](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/435)
