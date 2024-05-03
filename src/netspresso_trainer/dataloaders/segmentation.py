@@ -1,3 +1,5 @@
+import json
+import os
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
@@ -49,15 +51,27 @@ class SegmentationSampleLoader(BaseSampleLoader):
         return images_and_targets
 
     def load_id_mapping(self):
-        return self.conf_data.id_mapping
+        root_path = Path(self.conf_data.path.root)
+
+        if isinstance(self.conf_data.id_mapping, DictConfig):
+            return dict(self.conf_data.id_mapping)
+        elif isinstance(self.conf_data.id_mapping, ListConfig):
+            return dict(enumerate(self.conf_data.id_mapping))
+        elif isinstance(self.conf_data.id_mapping, str):
+            id_mapping_path = root_path / self.conf_data.id_mapping
+            if not os.path.exists(id_mapping_path):
+                raise FileNotFoundError(f"File not found: {id_mapping_path}")
+
+            with open(id_mapping_path, 'r') as f:
+                id_mapping = json.load(f)
+            if isinstance(id_mapping, list):
+                id_mapping = dict(enumerate(id_mapping))
+
+            return id_mapping
+        else:
+            raise ValueError(f"Unknown type for id_mapping! {type(self.conf_data.id_mapping)}")
 
     def load_class_map(self, id_mapping):
-        if isinstance(id_mapping, ListConfig):
-            assert isinstance(id_mapping[0], str), f"Unknown type for class name! {type(id_mapping[0])}"
-            idx_to_class: Dict[int, str] = dict(enumerate(id_mapping))
-            label_value_to_idx = {k: k for k in idx_to_class}
-            return {'idx_to_class': idx_to_class, 'label_value_to_idx': label_value_to_idx}
-
         idx_to_class: Dict[int, str] = {}
         label_value_to_idx: Dict[Union[int, Tuple], int] = {}
         for class_idx, (label_value, class_name) in enumerate(id_mapping.items()):
