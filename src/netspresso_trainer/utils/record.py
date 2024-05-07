@@ -143,7 +143,7 @@ class EvaluationSummary:
     metrics: float
     metrics_list: List[str]
     primary_metric: str
-    macs: Optional[int] = None
+    flops: Optional[int] = None
     params: Optional[int] = None
     total_evaluation_time: Optional[float] = None
     success: bool = False

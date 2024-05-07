@@ -91,19 +91,19 @@ class EvaluationPipeline(BasePipeline):
         self.save_summary(losses, metrics, time_for_evaluation)
 
     def save_summary(self, losses, metrics, time_for_evaluation):
-        macs, params = get_params_and_macs(self.model, self.sample_input.float())
+        flops, params = get_params_and_macs(self.model, self.sample_input.float())
         evaluation_summary = EvaluationSummary(
             losses=losses,
             metrics=metrics,
             metrics_list=self.metric_factory.metric_names,
             primary_metric=self.metric_factory.primary_metric,
-            macs=macs,
+            flops=flops,
             params=params,
             total_evaluation_time=time_for_evaluation,
             success=True,
         )
 
-        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "evaluation_summary.json"
 
