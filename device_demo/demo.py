@@ -39,6 +39,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Parser for NetsPresso demo")
 
     parser.add_argument('--model-path', type=str, required=True, dest='model_path', help="Path to the model")
+    parser.add_argument('--input-data', type=str, required=True, dest='input_data', help="Put 0 if you want tou use cam. Or put image data directory path.")
     parser.add_argument('--score-thresh', type=float, required=True, dest='score_thresh', help="Score threshold to discard boxes with low score")
     parser.add_argument('--nms-thresh', type=float, required=True, dest='nms_thresh', help="IoU threshold for non-maximum suppression")
 
@@ -56,8 +57,13 @@ if __name__ == '__main__':
     model_type = 'tflite'
 
     # Load dataset
-    #dataset = LoadDirectory('./data/WiderPerson-yolo/images/test')
-    dataset = LoadCamera()
+    cam_mode = args.input_data == '0'
+    if cam_mode:
+        dataset = LoadCamera()
+    else:
+        dataset = LoadDirectory('./data/WiderPerson-yolo/images/test')
+        save_dir = Path('./outputs/device_demo')
+        os.makedirs(save_dir, exist_ok=True)
 
     # Load model
     if model_type == 'tflite':
@@ -83,9 +89,6 @@ if __name__ == '__main__':
     model.invoke()
 
     # Inference
-    save_dir = Path('./outputs/device_demo')
-    os.makedirs(save_dir, exist_ok=True)
-   
     for i, original_img in enumerate(dataset):
         timer = TimeRecode()
         # Preprocess
@@ -130,9 +133,11 @@ if __name__ == '__main__':
         timer.end()
         fps = f'{int(np.round(1 / timer.elapsed))} FPS' # frame per second
         text_size, _ = cv2.getTextSize(str(fps), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
-        save_img = cv2.putText(save_img, str(fps), (0, 17), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        save_img = cv2.putText(save_img, str(fps), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
-        save_img = Image.fromarray(save_img)
-        save_img.save(save_dir / f'{i}.png')
-
-    print()
+        if cam_mode:
+            cv2.imshow('window', save_img[..., ::-1])
+            cv2.waitKey(1)
+        else:
+            save_img = Image.fromarray(save_img)
+            save_img.save(save_dir / f'{i}.png')

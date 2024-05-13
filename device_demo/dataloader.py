@@ -79,7 +79,8 @@ class LoadCamera:
     def __next__(self):
         success, img = self.cap.read()
         if success:
-            return img
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            return Image.fromarray(img)
         else:
             raise IOError("Failed to read camera frame")
 
