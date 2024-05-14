@@ -92,13 +92,16 @@ if __name__ == '__main__':
     for i, original_img in enumerate(dataset):
         timer = TimeRecode()
         # Preprocess
+        preprocess_time = TimeRecode()
         tensor_img = preprocess(original_img, size=320)
 
         if quantization:
             tensor_img = tensor_img / input_scale + input_zero_point
             tensor_img = tensor_img.to(torch.int8)
 
+        preprocess_time.end()
         # Model forward
+        forward_time = TimeRecode()
         model.set_tensor(0, tensor_img)
         model.invoke()
 
@@ -120,7 +123,9 @@ if __name__ == '__main__':
 
         output = {'pred': output}
 
+        forward_time.end()
         # Postprocess
+        postprocess_time = TimeRecode()
         detections = postprocessor(output, original_shape=(320, 320))
         detections = detections[0]
 
@@ -147,10 +152,13 @@ if __name__ == '__main__':
             save_img = cv2.rectangle(save_img, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
             save_img = cv2.putText(save_img, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
+        postprocess_time.end()
         timer.end()
         fps = f'{int(np.round(1 / timer.elapsed))} FPS' # frame per second
         text_size, _ = cv2.getTextSize(str(fps), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
         save_img = cv2.putText(save_img, str(fps), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        print(f'Preprocess time: {preprocess_time.elapsed}. Forward time: {forward_time.elapsed}. Postprocess time: {postprocess_time.elapsed}')
 
         if cam_mode:
             cv2.imshow('window', save_img[..., ::-1])
