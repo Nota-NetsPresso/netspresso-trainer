@@ -130,12 +130,12 @@ if __name__ == '__main__':
         detections = postprocessor(output, original_shape=(320, 320))
         detections = detections[0]
 
-        resize_factor = max((original_img.size[1] / 320), (original_img.size[0] / 320))
+        resize_factor = max((original_img.shape[0] / 320), (original_img.shape[1] / 320))
         detections[0][:, 1::2] *= resize_factor
         detections[0][:, :4:2] *= resize_factor
 
         # Visualize
-        save_img = np.array(original_img)
+        save_img = original_img
         cmap = _voc_color_map(len(CLASS_MAP))
         for bbox_label, class_label in zip(detections[0], detections[1]):
             class_name = CLASS_MAP[class_label]
