@@ -13,26 +13,7 @@ from utils import TimeRecode
 
 
 CLASS_MAP = ["pedestrians", "riders", "partially-visible persons", "ignore regions", "crowd"]
-
-def _voc_color_map(N=256, normalized=False):
-    def bitget(byteval, idx):
-        return ((byteval & (1 << idx)) != 0)
-
-    dtype = 'float32' if normalized else 'uint8'
-    cmap = np.zeros((N, 3), dtype=dtype)
-    for i in range(N):
-        r = g = b = 0
-        c = i
-        for j in range(8):
-            r = r | (bitget(c, 0) << 7 - j)
-            g = g | (bitget(c, 1) << 7 - j)
-            b = b | (bitget(c, 2) << 7 - j)
-            c = c >> 3
-
-        cmap[i] = np.array([r, g, b])
-
-    cmap = cmap / 255 if normalized else cmap
-    return cmap
+BOX_COLOR = (0, 255, 255)
 
 
 def parse_args():
@@ -42,6 +23,7 @@ def parse_args():
     parser.add_argument('--input-data', type=str, required=True, dest='input_data', help="Put 0 if you want tou use cam. Or put image data directory path.")
     parser.add_argument('--score-thresh', type=float, required=True, dest='score_thresh', help="Score threshold to discard boxes with low score")
     parser.add_argument('--nms-thresh', type=float, required=True, dest='nms_thresh', help="IoU threshold for non-maximum suppression")
+    parser.add_argument('--img-size', type=int, default=320, dest='img_size', help="Input image size")
 
     return parser.parse_args()
 
@@ -81,7 +63,7 @@ if __name__ == '__main__':
     quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
-    dummy_image = torch.empty((1, 320, 320, 3), device=device)
+    dummy_image = torch.empty((1, args.img_size, args.img_size, 3), device=device)
     if quantization: 
         dummy_image = dummy_image.to(torch.int8)
     model.set_tensor(0, dummy_image)
@@ -92,17 +74,14 @@ if __name__ == '__main__':
     for i, original_img in enumerate(dataset):
         timer = TimeRecode()
         # Preprocess
-        preprocess_time = TimeRecode()
-        input_img = preprocess(original_img, size=320)
+        input_img = preprocess(original_img, size=args.img_size)
 
         if quantization:
             input_scale, input_zero_point = model.get_input_details()[0]['quantization']
             input_img = input_img / input_scale + input_zero_point
             input_img = input_img.astype('int8')
 
-        preprocess_time.end()
         # Model forward
-        forward_time = TimeRecode()
         model.set_tensor(0, input_img)
         model.invoke()
 
@@ -124,42 +103,32 @@ if __name__ == '__main__':
 
         output = {'pred': output}
 
-        forward_time.end()
         # Postprocess
-        postprocess_time = TimeRecode()
-        detections = postprocessor(output, original_shape=(320, 320))
+        detections = postprocessor(output, original_shape=(args.img_size, args.img_size))
         detections = detections[0]
 
-        resize_factor = max((original_img.shape[0] / 320), (original_img.shape[1] / 320))
+        keeps = np.logical_or(detections[1] == 0, detections[1] == 2) # Only draw "pedestrians" and "partially-visible persons"
+        detections = (detections[0][keeps], detections[1][keeps])
+
+        resize_factor = max((original_img.shape[0] / args.img_size), (original_img.shape[1] / args.img_size))
         detections[0][:, 1::2] *= resize_factor
         detections[0][:, :4:2] *= resize_factor
 
         # Visualize
         save_img = original_img
-        cmap = _voc_color_map(len(CLASS_MAP))
         for bbox_label, class_label in zip(detections[0], detections[1]):
-            class_name = CLASS_MAP[class_label]
-
             # unnormalize depending on the visualizing image size
             x1 = int(bbox_label[0])
             y1 = int(bbox_label[1])
             x2 = int(bbox_label[2])
             y2 = int(bbox_label[3])
-            color = cmap[class_label].tolist()
 
-            save_img = cv2.rectangle(save_img, (x1, y1), (x2, y2), color=color, thickness=2)
-            text_size, _ = cv2.getTextSize(str(class_name), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-            text_w, text_h = text_size
-            save_img = cv2.rectangle(save_img, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
-            save_img = cv2.putText(save_img, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            save_img = cv2.rectangle(save_img, (x1, y1), (x2, y2), color=BOX_COLOR, thickness=2)
 
-        postprocess_time.end()
         timer.end()
         fps = f'{int(np.round(1 / timer.elapsed))} FPS' # frame per second
         text_size, _ = cv2.getTextSize(str(fps), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
         save_img = cv2.putText(save_img, str(fps), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-        print(f'Preprocess time: {preprocess_time.elapsed}. Forward time: {forward_time.elapsed}. Postprocess time: {postprocess_time.elapsed}')
 
         if cam_mode:
             cv2.imshow('window', save_img[..., ::-1])
