@@ -48,10 +48,6 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    print(args.model_path)
-
-    task = 'detection'
-    distributed = False
 
     device = torch.device('cpu') # Only support cpu mode.
     model_type = 'tflite'
@@ -75,16 +71,20 @@ if __name__ == '__main__':
             except ImportError:
                 raise ImportError("Failed to import tensorflow lite. Please install tflite_runtime or tensorflow")
 
-        model = tflite.Interpreter(model_path=args.model_path)
+        model = tflite.Interpreter(model_path=args.model_path, num_threads=1)
         model.allocate_tensors()
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
     
     # Load postprocessor
     postprocessor = DetectionPostprocessor(score_thresh=args.score_thresh, nms_thresh=args.nms_thresh, class_agnostic=False)
+    quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
-    dummy_image = torch.empty((1, 320, 320, 3), dtype=torch.float, device=device)
+    dummy_image = torch.empty((1, 320, 320, 3), device=device)
+    if quantization: 
+        dummy_image = dummy_image.to(torch.int8)
+        input_scale, input_zero_point = model.get_input_details()[0]['quantization']
     model.set_tensor(0, dummy_image)
     model.invoke()
 
@@ -94,14 +94,27 @@ if __name__ == '__main__':
         # Preprocess
         tensor_img = preprocess(original_img, size=320)
 
+        if quantization:
+            tensor_img = tensor_img / input_scale + input_zero_point
+            tensor_img = tensor_img.to(torch.int8)
+
         # Model forward
         model.set_tensor(0, tensor_img)
         model.invoke()
 
-        output_index = [details['index'] for details in model.get_output_details()]
-        output_index.sort()
-        output_index = output_index[::-1]
-        output = {'pred': [torch.tensor(model.get_tensor(index)).permute(0, 3, 1, 2) for index in output_index]}
+        output_info = [(details['index'], details['quantization_parameters']) for details in model.get_output_details()]
+        output_info.sort()
+        output_info = output_info[::-1]
+
+        output = [torch.tensor(model.get_tensor(index)).permute(0, 3, 1, 2) for index, _ in output_info]
+
+        if quantization:
+            for i, (_, quantization_parameters) in enumerate(output_info):
+                input_scale = quantization_parameters['scales']
+                input_zero_point = quantization_parameters['zero_points']
+                output[i] = (output[i] - input_zero_point.astype('int8')).to(torch.float32) * input_scale
+
+        output = {'pred': output}
 
         # Postprocess
         detections = postprocessor(output, original_shape=(320, 320))
