@@ -84,7 +84,6 @@ if __name__ == '__main__':
     dummy_image = torch.empty((1, 320, 320, 3), device=device)
     if quantization: 
         dummy_image = dummy_image.to(torch.int8)
-        input_scale, input_zero_point = model.get_input_details()[0]['quantization']
     model.set_tensor(0, dummy_image)
     for _ in range(5):
         model.invoke()
@@ -97,6 +96,7 @@ if __name__ == '__main__':
         tensor_img = preprocess(original_img, size=320)
 
         if quantization:
+            input_scale, input_zero_point = model.get_input_details()[0]['quantization']
             tensor_img = tensor_img / input_scale + input_zero_point
             tensor_img = tensor_img.to(torch.int8)
 
@@ -115,7 +115,7 @@ if __name__ == '__main__':
             for i, (_, quantization_parameters) in enumerate(output_info):
                 input_scale = quantization_parameters['scales']
                 input_zero_point = quantization_parameters['zero_points']
-                output[i] = (output[i] - input_zero_point.astype('int8')).to(torch.float32) * input_scale
+                output[i] = (output[i].to(torch.float32) - input_zero_point) * input_scale
 
             output_1 = torch.cat([output[1], output[2], output[0]], dim=1)
             output_2 = torch.cat([output[4], output[5], output[3]], dim=1)
