@@ -86,7 +86,8 @@ if __name__ == '__main__':
         dummy_image = dummy_image.to(torch.int8)
         input_scale, input_zero_point = model.get_input_details()[0]['quantization']
     model.set_tensor(0, dummy_image)
-    model.invoke()
+    for _ in range(5):
+        model.invoke()
 
     # Inference
     for i, original_img in enumerate(dataset):
