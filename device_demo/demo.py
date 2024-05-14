@@ -71,7 +71,7 @@ if __name__ == '__main__':
             except ImportError:
                 raise ImportError("Failed to import tensorflow lite. Please install tflite_runtime or tensorflow")
 
-        model = tflite.Interpreter(model_path=args.model_path, num_threads=1)
+        model = tflite.Interpreter(model_path=args.model_path, num_threads=4)
         model.allocate_tensors()
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
@@ -104,7 +104,6 @@ if __name__ == '__main__':
 
         output_info = [(details['index'], details['quantization_parameters']) for details in model.get_output_details()]
         output_info.sort()
-        output_info = output_info[::-1]
 
         output = [torch.tensor(model.get_tensor(index)).permute(0, 3, 1, 2) for index, _ in output_info]
 
@@ -113,6 +112,11 @@ if __name__ == '__main__':
                 input_scale = quantization_parameters['scales']
                 input_zero_point = quantization_parameters['zero_points']
                 output[i] = (output[i] - input_zero_point.astype('int8')).to(torch.float32) * input_scale
+
+            output_1 = torch.cat([output[1], output[2], output[0]], dim=1)
+            output_2 = torch.cat([output[4], output[5], output[3]], dim=1)
+            output_3 = torch.cat([output[7], output[8], output[6]], dim=1)
+            output = [output_3, output_2, output_1]
 
         output = {'pred': output}
 
