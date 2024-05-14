@@ -77,7 +77,7 @@ if __name__ == '__main__':
         raise ValueError(f"Unsupported model type: {model_type}")
     
     # Load postprocessor
-    postprocessor = DetectionPostprocessor(score_thresh=args.score_thresh, nms_thresh=args.nms_thresh, class_agnostic=True)
+    postprocessor = DetectionPostprocessor(score_thresh=args.score_thresh, nms_thresh=args.nms_thresh)
     quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
@@ -109,17 +109,17 @@ if __name__ == '__main__':
         output_info = [(details['index'], details['quantization_parameters']) for details in model.get_output_details()]
         output_info.sort()
 
-        output = [torch.tensor(model.get_tensor(index)).permute(0, 3, 1, 2) for index, _ in output_info]
+        output = [np.transpose(model.get_tensor(index), (0, 3, 1, 2)) for index, _ in output_info]
 
         if quantization:
             for i, (_, quantization_parameters) in enumerate(output_info):
                 input_scale = quantization_parameters['scales']
                 input_zero_point = quantization_parameters['zero_points']
-                output[i] = (output[i].to(torch.float32) - input_zero_point) * input_scale
+                output[i] = (output[i].astype('float32') - input_zero_point.astype('float32')) * input_scale.astype('float32')
 
-            output_1 = torch.cat([output[1], output[2], output[0]], dim=1)
-            output_2 = torch.cat([output[4], output[5], output[3]], dim=1)
-            output_3 = torch.cat([output[7], output[8], output[6]], dim=1)
+            output_1 = np.concatenate([output[1], output[2], output[0]], axis=1)
+            output_2 = np.concatenate([output[4], output[5], output[3]], axis=1)
+            output_3 = np.concatenate([output[7], output[8], output[6]], axis=1)
             output = [output_3, output_2, output_1]
 
         output = {'pred': output}
