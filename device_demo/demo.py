@@ -77,7 +77,7 @@ if __name__ == '__main__':
         raise ValueError(f"Unsupported model type: {model_type}")
     
     # Load postprocessor
-    postprocessor = DetectionPostprocessor(score_thresh=args.score_thresh, nms_thresh=args.nms_thresh, class_agnostic=False)
+    postprocessor = DetectionPostprocessor(score_thresh=args.score_thresh, nms_thresh=args.nms_thresh, class_agnostic=True)
     quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
@@ -93,17 +93,17 @@ if __name__ == '__main__':
         timer = TimeRecode()
         # Preprocess
         preprocess_time = TimeRecode()
-        tensor_img = preprocess(original_img, size=320)
+        input_img = preprocess(original_img, size=320)
 
         if quantization:
             input_scale, input_zero_point = model.get_input_details()[0]['quantization']
-            tensor_img = tensor_img / input_scale + input_zero_point
-            tensor_img = tensor_img.to(torch.int8)
+            input_img = input_img / input_scale + input_zero_point
+            input_img = input_img.astype('int8')
 
         preprocess_time.end()
         # Model forward
         forward_time = TimeRecode()
-        model.set_tensor(0, tensor_img)
+        model.set_tensor(0, input_img)
         model.invoke()
 
         output_info = [(details['index'], details['quantization_parameters']) for details in model.get_output_details()]

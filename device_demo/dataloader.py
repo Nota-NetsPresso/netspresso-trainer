@@ -37,9 +37,11 @@ def preprocess(img, size):
     img = resize_img(img, size)
     img = pad_img(img, size)
 
-    img = F.to_tensor(img)
-    img = F.normalize(img, mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    img = img.permute(1, 2, 0).unsqueeze(0)
+    img = np.array(img)
+    img = img.astype('float') / 255.0
+    img = img - np.array(IMAGENET_DEFAULT_MEAN).reshape(1, 1, -1)
+    img = img / np.array(IMAGENET_DEFAULT_STD).reshape(1, 1, -1)
+    img = img[np.newaxis, ...]
     return img
 
 
