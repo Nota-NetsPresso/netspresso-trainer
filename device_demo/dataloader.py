@@ -21,7 +21,7 @@ def resize_img(img, size):
 
 def pad_img(img, size):
     h, w = img.shape[:2]
-    padded = np.full((320, 320, 3), 114, dtype='uint8')
+    padded = np.full((size, size, 3), 114, dtype='uint8')
     padded[:h, :w] = img
     return padded
 

@@ -1,7 +1,6 @@
 from functools import partial
 
 import numpy as np
-import torchvision
 
 
 def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):

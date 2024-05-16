@@ -4,7 +4,6 @@ import os
 
 import numpy as np
 import cv2
-import torch
 from PIL import Image
 
 from dataloader import LoadDirectory, LoadCamera, preprocess
@@ -31,7 +30,6 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
 
-    device = torch.device('cpu') # Only support cpu mode.
     model_type = 'tflite'
 
     # Load dataset
@@ -63,9 +61,9 @@ if __name__ == '__main__':
     quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
-    dummy_image = torch.empty((1, args.img_size, args.img_size, 3), device=device)
+    dummy_image = np.random.random((1, args.img_size, args.img_size, 3))
     if quantization: 
-        dummy_image = dummy_image.to(torch.int8)
+        dummy_image = dummy_image.astype('int8')
     model.set_tensor(0, dummy_image)
     for _ in range(5):
         model.invoke()
