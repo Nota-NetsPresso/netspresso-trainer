@@ -20,6 +20,7 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'resnet34': 'imagenet1k',
     'resnet50': 'imagenet1k',
     'mobilenet_v3_small': 'imagenet1k',
+    'mobilenet_v3_large': 'imagenet1k',
     'segformer_b0': 'undefined',
     'mobilevit_s': 'imagenet1k',
     'vit_tiny': 'imagenet1k',
@@ -43,6 +44,9 @@ MODEL_CHECKPOINT_URL_DICT = {
     },
     'mobilenet_v3_small': {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=dPgl9WzLaJLqmuyDxsCoYawItdi0zES8",
+    },
+    'mobilenet_v3_large': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_large_imagenet1k.safetensors?versionId=jPG4LAueBDO5VrFGLQ51_z.iDHa5lOgP",
     },
     'segformer_b0': {
         'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors?versionId=aZsJLrZrAysdvqRz2WVfCrjM.0sTFs3H",
