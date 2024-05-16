@@ -49,9 +49,9 @@ model:
     head:
       name: fc
       params:
-        num_layers: 1
-        intermediate_channels: ~
-        act_type: ~
+        num_layers: 2
+        intermediate_channels: 1024
+        act_type: hard_swish
         dropout_prob: 0.
   losses:
     - criterion: cross_entropy
