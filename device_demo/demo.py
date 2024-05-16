@@ -19,6 +19,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Parser for NetsPresso demo")
 
     parser.add_argument('--model-path', type=str, required=True, dest='model_path', help="Path to the model")
+    parser.add_argument('--model-type', type=str, required=True, dest='model_type', help="'compressed' or 'original'")
     parser.add_argument('--input-data', type=str, required=True, dest='input_data', help="Put 0 if you want tou use cam. Or put image data directory path.")
     parser.add_argument('--score-thresh', type=float, required=True, dest='score_thresh', help="Score threshold to discard boxes with low score")
     parser.add_argument('--nms-thresh', type=float, required=True, dest='nms_thresh', help="IoU threshold for non-maximum suppression")
@@ -31,6 +32,13 @@ if __name__ == '__main__':
     args = parse_args()
 
     model_type = 'tflite'
+
+    if args.model_type == 'compressed':
+        tag_text = 'With Nota'
+    elif args.model_type == 'original':
+        tag_text = 'Without Nota'
+    else:
+        raise ValueError(args.model_type)
 
     # Load dataset
     cam_mode = args.input_data == '0'
@@ -61,7 +69,7 @@ if __name__ == '__main__':
     quantization = True if model.get_input_details()[0]['dtype'] == np.int8 else False
 
     # Warmup model
-    dummy_image = np.random.random((1, args.img_size, args.img_size, 3))
+    dummy_image = np.random.random((1, args.img_size, args.img_size, 3)).astype('float32')
     if quantization: 
         dummy_image = dummy_image.astype('int8')
     model.set_tensor(0, dummy_image)
@@ -126,7 +134,9 @@ if __name__ == '__main__':
         timer.end()
         fps = f'{int(np.round(1 / timer.elapsed))} FPS' # frame per second
         text_size, _ = cv2.getTextSize(str(fps), cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
-        save_img = cv2.putText(save_img, str(fps), (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        save_img = cv2.putText(save_img, str(fps), (save_img.shape[1] - text_size[0], 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+
+        save_img = cv2.putText(save_img, tag_text, (0, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
         if cam_mode:
             cv2.imshow('window', save_img[..., ::-1])
