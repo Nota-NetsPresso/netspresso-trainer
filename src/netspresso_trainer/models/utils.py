@@ -34,13 +34,13 @@ DEFAULT_WEIGHT_VERSION_DICT = {
 
 MODEL_CHECKPOINT_URL_DICT = {
     'resnet18': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=rI_BkIYyNFBtem180CSHA5QiGjuXgxMb",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=mEn38lTgeWB_kkDQOdiF9DfQKrPL2CCy",
     },
     'resnet34': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=YV687nYQc8tj5lq6ffqPpiJ8h2e0DW6L",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=.6Ezbpm8lsRyW.HrrnL6AyywYnsjlarr",
     },
     'resnet50': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=kDZZabJz8kK.HWDtvo7VJ.HYZ7A3GcxS",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=UF509XgguL1T3IhxSw1HVpfvnhvGGy6J",
     },
     'mobilenet_v3_small': {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=dPgl9WzLaJLqmuyDxsCoYawItdi0zES8",
