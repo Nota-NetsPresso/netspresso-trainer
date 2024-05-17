@@ -1,5 +1,5 @@
 from .common import CrossEntropyLoss, SigmoidFocalLoss
-from .detection import RetinaNetLoss, YOLOXLoss
+from .detection import RetinaNetLoss, YOLOXLoss, YOLOFastestLoss
 from .pose_estimation import RTMCCLoss
 from .segmentation import PIDNetLoss
 
@@ -10,6 +10,7 @@ LOSS_DICT = {
     'retinanet_loss': RetinaNetLoss,
     'focal_loss': SigmoidFocalLoss,
     'rtmcc_loss': RTMCCLoss,
+    'yolo_fastest_loss': YOLOFastestLoss,
 }
 
 PHASE_LIST = ['train', 'valid', 'test']
