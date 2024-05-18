@@ -84,3 +84,4 @@ model:
         # cls_weight: 1.0
         # obj_weight: 1.0
         weight: 1.0
+        anchors: [[12,18, 37,49, 52,132], [115,73, 119,199, 242,238]]
