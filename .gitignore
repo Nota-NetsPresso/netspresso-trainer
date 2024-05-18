@@ -34,3 +34,8 @@ docker-compose.yml
 
 !data/.gitkeep
 !weights/.gitkeep
+
+.DS_Store
+._.DS_Store
+**/.DS_Store
+**/._.DS_Store
