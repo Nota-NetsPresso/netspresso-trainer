@@ -20,6 +20,7 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'resnet34': 'imagenet1k',
     'resnet50': 'imagenet1k',
     'mobilenet_v3_small': 'imagenet1k',
+    'mobilenet_v3_large': 'imagenet1k',
     'segformer_b0': 'undefined',
     'mobilevit_s': 'imagenet1k',
     'vit_tiny': 'imagenet1k',
@@ -29,20 +30,26 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'mixnet_l': 'imagenet1k',
     'pidnet_s': 'cityscapes',
     'yolox_s': 'coco',
+    'yolox_m': 'coco',
+    'yolox_l': 'coco',
+    'yolox_x': 'coco',
 }
 
 MODEL_CHECKPOINT_URL_DICT = {
     'resnet18': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=rI_BkIYyNFBtem180CSHA5QiGjuXgxMb",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet18_imagenet1k.safetensors?versionId=mEn38lTgeWB_kkDQOdiF9DfQKrPL2CCy",
     },
     'resnet34': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=YV687nYQc8tj5lq6ffqPpiJ8h2e0DW6L",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet34_imagenet1k.safetensors?versionId=.6Ezbpm8lsRyW.HrrnL6AyywYnsjlarr",
     },
     'resnet50': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=kDZZabJz8kK.HWDtvo7VJ.HYZ7A3GcxS",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/resnet/resnet50_imagenet1k.safetensors?versionId=UF509XgguL1T3IhxSw1HVpfvnhvGGy6J",
     },
     'mobilenet_v3_small': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=NTpIJOERdx4efzBgY7Wcca7Xe1_Vwal9",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_small_imagenet1k.safetensors?versionId=dPgl9WzLaJLqmuyDxsCoYawItdi0zES8",
+    },
+    'mobilenet_v3_large': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_large_imagenet1k.safetensors?versionId=jPG4LAueBDO5VrFGLQ51_z.iDHa5lOgP",
     },
     'segformer_b0': {
         'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors?versionId=aZsJLrZrAysdvqRz2WVfCrjM.0sTFs3H",
@@ -54,22 +61,31 @@ MODEL_CHECKPOINT_URL_DICT = {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors?versionId=1WC4OqtnA5gJFolvCMrOWAdmiMwpL8RO",
     },
     'efficientformer_l1': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=JIkKVaUF0fhkvLz2jfcY3MmbUg6MkUO6",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=U5gtiRXNNyBvXOpawPA7lfFil09rq50S",
     },
     'mixnet_s': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors?versionId=n0sHuieRyTWWzwBmSAE8oSP4BL53laDP",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors?versionId=9YlFMjHa__1GYFv1H4l4_d4NqX_5djT5",
     },
     'mixnet_m': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m_imagenet1k.safetensors?versionId=cMkB57XAqu8Ro9OOWf9M6nLBPbrD2C7k",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_m_imagenet1k.safetensors?versionId=F11svT5UpQJWGQTv9B..STYj5_P53O1Y",
     },
     'mixnet_l': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors?versionId=UZFlpK8LO_SlYbu5GnUe9Qb3srikM6mk",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_l_imagenet1k.safetensors?versionId=nLUZeSGKWRZVldPLc0FCvFCZc6lPPEyB",
     },
     'pidnet_s': {
         'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8",
     },
     'yolox_s': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=QRLqHKqhv8TSYBrmsQ3M8lCR8w7HEZyA",
+    },
+    'yolox_m': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_m_coco.safetensors?versionId=xVUySP8xgVTpa6NhCMQpulqmYeRUAhpS",
+    },
+    'yolox_l': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_l_coco.safetensors?versionId=1GR6YNRu.yUfnjq8hKPgARyZ6YejdxMB",
+    },
+    'yolox_x': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_x_coco.safetensors?versionId=NWskUEbSGviBWskHQ3P1dQZXnRXOR1WN",
     },
 }
 

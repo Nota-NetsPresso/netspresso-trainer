@@ -1,9 +1,9 @@
 model:
   task: detection
-  name: yolox_s
+  name: yolox_m
   checkpoint:
     use_pretrained: True
-    load_head: True
+    load_head: False
     path: ~
     fx_model_path: ~
     optimizer_path: ~
@@ -13,8 +13,8 @@ model:
     backbone:
       name: cspdarknet
       params:
-        dep_mul: &dep_mul 0.33
-        wid_mul: 0.5
+        dep_mul: &dep_mul 0.67
+        wid_mul: 0.75
         act_type: &act_type "silu"
       stage_params: ~
     neck:

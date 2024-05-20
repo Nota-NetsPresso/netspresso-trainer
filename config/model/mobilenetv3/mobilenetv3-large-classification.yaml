@@ -1,0 +1,59 @@
+model:
+  task: classification
+  name: mobilenet_v3_large
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mobilenetv3
+      params: ~
+      stage_params:
+        -
+          in_channels: [16, 16, 24]
+          kernel_sizes: [3, 3, 3]
+          expanded_channels: [16, 64, 72]
+          out_channels: [16, 24, 24]
+          use_se: [False, False, False]
+          act_type: ["relu", "relu", "relu"]
+          stride: [1, 2, 1]
+        -
+          in_channels: [24, 40, 40]
+          kernel_sizes: [5, 5, 5]
+          expanded_channels: [72, 120, 120]
+          out_channels: [40, 40, 40]
+          use_se: [True, True, True]
+          act_type: ["relu", "relu", "relu"]
+          stride: [2, 1, 1]
+        -
+          in_channels: [40, 80, 80, 80, 80, 112]
+          kernel_sizes: [3, 3, 3, 3, 3, 3]
+          expanded_channels: [240, 200, 184, 184, 480, 672]
+          out_channels: [80, 80, 80, 80, 112, 112]
+          use_se: [False, False, False, False, True, True]
+          act_type: ["hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish", "hard_swish"]
+          stride: [2, 1, 1, 1, 1, 1]
+        -
+          in_channels: [112, 160, 160]
+          kernel_sizes: [5, 5, 5]
+          expanded_channels: [672, 960, 960]
+          out_channels: [160, 160, 160]
+          use_se: [True, True, True]
+          act_type: ["hard_swish", "hard_swish", "hard_swish"]
+          stride: [2, 1, 1]
+    head:
+      name: fc
+      params:
+        num_layers: 2
+        intermediate_channels: 1280
+        act_type: hard_swish
+        dropout_prob: 0.
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~
