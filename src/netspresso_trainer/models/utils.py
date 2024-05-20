@@ -30,6 +30,9 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'mixnet_l': 'imagenet1k',
     'pidnet_s': 'cityscapes',
     'yolox_s': 'coco',
+    'yolox_m': 'coco',
+    'yolox_l': 'coco',
+    'yolox_x': 'coco',
 }
 
 MODEL_CHECKPOINT_URL_DICT = {
@@ -74,6 +77,15 @@ MODEL_CHECKPOINT_URL_DICT = {
     },
     'yolox_s': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=QRLqHKqhv8TSYBrmsQ3M8lCR8w7HEZyA",
+    },
+    'yolox_m': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_m_coco.safetensors?versionId=xVUySP8xgVTpa6NhCMQpulqmYeRUAhpS",
+    },
+    'yolox_l': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_l_coco.safetensors?versionId=1GR6YNRu.yUfnjq8hKPgARyZ6YejdxMB",
+    },
+    'yolox_x': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_x_coco.safetensors?versionId=NWskUEbSGviBWskHQ3P1dQZXnRXOR1WN",
     },
 }
 
