@@ -121,11 +121,6 @@ class ConvLayer(nn.Module):
         return f"{self.block}"
 
 
-@torch.fx.wrap
-def tensor_slice(tensor: Tensor, dim, index):
-    return tensor.select(dim, index)
-
-
 class BasicBlock(nn.Module):
     expansion: int = 1
 
@@ -398,7 +393,7 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     x = x + selected_pe
 
         # x = x + self.pe[..., :seq_index, :]
-        x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
+        x = x + self.pe[..., : x.shape[-2], :]
 
         return x
 
