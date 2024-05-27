@@ -136,7 +136,7 @@ class TrainingSummary:
         self.last_epoch = list(self.train_losses.keys())[-1]
         try: # self.valid_losses is empty if validation is not performed
             self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
-        except:
+        except ValueError:
             self.best_epoch = self.last_epoch
 
 @dataclass
