@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix best_epoch init error in TrainingSummary in case of training resume by `@illian01` in [PR 448](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/448)
 
 ## Breaking Changes:
 
