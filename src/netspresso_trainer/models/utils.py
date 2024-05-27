@@ -55,10 +55,10 @@ MODEL_CHECKPOINT_URL_DICT = {
         'undefined': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0.safetensors?versionId=aZsJLrZrAysdvqRz2WVfCrjM.0sTFs3H",
     },
     'mobilevit_s': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors?versionId=Kg71H367_VeSJqfzJv54At1uFcMyIf9D",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilevit/mobilevit_s_imagenet1k.safetensors?versionId=IvxVWQ.yqTF9tvZr9E2JLyE7_1dBdDB4",
     },
     'vit_tiny': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors?versionId=1WC4OqtnA5gJFolvCMrOWAdmiMwpL8RO",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/vit/vit_tiny_imagenet1k.safetensors?versionId=FJwTnbWvFxnlIK.57wjWCh517kuFpOkF",
     },
     'efficientformer_l1': {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=U5gtiRXNNyBvXOpawPA7lfFil09rq50S",
