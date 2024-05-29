@@ -38,7 +38,7 @@ def normalize(img):
     return img
 
 
-class DetectionPreprocessor:
+class Preprocessor:
     DEVICE_TRANSFORM_DICT = {
         'resize': resize_img,
         'pad': pad_img,

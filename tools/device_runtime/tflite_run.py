@@ -14,7 +14,7 @@ def parse_args():
 def import_modules_by_task(conf):
     if conf.task == 'detection':
         from visualizers.detection_visualizer import DetectionVisualizer as Visualizer
-        from preprocessors.detection_preprocessor import DetectionPreprocessor as Preprocessor
+        from preprocessor import Preprocessor
         from postprocessors.detection_postprocessor import DetectionPostprocessor as Postprocessor
     else:
         raise NotImplementedError(f"Task {args.task} is not supported yet")
