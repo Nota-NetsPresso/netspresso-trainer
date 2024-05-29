@@ -1,0 +1,8 @@
+runtime:
+  task: detection
+  model_path: ./yolox_s.tflite
+  preprocess:
+    img_size: 640
+  postprocess:
+    score_thresh: 0.4
+    nms_thresh: 0.65
