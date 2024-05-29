@@ -52,10 +52,10 @@ def forward_model(interpreter, input_data):
 if __name__ == '__main__':
     args = parse_args()
 
-    conf = OmegaConf.load(args.config_path)
+    conf = OmegaConf.load(args.config_path).runtime
     Preprocessor, Postprocessor, Visualizer = import_modules_by_task(conf)
 
-    model = load_model(conf.model_path).runtime
+    model = load_model(conf.model_path)
     preprocessor = Preprocessor(conf.preprocess)
     postprocessor = Postprocessor(conf.postprocess)
     visualizer = Visualizer()
