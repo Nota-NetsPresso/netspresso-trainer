@@ -106,6 +106,14 @@ class MobileNetV3(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 nn.init.zeros_(m.bias)
 
+        # Set batchnorm eps and momentum
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 0.001
+                    m.momentum = 0.01
+        self.apply(init_bn)
+
     def forward(self, x: Tensor):
         x = self.conv_first(x)
 

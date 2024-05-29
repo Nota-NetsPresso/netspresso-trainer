@@ -2,11 +2,11 @@
 
 ## New Features:
 
-No changes to highlight.
+- Update Benchmarks & Checkpoints (docs) and weights files to fully usable by `@illian01` in [PR 446](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/446), [PR 447](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/447)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix best_epoch init error in TrainingSummary in case of training resume by `@illian01` in [PR 448](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/448)
 
 ## Breaking Changes:
 

@@ -81,11 +81,10 @@ class ViTBlock(MetaFormerBlock):
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.token_mixer = MultiHeadAttention(hidden_size, num_attention_heads,
-                                                  attention_scale=(hidden_size // num_attention_heads) ** -0.5,
                                                   attention_dropout_prob=attention_dropout_prob,
                                                   use_qkv_bias=True
                                                   )
-        self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
+        self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type='gelu')
     
     
 class ViTEncoder(MetaFormerEncoder):
@@ -119,7 +118,7 @@ class VisionTransformer(MetaFormer):
         vocab_size = params.vocab_size
 
         # Fix as a constant
-        layer_norm_eps = 1e-6
+        layer_norm_eps = 1e-5
 
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)

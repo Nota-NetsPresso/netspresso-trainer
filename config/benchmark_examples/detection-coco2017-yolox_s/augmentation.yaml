@@ -40,7 +40,7 @@ augmentation:
   inference:
     - 
       name: resize
-      size: 64
+      size: 640
       interpolation: bilinear
       max_size: ~
       resize_criteria: long
