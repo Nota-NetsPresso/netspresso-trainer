@@ -58,7 +58,7 @@ if __name__ == '__main__':
     model = load_model(conf.model_path)
     preprocessor = Preprocessor(conf.preprocess)
     postprocessor = Postprocessor(conf.postprocess)
-    visualizer = Visualizer()
+    visualizer = Visualizer(input_shape=(conf.preprocess.img_size, conf.preprocess.img_size))
 
     dataloader = LoadCamera()
     for img in dataloader:

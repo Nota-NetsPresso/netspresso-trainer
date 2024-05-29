@@ -24,11 +24,16 @@ def _voc_color_map(N=256, normalized=False):
 
 
 class DetectionVisualizer:
-    def __init__(self, class_map=None):
+    def __init__(self, input_shape, class_map=None):
         self.cmap = _voc_color_map(256)
+        self.input_shape = input_shape
         self.class_map = class_map
 
     def draw(self, image, detections):
+        resize_factor = max((image.shape[0] / self.input_shape[0]), (image.shape[1] / self.input_shape[1]))
+        detections[0][:, 1::2] *= resize_factor
+        detections[0][:, :4:2] *= resize_factor
+
         visualize_image = image.copy()
         for bbox_label, class_label in zip(detections[0], detections[1]):
             # Get bbox coordinates
