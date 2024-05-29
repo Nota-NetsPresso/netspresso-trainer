@@ -24,7 +24,7 @@ def _voc_color_map(N=256, normalized=False):
 
 
 class DetectionVisualizer:
-    def __init__(self, class_map):
+    def __init__(self, class_map=None):
         self.cmap = _voc_color_map(256)
         self.class_map = class_map
 
