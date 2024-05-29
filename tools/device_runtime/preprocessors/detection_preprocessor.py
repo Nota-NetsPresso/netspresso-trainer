@@ -23,7 +23,7 @@ def pad_img(img, size):
 class DetectionPreprocessor:
 
     def __init__(self, preprocess_conf):
-        self.size = preprocess_conf.size
+        self.size = preprocess_conf.img_size
 
     def __call__(self, img):
         img = resize_img(img, self.size)
