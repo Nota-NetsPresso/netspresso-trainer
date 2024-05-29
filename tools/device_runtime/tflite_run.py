@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for img in dataloader:
         img = preprocessor(img)
         output = forward_model(model, img)
-        pred = postprocessor(output)
+        pred = postprocessor({'pred': output}, (conf.preprocess.img_size, conf.preprocess.img_size))[0]
 
         img_draw = visualizer.draw(img, pred)
         visualizer.visualize(img_draw)
