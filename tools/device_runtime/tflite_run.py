@@ -30,7 +30,7 @@ def load_model(model_path):
             import tensorflow.lite as tflite
         except ImportError:
             raise ImportError("Failed to import tensorflow lite. Please install tflite_runtime or tensorflow")
-    interpreter = tflite.Interpreter(model_path=model_path, num_threads=-1) # Use platform-dependant number of threads
+    interpreter = tflite.Interpreter(model_path=model_path, num_threads=4) # TODO: Get num_threads from config or environment
     interpreter.allocate_tensors()
     return interpreter
 
