@@ -62,9 +62,12 @@ if __name__ == '__main__':
 
     dataloader = LoadCamera()
     for img in dataloader:
+        img_draw = img.squeeze()
+
         img = preprocessor(img)
         output = forward_model(model, img)
         pred = postprocessor({'pred': output}, (conf.preprocess.img_size, conf.preprocess.img_size))[0]
 
-        img_draw = visualizer.draw(img, pred)
+        img_draw = visualizer.draw(img_draw, pred)
+        img_draw = img_draw[..., ::-1] # RGB -> BGR to use cv2 imshow
         visualizer.visualize(img_draw)
