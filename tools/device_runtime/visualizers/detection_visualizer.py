@@ -29,28 +29,28 @@ class DetectionVisualizer:
         self.class_map = class_map
 
     def draw(self, image, detections):
-        bbox_label, class_label = detections[0], detections[1]
+        visualize_image = image.copy()
+        for bbox_label, class_label in zip(detections[0], detections[1]):
+            # Get bbox coordinates
+            x1 = int(bbox_label[0])
+            y1 = int(bbox_label[1])
+            x2 = int(bbox_label[2])
+            y2 = int(bbox_label[3])
 
-        # Get bbox coordinates
-        x1 = int(bbox_label[0])
-        y1 = int(bbox_label[1])
-        x2 = int(bbox_label[2])
-        y2 = int(bbox_label[3])
+            # Get bbox color
+            color = self.cmap[class_label].tolist()
 
-        # Get bbox color
-        color = self.cmap[class_label].tolist()
+            # Draw bbox
+            visualize_image = cv2.rectangle(visualize_image, (x1, y1), (x2, y2), color=color, thickness=2)
 
-        # Draw bbox
-        visualize_image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
+            # Get class name
+            class_name = self.class_map[class_label] if self.class_map else str(class_label)
 
-        # Get class name
-        class_name = self.class_map[class_label] if self.class_map else str(class_label)
-
-        # Draw class info
-        text_size, _ = cv2.getTextSize(str(class_name), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-        text_w, text_h = text_size
-        visualize_image = cv2.rectangle(visualize_image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
-        visualize_image = cv2.putText(visualize_image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # Draw class info
+            text_size, _ = cv2.getTextSize(str(class_name), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+            text_w, text_h = text_size
+            visualize_image = cv2.rectangle(visualize_image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
+            visualize_image = cv2.putText(visualize_image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
         return visualize_image
 
