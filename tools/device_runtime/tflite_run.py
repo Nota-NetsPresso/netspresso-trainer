@@ -55,7 +55,7 @@ if __name__ == '__main__':
     conf = OmegaConf.load(args.config_path)
     Preprocessor, Postprocessor, Visualizer = import_modules_by_task(conf)
 
-    model = load_model(conf.model_path)
+    model = load_model(conf.model_path).runtime
     preprocessor = Preprocessor(conf.preprocess)
     postprocessor = Postprocessor(conf.postprocess)
     visualizer = Visualizer()
