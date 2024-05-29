@@ -1,14 +1,9 @@
-import glob
 from pathlib import Path
 from itertools import chain
 
 import cv2
 import numpy as np
 from PIL import Image
-import torch
-from torch.utils.data import Dataset
-from torchvision.transforms.functional import InterpolationMode
-import torchvision.transforms.functional as F
 
 IMG_EXTENSIONS = ('.png', '.jpg', '.jpeg',
                   '.bmp', '.tif', '.tiff', '.dng', '.webp', '.mpo')
@@ -17,29 +12,28 @@ IMAGENET_DEFAULT_STD = (0.229, 0.224, 0.225)
 
 
 def resize_img(img, size):
-    w, h = img.size
+    h, w = img.shape[:2]
     long_side, short_side = max(h, w), min(h, w)
     resize_factor = size / long_side
-    target_size = [size, round(resize_factor * short_side)] if h > w else [round(resize_factor * short_side), size]
-    img = F.resize(img, target_size, InterpolationMode.BILINEAR, None, True)
+    target_size = [size, round(resize_factor * short_side)] if h < w else [round(resize_factor * short_side), size]
+    img = cv2.resize(img, dsize=target_size, interpolation=cv2.INTER_LINEAR)
     return img
 
 def pad_img(img, size):
-    w, h = img.size
-    w_pad_needed = max(0, size - w)
-    h_pad_needed = max(0, size - h)
-    padding_ltrb = [0, 0, w_pad_needed, h_pad_needed]
-    img = F.pad(img, padding_ltrb, fill=114, padding_mode='constant')
-    return img
+    h, w = img.shape[:2]
+    padded = np.full((size, size, 3), 114, dtype='uint8')
+    padded[:h, :w] = img
+    return padded
 
 
 def preprocess(img, size):
     img = resize_img(img, size)
     img = pad_img(img, size)
 
-    img = F.to_tensor(img)
-    img = F.normalize(img, mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    img = img.permute(1, 2, 0).unsqueeze(0)
+    img = img.astype('float32') / 255.0
+    img = img - np.array(IMAGENET_DEFAULT_MEAN).reshape(1, 1, -1).astype('float32')
+    img = img / np.array(IMAGENET_DEFAULT_STD).reshape(1, 1, -1).astype('float32')
+    img = img[np.newaxis, ...]
     return img
 
 
@@ -80,7 +74,7 @@ class LoadCamera:
         success, img = self.cap.read()
         if success:
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-            return Image.fromarray(img)
+            return img
         else:
             raise IOError("Failed to read camera frame")
 
