@@ -1,0 +1,5 @@
+numpy==1.26.4
+pillow==10.3.0
+opencv-python==4.9.0.80
+tensorflow==2.16.1
+omegaconf
