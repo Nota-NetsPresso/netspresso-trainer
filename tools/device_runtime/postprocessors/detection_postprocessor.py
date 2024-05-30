@@ -9,8 +9,9 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
     stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
 
     hw = [x.shape[-2:] for x in pred]
-    # [batch, n_anchors_all, num_classes + 5]
-    pred = np.concatenate([x.reshape(1, 10, -1) for x in pred], axis=2).transpose(0, 2, 1)
+    dim_len = pred[0].shape[1]
+
+    pred = np.concatenate([x.reshape(1, dim_len, -1) for x in pred], axis=2).transpose(0, 2, 1)
     pred[..., 4:] = 1 / (1 + (np.exp(-pred[..., 4:])))
     
     grids = []
