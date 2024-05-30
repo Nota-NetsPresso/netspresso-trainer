@@ -24,13 +24,12 @@ def _voc_color_map(N=256, normalized=False):
 
 
 class DetectionVisualizer:
-    def __init__(self, input_shape, class_map=None):
+    def __init__(self, class_map=None):
         self.cmap = _voc_color_map(256)
-        self.input_shape = input_shape
         self.class_map = class_map
 
-    def draw(self, image, detections):
-        resize_factor = max((image.shape[0] / self.input_shape[0]), (image.shape[1] / self.input_shape[1]))
+    def draw(self, image, detections, model_input_shape):
+        resize_factor = max((image.shape[0] / model_input_shape[0]), (image.shape[1] / model_input_shape[1]))
         detections[0][:, 1::2] *= resize_factor
         detections[0][:, :4:2] *= resize_factor
 
