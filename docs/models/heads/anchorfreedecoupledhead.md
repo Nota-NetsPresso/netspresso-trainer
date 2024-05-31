@@ -53,11 +53,10 @@ We provide the head of YOLOX as AnchorFreeDecoupledHead. There are no differnece
         name: anchor_free_decoupled_head
         params:
           act_type: "silu"
-          # postprocessor - decode
-          score_thresh: 0.7
-          # postprocessor - nms
-          nms_thresh: 0.45
-          class_agnostic: False
+    postprocessor:
+      score_thresh: 0.7
+      nms_thresh: 0.45
+      class_agnostic: False
   ```
 </details>
 

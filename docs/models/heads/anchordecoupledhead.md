@@ -61,12 +61,11 @@ We have named the detection head of RetinaNet as AnchorDecoupledHead to represen
           aspect_ratios: [0.5, 1.0, 2.0]
           num_layers: 1
           norm_type: batch_norm
-          # postprocessor - decode
-          topk_candidates: 1000
-          score_thresh: 0.05
-          # postprocessor - nms
-          nms_thresh: 0.45
-          class_agnostic: False
+    postprocessor:
+      topk_candidates: 1000
+      score_thresh: 0.05
+      nms_thresh: 0.45
+      class_agnostic: False
   ```
 </details>
 
