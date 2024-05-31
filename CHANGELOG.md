@@ -16,6 +16,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Refactoring: remove thop, replace MACs with FLOPs by `@illian01` in [PR 444](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/444)
+- Add copyright for entire project by `@illian01` in [PR 451](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/451)
 
 # v0.2.1
 
