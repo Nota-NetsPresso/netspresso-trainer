@@ -1,7 +1,3 @@
-"""
-Based on the publicly available DeepDeblur-PyTorch repository.
-https://github.com/SeungjunNah/DeepDeblur-PyTorch/blob/master/src/data/sampler.py
-"""
 import math
 
 import torch
