@@ -67,7 +67,7 @@ class AllMLPDecoder(nn.Module):
             )  # upsample to H/4 x W/4
             all_hidden_states += (encoder_hidden_state,)
 
-        hidden_states = self.linear_fuse(torch.cat(all_hidden_states[::-1], dim=1))
+        hidden_states = self.linear_fuse(torch.cat(all_hidden_states, dim=1))
         hidden_states = self.dropout(hidden_states)
 
         # logits are of shape (batch_size, num_labels, height/4, width/4)
