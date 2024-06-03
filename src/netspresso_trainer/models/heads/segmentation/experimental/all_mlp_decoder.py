@@ -49,7 +49,7 @@ class AllMLPDecoder(nn.Module):
         # the following 3 layers implement the ConvModule of the original implementation
         self.linear_fuse = ConvLayer(len(intermediate_features_dim) * intermediate_channels,
                                      intermediate_channels, kernel_size=1,
-                                     use_norm=True, use_act=False)
+                                     use_norm=True, use_act=True)
 
         self.dropout = nn.Dropout(classifier_dropout_prob)
         self.classifier = nn.Conv2d(intermediate_channels, num_classes, kernel_size=1)
