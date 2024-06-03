@@ -102,7 +102,6 @@ class SegFormerBlock(MetaFormerBlock):
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.token_mixer = MultiHeadAttention(
             hidden_size, num_attention_heads,
-            attention_scale=(hidden_size // num_attention_heads) ** -0.5,
             attention_dropout_prob=attention_dropout_prob,
             use_qkv_bias=True,
             sequence_reduction_ratio=sequence_reduction_ratio
