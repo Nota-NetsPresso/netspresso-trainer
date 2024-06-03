@@ -36,7 +36,6 @@ class AllMLPDecoder(nn.Module):
         super().__init__()
         intermediate_channels = params.intermediate_channels
         classifier_dropout_prob = params.classifier_dropout_prob
-        self.label_size = params.resize_output
 
         # linear layers which will unify the channel dimension of each of the encoder blocks to the same config.decoder_hidden_size
         mlps = []
@@ -72,13 +71,6 @@ class AllMLPDecoder(nn.Module):
 
         # logits are of shape (batch_size, num_labels, height/4, width/4)
         logits = self.classifier(hidden_states)  # B x {num_classes} x H/4 x W/4
-
-        if self.label_size is not None:
-            H, W = self.label_size[-2:]
-            # upsample logits to the images' original size
-            logits = F.interpolate(
-                logits, size=(H, W), mode="bilinear", align_corners=False
-            )
 
         return ModelOutput(pred=logits)
 

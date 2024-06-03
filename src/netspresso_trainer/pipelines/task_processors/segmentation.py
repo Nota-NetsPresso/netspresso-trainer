@@ -76,7 +76,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         out = eval_model(images)
         loss_factory.calc(out, target, phase='valid')
 
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
