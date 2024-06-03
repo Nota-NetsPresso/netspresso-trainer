@@ -15,3 +15,4 @@
 # ----------------------------------------------------------------------------
 
 from .pidnet import PIDNetLoss
+from .seg_cross_entropy import SegCrossEntropyLoss

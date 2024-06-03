@@ -17,6 +17,7 @@
 from typing import Any, Optional
 
 import torch
+import torch.nn.functional as F
 
 from ..models.utils import ModelOutput
 
@@ -25,7 +26,12 @@ class SegmentationPostprocessor:
     def __init__(self, conf_model):
         pass
 
-    def __call__(self, outputs: ModelOutput):
+    def __call__(self, outputs: ModelOutput, original_shape):
         pred = outputs['pred']
+        H, W = original_shape[-2:]
+        # upsample logits to the images' original size
+        pred = F.interpolate(
+            pred, size=(H, W), mode="bilinear", align_corners=False
+        )
         pred = torch.max(pred, dim=1)[1]  # argmax
         return pred.detach().cpu().numpy()
