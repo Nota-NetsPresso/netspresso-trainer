@@ -21,7 +21,7 @@ from .segmentation import PIDNetLoss, SegCrossEntropyLoss
 
 LOSS_DICT = {
     'cross_entropy': CrossEntropyLoss,
-    'seg_cross_entropy': SegCrossEntropyLoss, 
+    'seg_cross_entropy': SegCrossEntropyLoss,
     'pidnet_loss': PIDNetLoss,
     'yolox_loss': YOLOXLoss,
     'retinanet_loss': RetinaNetLoss,
