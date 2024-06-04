@@ -41,7 +41,7 @@ MAPPING_TABLE[CITYSCAPES_LABELS] = np.arange(19)
 
 if __name__ == '__main__':
     # Set argument (data directory)
-    parser = argparse.ArgumentParser(description="Parser for CIFAR100 dataset downloader.")
+    parser = argparse.ArgumentParser(description="Parser for Cityscapes dataset remapper.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
     parser.add_argument('--images', type=str, dest='images', required=True,
                         help="Cityscapes dataset cannot be downloaded automatically. Download dataset from https://www.cityscapes-dataset.com/ and set leftimg8bit_trainvaltest.zip path here.")

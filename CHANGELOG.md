@@ -2,12 +2,13 @@
 
 ## New Features:
 
-- Update Benchmarks & Checkpoints (docs) and weights files to fully usable by `@illian01` in [PR 446](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/446), [PR 447](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/447)
+- Update Benchmarks & Checkpoints (docs) and weights files to fully usable by `@illian01` in [PR 446](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/446), [PR 447](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/447), [PR 456](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/456)
 - Add TFLite runtime code example by `@illian01` in [PR 449](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/449)
 
 ## Bug Fixes:
 
 - Fix best_epoch init error in TrainingSummary in case of training resume by `@illian01` in [PR 448](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/448)
+- Fix segmentation metric logic bug by `@illian01` in [PR 455](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/455)
 
 ## Breaking Changes:
 

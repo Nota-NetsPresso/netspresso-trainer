@@ -35,7 +35,7 @@ CLASS_INDEX_URL = 'https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws
 
 if __name__ == '__main__':
     # Set argument (data directory)
-    parser = argparse.ArgumentParser(description="Parser for CIFAR100 dataset downloader.")
+    parser = argparse.ArgumentParser(description="Parser for ImageNet1K dataset remapper.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
     parser.add_argument('--train-images', type=str, dest='train_images', required=True,
                         help="ImageNet1K dataset cannot be downloaded automatically. Download dataset from https://www.image-net.org/ and set train path here.")
