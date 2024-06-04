@@ -49,11 +49,11 @@ model:
         aspect_ratios: [0.5, 1.0, 2.0]
         num_layers: 1
         norm_type: batch_norm
-    postprocessor:
-      topk_candidates: 1000
-      score_thresh: 0.05
-      nms_thresh: 0.45
-      class_agnostic: False
+  postprocessor:
+    topk_candidates: 1000
+    score_thresh: 0.05  # decode
+    nms_thresh: 0.45  # nms
+    class_agnostic: False
   losses:
     - criterion: retinanet_loss
       weight: ~

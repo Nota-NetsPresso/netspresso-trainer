@@ -37,6 +37,7 @@ model:
       params:
         intermediate_channels: 256
         classifier_dropout_prob: 0.
+  postprocessor: ~
   losses:
     - criterion: cross_entropy
       weight: ~

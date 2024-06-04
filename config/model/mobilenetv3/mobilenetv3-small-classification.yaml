@@ -53,6 +53,7 @@ model:
         intermediate_channels: 1024
         act_type: hard_swish
         dropout_prob: 0.
+  postprocessor: ~
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
