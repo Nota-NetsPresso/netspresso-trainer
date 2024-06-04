@@ -39,7 +39,6 @@ class CSPDarknet(nn.Module):
         task: str,
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
-        #depthwise=False,
     ) -> None:
         # Check task compatibility
         self.task = task.lower()
@@ -54,6 +53,7 @@ class CSPDarknet(nn.Module):
         dep_mul = params.dep_mul
         wid_mul = params.wid_mul
         act_type = params.act_type
+        depthwise = params.depthwise
 
         self.out_features = out_features
         Conv = ConvLayer
@@ -75,7 +75,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 2,
                 base_channels * 2,
                 n=base_depth,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -91,7 +91,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 4,
                 base_channels * 4,
                 n=base_depth * 3,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -107,7 +107,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 8,
                 base_channels * 8,
                 n=base_depth * 3,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -125,7 +125,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 16,
                 n=base_depth,
                 shortcut=False,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
