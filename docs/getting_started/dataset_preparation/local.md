@@ -122,6 +122,26 @@ python ./tools/open_dataset_tool/imagenet1k.py --dir ./data --train-images ./dat
 
 ### Semantic segmentation
 
+#### ADE20K
+
+Run `ade20k.py` python file with your dataset directory as an augument.
+
+ADE20K dataset will be automatically downloaded to `./data/download`. After executing scripts, you can use  [pre-defined configuration](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/data/local/ade20k.yaml).
+
+```bash
+python ./tools/open_dataset_tool/ade20k.py --dir ./data
+```
+
+#### Cityscapes
+
+Cityscapes dataset cannot be automatically downloaded. You should download dataset from [Cityscapes](https://www.cityscapes-dataset.com/) website, and place downloaded files into `./data/download`.
+
+And, run `cityscapes.py` python file with your dataset directorty and downloaded files path as arguments. After executing scripts, you can use [pre-defined configuration](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/data/local/cityscapes.yaml).
+
+```bash
+python --dir ./data --images .data/download/leftImg8bit_trainvaltest.zip --labels .data/download/gtFine_trainvaltest.zip
+```
+
 #### PascalVOC 2012
  
 Run `voc2012_seg.py` python file with your dataset directory as an argument.
