@@ -17,7 +17,7 @@ class SegCrossEntropyLoss(nn.Module):
         pred = out['pred']
         target = target['target']
 
-        H, W = target.shape[-2:] 
+        H, W = target.shape[-2:]
         # upsample logits to the images' original size
         pred = F.interpolate(
             pred, size=(H, W), mode="bilinear", align_corners=False
