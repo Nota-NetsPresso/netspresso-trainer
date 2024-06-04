@@ -13,6 +13,7 @@ model:
     backbone:
       name: cspdarknet
       params:
+        depthwise: False
         dep_mul: &dep_mul 1.33
         wid_mul: 1.25
         act_type: &act_type "silu"
