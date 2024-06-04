@@ -249,7 +249,7 @@ Crop the given image at a random location. This augmentation follows the [Random
   ```
 </details>
 
-### RancomErasing
+### RandomErasing
 
 Erase random area of given image. This augmentation follows the [RandomErasing](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomErasing.html#torchvision.transforms.RandomErasing) in torchvision library.
 
