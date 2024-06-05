@@ -20,6 +20,8 @@ import os
 import shutil
 import json
 
+import numpy as np
+from PIL import Image
 import torch
 
 DEFAULT_DATA_DIR = './data'
@@ -63,6 +65,17 @@ if __name__ == '__main__':
 
     shutil.move(src_root / 'images', ade20k_path / 'images')
     shutil.move(src_root / 'labels', ade20k_path / 'labels')
+
+    for phase in ['train', 'valid']:
+        phase_path = ade20k_path / 'labels' / phase
+        labels = os.listdir(phase_path)
+        for label_name in labels:
+            label = Image.open(phase_path / label_name)
+            label = np.array(label)
+            label[label == 0] = 255 # Ignore backgrounds
+            label[label != 255] -= 1 # Shift label values
+            label = Image.fromarray(label)
+            label.save(phase_path / label_name)
 
     # Build id_mapping.json
     with open(ade20k_path / 'id_mapping.json', 'w') as f:
