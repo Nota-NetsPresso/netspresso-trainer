@@ -161,7 +161,9 @@ class DetectionPostprocessor:
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'anchor_coupled_head':
-            self.decode_outputs = partial()
+            # TODO: implement decoder and postprocessor
+            self.decode_outputs = None 
+            self.postprocess = None  
 
         else:
             self.decode_outputs = None
