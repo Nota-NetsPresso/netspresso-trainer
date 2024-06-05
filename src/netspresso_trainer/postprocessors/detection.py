@@ -9,6 +9,10 @@ from torchvision.ops import boxes as box_ops
 from ..models.utils import ModelOutput
 
 
+def anchor_coupled_head_decode(pred, original_shape, topk_candiates=1000, score_thres=0.05):
+    pass 
+
+
 def anchor_decoupled_head_decode(pred, original_shape, topk_candidates=1000, score_thresh=0.05):
     box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
 
@@ -156,6 +160,9 @@ class DetectionPostprocessor:
         elif head_name == 'anchor_decoupled_head':
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        elif head_name == 'anchor_coupled_head':
+            self.decode_outputs = partial()
+
         else:
             self.decode_outputs = None
             self.postprocess = None
