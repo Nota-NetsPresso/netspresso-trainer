@@ -183,7 +183,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
             img_path = self.samples[index]['image']
             ann_path = self.samples[index]['label']
             img = Image.open(Path(img_path)).convert('RGB')
-            label = Image.open(Path(ann_path)).convert(self.label_image_mode) if ann_path is not None else None
+            label = Image.open(Path(ann_path)) if ann_path is not None else None
 
         w, h = img.size
 
@@ -194,18 +194,16 @@ class SegmentationCustomDataset(BaseCustomDataset):
             outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
             return outputs
 
-
-        label_array = np.array(label)
-        label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
-        # if self.conf_augmentation.reduce_zero_label:
-        #     label = reduce_label(np.array(label))
-
-        mask = np.zeros((label.size[1], label.size[0]), dtype=np.uint8)
-        for label_value in self.label_value_to_idx:
-            class_mask = (label_array == np.array(label_value)).all(axis=-1)
-            mask[class_mask] = self.label_value_to_idx[label_value]
-
-        mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
+        if self.label_image_mode == 'L':
+            mask = label
+        else: # RGB, P
+            label = label.convert('RGB')
+            label = np.array(label)
+            mask = np.zeros((label.shape[0], label.shape[1]), dtype=np.uint8) + 255 # Set undefined as 255
+            for label_value in self.label_value_to_idx:
+                class_mask = (label == np.array(label_value)).all(axis=-1)
+                mask[class_mask] = self.label_value_to_idx[label_value]
+            mask = Image.fromarray(mask, mode='L')
 
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
