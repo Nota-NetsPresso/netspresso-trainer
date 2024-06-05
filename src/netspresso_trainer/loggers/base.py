@@ -127,7 +127,7 @@ class TrainingLogger():
             if len(images_list) == 0:
                 return None
 
-            images_dict = {key: [] for key in images_list[0].keys()}
+            images_dict = {key: [] for key in images_list[0]}
             for minibatch in images_list:
                 minibatch: Dict = self._convert_imagedict_as_readable(minibatch)
                 for k_batch, v_batch in minibatch.items():
