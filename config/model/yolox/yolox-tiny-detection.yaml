@@ -1,6 +1,6 @@
 model:
   task: detection
-  name: yolox_n
+  name: yolox_tiny
   checkpoint:
     use_pretrained: False
     load_head: False
@@ -15,7 +15,7 @@ model:
       params:
         depthwise: True
         dep_mul: &dep_mul 0.33
-        wid_mul: 0.25
+        wid_mul: 0.375
         act_type: &act_type "silu"
       stage_params: ~
     neck:
