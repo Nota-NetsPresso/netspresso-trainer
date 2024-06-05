@@ -18,6 +18,7 @@ No changes to highlight.
 
 - Refactoring: remove thop, replace MACs with FLOPs by `@illian01` in [PR 444](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/444)
 - Add copyright for entire project by `@illian01` in [PR 451](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/451)
+- Modify ImageSaver to receive various resolution at once `@illian01` in [PR 458](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/458)
 
 # v0.2.1
 
