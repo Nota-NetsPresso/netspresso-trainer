@@ -3,7 +3,7 @@ data:
   task: segmentation
   format: local
   path:
-    root: ./data/voc2012_seg # dataset root
+    root: ./data/voc2012_seg
     train:
       image: images/train # directory for training images
       label: labels/train # directory for training labels
@@ -16,28 +16,6 @@ data:
     pattern:
       image: ~
       label: ~
-  label_image_mode: RGB
+  label_image_mode: L
   id_mapping: id_mapping.json
-  #   (0, 0, 0): background
-  #   (128, 0, 0): aeroplane
-  #   (0, 128, 0): bicycle
-  #   (128, 128, 0): bird
-  #   (0, 0, 128): boat
-  #   (128, 0, 128): bottle
-  #   (0, 128, 128): bus
-  #   (128, 128, 128): car
-  #   (64, 0, 0): cat
-  #   (192, 0, 0): chair
-  #   (64, 128, 0): cow
-  #   (192, 128, 0): diningtable
-  #   (64, 0, 128): dog
-  #   (192, 0, 128): horse
-  #   (64, 128, 128): motorbike
-  #   (192, 128, 128): person
-  #   (0, 64, 0): pottedplant
-  #   (128, 64, 0): sheep
-  #   (0, 192, 0): sofa
-  #   (128, 192, 0): train
-  #   (0, 64, 128): tvmonitor
-  #   (128, 64, 128): void
-  pallete: ~
+  #id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']
