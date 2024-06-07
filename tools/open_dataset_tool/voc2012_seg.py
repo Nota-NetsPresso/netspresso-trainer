@@ -67,7 +67,7 @@ if __name__ == '__main__':
     # Set argument (data directory)
     parser = argparse.ArgumentParser(description="Parser for VOC 2012 dataset downloader.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
-    parser.add_argument('--label_image_mode', type=str, default='RGB', choices=['RGB', 'L'], help='Label image mode (RGB or P or L)')
+    parser.add_argument('--label_image_mode', type=str, default='L', choices=['RGB', 'L'], help='Label image mode (RGB or L)')
     args = parser.parse_args()
 
     # Download VOC 2012 dataset
