@@ -73,8 +73,8 @@ class PIDNet(nn.Module):
                                       kernel_size=1, stride=1, padding=0,
                                       norm_type='batch_norm', use_act=False)
 
-        self.pag3 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
-        self.pag4 = PagFM(planes * 2, planes, resize_to=(512 // 8, 512 // 8))
+        self.pag3 = PagFM(planes * 2, planes)
+        self.pag4 = PagFM(planes * 2, planes)
 
         self.layer3_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
         self.layer4_ = self._make_layer(BasicBlock, planes * 2, planes * 2, m)
@@ -119,9 +119,6 @@ class PIDNet(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-
-        self.original_to = (512, 512)
-        self.resize_to = (512 // 8, 512 // 8)
 
     def _make_layer(self, block, inplanes, planes, blocks, stride=1, expansion=None):
         downsample = None
@@ -180,11 +177,10 @@ class PIDNet(nn.Module):
 
         x_d = x_d + F.interpolate(
             self.diff3(x),
-            size=self.resize_to,
+            size=x_d.shape[-2:],
             mode='bilinear', align_corners=use_align_corners)
 
-        if self.is_training:
-            # if self.augment:
+        if not torch.jit.is_tracing():
             temp_p = x_
 
         x = self.relu(self.layer4(x))
@@ -195,11 +191,10 @@ class PIDNet(nn.Module):
 
         x_d = x_d + F.interpolate(
             self.diff4(x),
-            size=self.resize_to,
+            size=x_d.shape[-2:],
             mode='bilinear', align_corners=use_align_corners)
 
-        if self.is_training:
-            # if self.augment:
+        if not torch.jit.is_tracing():
             temp_d = x_d
 
         x_ = self.layer5_(self.relu(x_))
@@ -207,19 +202,17 @@ class PIDNet(nn.Module):
 
         x = F.interpolate(
             self.spp(self.layer5(x)),
-            size=self.resize_to,
+            size=x_d.shape[-2:],
             mode='bilinear', align_corners=use_align_corners)
 
         x_ = self.final_layer(self.dfm(x_, x, x_d))
 
-        x_ = F.interpolate(x_, size=self.original_to, mode='bilinear', align_corners=True)
-
-        # if self.augment:
-        x_extra_p = self.seghead_p(temp_p)
-        x_extra_d = self.seghead_d(temp_d)
-
-        x_extra_p = F.interpolate(x_extra_p, size=self.original_to, mode='bilinear', align_corners=True)
-        x_extra_d = F.interpolate(x_extra_d, size=self.original_to, mode='bilinear', align_corners=True)
+        if not torch.jit.is_tracing():
+            x_extra_p = self.seghead_p(temp_p)
+            x_extra_d = self.seghead_d(temp_d)
+        else:
+            x_extra_p = None
+            x_extra_d = None
 
         return PIDNetModelOutput(extra_p=x_extra_p, extra_d=x_extra_d, pred=x_)
 
