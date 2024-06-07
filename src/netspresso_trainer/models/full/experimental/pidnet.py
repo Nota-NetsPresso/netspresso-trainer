@@ -130,7 +130,7 @@ class PIDNet(nn.Module):
                                    norm_type='batch_norm', use_act=False)
 
         layers = []
-        layers.append(block(inplanes, planes, stride, downsample, expansion=expansion))
+        layers.append(block(inplanes, planes, stride, downsample, expansion=expansion, no_out_act=True if block == Bottleneck else False))
         inplanes = planes * expansion
         for i in range(1, blocks):
             if i == (blocks-1):
