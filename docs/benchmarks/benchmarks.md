@@ -27,7 +27,7 @@ If you have a better recipe, please share with us anytime. We appreciate all eff
 | Dataset | Model | Weights | Resolution | mIoU | Pixel acc | Params | FLOPs | NetsPresso | Remarks |
 |---|---|---|---|---|---|---|---|---|---|
 | ADE20K | [SegFormer-b0*](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/segformer/segformer-b0-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0_ade20k.safetensors?versionId=0RRDpZeHb2VvVzFo2jGZN4A4bVQ.k49l) | 512x512 | 36.74 | 76.83 | 3.75M | 8.51G | Supported | [mmsegmentation](https://github.com/open-mmlab/mmsegmentation/tree/main/configs/segformer) |
-| Cityscapes | [PIDNet-s*](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/pidnet/pidnet-s-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8) | 2048x1024 | 78.8 | - | - | - | Supported | [XuJiacong/PIDNet](https://github.com/XuJiacong/PIDNet#models) |
+| Cityscapes | [PIDNet-s*](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/pidnet/pidnet-s-segmentation.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8) | 2048x1024 | 78.76 | 96.12 | 7.72M | 5.94M | Supported | [XuJiacong/PIDNet](https://github.com/XuJiacong/PIDNet#models) |
 
 ## Object detection
 
