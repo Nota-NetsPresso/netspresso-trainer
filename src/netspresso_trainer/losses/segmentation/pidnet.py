@@ -162,9 +162,9 @@ class PIDNetLoss(nn.Module):
         if out['extra_p'] is None:
             return torch.sum(out['pred'] - out['pred']) # return 0
 
-        out['pred'] = F.interpolate(out['pred'], size=[512, 512], mode='bilinear', align_corners=True)
-        out['extra_p'] = F.interpolate(out['extra_p'], size=[512, 512], mode='bilinear', align_corners=True)
-        out['extra_d'] = F.interpolate(out['extra_d'], size=[512, 512], mode='bilinear', align_corners=True)
+        out['pred'] = F.interpolate(out['pred'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_p'] = F.interpolate(out['extra_p'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_d'] = F.interpolate(out['extra_d'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
 
         cross_entropy_loss = self.cross_entropy_loss(out, target)
         boundary_loss = self.boundary_loss(out, target)
