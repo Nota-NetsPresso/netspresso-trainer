@@ -7,8 +7,7 @@ import torch.nn as nn
 
 
 from ....op.custom import ConvLayer
-from ....utils import AnchorBasedDetectionModelOutput
-from .detection import AnchorGenerator
+from ....utils import ModelOutput
 
 # TODO: Expand features to make it fully compatible with Yolov3 head and change the name to Yolov3Head
 class YoloFastestHead(nn.Module):
@@ -67,12 +66,11 @@ class YoloFastestHead(nn.Module):
         self.apply(init_bn)
 
     def forward(self, inputs: List[torch.Tensor]):
-
         x1, x2 = inputs
         out1 = self.layer_1(x1)
         out2 = self.layer_2(x2)
-
-        return out1, out2
+        output = [out1, out2]
+        return ModelOutput({'pred': output})
 
 
 def yolo_fastest_head(

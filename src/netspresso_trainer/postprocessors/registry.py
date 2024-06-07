@@ -12,4 +12,5 @@ POSTPROCESSOR_DICT = {
     'pidnet': SegmentationPostprocessor,
     'anchor_decoupled_head': DetectionPostprocessor,
     'rtmcc': PoseEstimationPostprocessor,
+    'yolo_fastest_head': DetectionPostprocessor,
 }
