@@ -159,6 +159,12 @@ class PIDNetLoss(nn.Module):
         self.cross_entropy_with_boundary = PIDNetBoundaryAwareCrossEntropy(ignore_index=ignore_index)
 
     def forward(self, out: Dict, target: Dict):
+        if out['extra_p'] is None:
+            return torch.sum(out['pred'] - out['pred']) # return 0
+
+        out['pred'] = F.interpolate(out['pred'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_p'] = F.interpolate(out['extra_p'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_d'] = F.interpolate(out['extra_d'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
 
         cross_entropy_loss = self.cross_entropy_loss(out, target)
         boundary_loss = self.boundary_loss(out, target)
