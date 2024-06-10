@@ -39,5 +39,4 @@ data:
   #   (0, 192, 0): sofa
   #   (128, 192, 0): train
   #   (0, 64, 128): tvmonitor
-  #   (128, 64, 128): void
   pallete: ~
