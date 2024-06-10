@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.2.2
+
+## New Features:
+
 - Update Benchmarks & Checkpoints (docs) and weights files to fully usable by `@illian01` in [PR 446](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/446), [PR 447](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/447), [PR 456](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/456), [PR 461](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/461)
 - Add TFLite runtime code example by `@illian01` in [PR 449](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/449)
 
