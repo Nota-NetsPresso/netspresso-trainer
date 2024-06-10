@@ -174,7 +174,7 @@ class YOLOFastestLoss(nn.Module):
 
                 # Regression
                 pxy = pxy.sigmoid()
-                pwh = pwh * torch.log(1e-16 + anchors[i])
+                pwh = torch.exp(pwh) * anchors[i]
                 pbox = torch.cat((pxy, pwh), 1)  # predicted box
                 iou = bbox_iou(pbox, tbox[i], CIoU=True).squeeze()  # iou(prediction, target)
                 lbox += (1.0 - iou).mean()  # iou loss
@@ -280,7 +280,7 @@ class YOLOFastestLoss(nn.Module):
 
             # Append
             indices.append((b, a, gj.clamp_(0, shape[2] - 1), gi.clamp_(0, shape[3] - 1)))  # image, anchor, grid
-            tbox.append(torch.cat((gxy - gij, torch.log(1e-16 + gwh)), 1))  # box
+            tbox.append(torch.cat((gxy - gij, gwh), 1))  # box
             anch.append(anchors[a])  # anchors
             tcls.append(c)  # class
 
