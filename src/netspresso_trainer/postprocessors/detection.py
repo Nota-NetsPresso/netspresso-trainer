@@ -38,17 +38,16 @@ def anchor_coupled_head_decode(pred, original_shape, anchors=[[12,10, 11,28, 24,
         
     
     for idx, p in enumerate(pred):
-        anchors = torch.tensor(anchors[idx], device=p.device).view(-1, 1, 1, 2)
+        anchor = torch.tensor(anchors[idx], device=p.device).clone().detach().view(-1, 1, 1, 2)
         pred[idx] = torch.cat([
                                 (p[..., 0:2].sigmoid() + grids[idx]) * strides[idx],
-                                torch.exp(p[..., 2:4]) * anchors,
-                                p[..., 4:].sigmoid()], dim=-1) 
-        pred[idx] = pred[idx].permute(0,4,1,2,3)
+                                torch.exp(p[..., 2:4]) * anchor * strides[idx],
+                                p[..., 4:].sigmoid()], dim=-1).permute(0,4,1,2,3) 
+    
     
     
     # [batch, n_anchors_all, num_classes + 5]
     pred = torch.cat([x.flatten(start_dim=2) for x in pred], dim=2).permute(0, 2, 1) 
-
     box_corner = pred.new(pred.shape)
     box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
     box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
@@ -233,9 +232,6 @@ class DetectionPostprocessor:
             pred = self.decode_outputs(pred, original_shape)
         if self.postprocess:
             pred = self.postprocess(pred)
-        else:
-            return pred
-
         pred = [(torch.cat([p[:, :4], p[:, 4:5] * p[:, 5:6]], dim=-1).detach().cpu().numpy(),
                       p[:, 6].to(torch.int).detach().cpu().numpy())
                       for p in pred]
