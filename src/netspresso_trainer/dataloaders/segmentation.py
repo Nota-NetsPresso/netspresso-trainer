@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import json
 import os
 from functools import partial
@@ -102,6 +118,8 @@ class SegmentationSampleLoader(BaseSampleLoader):
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
 
         assert isinstance(self.conf_data.id_mapping, (ListConfig, DictConfig))
+        if isinstance(self.conf_data.id_mapping, ListConfig):
+            self.conf_data.id_mapping = dict(enumerate(self.conf_data.id_mapping))
 
         misc = self.load_class_map(id_mapping=self.conf_data.id_mapping)
 
@@ -167,7 +185,7 @@ class SegmentationCustomDataset(BaseCustomDataset):
             img_path = self.samples[index]['image']
             ann_path = self.samples[index]['label']
             img = Image.open(Path(img_path)).convert('RGB')
-            label = Image.open(Path(ann_path)).convert(self.label_image_mode) if ann_path is not None else None
+            label = Image.open(Path(ann_path)) if ann_path is not None else None
 
         w, h = img.size
 
@@ -178,18 +196,16 @@ class SegmentationCustomDataset(BaseCustomDataset):
             outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
             return outputs
 
-
-        label_array = np.array(label)
-        label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
-        # if self.conf_augmentation.reduce_zero_label:
-        #     label = reduce_label(np.array(label))
-
-        mask = np.zeros((label.size[1], label.size[0]), dtype=np.uint8)
-        for label_value in self.label_value_to_idx:
-            class_mask = (label_array == np.array(label_value)).all(axis=-1)
-            mask[class_mask] = self.label_value_to_idx[label_value]
-
-        mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
+        if self.label_image_mode == 'L':
+            mask = label
+        else: # RGB, P
+            label = label.convert('RGB')
+            label = np.array(label)
+            mask = np.zeros((label.shape[0], label.shape[1]), dtype=np.uint8) + 255 # Set undefined as 255
+            for label_value in self.label_value_to_idx:
+                class_mask = (label == np.array(label_value)).all(axis=-1)
+                mask[class_mask] = self.label_value_to_idx[label_value]
+            mask = Image.fromarray(mask, mode='L')
 
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
@@ -260,16 +276,16 @@ class SegmentationHFDataset(BaseHFDataset):
         img: Image.Image = self.samples[index][self.image_feature_name]
         label: Image.Image = self.samples[index][self.label_feature_name] if self.label_feature_name in self.samples[index] else None
 
-        label_array = np.array(label.convert(self.label_image_mode))
-        label_array = label_array[..., np.newaxis] if label_array.ndim == 2 else label_array
-        # if self.conf_augmentation.reduce_zero_label:
-        #     label = reduce_label(np.array(label))
-
-        mask = np.zeros((label.size[1], label.size[0]), dtype=np.uint8)
-        for label_value in self.label_value_to_idx:
-            class_mask = (label_array == np.array(label_value)).all(axis=-1)
-            mask[class_mask] = self.label_value_to_idx[label_value]
-        mask = Image.fromarray(mask, mode='L')  # single mode array (PIL.Image) compatbile with torchvision transform API
+        if self.label_image_mode == 'L':
+            mask = label
+        else: # RGB, P
+            label = label.convert('RGB')
+            label = np.array(label)
+            mask = np.zeros((label.shape[0], label.shape[1]), dtype=np.uint8) + 255 # Set undefined as 255
+            for label_value in self.label_value_to_idx:
+                class_mask = (label == np.array(label_value)).all(axis=-1)
+                mask[class_mask] = self.label_value_to_idx[label_value]
+            mask = Image.fromarray(mask, mode='L')
 
         w, h = img.size
 
@@ -279,7 +295,7 @@ class SegmentationHFDataset(BaseHFDataset):
 
         outputs = {}
 
-        if self.model_name == 'pidnet':
+        if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(label))
             out = self.transform(image=img, mask=mask, edge=edge)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})

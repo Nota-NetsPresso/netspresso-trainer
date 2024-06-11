@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import argparse
 import math
 import warnings
@@ -119,11 +135,6 @@ class ConvLayer(nn.Module):
 
     def __repr__(self):
         return f"{self.block}"
-
-
-@torch.fx.wrap
-def tensor_slice(tensor: Tensor, dim, index):
-    return tensor.select(dim, index)
 
 
 class BasicBlock(nn.Module):
@@ -398,7 +409,7 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     x = x + selected_pe
 
         # x = x + self.pe[..., :seq_index, :]
-        x = x + tensor_slice(self.pe, dim=1, index=x.shape[-2])
+        x = x + self.pe[..., : x.shape[-2], :]
 
         return x
 

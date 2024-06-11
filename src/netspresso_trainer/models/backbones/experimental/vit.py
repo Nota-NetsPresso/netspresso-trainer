@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 """
 Based on the vit implementation of apple/ml-cvnets.
 https://github.com/apple/ml-cvnets/blob/84d992f413e52c0468f86d23196efd9dad885e6f/cvnets/models/classification/vit.py
@@ -81,11 +97,10 @@ class ViTBlock(MetaFormerBlock):
         self.layernorm_before = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.token_mixer = MultiHeadAttention(hidden_size, num_attention_heads,
-                                                  attention_scale=(hidden_size // num_attention_heads) ** -0.5,
                                                   attention_dropout_prob=attention_dropout_prob,
                                                   use_qkv_bias=True
                                                   )
-        self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob)
+        self.channel_mlp = ChannelMLP(hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type='gelu')
     
     
 class ViTEncoder(MetaFormerEncoder):
@@ -119,7 +134,7 @@ class VisionTransformer(MetaFormer):
         vocab_size = params.vocab_size
 
         # Fix as a constant
-        layer_norm_eps = 1e-6
+        layer_norm_eps = 1e-5
 
         hidden_sizes = hidden_size if isinstance(hidden_size, list) else [hidden_size] * num_blocks
         super().__init__(hidden_sizes)

@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 from typing import Dict
 
 import torch
@@ -143,6 +159,12 @@ class PIDNetLoss(nn.Module):
         self.cross_entropy_with_boundary = PIDNetBoundaryAwareCrossEntropy(ignore_index=ignore_index)
 
     def forward(self, out: Dict, target: Dict):
+        if out['extra_p'] is None:
+            return torch.sum(out['pred'] - out['pred']) # return 0
+
+        out['pred'] = F.interpolate(out['pred'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_p'] = F.interpolate(out['extra_p'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
+        out['extra_d'] = F.interpolate(out['extra_d'], size=target['target'].shape[-2:], mode='bilinear', align_corners=True)
 
         cross_entropy_loss = self.cross_entropy_loss(out, target)
         boundary_loss = self.boundary_loss(out, target)

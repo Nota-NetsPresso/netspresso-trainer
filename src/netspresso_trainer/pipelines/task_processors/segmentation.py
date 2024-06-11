@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 from typing import Literal
 
 import torch
@@ -30,8 +46,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         self.grad_scaler.step(optimizer)
         self.grad_scaler.update()
 
-        out = {k: v.detach() for k, v in out.items()}
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
@@ -60,7 +75,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         out = eval_model(images)
         loss_factory.calc(out, target, phase='valid')
 
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
@@ -98,7 +113,7 @@ class SegmentationProcessor(BaseTaskProcessor):
 
         out = test_model(images)
 
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         indices = indices.numpy()
         if self.conf.distributed:

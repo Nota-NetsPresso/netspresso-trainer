@@ -1,0 +1,20 @@
+data:
+  name: ade20k
+  task: segmentation
+  format: local
+  path:
+    root: ./data/ade20k
+    train:
+      image: images/train # directory for training images
+      label: labels/train # directory for training labels
+    valid:
+      image: images/valid # directory for valid images
+      label: labels/valid # directory for valid labels
+    test:
+      image: images/valid # directory for test images
+      label: labels/valid # directory for test images
+    pattern:
+      image: ~
+      label: ~
+  label_image_mode: L
+  id_mapping: id_mapping.json

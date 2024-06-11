@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import json
 from dataclasses import asdict
 from pathlib import Path
@@ -91,19 +107,19 @@ class EvaluationPipeline(BasePipeline):
         self.save_summary(losses, metrics, time_for_evaluation)
 
     def save_summary(self, losses, metrics, time_for_evaluation):
-        macs, params = get_params_and_macs(self.model, self.sample_input.float())
+        flops, params = get_params_and_macs(self.model, self.sample_input.float())
         evaluation_summary = EvaluationSummary(
             losses=losses,
             metrics=metrics,
             metrics_list=self.metric_factory.metric_names,
             primary_metric=self.metric_factory.primary_metric,
-            macs=macs,
+            flops=flops,
             params=params,
             total_evaluation_time=time_for_evaluation,
             success=True,
         )
 
-        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "evaluation_summary.json"
 

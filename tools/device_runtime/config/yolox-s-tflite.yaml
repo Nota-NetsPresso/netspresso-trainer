@@ -1,0 +1,17 @@
+runtime:
+  task: detection
+  model_path: ./yolox_s.tflite
+  preprocess:
+    - 
+      name: resize
+      size: 640
+      interpolation: bilinear
+      max_size: null
+      resize_criteria: long
+    - 
+      name: pad
+      size: 640
+      fill: 114
+  postprocess:
+    score_thresh: 0.4
+    nms_thresh: 0.65

@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import argparse
 from pathlib import Path
 import os
@@ -37,7 +53,6 @@ VOC2012_ID_MAPPING_RGB = {
     '(0, 192, 0)': 'sofa',
     '(128, 192, 0)': 'train',
     '(0, 64, 128)': 'tvmonitor',
-    '(128, 64, 128)': 'void',
 }
 
 
@@ -52,7 +67,7 @@ if __name__ == '__main__':
     # Set argument (data directory)
     parser = argparse.ArgumentParser(description="Parser for VOC 2012 dataset downloader.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
-    parser.add_argument('--label_image_mode', type=str, default='P', choices=['RGB', 'P', 'L'], help='Label image mode (RGB or P or L)')
+    parser.add_argument('--label_image_mode', type=str, default='L', choices=['RGB', 'L'], help='Label image mode (RGB or L)')
     args = parser.parse_args()
 
     # Download VOC 2012 dataset
@@ -88,13 +103,15 @@ if __name__ == '__main__':
     os.makedirs(train_label_dir, exist_ok=True)
     for sample in tqdm(train_samples):
         shutil.move(img_src / (sample + '.jpg'), train_image_dir / (sample + '.jpg'))
+        label = Image.open(label_src / (sample + '.png'))
         if args.label_image_mode == 'L':
-            label = Image.open(label_src / (sample + '.png'))
             label = np.array(label)
             label = Image.fromarray(label, mode='L')
-            label.save(train_label_dir / (sample + '.png'))
-        else:
-            Image.open(label_src / (sample + '.png')).save(train_label_dir / (sample + '.png'))
+        elif args.label_image_mode == 'RGB':
+            label = label.convert('RGB')
+        elif args.label_image_mode == 'P':
+            pass
+        label.save(train_label_dir / (sample + '.png'))
 
     # Get valid sample list
     valid_samples = voc2012_path / 'VOCdevkit' / 'VOC2012' / 'ImageSets' / 'Segmentation' / 'val.txt'

@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import math
 from typing import Optional, List, Dict
 
@@ -20,7 +36,7 @@ TEMP_HIDDEN_SZIE_AS_CONSTANT = 256
 class SegformerOverlapPatchEmbeddings(nn.Module):
     """Construct the overlapping patch embeddings."""
 
-    def __init__(self, patch_size, stride, in_channels, hidden_size):
+    def __init__(self, patch_size, stride, in_channels, hidden_size, layer_norm_eps):
         super().__init__()
         self.proj = nn.Conv2d(
             in_channels,
@@ -31,7 +47,7 @@ class SegformerOverlapPatchEmbeddings(nn.Module):
         )
 
         self.flat = Image2Sequence()
-        self.layer_norm = nn.LayerNorm(hidden_size)
+        self.layer_norm = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
 
     def forward(self, pixel_values):
         embeddings = self.proj(pixel_values)
@@ -86,7 +102,6 @@ class SegFormerBlock(MetaFormerBlock):
         self.layernorm_after = nn.LayerNorm(hidden_size, eps=layer_norm_eps)
         self.token_mixer = MultiHeadAttention(
             hidden_size, num_attention_heads,
-            attention_scale=(hidden_size // num_attention_heads) ** -0.5,
             attention_dropout_prob=attention_dropout_prob,
             use_qkv_bias=True,
             sequence_reduction_ratio=sequence_reduction_ratio
@@ -158,7 +173,7 @@ class MixTransformer(MetaFormer):
         hidden_dropout_prob = params.ffn_dropout_prob
         attention_dropout_prob = params.attention_dropout_prob
 
-        layer_norm_eps = 1e-5
+        layer_norm_eps = 1e-6
         in_channels = 3
         
         self.encoder_modules = nn.ModuleList()
@@ -176,7 +191,8 @@ class MixTransformer(MetaFormer):
                         embedding_patch_sizes,
                         embedding_strides,
                         in_channels,
-                        hidden_sizes
+                        hidden_sizes,
+                        layer_norm_eps,
                     ),
                     'encoder': SegformerEncoder(
                         num_blocks,
@@ -189,7 +205,7 @@ class MixTransformer(MetaFormer):
                         hidden_activation_type,
                         layer_norm_eps
                     ),
-                    'norm': nn.LayerNorm(hidden_sizes)
+                    'norm': nn.LayerNorm(hidden_sizes, eps=layer_norm_eps)
                 }
             )
             self.encoder_modules.append(module)

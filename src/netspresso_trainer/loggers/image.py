@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
@@ -26,18 +42,13 @@ class ImageSaver:
         prefix_dir: Path = self.save_dir / prefix
         prefix_dir.mkdir(exist_ok=True)
 
-        for k, v in image_dict.items():
-            assert isinstance(v, np.ndarray)
-            assert v.ndim in [3, 4], \
-                f"Array for saving as image should have dim of 3 or 4! Current: {v.ndim}"
-            if v.ndim == 3:
-                self.save_ndarray_as_image(v, f"{prefix_dir}/{epoch:04d}_{k}.png", dataformats='HWC')
-            for idx, image in enumerate(v):
+        for k, v_list in image_dict.items():
+            for idx, v in enumerate(v_list):
+                assert isinstance(v, np.ndarray)
                 if epoch is None:
-                    filename = f"{prefix_dir}/{idx:03d}_{k}.png"
+                    self.save_ndarray_as_image(v, f"{prefix_dir}/{idx:03d}_{k}.png", dataformats='HWC')
                 else:
-                    filename = f"{prefix_dir}/{epoch:04d}_{idx:03d}_{k}.png"
-                self.save_ndarray_as_image(image, filename, dataformats='HWC') # TODO: get dataformats option from outside
+                    self.save_ndarray_as_image(v, f"{prefix_dir}/{epoch:04d}_{idx:03d}_{k}.png", dataformats='HWC')
 
     def __call__(
         self,

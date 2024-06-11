@@ -1,9 +1,9 @@
 data:
-  name: voc2012
+  name: cityscapes
   task: segmentation
   format: local
   path:
-    root: ./data/voc2012_seg
+    root: ./data/cityscapes
     train:
       image: images/train # directory for training images
       label: labels/train # directory for training labels
@@ -11,11 +11,10 @@ data:
       image: images/valid # directory for valid images
       label: labels/valid # directory for valid labels
     test:
-      image: ~
-      label: ~
+      image: images/valid # directory for test images
+      label: labels/valid # directory for test images
     pattern:
       image: ~
       label: ~
   label_image_mode: L
   id_mapping: id_mapping.json
-  #id_mapping: ['background', 'aeroplane', 'bicycle', 'bird', 'boat', 'bottle', 'bus', 'car', 'cat', 'chair', 'cow', 'diningtable', 'dog', 'horse', 'motorbike', 'person', 'pottedplant', 'sheep', 'sofa', 'train', 'tvmonitor']

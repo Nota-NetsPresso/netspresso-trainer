@@ -3,7 +3,7 @@ model:
   name: yolox_s
   checkpoint:
     use_pretrained: True
-    load_head: False
+    load_head: True
     path: ~
     fx_model_path: ~
     optimizer_path: ~
@@ -27,9 +27,9 @@ model:
       params:
         act_type: *act_type
         # postprocessor - decode
-        score_thresh: 0.7
+        score_thresh: 0.01
         # postprocessor - nms
-        nms_thresh: 0.45
+        nms_thresh: 0.65
         class_agnostic: False
   losses:
     - criterion: yolox_loss

@@ -1,6 +1,22 @@
-# ------------------------------------------------------------------------------
-# Written by Jiacong Xu (jiacong.xu@tamu.edu)
-# ------------------------------------------------------------------------------
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
+# Modified from official PIDNet implementation:
+# https://github.com/XuJiacong/PIDNet
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,9 +24,6 @@ import torch.nn.functional as F
 BatchNorm2d = nn.BatchNorm2d
 bn_mom = 0.1
 algc = False
-
-INTERPOLATE_TO_SIZE = (512 // 8, 512 // 8)
-PAPPM_DAPPM_RESIZE_TO = (8, 8)
 
 
 # class BasicBlock(nn.Module):
@@ -177,7 +190,6 @@ class DAPPM(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(inplanes, outplanes, kernel_size=1, bias=False),
         )
-        self.resize_to = PAPPM_DAPPM_RESIZE_TO
 
     def forward(self, x):
         x.shape[-1]
@@ -186,16 +198,16 @@ class DAPPM(nn.Module):
 
         x_list.append(self.scale0(x))
         x_list.append(self.process1((F.interpolate(self.scale1(x),
-                                                   size=self.resize_to,
+                                                   size=x_list[0].shape[-2:],
                                                    mode='bilinear', align_corners=algc)+x_list[0])))
         x_list.append(self.process2((F.interpolate(self.scale2(x),
-                                                   size=self.resize_to,
+                                                   size=x_list[1].shape[-2:],
                                                    mode='bilinear', align_corners=algc)+x_list[1])))
         x_list.append(self.process3((F.interpolate(self.scale3(x),
-                                                   size=self.resize_to,
+                                                   size=x_list[2].shape[-2:],
                                                    mode='bilinear', align_corners=algc)+x_list[2])))
         x_list.append(self.process4((F.interpolate(self.scale4(x),
-                                                   size=self.resize_to,
+                                                   size=x_list[3].shape[-2:],
                                                    mode='bilinear', align_corners=algc)+x_list[3])))
 
         out = self.compression(torch.cat(x_list, 1)) + self.shortcut(x)
@@ -250,7 +262,6 @@ class PAPPM(nn.Module):
             nn.ReLU(inplace=True),
             nn.Conv2d(inplanes, outplanes, kernel_size=1, bias=False),
         )
-        self.resize_to = PAPPM_DAPPM_RESIZE_TO
 
     def forward(self, x):
         x.shape[-1]
@@ -258,13 +269,13 @@ class PAPPM(nn.Module):
         scale_list = []
 
         x_ = self.scale0(x)
-        scale_list.append(F.interpolate(self.scale1(x), size=self.resize_to,
+        scale_list.append(F.interpolate(self.scale1(x), size=x_.shape[-2:],
                                         mode='bilinear', align_corners=algc)+x_)
-        scale_list.append(F.interpolate(self.scale2(x), size=self.resize_to,
+        scale_list.append(F.interpolate(self.scale2(x), size=x_.shape[-2:],
                                         mode='bilinear', align_corners=algc)+x_)
-        scale_list.append(F.interpolate(self.scale3(x), size=self.resize_to,
+        scale_list.append(F.interpolate(self.scale3(x), size=x_.shape[-2:],
                                         mode='bilinear', align_corners=algc)+x_)
-        scale_list.append(F.interpolate(self.scale4(x), size=self.resize_to,
+        scale_list.append(F.interpolate(self.scale4(x), size=x_.shape[-2:],
                                         mode='bilinear', align_corners=algc)+x_)
 
         scale_out = self.scale_process(torch.cat(scale_list, 1))
@@ -274,7 +285,7 @@ class PAPPM(nn.Module):
 
 
 class PagFM(nn.Module):
-    def __init__(self, in_channels, mid_channels, after_relu=False, with_channel=False, BatchNorm=nn.BatchNorm2d, resize_to=INTERPOLATE_TO_SIZE):
+    def __init__(self, in_channels, mid_channels, after_relu=False, with_channel=False, BatchNorm=nn.BatchNorm2d):
         super(PagFM, self).__init__()
         self.with_channel = with_channel
         self.after_relu = after_relu
@@ -297,8 +308,6 @@ class PagFM(nn.Module):
         if after_relu:
             self.relu = nn.ReLU(inplace=True)
 
-        self.resize_to = resize_to
-
     def forward(self, x, y):
 
         if self.after_relu:
@@ -306,7 +315,7 @@ class PagFM(nn.Module):
             x = self.relu(x)
 
         y_q = self.f_y(y)
-        y_q = F.interpolate(y_q, size=self.resize_to,
+        y_q = F.interpolate(y_q, size=x.shape[-2:],
                             mode='bilinear', align_corners=False)
         x_k = self.f_x(x)
 
@@ -315,7 +324,7 @@ class PagFM(nn.Module):
         else:
             sim_map = torch.sigmoid(torch.sum(x_k * y_q, dim=1).unsqueeze(1))
 
-        y = F.interpolate(y, size=self.resize_to,
+        y = F.interpolate(y, size=x.shape[-2:],
                           mode='bilinear', align_corners=False)
         x = (1-sim_map)*x + sim_map*y
 

@@ -1,3 +1,19 @@
+# Copyright (C) 2024 Nota Inc. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# ----------------------------------------------------------------------------
+
 import argparse
 from pathlib import Path
 import os
@@ -13,11 +29,13 @@ import torch
 from tqdm import tqdm
 
 DEFAULT_DATA_DIR = './data'
+DOWNLOAD_DIR = './data/download'
+CLASS_INDEX_URL = 'https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/metadata/imagenet_class_index.json'
 
 
 if __name__ == '__main__':
     # Set argument (data directory)
-    parser = argparse.ArgumentParser(description="Parser for CIFAR100 dataset downloader.")
+    parser = argparse.ArgumentParser(description="Parser for ImageNet1K dataset remapper.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
     parser.add_argument('--train-images', type=str, dest='train_images', required=True,
                         help="ImageNet1K dataset cannot be downloaded automatically. Download dataset from https://www.image-net.org/ and set train path here.")
@@ -26,6 +44,13 @@ if __name__ == '__main__':
     parser.add_argument('--devkit', type=str, dest='devkit', required=True,
                         help="ImageNet1K dataset cannot be downloaded automatically. Download dataset from https://www.image-net.org/ and set devkit path here.")
     args = parser.parse_args()
+
+    # Download class index
+    class_index_path = Path(DOWNLOAD_DIR) / 'imagenet_class_index.json'
+    if class_index_path.exists():
+        print(f'Download path {class_index_path} already exists! download step is skipped.')
+    else:
+        torch.hub.download_url_to_file(CLASS_INDEX_URL, class_index_path)
 
     # Set base directory
     imagenet_path = Path(args.dir) / 'imagenet1k'
@@ -82,17 +107,17 @@ if __name__ == '__main__':
 
     mat = scipy.io.loadmat(meta)
 
-    cls_to_name = {}
-    id_to_cls = {}
+    base_nids = []
     for row in mat['synsets']:
         row = row[0]
+        cls_nid = row[1].item()
+        base_nids.append(cls_nid)
 
-        cls_name = row[2].item().split(',')[0]
-        cls_id = row[1].item()
-        cls_num = row[0].item() - 1
+    with open(class_index_path, 'r') as f:
+        json_object = json.load(f)
+        nid_to_label = {json_object[str(i)][0]:i for i in range(1000)}
+        class_names = [json_object[str(i)][1] for i in range(1000)]
 
-        cls_to_name[cls_num] = cls_name
-        id_to_cls[cls_id] = cls_num
     print('Done!')
 
     # Build train label csv file
@@ -103,7 +128,7 @@ if __name__ == '__main__':
     samples = os.listdir(imagenet_path / 'images' / 'train')
     labels = []
     for sample in samples:
-        labels.append(id_to_cls[sample.split('_')[0]])
+        labels.append(nid_to_label[sample.split('_')[0]])
     
     train_csv = pd.DataFrame({'image_id': samples, 'class': labels})
     train_csv.to_csv(train_label_dir / 'imagenet_train.csv', mode='w', index=False)
@@ -118,7 +143,10 @@ if __name__ == '__main__':
         labels = f.readlines()
         labels = [int(l.strip()) - 1 for l in labels]
         f.close()
-    valid_csv = pd.DataFrame({'image_id': sorted(os.listdir(imagenet_path / 'images' / 'valid')), 'class': labels})
+
+    valid_nids = [base_nids[label] for label in labels]
+    valid_labels = [nid_to_label[nid] for nid in valid_nids]
+    valid_csv = pd.DataFrame({'image_id': sorted(os.listdir(imagenet_path / 'images' / 'valid')), 'class': valid_labels})
     valid_csv.to_csv(valid_label_dir / 'imagenet_valid.csv', mode='w', index=False)
     print('Done!')
 
@@ -129,7 +157,7 @@ if __name__ == '__main__':
 
     # Build id_mapping
     print('Building id_mapping ...')
-    id_mapping = [cls_to_name[i] for i in range(1000)]
+    id_mapping = class_names
     with open(imagenet_path / 'id_mapping.json', 'w') as f:
         json.dump(id_mapping, f)
 
