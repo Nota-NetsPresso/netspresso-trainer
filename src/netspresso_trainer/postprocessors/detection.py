@@ -8,19 +8,6 @@ from torchvision.ops import boxes as box_ops
 
 from ..models.utils import ModelOutput
 
-# def make_grid(pi, nx=20, ny=20, i=0, anchor=[]):
-#     s = 256  # 2x min stride
-#     stride = torch.tensor([s / pi.shape[-2]])
-#     d = pi.device
-#     t = pi.dtype
-#     shape = 1, pi.shape[1], ny, nx, 2  # grid shape
-#     y, x = torch.arange(ny, device=d, dtype=t), torch.arange(nx, device=d, dtype=t)
-#     yv, xv = torch.meshgrid(y, x, indexing='ij')
-#     grid = torch.stack((xv, yv), 2).expand(shape) - 0.5  # add grid offset, i.e. y = 2.0 * x - 0.5
-#     anchor_grid = (anchor * stride).view((1, pi.shape[1], 1, 1, 2)).expand(shape)
-#     return grid, anchor_grid
-
-
 
 def anchor_coupled_head_decode(pred, original_shape, anchors=[[12,10, 11,28, 24,17], [45,21, 24,60, 92,73]], topk_candidates=1000, score_thresh=0.05):
     pred = pred['pred']
