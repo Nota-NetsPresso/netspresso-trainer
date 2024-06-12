@@ -54,6 +54,6 @@ model:
         resize_output: [512, 512]
   postprocessor: ~
   losses:
-    - criterion: cross_entropy
+    - criterion: seg_cross_entropy
       weight: ~
-      ignore_index: 255
+      ignore_index: 255 # Default undefined class is 255

@@ -65,6 +65,6 @@ model:
         classifier_dropout_prob: 0.
   postprocessor: ~
   losses:
-    - criterion: cross_entropy
+    - criterion: seg_cross_entropy
       weight: ~
-      ignore_index: 255
+      ignore_index: 255 # Default undefined class is 255
