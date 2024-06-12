@@ -3,6 +3,7 @@
 __pycache__/
 
 *.jpg
+*.txt
 *.png
 *.onnx
 *.pt

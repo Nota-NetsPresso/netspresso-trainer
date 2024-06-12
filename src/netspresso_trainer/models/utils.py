@@ -91,6 +91,12 @@ MODEL_CHECKPOINT_URL_DICT = {
     'pidnet_s': {
         'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8",
     },
+    'yolox_n': {
+        'coco': ""
+    },
+    'yolox_tiny': {
+        'coco': ""
+    },
     'yolox_s': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=QRLqHKqhv8TSYBrmsQ3M8lCR8w7HEZyA",
     },

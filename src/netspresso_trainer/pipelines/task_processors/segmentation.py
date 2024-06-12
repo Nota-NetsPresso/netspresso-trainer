@@ -46,8 +46,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         self.grad_scaler.step(optimizer)
         self.grad_scaler.update()
 
-        out = {k: v.detach() for k, v in out.items()}
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
         if self.conf.distributed:
@@ -114,7 +113,7 @@ class SegmentationProcessor(BaseTaskProcessor):
 
         out = test_model(images)
 
-        pred = self.postprocessor(out)
+        pred = self.postprocessor(out, original_shape=images[0].shape)
 
         indices = indices.numpy()
         if self.conf.distributed:

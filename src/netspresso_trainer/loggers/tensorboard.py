@@ -38,7 +38,7 @@ class TensorboardLogger:
 
         self.tensorboard = SummaryWriter(self.result_dir / "tensorboard")
 
-    def _as_numpy(self, value: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
+    def _as_numpy(self, value: Union[np.ndarray, torch.Tensor, list]) -> np.ndarray:
         if isinstance(value, np.ndarray):
             return value
         if isinstance(value, torch.Tensor):
@@ -46,6 +46,13 @@ class TensorboardLogger:
             value = value.cpu() if value.is_cuda else value
             value = value.numpy()
             return value
+        if isinstance(value, list): # Pad images for tensorboard
+            pad_shape = np.array([[v.shape[0], v.shape[1]] for v in value])
+            pad_shape = pad_shape.max(0)
+            ret_value = np.zeros((len(value), *pad_shape, 3), dtype=value[0].dtype)
+            for i, v in enumerate(value):
+                ret_value[i, :v.shape[0], :v.shape[1]] = v
+            return ret_value
 
         raise TypeError(f"Unsupported type! {type(value)}")
 

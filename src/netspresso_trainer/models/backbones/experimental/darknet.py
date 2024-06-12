@@ -24,7 +24,7 @@ from omegaconf import DictConfig
 import torch
 from torch import nn
 
-from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
+from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck, SeparableConvLayer
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -39,7 +39,6 @@ class CSPDarknet(nn.Module):
         task: str,
         params: Optional[DictConfig] = None,
         stage_params: Optional[List] = None,
-        #depthwise=False,
     ) -> None:
         # Check task compatibility
         self.task = task.lower()
@@ -54,9 +53,10 @@ class CSPDarknet(nn.Module):
         dep_mul = params.dep_mul
         wid_mul = params.wid_mul
         act_type = params.act_type
-
+        depthwise = params.depthwise
+        
         self.out_features = out_features
-        Conv = ConvLayer
+        Conv = SeparableConvLayer if depthwise else ConvLayer
 
         base_channels = int(wid_mul * 64)  # 64
         base_depth = max(round(dep_mul * 3), 1)  # 3
@@ -75,7 +75,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 2,
                 base_channels * 2,
                 n=base_depth,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -91,7 +91,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 4,
                 base_channels * 4,
                 n=base_depth * 3,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -107,7 +107,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 8,
                 base_channels * 8,
                 n=base_depth * 3,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )
@@ -125,7 +125,7 @@ class CSPDarknet(nn.Module):
                 base_channels * 16,
                 n=base_depth,
                 shortcut=False,
-                #depthwise=depthwise,
+                depthwise=depthwise,
                 act_type=act_type,
             ),
         )

@@ -127,12 +127,13 @@ class TrainingLogger():
             if len(images_list) == 0:
                 return None
 
-            images_dict = {}
+            images_dict = {key: [] for key in images_list[0]}
             for minibatch in images_list:
                 minibatch: Dict = self._convert_imagedict_as_readable(minibatch)
                 for k_batch, v_batch in minibatch.items():
+                    v_batch = list(v_batch)
                     if k_batch in images_dict:
-                        images_dict[k_batch] = np.concatenate((images_dict[k_batch], v_batch), axis=0)
+                        images_dict[k_batch].extend(v_batch)
                         continue
                     images_dict[k_batch] = v_batch
 
