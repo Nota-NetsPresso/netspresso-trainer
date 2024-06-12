@@ -24,7 +24,7 @@ from omegaconf import DictConfig
 import torch
 from torch import nn
 
-from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck
+from ...op.custom import ConvLayer, CSPLayer, Focus, SPPBottleneck, SeparableConvLayer
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -54,9 +54,9 @@ class CSPDarknet(nn.Module):
         wid_mul = params.wid_mul
         act_type = params.act_type
         depthwise = params.depthwise
-
+        
         self.out_features = out_features
-        Conv = ConvLayer
+        Conv = SeparableConvLayer if depthwise else ConvLayer
 
         base_channels = int(wid_mul * 64)  # 64
         base_depth = max(round(dep_mul * 3), 1)  # 3
