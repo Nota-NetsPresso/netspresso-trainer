@@ -76,6 +76,25 @@ Loss module for [AnchorFreeDecoupledHead](../../models/heads/anchorfreedecoupled
   ```
 </details>
 
+### YOLOFastestLoss
+
+Loss module for [YoloFastestHead](../../models/heads/yolofastesthead.md). This loss follows the [YOLOFastest implementation](https://github.com/dog-qiuqiu/Yolo-Fastest).
+
+| Field <img width=200/> | Description |
+|---|---|
+| `criterion` | (str) Criterion must be "yolo_fastest_loss" to use `YOLOFastestLoss`. |
+| `weight` | (float) Weight for the YOLOFastest loss. |
+
+<details>
+  <summary>YOLOFastest loss example</summary>
+  ```yaml
+  model:
+    losses:
+      - criterion: yolo_fastest_loss
+        weight: ~
+  ```
+</details>
+
 ### RetinaNetLoss 
 
 Loss module for [AnchorDecoupledHead](../../models/heads/anchordecoupledhead.md). This loss follows torchvision implementation, it contains classification loss via focal loss and box regression loss via L1 loss.
