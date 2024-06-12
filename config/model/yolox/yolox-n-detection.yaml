@@ -2,7 +2,7 @@ model:
   task: detection
   name: yolox_n
   checkpoint:
-    use_pretrained: False
+    use_pretrained: True
     load_head: False
     path: ~
     fx_model_path: ~
@@ -21,12 +21,14 @@ model:
     neck:
       name: yolopafpn
       params:
+        depthwise: True
         dep_mul: *dep_mul
         act_type: *act_type
     head:
       name: anchor_free_decoupled_head
       params:
         act_type: *act_type
+        depthwise: True
   postprocessor: 
     score_thresh: 0.01  # decode
     nms_thresh: 0.65  # nms
