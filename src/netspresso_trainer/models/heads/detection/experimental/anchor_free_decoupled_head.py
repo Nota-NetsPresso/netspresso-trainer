@@ -25,7 +25,7 @@ from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
-from ....op.custom import ConvLayer
+from ....op.custom import ConvLayer, SeparableConvLayer
 from ....utils import ModelOutput
 
 
@@ -38,6 +38,7 @@ class AnchorFreeDecoupledHead(nn.Module):
     ):
         super().__init__()
         act_type = params.act_type
+        depthwise = params.depthwise
 
         self.num_classes = num_classes
 
@@ -47,12 +48,12 @@ class AnchorFreeDecoupledHead(nn.Module):
         self.reg_preds = nn.ModuleList()
         self.obj_preds = nn.ModuleList()
         self.stems = nn.ModuleList()
-        Conv = ConvLayer
+        Conv = SeparableConvLayer if depthwise else ConvLayer
 
         hidden_dim = int(intermediate_features_dim[0]) # 256 * width
         for i in range(len(intermediate_features_dim)):
             self.stems.append(
-                Conv(
+                ConvLayer(
                     in_channels=int(intermediate_features_dim[i]),
                     out_channels=hidden_dim,
                     kernel_size=1,
