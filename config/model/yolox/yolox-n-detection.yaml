@@ -27,8 +27,8 @@ model:
     head:
       name: anchor_free_decoupled_head
       params:
-        act_type: *act_type
         depthwise: True
+        act_type: *act_type
   postprocessor: 
     score_thresh: 0.01  # decode
     nms_thresh: 0.65  # nms
