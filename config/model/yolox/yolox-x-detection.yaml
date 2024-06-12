@@ -21,11 +21,13 @@ model:
     neck:
       name: yolopafpn
       params:
+        depthwise: False
         dep_mul: *dep_mul
         act_type: *act_type
     head:
       name: anchor_free_decoupled_head
       params:
+        depthwise: False
         act_type: *act_type
         # postprocessor - decode
         score_thresh: 0.01
