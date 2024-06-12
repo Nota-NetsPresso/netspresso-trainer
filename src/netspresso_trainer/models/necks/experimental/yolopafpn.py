@@ -23,7 +23,7 @@ from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
-from ...op.custom import ConvLayer, CSPLayer
+from ...op.custom import ConvLayer, CSPLayer, SeparableConvLayer
 from ...utils import BackboneOutput
 
 
@@ -38,9 +38,9 @@ class YOLOPAFPN(nn.Module):
         params: DictConfig,
     ):
         super().__init__()
-        
+        depthwise = params.depthwise
         self.in_channels = intermediate_features_dim
-        Conv = ConvLayer
+        Conv = SeparableConvLayer if depthwise else ConvLayer
 
         depth = params.dep_mul
         act_type = params.act_type
@@ -58,6 +58,7 @@ class YOLOPAFPN(nn.Module):
             out_channels=int(self.in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
+            depthwise=depthwise,
             act_type=act_type,
         )  # cat
 
@@ -73,6 +74,7 @@ class YOLOPAFPN(nn.Module):
             out_channels=int(self.in_channels[0]),
             n=round(3 * depth),
             shortcut=False,
+            depthwise=depthwise,
             act_type=act_type,
         )
 
@@ -89,6 +91,7 @@ class YOLOPAFPN(nn.Module):
             out_channels=int(self.in_channels[1]),
             n=round(3 * depth),
             shortcut=False,
+            depthwise=depthwise,
             act_type=act_type,
         )
 
@@ -105,6 +108,7 @@ class YOLOPAFPN(nn.Module):
             out_channels=int(self.in_channels[2]),
             n=round(3 * depth),
             shortcut=False,
+            depthwise=depthwise,
             act_type=act_type,
         )
 
