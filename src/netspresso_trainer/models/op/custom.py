@@ -662,9 +662,9 @@ class DarknetBlock(nn.Module):
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
                                 kernel_size=1, stride=1, act_type=act_type)
-        if depthwise: 
+        if depthwise:
             self.conv2 = SeparableConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                            kernel_size=3, stride=1, act_type=act_type) 
+                                            kernel_size=3, stride=1, act_type=act_type)
         else:
             self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
                                     kernel_size=3, stride=1, act_type=act_type)
