@@ -20,7 +20,6 @@ model:
     backbone: ...
     neck: ...
     head: ...
-  postprocessor: ~
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
@@ -43,7 +42,6 @@ model:
     optimizer_path: # This field will be ignored since fx_model_path is activated
   freeze_backbone: False
   architecture: # This field will be ignored since fx_model_path is activated
-  postprocessor: ~
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
@@ -65,5 +63,4 @@ model:
 | `model.checkpoint.fx_model_path` | (str) Model path for fx model retraining. If you have to train the model from NP Compressor, you have to fill your compressed model path at this field. If `fx_model_path` is filled, `use_pretrained`, `load_head`, `path`, `optimizer_path`, and `freeze_backbone` are ignored. |
 | `model.freeze_backbone` | (bool) Whether to freeze backbone in training. |
 | `model.architecture` | (dict) Detailed configuration of the model architecture. Please see [Model page](../../../models/overview) to find NetsPresso supporting models. |
-| `model.postprocessor` | (dict) Detailed configuration of the postprocessor (e.g., `score_thresh`, `nms_thresh`, `class_agnostic`, etc). 
 | `model.losses` | (list) List of losses that model to learn. Please see [Losses page](../losses/) to find NetsPresso supporting loss modules. |
