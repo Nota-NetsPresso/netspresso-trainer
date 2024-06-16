@@ -2,7 +2,7 @@ model:
   task: detection
   name: yolox_tiny
   checkpoint:
-    use_pretrained: False
+    use_pretrained: True
     load_head: False
     path: ~
     fx_model_path: ~
