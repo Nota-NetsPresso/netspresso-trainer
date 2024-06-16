@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Change attention bias interpolate method by `@illian01` in [PR 468](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/468)
 
 # v0.2.2
 
