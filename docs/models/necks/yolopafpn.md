@@ -44,7 +44,7 @@ YOLOPAFPN is a modified PAFPN for YOLOX model. Therefore, although YOLOPAFP is c
 
 ## Model configuration examples
 <details>
-  <summary>PAFPN for YOLOX-n</summary>
+  <summary>PAFPN for YOLOX-nano</summary>
   
   ```yaml
   model:

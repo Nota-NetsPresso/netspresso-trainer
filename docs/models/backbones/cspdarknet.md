@@ -41,7 +41,7 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
 
 ## Model configuration examples
 <details>
-  <summary>CSPDarkNet-n</summary>
+  <summary>CSPDarkNet-nano</summary>
   
   ```yaml
   model:

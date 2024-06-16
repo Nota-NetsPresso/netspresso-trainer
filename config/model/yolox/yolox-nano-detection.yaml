@@ -1,6 +1,6 @@
 model:
   task: detection
-  name: yolox_n
+  name: yolox_nano
   checkpoint:
     use_pretrained: True
     load_head: False
