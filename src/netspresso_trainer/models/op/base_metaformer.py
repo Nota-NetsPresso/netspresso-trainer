@@ -199,7 +199,7 @@ class MultiHeadAttention(nn.Module):
 
         if self.use_attention_bias:
             bias = self.attention_biases[:, self.attention_bias_idxs]
-            bias = nn.functional.interpolate(bias.unsqueeze(0), size=(attention_scores.size(-2), attention_scores.size(-1)), mode='bicubic')
+            bias = nn.functional.interpolate(bias.unsqueeze(0), size=(attention_scores.size(-2), attention_scores.size(-1)), mode='bilinear')
             attention_scores = attention_scores + bias
 
         # Normalize the attention scores to probabilities.
