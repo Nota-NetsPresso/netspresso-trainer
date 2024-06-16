@@ -34,11 +34,46 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
 | Field <img width=200/> | Description |
 |---|---|
 |`name` | (str) Name must be "cspdarknet" to use `CSPDarkNet` backbone. |
+| `params.depthwise`| (bool) Whether to enable depthwise convolution for the `CSPDarkNet` backbone. |
 | `params.dep_mul` | (float) Multiplying factor determining the repetition count of `CSPLayer` in the backbone. |
 | `params.wid_mul` | (float) Multiplying factor adjusting the input/output dimensions of convolutional layers throughout the backbone. |
 | `params.act_type` | (str) Type of activation function for the model. Supporting activation functions are described in [[here]](../../components/model/activations.md). |
 
 ## Model configuration examples
+<details>
+  <summary>CSPDarkNet-nano</summary>
+  
+  ```yaml
+  model:
+    architecture:
+      backbone:
+        name: cspdarknet
+        params:
+          depthwise: True
+          dep_mul: &dep_mul 0.33
+          wid_mul: 0.25
+          act_type: &act_type "silu"
+        stage_params: ~
+  ```
+</details>
+
+<details>
+  <summary>CSPDarkNet-tiny</summary>
+  
+  ```yaml
+  model:
+    architecture:
+      backbone:
+        name: cspdarknet
+        params:
+          depthwise: False
+          dep_mul: &dep_mul 0.33
+          wid_mul: 0.375
+          act_type: &act_type "silu"
+        stage_params: ~
+  ```
+</details>
+
 
 <details>
   <summary>CSPDarkNet-s</summary>
@@ -49,6 +84,7 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
       backbone:
         name: cspdarknet
         params:
+          depthwise: False
           dep_mul: &dep_mul 0.33
           wid_mul: 0.5
           act_type: &act_type "silu"
@@ -65,6 +101,7 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
       backbone:
         name: cspdarknet
         params:
+          depthwise: False
           dep_mul: &dep_mul 0.67
           wid_mul: 0.75
           act_type: &act_type "silu"
@@ -81,6 +118,7 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
       backbone:
         name: cspdarknet
         params:
+          depthwise: False
           dep_mul: &dep_mul 1.0
           wid_mul: 1.0
           act_type: &act_type "silu"
@@ -97,6 +135,7 @@ CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet
       backbone:
         name: cspdarknet
         params:
+          depthwise: False
           dep_mul: &dep_mul 1.33
           wid_mul: 1.25
           act_type: &act_type "silu"

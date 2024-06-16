@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add YOLOX-nano and YOLOX-tiny by `@hglee98` in [PR 467](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/467)
 
 ## Bug Fixes:
 

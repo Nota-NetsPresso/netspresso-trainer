@@ -1,6 +1,6 @@
 model:
   task: detection
-  name: yolox_x
+  name: yolox_tiny
   checkpoint:
     use_pretrained: True
     load_head: False
@@ -14,8 +14,8 @@ model:
       name: cspdarknet
       params:
         depthwise: False
-        dep_mul: &dep_mul 1.33
-        wid_mul: 1.25
+        dep_mul: &dep_mul 0.33
+        wid_mul: 0.375
         act_type: &act_type "silu"
       stage_params: ~
     neck:
@@ -29,10 +29,8 @@ model:
       params:
         depthwise: False
         act_type: *act_type
-        # postprocessor - decode
-        score_thresh: 0.01
-        # postprocessor - nms
-        nms_thresh: 0.65
+        score_thresh: 0.01  # decode
+        nms_thresh: 0.65  # nms
         class_agnostic: False
   losses:
     - criterion: yolox_loss

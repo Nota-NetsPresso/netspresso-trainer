@@ -3,8 +3,8 @@ model:
   name: yolox_s
   checkpoint:
     use_pretrained: True
-    load_head: True
-    path: ~
+    load_head: False
+    path: ~ 
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
@@ -13,6 +13,7 @@ model:
     backbone:
       name: cspdarknet
       params:
+        depthwise: False
         dep_mul: &dep_mul 0.33
         wid_mul: 0.5
         act_type: &act_type "silu"
@@ -20,16 +21,16 @@ model:
     neck:
       name: yolopafpn
       params:
+        depthwise: False
         dep_mul: *dep_mul
         act_type: *act_type
     head:
       name: anchor_free_decoupled_head
       params:
+        depthwise: False
         act_type: *act_type
-        # postprocessor - decode
-        score_thresh: 0.01
-        # postprocessor - nms
-        nms_thresh: 0.65
+        score_thresh: 0.01  # decode
+        nms_thresh: 0.65  # nms
         class_agnostic: False
   losses:
     - criterion: yolox_loss
