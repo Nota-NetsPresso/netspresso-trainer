@@ -45,6 +45,8 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'mixnet_m': 'imagenet1k',
     'mixnet_l': 'imagenet1k',
     'pidnet_s': 'cityscapes',
+    'yolox_nano': 'coco',
+    'yolox_tiny': 'coco',
     'yolox_s': 'coco',
     'yolox_m': 'coco',
     'yolox_l': 'coco',
@@ -91,11 +93,11 @@ MODEL_CHECKPOINT_URL_DICT = {
     'pidnet_s': {
         'cityscapes': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/pidnet/pidnet_s_cityscapes.safetensors?versionId=lsgtDpiF1yqJpuCLYpruLdR6on0V53r8",
     },
-    'yolox_n': {
-        'coco': ""
+    'yolox_nano': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_nano_coco.safetensors?versionId=JCXugDTwGegx9Kl6Jc5AMJpIkA.WlNVP"
     },
     'yolox_tiny': {
-        'coco': ""
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_tiny_coco.safetensors?versionId=lJp1bCEToD_6IaL9kRCqcYIwVZ.QQ.1P"
     },
     'yolox_s': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_s_coco.safetensors?versionId=QRLqHKqhv8TSYBrmsQ3M8lCR8w7HEZyA",
