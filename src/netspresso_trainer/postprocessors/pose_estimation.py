@@ -27,8 +27,8 @@ from ..models.utils import ModelOutput
 
 class PoseEstimationPostprocessor():
     def __init__(self, conf_model):
-        # TODO: Get from config
-        self.simcc_split_ratio = 2.
+        self.params = conf_model.postprocessor.params
+        self.simcc_split_ratio = self.params.simcc_split_ratio
 
     def get_simcc_maximum(self, simcc_x, simcc_y, apply_softmax: bool = False):
         assert simcc_x.ndim == 2 or simcc_x.ndim == 3, (f'Invalid shape {simcc_x.shape}')
