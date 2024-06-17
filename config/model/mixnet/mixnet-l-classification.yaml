@@ -65,7 +65,9 @@ model:
         intermediate_channels: ~
         act_type: ~
         dropout_prob: 0.
-  postprocessor: ~
+  postprocessor: 
+    params: 
+      topk_max: 20
   losses:
     - criterion: cross_entropy
       label_smoothing: 0.1
