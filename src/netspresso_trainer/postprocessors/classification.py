@@ -22,8 +22,8 @@ from ..models.utils import ModelOutput
 
 class ClassificationPostprocessor():
     def __init__(self, conf_model):
-        self.params = conf_model.postprocessor.params
-        self.topk_max = self.params.topk_max
+        params = conf_model.postprocessor.params
+        self.topk_max = params.topk_max
 
     def __call__(self, outputs: ModelOutput, k: Optional[int]=None):
         pred = outputs['pred']
