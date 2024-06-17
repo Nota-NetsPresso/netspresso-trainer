@@ -62,6 +62,7 @@ model:
         simcc_split_ratio: 2.
         target_size: [256, 256]
         backbone_stride: 32
+  postprocessor: ~
   losses:
     - criterion: rtmcc_loss
       weight: ~

@@ -32,6 +32,7 @@ model:
         score_thresh: 0.01  # decode
         nms_thresh: 0.65  # nms
         class_agnostic: False
+  postprocessor: ~
   losses:
     - criterion: yolox_loss
       weight: ~

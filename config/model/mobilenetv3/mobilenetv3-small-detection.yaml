@@ -67,6 +67,7 @@ model:
         # postprocessor - nms
         nms_thresh: 0.45
         class_agnostic: False
+  postprocessor: ~
   losses:
     - criterion: retinanet_loss
       weight: ~

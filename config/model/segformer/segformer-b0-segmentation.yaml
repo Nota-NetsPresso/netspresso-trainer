@@ -52,6 +52,7 @@ model:
         intermediate_channels: 256
         classifier_dropout_prob: 0.
         resize_output: [512, 512]
+  postprocessor: ~
   losses:
     - criterion: seg_cross_entropy
       weight: ~
