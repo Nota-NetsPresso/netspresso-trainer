@@ -29,12 +29,13 @@ model:
       params:
         depthwise: False
         act_type: *act_type
-        # postprocessor - decode
-        score_thresh: 0.01
-        # postprocessor - nms
-        nms_thresh: 0.65
-        class_agnostic: False
-  postprocessor: ~
+  postprocessor: 
+    params: 
+      # postprocessor - decode
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      class_agnostic: False
   losses:
     - criterion: yolox_loss
       weight: ~

@@ -52,7 +52,14 @@ model:
         # postprocessor - nms
         nms_thresh: 0.45
         class_agnostic: False
-  postprocessor: ~
+  postprocessor: 
+    params:
+      # postprocessor - decode
+      topk_candidates: 1000
+      score_thresh: 0.05
+      # postprocessor - nms
+      nms_thresh: 0.45
+      class_agnostic: False
   losses:
     - criterion: retinanet_loss
       weight: ~
