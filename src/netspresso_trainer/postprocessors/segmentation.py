@@ -24,7 +24,7 @@ from ..models.utils import ModelOutput
 
 class SegmentationPostprocessor:
     def __init__(self, conf_model):
-        params = conf_model.postprocessor.params        
+        pass
     def __call__(self, outputs: ModelOutput, original_shape):
         pred = outputs['pred']
         H, W = original_shape[-2:]

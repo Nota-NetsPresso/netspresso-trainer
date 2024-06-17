@@ -19,7 +19,6 @@ from typing import Optional
 from ..models.utils import ModelOutput
 
 
-
 class ClassificationPostprocessor():
     def __init__(self, conf_model):
         params = conf_model.postprocessor.params
