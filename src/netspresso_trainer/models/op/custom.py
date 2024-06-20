@@ -646,6 +646,64 @@ class SPPBottleneck(nn.Module):
         return x
 
 
+class ShuffleV2Block(nn.Module): 
+    def __init__(
+        self,
+        in_channels,
+        out_channels,
+        hidden_channels,
+        kernel_size,
+        stride,
+    ):
+        super().init()
+        self.stride = stride 
+        assert stride in [1, 2]
+
+        self.in_channels = in_channels
+        self.hidden_channels = hidden_channels 
+        self.kernel_size = kernel_size 
+        padding = kernel_size // 2 
+        self.padding = padding
+        outputs = out_channels - in_channels
+        branch_main = [
+            # pointwise
+            ConvLayer(self.in_channels, self.hidden_channels, 1, 1, padding=0),
+            # depthwise
+            ConvLayer(self.hidden_channels, self.hidden_channels, self.kernel_size, stride=stride, padding=padding, groups=self.hidden_channels, use_act=False),
+            # pointwise
+            ConvLayer(self.hidden_channels, outputs, 1, 1, padding=0), 
+        ]
+        self.branch_main = nn.Sequential(*branch_main)
+
+        if stride == 2: 
+            branch_proj = [
+                # depthwise
+                ConvLayer(self.in_channels, self.in_channels, self.kernel_size, stride, padding=padding, groups=self.in_channels, use_act=False),
+                #pointwise 
+                ConvLayer(self.in_channels, self.in_channels, 1, 1, padding=0),
+            ]
+            self.branch_proj = nn.Sequential(*branch_proj)
+        else: 
+            self.branch_proj = None 
+    
+    def forward(self, old_x):
+        if self.stride==1:
+            x_proj, x = self.channel_shuffle(old_x)
+            return torch.cat((x_proj, self.branch_main(x)), 1)
+        elif self.stride==2:
+            x_proj = old_x
+            x = old_x
+            return torch.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
+
+    def channel_shuffle(self, x):
+        b, c, h, w = x.data.size()
+        assert (c % 4 == 0)
+        x = x.reshape(b * c // 2, 2, h * w)
+        x = x.permute(1, 0, 2)
+        x = x.reshape(2, -1, c // 2, h, w)
+        return x[0], x[1]
+        
+
 # Newly defined because of slight difference with Bottleneck of custom.py
 class DarknetBlock(nn.Module):
     # Standard bottleneck
