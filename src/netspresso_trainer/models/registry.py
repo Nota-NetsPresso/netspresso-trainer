@@ -19,7 +19,7 @@ from typing import Callable, Dict, List, Type
 
 import torch.nn as nn
 
-from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, vit
+from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, shufflenetv2, vit
 from .base import ClassificationModel, DetectionModel, PoseEstimationModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
@@ -36,6 +36,7 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'vit': vit,
     'efficientformer': efficientformer,
     'cspdarknet': cspdarknet,
+    'shufflenetv2': shufflenetv2,
     'mixnet': mixnet,
 }
 
