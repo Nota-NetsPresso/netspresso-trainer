@@ -655,7 +655,7 @@ class ShuffleV2Block(nn.Module):
         kernel_size,
         stride,
     ):
-        super().init()
+        super().__init__()
         self.stride = stride 
         assert stride in [1, 2]
 
