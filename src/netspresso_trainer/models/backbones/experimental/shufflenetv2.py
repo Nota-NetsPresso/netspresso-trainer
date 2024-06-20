@@ -1,3 +1,8 @@
+"""
+Based on the ShuffleNet implementation of dog-qiuqiu. 
+https://github.com/dog-qiuqiu/Yolo-FastestV2/blob/main/model/backbone/shufflenetv2.py#L70
+"""
+
 from typing import Dict, Optional, List 
 from omegaconf import DictConfig
 import torch
