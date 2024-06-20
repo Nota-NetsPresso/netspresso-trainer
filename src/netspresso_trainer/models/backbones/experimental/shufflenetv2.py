@@ -37,6 +37,8 @@ class ShuffleNetV2(nn.Module):
             self.stage_out_channels = [-1 ,24, 244, 488, 976]
         
         stage_names = ["stage2", "stage3", "stage4"]
+        self._feature_dim = self.stage_out_channels[-1]
+        self._intermediate_features_dim = [self.stage_out_channels[-2], self.stage_out_channels[-1]]
         # building first layer 
         input_dim = self.stage_out_channels[1]
         self.first_conv = ConvLayer(3, input_dim, kernel_size=3, stride=2, padding=1)
@@ -49,12 +51,12 @@ class ShuffleNetV2(nn.Module):
             stageSeq = []
             for i in range(num_repeat):
                 if i == 0:
-                    stageSeq.append(ShuffleV2Block(input_channel, output_channel, 
-                                                mid_channels=output_channel // 2, ksize=3, stride=2))
+                    stageSeq.append(ShuffleV2Block(input_dim, output_channel, 
+                                                hidden_channels=output_channel // 2, kernel_size=3, stride=2))
                 else:
-                    stageSeq.append(ShuffleV2Block(input_channel // 2, output_channel, 
-                                                mid_channels=output_channel // 2, ksize=3, stride=1))
-                input_channel = output_channel
+                    stageSeq.append(ShuffleV2Block(input_dim // 2, output_channel, 
+                                                hidden_channels=output_channel // 2, kernel_size=3, stride=1))
+                input_dim = output_channel
             setattr(self, stage_names[stage_idx], nn.Sequential(*stageSeq))
 
         self.avgpool = nn.AdaptiveAvgPool2d(1) if not self.use_intermediate_features else None  
@@ -71,4 +73,19 @@ class ShuffleNetV2(nn.Module):
         x = self.avgpool(C3)
         x = torch.flatten(x, 1)
         return BackboneOutput(last_feature=x)
+    
+    @property
+    def feature_dim(self):
+        return self._feature_dim
+
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
+
+    def task_support(self, task):
+        return task.lower() in SUPPORTING_TASK
+
+
+def shufflenetv2(task, conf_model_backbone) -> ShuffleNetV2: 
+    return ShuffleNetV2(task, conf_model_backbone.params, conf_model_backbone.stage_params)
 
