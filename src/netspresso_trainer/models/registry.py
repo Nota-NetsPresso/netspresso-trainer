@@ -26,7 +26,7 @@ from .heads.classification import fc
 from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
 from .heads.pose_estimation import rtmcc
 from .heads.segmentation import all_mlp_decoder
-from .necks import fpn, yolopafpn
+from .necks import fpn, yolopafpn, lightfpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
@@ -42,6 +42,7 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
 
 MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
     'fpn': fpn,
+    'lightfpn': lightfpn,
     'yolopafpn': yolopafpn,
 }
 
