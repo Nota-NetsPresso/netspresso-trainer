@@ -702,7 +702,28 @@ class ShuffleV2Block(nn.Module):
         x = x.permute(1, 0, 2)
         x = x.reshape(2, -1, c // 2, h, w)
         return x[0], x[1]
-        
+
+
+class DWConvBlock(nn.Module): 
+    def __init__(
+        self,
+        in_channels, 
+        out_channels, 
+        kernel_size,) -> None:
+        super().__init__()
+
+        block_main = [
+            ConvLayer(in_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels),
+            ConvLayer(out_channels, out_channels, 1, 1, padding=0, use_act=False), 
+            ConvLayer(out_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels), 
+            ConvLayer(out_channels, out_channels, 1, 1, use_act=False)
+        ]
+        self.block = nn.Sequential(*block_main)
+
+    def forward(self, x): 
+        x = self.block(x)
+        return x
+         
 
 # Newly defined because of slight difference with Bottleneck of custom.py
 class DarknetBlock(nn.Module):
