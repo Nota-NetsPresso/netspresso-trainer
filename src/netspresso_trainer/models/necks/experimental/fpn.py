@@ -184,13 +184,7 @@ class LightFPN(nn.Module):
         self._intermediate_features_dim = [self.out_channels for _ in range(self.num_ins)]
         # TODO: Make sure this module can process multi-scale features greater than 2. 
         self.conv_C2 = ConvLayer(self.in_channels[0]+self.in_channels[1], self.out_channels, 1, 1, padding=0)
-        self.conv_C3 = ConvLayer(self.in_channels[1], self.out_channels, 1, 1, padding=0)
-
-        # self.reg_C2 = DWConvBlock(self.in_channels[0], self.out_channels, 5)
-        # self.cls_C2 = DWConvBlock(self.in_channels[0], self.out_channels, 5)
-
-        # self.reg_C3 = DWConvBlock(self.in_channels[1], self.out_channels, 5)
-        # self.cls_C3 = DWConvBlock(self.in_channels[1], self.out_channels, 5)
+        self.conv_C3 = ConvLayer(self.in_channels[1], self.out_channels, 1, 1, padding=0)   
     
     def forward(self, inputs): 
         C2, C3 = inputs[0], inputs[1] 
