@@ -646,7 +646,7 @@ class SPPBottleneck(nn.Module):
         return x
 
 
-class ShuffleV2Block(nn.Module): 
+class ShuffleV2Block(nn.Module):
     def __init__(
         self,
         in_channels,
@@ -656,13 +656,13 @@ class ShuffleV2Block(nn.Module):
         stride,
     ):
         super().__init__()
-        self.stride = stride 
+        self.stride = stride
         assert stride in [1, 2]
 
         self.in_channels = in_channels
-        self.hidden_channels = hidden_channels 
-        self.kernel_size = kernel_size 
-        padding = kernel_size // 2 
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        padding = kernel_size // 2
         self.padding = padding
         outputs = out_channels - in_channels
         branch_main = [
@@ -671,21 +671,21 @@ class ShuffleV2Block(nn.Module):
             # depthwise
             ConvLayer(self.hidden_channels, self.hidden_channels, self.kernel_size, stride=stride, padding=padding, groups=self.hidden_channels, use_act=False),
             # pointwise
-            ConvLayer(self.hidden_channels, outputs, 1, 1, padding=0), 
+            ConvLayer(self.hidden_channels, outputs, 1, 1, padding=0),
         ]
         self.branch_main = nn.Sequential(*branch_main)
 
-        if stride == 2: 
+        if stride == 2:
             branch_proj = [
                 # depthwise
                 ConvLayer(self.in_channels, self.in_channels, self.kernel_size, stride, padding=padding, groups=self.in_channels, use_act=False),
-                #pointwise 
+                #pointwise
                 ConvLayer(self.in_channels, self.in_channels, 1, 1, padding=0),
             ]
             self.branch_proj = nn.Sequential(*branch_proj)
-        else: 
-            self.branch_proj = None 
-    
+        else:
+            self.branch_proj = None
+
     def forward(self, old_x):
         if self.stride==1:
             x_proj, x = self.channel_shuffle(old_x)
@@ -704,26 +704,26 @@ class ShuffleV2Block(nn.Module):
         return x[0], x[1]
 
 
-class DWConvBlock(nn.Module): 
+class DWConvBlock(nn.Module):
     def __init__(
         self,
-        in_channels, 
-        out_channels, 
+        in_channels,
+        out_channels,
         kernel_size,) -> None:
         super().__init__()
 
         block_main = [
             ConvLayer(in_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels),
-            ConvLayer(out_channels, out_channels, 1, 1, padding=0, use_act=False), 
-            ConvLayer(out_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels), 
+            ConvLayer(out_channels, out_channels, 1, 1, padding=0, use_act=False),
+            ConvLayer(out_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels),
             ConvLayer(out_channels, out_channels, 1, 1, use_act=False)
         ]
         self.block = nn.Sequential(*block_main)
 
-    def forward(self, x): 
+    def forward(self, x):
         x = self.block(x)
         return x
-         
+
 
 # Newly defined because of slight difference with Bottleneck of custom.py
 class DarknetBlock(nn.Module):
