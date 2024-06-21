@@ -36,12 +36,9 @@ class YOLOFastestHeadV2(nn.Module):
 
     def forward(self, x): 
         anchors = torch.cat(self.anchor_generator(x), dim=0)
-        cls_logits, intermediate_cls_logits, objs, intermediate_objs = self.cls_head(x) 
-        bbox_regression, intermediate_bbox_regression = self.reg_head(x)
-        pred = [intermediate_cls_logits[0], intermediate_objs[0], intermediate_bbox_regression[0], 
-                intermediate_cls_logits[1], intermediate_objs[1], intermediate_bbox_regression[1]]
-        return AnchorBasedDetectionModelOutput(anchors=anchors, cls_logits=cls_logits, bbox_regression=bbox_regression, pred=pred)
-
+        cls_logits, objs = self.cls_head(x) 
+        bbox_regression = self.reg_head(x)
+        return AnchorBasedDetectionModelOutput(anchors=anchors, cls_logits=cls_logits, bbox_regression=bbox_regression)
 
 def yolo_fastest_head_v2(num_classes, intermediate_features_dim, conf_model_head) -> YOLOFastestHeadV2:
     return YOLOFastestHeadV2(num_classes=num_classes, 
@@ -76,16 +73,13 @@ class YOLOFastestClassificationHead(nn.Module):
         out1 = self.layer_1(x[0])
         out2 = self.layer_2(x[1])
         outputs = [out1, out2]
-        intermediate_cls_logits = []
-        intermediate_objs = []
 
         for idx, features in enumerate(x): 
             cls_logits = outputs[idx]
             objectness = cls_logits
             cls_logits = self.cls_logits(cls_logits)
             objectness = self.obj(objectness)
-            intermediate_cls_logits.append(cls_logits)
-            intermediate_objs.append(objectness)
+            
             # Permute classification output from (N, A * K, H, W) to (N, HWA, K).
             N, _, H, W = cls_logits.shape
             cls_logits = cls_logits.view(N, -1, self.num_classes, H, W)
@@ -101,7 +95,7 @@ class YOLOFastestClassificationHead(nn.Module):
             objectness = objectness.reshape(N, -1, 1)  # Size=(N, HWA, 1)
             all_objs.append(objectness)
         
-        return all_cls_logits, intermediate_cls_logits, all_objs, intermediate_objs
+        return all_cls_logits, all_objs
 
 
 
@@ -121,12 +115,11 @@ class YOLOFastestRegressionHead(nn.Module):
         out1 = self.layer_1(x[0])
         out2 = self.layer_2(x[1])
         outputs = [out1, out2]
-        intermediate_outputs = []
 
         for idx, features in enumerate(x): 
             bbox_regression = outputs[idx]
             bbox_regression = self.bbox_reg(bbox_regression)
-            intermediate_outputs.append(bbox_regression)
+
             # Permute bbox regression output from (N, 4 * A, H, W) to (N, HWA, 4).
             N, _, H, W = bbox_regression.shape
             bbox_regression = bbox_regression.view(N, -1, 4, H, W)
@@ -135,5 +128,5 @@ class YOLOFastestRegressionHead(nn.Module):
 
             all_bbox_regression.append(bbox_regression)
         
-        return all_bbox_regression, intermediate_outputs
+        return all_bbox_regression
 
