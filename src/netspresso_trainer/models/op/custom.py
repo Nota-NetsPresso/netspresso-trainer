@@ -152,6 +152,7 @@ class SeparableConvLayer(nn.Module):
         norm_type: Optional[str] = None,
         use_act: bool = True,
         act_type: Optional[str] = None,
+        no_out_act: bool = False,
     ) -> None:
         super().__init__()
         self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
@@ -159,11 +160,15 @@ class SeparableConvLayer(nn.Module):
                                    padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
                                    use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
         self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
+                                   use_norm=use_norm, norm_type=norm_type, use_act=False, act_type=act_type,)
+        self.final_act = (
+            nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]()
+        )
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         x = self.depthwise(x)
         x = self.pointwise(x)
+        x = self.final_act(x)
         return x
 
 
