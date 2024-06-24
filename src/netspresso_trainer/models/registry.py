@@ -19,14 +19,24 @@ from typing import Callable, Dict, List, Type
 
 import torch.nn as nn
 
-from .backbones import cspdarknet, efficientformer, mixnet, mixtransformer, mobilenetv3, mobilevit, resnet, vit
+from .backbones import (
+    cspdarknet,
+    darknet,
+    efficientformer,
+    mixnet,
+    mixtransformer,
+    mobilenetv3,
+    mobilevit,
+    resnet,
+    vit,
+)
 from .base import ClassificationModel, DetectionModel, PoseEstimationModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
-from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head
+from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head, yolo_fastest_head
 from .heads.pose_estimation import rtmcc
 from .heads.segmentation import all_mlp_decoder
-from .necks import fpn, yolopafpn
+from .necks import fpn, yolopafpn, yolov3fpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
@@ -36,12 +46,14 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'vit': vit,
     'efficientformer': efficientformer,
     'cspdarknet': cspdarknet,
+    'darknet': darknet,
     'mixnet': mixnet,
 }
 
 MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
     'fpn': fpn,
     'yolopafpn': yolopafpn,
+    'yolov3fpn': yolov3fpn,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -54,6 +66,7 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
     'detection': {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,
         'anchor_decoupled_head': anchor_decoupled_head,
+        'yolo_fastest_head': yolo_fastest_head,
     },
     'pose_estimation': {
         'rtmcc': rtmcc,
