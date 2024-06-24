@@ -651,7 +651,6 @@ class SPPBottleneck(nn.Module):
         return x
 
 
-# Newly defined because of slight difference with Bottleneck of custom.py
 class DarknetBlock(nn.Module):
     # Standard bottleneck
     def __init__(
@@ -662,17 +661,20 @@ class DarknetBlock(nn.Module):
         expansion=0.5,
         depthwise=False,
         act_type="silu",
+        norm_type: Optional[str] = None,
+        no_out_act=False,
+        depthwise_stride: Optional[int] = None,
     ):
         super().__init__()
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
-                                kernel_size=1, stride=1, act_type=act_type)
+                                kernel_size=1, stride=1, act_type=act_type, norm_type=norm_type)
         if depthwise:
             self.conv2 = SeparableConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                            kernel_size=3, stride=1, act_type=act_type)
+                                            kernel_size=3, stride=depthwise_stride if depthwise_stride else 1, act_type=act_type, norm_type=norm_type, no_out_act=no_out_act)
         else:
             self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                    kernel_size=3, stride=1, act_type=act_type)
+                                    kernel_size=3, stride=1, act_type=act_type, norm_type=norm_type)
         self.use_add = shortcut and in_channels == out_channels
 
     def forward(self, x):
