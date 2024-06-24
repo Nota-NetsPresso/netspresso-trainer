@@ -439,7 +439,9 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     x = x + selected_pe
 
         # x = x + self.pe[..., :seq_index, :]
-        x = x + self.pe[..., : x.shape[-2], :]
+        if not isinstance(x, torch.fx.Proxy):
+            self.last_token_num = x.shape[-2]
+        x = x + self.pe[..., : self.last_token_num, :]
 
         return x
 
