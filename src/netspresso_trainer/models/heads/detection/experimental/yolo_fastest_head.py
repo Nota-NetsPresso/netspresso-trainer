@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn 
 import math
 
-from ....op.custom import ConvLayer, DWConvBlock
+from ....op.custom import SeparableConvLayer
 from ....utils import AnchorBasedDetectionModelOutput 
 from .detection import AnchorGenerator
 
@@ -56,8 +56,14 @@ class YOLOFastestClassificationHead(nn.Module):
         ) -> None:
         super().__init__()
 
-        self.layer_1 = DWConvBlock(in_channels, in_channels, 5)
-        self.layer_2 = DWConvBlock(in_channels, in_channels, 5)
+        self.layer_1 = nn.Sequential(*[
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+        ])
+        self.layer_2 = nn.Sequential(*[
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+        ])
         
         self.cls_logits = nn.Conv2d(in_channels, num_classes * num_anchors, 1, 1, 0, bias=True)
         self.obj = nn.Conv2d(in_channels, num_anchors, 1, 1, 0, bias=True) 
@@ -106,8 +112,14 @@ class YOLOFastestRegressionHead(nn.Module):
         num_anchors,) -> None:
         super().__init__()
 
-        self.layer_1 = DWConvBlock(in_channels, in_channels, 5)
-        self.layer_2 = DWConvBlock(in_channels, in_channels, 5)
+        self.layer_1 = nn.Sequential(*[
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+        ])
+        self.layer_2 = nn.Sequential(*[
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+            SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
+        ])
         self.bbox_reg = nn.Conv2d(in_channels, num_anchors * 4, 1, 1, 0, bias=True)
     
     def forward(self, x): 
