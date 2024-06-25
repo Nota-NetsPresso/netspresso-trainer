@@ -18,6 +18,7 @@ model:
       head_channels: 128
     backbone: ~
     head: ~
+  postprocessor: ~
   losses:
     - criterion: pidnet_loss
       weight: ~

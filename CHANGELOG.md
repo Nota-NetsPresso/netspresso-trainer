@@ -3,6 +3,7 @@
 ## New Features:
 
 - Add YOLOX-nano and YOLOX-tiny by `@hglee98` in [PR 467](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/467)
+- Separate postprocessor configuration hierarchy by `@hglee98` in [PR 470](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/470)
 
 ## Bug Fixes:
 
