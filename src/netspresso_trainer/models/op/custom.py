@@ -152,18 +152,23 @@ class SeparableConvLayer(nn.Module):
         norm_type: Optional[str] = None,
         use_act: bool = True,
         act_type: Optional[str] = None,
+        no_out_act: Optional[bool] = False,
     ) -> None:
         super().__init__()
+        if act_type is None:
+            act_type = 'relu'
         self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
                                    kernel_size=kernel_size, stride=stride, dilation=dilation,
                                    padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
                                    use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
         self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
+                                   use_norm=use_norm, norm_type=norm_type, use_act=False)
+        self.final_act = nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]() 
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         x = self.depthwise(x)
         x = self.pointwise(x)
+        x = self.final_act(x)
         return x
 
 
@@ -704,27 +709,6 @@ class ShuffleV2Block(nn.Module):
         x = x.permute(1, 0, 2)
         x = x.reshape(2, -1, c // 2, h, w)
         return x[0], x[1]
-
-
-class DWConvBlock(nn.Module):
-    def __init__(
-        self,
-        in_channels,
-        out_channels,
-        kernel_size,) -> None:
-        super().__init__()
-
-        block_main = [
-            ConvLayer(in_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels),
-            ConvLayer(out_channels, out_channels, 1, 1, padding=0, use_act=False),
-            ConvLayer(out_channels, out_channels, kernel_size, 1, padding=2, groups=out_channels),
-            ConvLayer(out_channels, out_channels, 1, 1, use_act=False)
-        ]
-        self.block = nn.Sequential(*block_main)
-
-    def forward(self, x):
-        x = self.block(x)
-        return x
 
 
 # Newly defined because of slight difference with Bottleneck of custom.py
