@@ -26,12 +26,14 @@ model:
         anchors:
           - [12,18, 37,49, 52,132]  # P2
           - [115,73, 119,199, 242,238]  # P3
-        # postprocessor - decode
-        topk_candidates: 1000
-        score_thresh: 0.05
-        # postprocessor - nms
-        nms_thresh: 0.45
-        class_agnostic: False
+  postprocessor: 
+    params:
+      # postprocessor - decode
+      topk_candidates: 1000
+      score_thresh: 0.05
+      # postprocessor - nms
+      nms_thresh: 0.45
+      class_agnostic: False
   # Temporary loss to test the full YOLOFastestV2 model to work right
   losses:
     - criterion: retinanet_loss
