@@ -3,6 +3,7 @@
 ## New Features:
 
 - Add YOLOX-nano and YOLOX-tiny by `@hglee98` in [PR 467](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/467)
+- Separate postprocessor configuration hierarchy by `@hglee98` in [PR 470](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/470)
 
 ## Bug Fixes:
 
@@ -15,6 +16,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Change attention bias interpolate method by `@illian01` in [PR 468](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/468)
+- Fix ViT token number in positional encoding for torch.fx compile step by `@illian01` in [PR 475](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/475)
 
 # v0.2.2
 

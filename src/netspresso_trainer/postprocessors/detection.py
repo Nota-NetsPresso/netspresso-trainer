@@ -165,7 +165,7 @@ def nms(prediction, nms_thresh=0.45, class_agnostic=False):
 class DetectionPostprocessor:
     def __init__(self, conf_model):
         head_name = conf_model.architecture.head.name
-        params = conf_model.architecture.head.params
+        params = conf_model.postprocessor.params
         if head_name == 'anchor_free_decoupled_head':
             self.decode_outputs = partial(anchor_free_decoupled_head_decode, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
