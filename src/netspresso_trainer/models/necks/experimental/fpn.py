@@ -25,7 +25,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from ...utils import BackboneOutput
-from ...op.custom import ConvLayer, DWConvBlock
+from ...op.custom import ConvLayer
 
 
 class FPN(nn.Module):
