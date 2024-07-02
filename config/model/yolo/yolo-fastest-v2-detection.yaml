@@ -15,7 +15,7 @@ model:
       params: 
         model_size: 0.5x
       stage_params: 
-        out_channels: [-1, 24, 48, 96, 192] 
+        ~
     neck:
       name: lightfpn
       params:
