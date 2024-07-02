@@ -20,10 +20,12 @@
 from typing import List
 
 from omegaconf import DictConfig
+import torch 
 import torch.nn as nn
 import torch.nn.functional as F
 
 from ...utils import BackboneOutput
+from ...op.custom import ConvLayer
 
 
 class FPN(nn.Module):
@@ -166,3 +168,38 @@ class FPN(nn.Module):
 
 def fpn(intermediate_features_dim, conf_model_neck, **kwargs):
     return FPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)
+
+
+class LightFPN(nn.Module):
+    def __init__(
+        self,
+        intermediate_features_dim: List[int], 
+        params: DictConfig,
+    ) -> None:
+        super().__init__()
+
+        self.in_channels = intermediate_features_dim 
+        self.out_channels = params.out_channels
+        self.num_ins = len(self.in_channels)
+        self._intermediate_features_dim = [self.out_channels for _ in range(self.num_ins)]
+        # TODO: Make sure this module can process multi-scale features greater than 2. 
+        self.conv_C2 = ConvLayer(self.in_channels[0]+self.in_channels[1], self.out_channels, 1, 1, padding=0)
+        self.conv_C3 = ConvLayer(self.in_channels[1], self.out_channels, 1, 1, padding=0)   
+    
+    def forward(self, inputs): 
+        C2, C3 = inputs[0], inputs[1] 
+        S3 = self.conv_C3(C3)
+        P2 = F.interpolate(C3, scale_factor=2)
+        P2 = torch.cat((P2, C2), dim=1)
+        S2 = self.conv_C2(P2) 
+
+        outs = [S2, S3] 
+
+        return BackboneOutput(intermediate_features=outs)
+
+    @property
+    def intermediate_features_dim(self):
+        return self._intermediate_features_dim
+
+def lightfpn(intermediate_features_dim, conf_model_neck, **kwargs): 
+    return LightFPN(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)

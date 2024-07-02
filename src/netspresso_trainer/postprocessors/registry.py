@@ -27,5 +27,6 @@ POSTPROCESSOR_DICT = {
     'anchor_free_decoupled_head': DetectionPostprocessor,
     'pidnet': SegmentationPostprocessor,
     'anchor_decoupled_head': DetectionPostprocessor,
+    'yolo_fastest_head_v2': DetectionPostprocessor,
     'rtmcc': PoseEstimationPostprocessor,
 }

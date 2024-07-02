@@ -169,7 +169,7 @@ class DetectionPostprocessor:
         if head_name == 'anchor_free_decoupled_head':
             self.decode_outputs = partial(anchor_free_decoupled_head_decode, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
-        elif head_name == 'anchor_decoupled_head':
+        elif head_name == 'anchor_decoupled_head' or head_name == 'yolo_fastest_head_v2':
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         else:
