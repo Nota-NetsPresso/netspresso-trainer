@@ -40,6 +40,12 @@ class ShuffleNetV2(nn.Module):
             self.stage_out_channels = [-1, 24, 176, 352, 704]
         elif model_size == '2.0x': 
             self.stage_out_channels = [-1 ,24, 244, 488, 976]
+        else:
+            raise NotImplementedError(
+                "The options of the model_size parameter "
+                "are currently not yet supported for "
+                f"{model_size}. Available options are following: "
+                "['0.5x', '1.0x', '1.5x', '2.0x']") 
         
         stage_names = ["stage2", "stage3", "stage4"]
         self._feature_dim = self.stage_out_channels[-1]
