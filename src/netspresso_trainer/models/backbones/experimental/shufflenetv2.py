@@ -1,8 +1,3 @@
-"""
-Based on the ShuffleNet implementation of dog-qiuqiu. 
-https://github.com/dog-qiuqiu/Yolo-FastestV2/blob/main/model/backbone/shufflenetv2.py#L70
-"""
-
 from typing import Dict, Optional, List 
 from omegaconf import DictConfig
 import torch
@@ -30,61 +25,59 @@ class ShuffleNetV2(nn.Module):
         super().__init__()
 
         self.stage_repeats = [4, 8, 4]
-        model_size = params.model_size 
-
-        if model_size == '0.5x': 
-            self.stage_out_channels = [-1, 24, 48, 96, 192]
-        elif model_size == '1.0x': 
-            self.stage_out_channels = [-1, 24, 116, 232, 464]
-        elif model_size == '1.5x': 
-            self.stage_out_channels = [-1, 24, 176, 352, 704]
-        elif model_size == '2.0x': 
-            self.stage_out_channels = [-1 ,24, 244, 488, 976]
-        else:
-            raise NotImplementedError(
-                "The options of the model_size parameter "
-                "are currently not yet supported for "
-                f"{model_size}. Available options are following: "
-                "['0.5x', '1.0x', '1.5x', '2.0x']") 
-        
-        stage_names = ["stage2", "stage3", "stage4"]
+        self.stage_out_channels = self._get_stage_out_channels(params.model_size)
         self._feature_dim = self.stage_out_channels[-1]
-        self._intermediate_features_dim = [self.stage_out_channels[-2], self.stage_out_channels[-1]]
-        # building first layer 
-        input_dim = self.stage_out_channels[1]
-        self.first_conv = ConvLayer(3, input_dim, kernel_size=3, stride=2, padding=1)
-
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
-
-        for stage_idx in range(len(self.stage_repeats)):
-            num_repeat = self.stage_repeats[stage_idx]
-            output_channel = self.stage_out_channels[stage_idx+2]
-            stageSeq = []
-            for i in range(num_repeat):
-                if i == 0:
-                    stageSeq.append(ShuffleV2Block(input_dim, output_channel, 
-                                                hidden_channels=output_channel // 2, kernel_size=3, stride=2))
-                else:
-                    stageSeq.append(ShuffleV2Block(input_dim // 2, output_channel, 
-                                                hidden_channels=output_channel // 2, kernel_size=3, stride=1))
-                input_dim = output_channel
-            setattr(self, stage_names[stage_idx], nn.Sequential(*stageSeq))
-
-        self.avgpool = nn.AdaptiveAvgPool2d(1) if not self.use_intermediate_features else None  
-    
+        self._intermediate_features_dim = self.stage_out_channels[-2:]
+        
+        self._build_network()
+ 
     def forward(self, x):
-        x = self.first_conv(x)
-        x = self.maxpool(x)
-        C1 = self.stage2(x)
-        C2 = self.stage3(C1)
-        C3 = self.stage4(C2)
-        if self.use_intermediate_features: 
-            return BackboneOutput(intermediate_features=[C2, C3])
-
-        x = self.avgpool(C3)
+        x = self.maxpool(self.conv1(x))
+        c1 = self.stage2(x)
+        c2 = self.stage3(c1)
+        c3 = self.stage4(c2)
+        
+        if self.use_intermediate_features:
+            return BackboneOutput(intermediate_features=[c2, c3])
+        
+        x = self.avgpool(c3)
         x = torch.flatten(x, 1)
         return BackboneOutput(last_feature=x)
+
+    def _get_stage_out_channels(self, model_size: str) -> List[int]:
+        channels = {
+            '0.5x': [-1, 24, 48, 96, 192],
+            '1.0x': [-1, 24, 116, 232, 464],
+            '1.5x': [-1, 24, 176, 352, 704],
+            '2.0x': [-1, 24, 244, 488, 976]
+        }
+        if model_size not in channels:
+            raise ValueError(f"Unsupported model_size: {model_size}. Available options are: {list(channels.keys())}")
+        return channels[model_size]
+
+    def _make_stage(self, in_channels: int, out_channels: int, num_layers: int) -> nn.Sequential:
+        layers = []
+        for i in range(num_layers):
+            stride = 2 if i == 0 else 1
+            in_ch = in_channels if i == 0 else out_channels // 2
+            layers.append(ShuffleV2Block(in_ch, out_channels, 
+                                         hidden_channels=out_channels // 2, 
+                                         kernel_size=3, stride=stride))
+        return nn.Sequential(*layers)
     
+    def _build_network(self):
+        in_channels = self.stage_out_channels[1]
+        self.conv1 = ConvLayer(3, in_channels, kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        
+        for i, num_layers in enumerate(self.stage_repeats):
+            stage_name = f"stage{i+2}"
+            out_channels = self.stage_out_channels[i+2]
+            setattr(self, stage_name, self._make_stage(in_channels, out_channels, num_layers))
+            in_channels = out_channels
+        
+        self.avgpool = nn.AdaptiveAvgPool2d(1) if not self.use_intermediate_features else None
+
     @property
     def feature_dim(self):
         return self._feature_dim
