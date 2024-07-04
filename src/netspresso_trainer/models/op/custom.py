@@ -656,55 +656,50 @@ class SPPBottleneck(nn.Module):
 class ShuffleV2Block(nn.Module):
     def __init__(
         self,
-        in_channels,
-        out_channels,
-        hidden_channels,
-        kernel_size,
-        stride,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: int,
+        kernel_size: int,
+        stride: int,
     ):
         super().__init__()
-        self.stride = stride
-        assert stride in [1, 2]
+        assert stride in [1, 2], "Stride must be either 1 or 2"
 
+        self.stride = stride
         self.in_channels = in_channels
         self.hidden_channels = hidden_channels
         self.kernel_size = kernel_size
-        padding = kernel_size // 2
-        self.padding = padding
-        outputs = out_channels - in_channels
-        branch_main = [
-            # pointwise
+        self.padding = kernel_size // 2
+
+        self.out_channels = out_channels - in_channels
+
+        self.branch_main = self._create_main_branch()
+        self.branch_proj = self._create_proj_branch() if stride == 2 else None
+
+    def _create_main_branch(self) -> nn.Sequential:
+        return nn.Sequential(
             ConvLayer(self.in_channels, self.hidden_channels, 1, 1, padding=0),
-            # depthwise
-            ConvLayer(self.hidden_channels, self.hidden_channels, self.kernel_size, stride=stride, padding=padding, groups=self.hidden_channels, use_act=False),
-            # pointwise
-            ConvLayer(self.hidden_channels, outputs, 1, 1, padding=0),
-        ]
-        self.branch_main = nn.Sequential(*branch_main)
+            ConvLayer(self.hidden_channels, self.hidden_channels, self.kernel_size,
+                      stride=self.stride, padding=self.padding, groups=self.hidden_channels, use_act=False),
+            ConvLayer(self.hidden_channels, self.out_channels, 1, 1, padding=0),
+        )
 
-        if stride == 2:
-            branch_proj = [
-                # depthwise
-                ConvLayer(self.in_channels, self.in_channels, self.kernel_size, stride, padding=padding, groups=self.in_channels, use_act=False),
-                #pointwise
-                ConvLayer(self.in_channels, self.in_channels, 1, 1, padding=0),
-            ]
-            self.branch_proj = nn.Sequential(*branch_proj)
-        else:
-            self.branch_proj = None
+    def _create_proj_branch(self) -> nn.Sequential:
+        return nn.Sequential(
+            ConvLayer(self.in_channels, self.in_channels, self.kernel_size,
+                      self.stride, padding=self.padding, groups=self.in_channels, use_act=False),
+            ConvLayer(self.in_channels, self.in_channels, 1, 1, padding=0),
+        )
 
-    def forward(self, old_x):
-        if self.stride==1:
-            x_proj, x = self.channel_shuffle(old_x)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.stride == 1:
+            x_proj, x = self.channel_shuffle(x)
             return torch.cat((x_proj, self.branch_main(x)), 1)
-        elif self.stride==2:
-            x_proj = old_x
-            x = old_x
-            return torch.cat((self.branch_proj(x_proj), self.branch_main(x)), 1)
+        else:
+            return torch.cat((self.branch_proj(x), self.branch_main(x)), 1)
 
-    def channel_shuffle(self, x):
-        b, c, h, w = x.data.size()
-        assert (c % 4 == 0)
+    def channel_shuffle(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        b, c, h, w = x.shape
         x = x.reshape(b * c // 2, 2, h * w)
         x = x.permute(1, 0, 2)
         x = x.reshape(2, -1, c // 2, h, w)
