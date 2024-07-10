@@ -4,31 +4,6 @@ MobileViT backbone based on [MobileViT: Light-weight, General-purpose, and Mobil
 
 MobileViT was introduced by combining inverted residual blocks with transformer-based MobileViT blocks. In line with this, it is possible to select between inverted residual blocks (as mv2) and MobileViT models for each stage of the backbone with detailed configurations according to each block type.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

@@ -4,26 +4,6 @@ ViT backbone based on [An Image is Worth 16x16 Words: Transformers for Image Rec
 
 ViT (Vision Transformer) does not have a stage configuration and therefore does not support compatibility with neck modules. Currently, it only supports the FC head. When using the ViT model for classification tasks, users can decide whether to use a classification token. Additionally, users can flexibly configure the settings of the transformer encoder.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-    </td>
-    <td>
-      FC<br />
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

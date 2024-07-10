@@ -4,31 +4,6 @@ MobileNetV3 backbone based on [Searching for MobileNetV3](https://openaccess.the
 
 We provide a configuration that allows users to define each inverted residual block in MobileNetV3 individually. You can specify in a list format the number and form of each inverted residual block for every stage. Using this, we provide both MobileNetV3-small and MobileNetV3-large.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

@@ -4,32 +4,6 @@ MixTransformer backbone based on [SegFormer: Simple and Efficient Design for Sem
 
 We provide the MixTransformer encoder (MiT), the backbone of SegFormer, as a freely usable backbone module. Users have the flexibility to configure the transformer encoder for each stage, enabling MiT-b0 to MiT-b5.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
-
 ## Field list
 
 | Field <img width=200/> | Description |

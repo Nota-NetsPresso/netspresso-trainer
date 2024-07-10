@@ -4,31 +4,6 @@ CSPDarkNet backbone based on [YOLOX: Exceeding YOLO Series in 2021](https://arxi
 
 CSPDarkNet is a modified model from Darknet53 by adopting the strategy of CSPNet. Therefore, the structure of the model is fixed, and neither the number of stages nor type of blocks can be changed. The size of the model is determined by two values, which define the feature dimensions within the model and the repetition of CSPLayers.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

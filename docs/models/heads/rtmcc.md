@@ -2,24 +2,6 @@
 
 RTMCC head based on [RTMPose: Real-Time Multi-Person Pose Estimation based on MMPose](https://arxiv.org/abs/2303.07399).
 
-
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting backbones</th>
-    <th>Supporting necks</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>To be updated ...</td>
-    <td>To be updated ...</td>
-    <td>To be updated ...</td>
-    <td>To be updated ...</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
