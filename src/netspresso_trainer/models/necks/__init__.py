@@ -14,5 +14,5 @@
 #
 # ----------------------------------------------------------------------------
 
-from .experimental.fpn import fpn
+from .experimental.fpn import fpn, lightfpn
 from .experimental.yolopafpn import yolopafpn
