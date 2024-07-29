@@ -207,4 +207,10 @@ nav:
       - Normalizations: models/layers/normalizations.md
   - Benchmarks & Checkpoints: 
     - Benchmarks & Checkpoints: benchmarks/benchmarks.md
+    - Compression compatibility matrix: benchmarks/compression_compat_matrix.md
+    - Device compatibility matrix: 
+      - TensorRT: benchmarks/device_compat_matrix/tensorrt.md
+      - TFLite: benchmarks/device_compat_matrix/tflite.md
+    - TFLite runtime examples:
+      - YOLOX-s: benchmarks/tflite_runtime_examples/yolox-s.md
   - NetsPresso: https://netspresso.ai/
