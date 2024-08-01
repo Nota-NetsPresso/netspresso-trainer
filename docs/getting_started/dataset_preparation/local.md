@@ -164,6 +164,15 @@ COCO 2017 dataset will be automatically downloaded to `./data/download`. After e
 python ./tools/open_dataset_tool/coco2017.py --dir ./data
 ```
 
+#### Objects365
+Run `objects365.py` python file with your dataset directory as an argument.
+
+Objects365 dataset will be automatically downloaded to `./data/ download`. After executing scripts, you can use [pre-defined configuration](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/data/local/objects365.yaml). As the dataset is quite large, It is recommened to use multi-threads when you download it (e.g., `--num_threads 4`).
+
+```bash
+python ./tools/open_dataset_tool/objects.py --dir ./data --num_threads 4
+```
+
 ### Pose estimation
 
 #### WFLW
