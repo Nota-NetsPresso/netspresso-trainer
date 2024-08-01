@@ -105,6 +105,7 @@ def download_worker(q, split, max_retries=5, delay=5):
                         "curl", "-#", "-L", "-o", str(image_download_path),
                         "--connect-timeout", "30",
                         "--max-time", "300",
+                        "-C", "-",
                         download_url
                     ], check=True)
                     print(f"Successfully downloaded {download_url} to {image_download_path}")
