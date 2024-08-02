@@ -13,24 +13,29 @@ model:
     backbone:
       name: cspdarknet
       params:
+        depthwise: False
         dep_mul: &dep_mul 0.67
         wid_mul: 0.75
         act_type: &act_type "silu"
       stage_params: ~
     neck:
       name: yolopafpn
-      params:
+      params: 
+        depthwise: False
         dep_mul: *dep_mul
         act_type: *act_type
     head:
       name: anchor_free_decoupled_head
       params:
-        act_type: *act_type
-        # postprocessor - decode
-        score_thresh: 0.01
-        # postprocessor - nms
-        nms_thresh: 0.65
-        class_agnostic: False
+        depthwise: False
+        act_type: *act_type 
+  postprocessor: 
+    params: 
+      # postprocessor - decode
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      class_agnostic: False
   losses:
     - criterion: yolox_loss
       weight: ~

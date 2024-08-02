@@ -4,31 +4,6 @@ ResNet backbone based on [Deep Residual Learning for Image Recognition](https://
 
 You can flexibly choose between basicblock and bottleneck as the building blocks for the ResNet architecture. And, you can also freely determine the number of stages and the repetition of blocks within the model. This flexibility supports the creation of various ResNet models, e.g. ResNet18, ResNet34, ResNet50, ResNet101, and ResNet152. Also this supports adjusting the number of stages and blocks for your specific requirements.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

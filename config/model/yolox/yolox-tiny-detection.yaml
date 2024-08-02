@@ -1,0 +1,42 @@
+model:
+  task: detection
+  name: yolox_tiny
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: cspdarknet
+      params:
+        depthwise: False
+        dep_mul: &dep_mul 0.33
+        wid_mul: 0.375
+        act_type: &act_type "silu"
+      stage_params: ~
+    neck:
+      name: yolopafpn
+      params:
+        depthwise: False
+        dep_mul: *dep_mul
+        act_type: *act_type
+    head:
+      name: anchor_free_decoupled_head
+      params:
+        depthwise: False
+        act_type: *act_type
+  postprocessor: 
+    params: 
+      # postprocessor - decode
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      class_agnostic: False
+  losses:
+    - criterion: yolox_loss
+      weight: ~
+      l1_activate_epoch: 1

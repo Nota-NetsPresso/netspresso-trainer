@@ -6,7 +6,7 @@ NetsPresso Trainer categorizes essential parameters for training into six config
 
 - **Data**: Defines the structure of the user-customized or Hugging Face datasets for interpretation by NetsPresso Trainer.
 - **Augmentation**: Defines the data augmentation recipe.
-- **Model**: Defines the model architecture, loss modules, and pretrained weights.
+- **Model**: Defines the model architecture, postprocessor modules, loss modules, and pretrained weights.
 - **Training**: Defines necessary elements like optimizer, epochs, and batch size for training.
 - **Logging**: Defines output formats of training results.
 - **Environment**: Defines the training environment, including GPU usage and dataloader multi-processing.

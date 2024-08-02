@@ -137,6 +137,41 @@ class ConvLayer(nn.Module):
         return f"{self.block}"
 
 
+class SeparableConvLayer(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, int]],
+        stride: Optional[Union[int, Tuple[int, int]]] = 1,
+        dilation: Optional[Union[int, Tuple[int, int]]] = 1,
+        padding: Optional[Union[int, Tuple[int, int]]] = None,
+        bias: bool = False,
+        padding_mode: Optional[str] = 'zeros',
+        use_norm: bool = True,
+        norm_type: Optional[str] = None,
+        use_act: bool = True,
+        act_type: Optional[str] = None,
+        no_out_act: Optional[bool] = False,
+    ) -> None:
+        super().__init__()
+        if act_type is None:
+            act_type = 'relu'
+        self.depthwise = ConvLayer(in_channels=in_channels, out_channels=in_channels,
+                                   kernel_size=kernel_size, stride=stride, dilation=dilation,
+                                   padding=padding, groups=in_channels, bias=bias, padding_mode=padding_mode,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=use_act, act_type=act_type,)
+        self.pointwise = ConvLayer(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
+                                   use_norm=use_norm, norm_type=norm_type, use_act=False)
+        self.final_act = nn.Identity() if no_out_act else ACTIVATION_REGISTRY[act_type]()
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x = self.depthwise(x)
+        x = self.pointwise(x)
+        x = self.final_act(x)
+        return x
+
+
 class BasicBlock(nn.Module):
     expansion: int = 1
 
@@ -409,7 +444,9 @@ class SinusoidalPositionalEncoding(nn.Module):
         #     x = x + selected_pe
 
         # x = x + self.pe[..., :seq_index, :]
-        x = x + self.pe[..., : x.shape[-2], :]
+        if not isinstance(x, torch.fx.Proxy):
+            self.last_token_num = x.shape[-2]
+        x = x + self.pe[..., : self.last_token_num, :]
 
         return x
 
@@ -541,7 +578,7 @@ class CSPLayer(nn.Module):
         n=1,
         shortcut=True,
         expansion=0.5,
-        #depthwise=False,
+        depthwise=False,
         act_type="silu",
     ):
         """
@@ -574,6 +611,7 @@ class CSPLayer(nn.Module):
                 out_channels=hidden_channels,
                 shortcut=shortcut,
                 expansion=1.0,
+                depthwise=depthwise,
                 act_type=act_type
             )
             for _ in range(n)
@@ -615,6 +653,59 @@ class SPPBottleneck(nn.Module):
         return x
 
 
+class ShuffleV2Block(nn.Module):
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: int,
+        kernel_size: int,
+        stride: int,
+    ):
+        super().__init__()
+        assert stride in [1, 2], "Stride must be either 1 or 2"
+
+        self.stride = stride
+        self.in_channels = in_channels
+        self.hidden_channels = hidden_channels
+        self.kernel_size = kernel_size
+        self.padding = kernel_size // 2
+
+        self.out_channels = out_channels - in_channels
+
+        self.branch_main = self._create_main_branch()
+        self.branch_proj = self._create_proj_branch() if stride == 2 else None
+
+    def _create_main_branch(self) -> nn.Sequential:
+        return nn.Sequential(
+            ConvLayer(self.in_channels, self.hidden_channels, 1, 1, padding=0),
+            ConvLayer(self.hidden_channels, self.hidden_channels, self.kernel_size,
+                      stride=self.stride, padding=self.padding, groups=self.hidden_channels, use_act=False),
+            ConvLayer(self.hidden_channels, self.out_channels, 1, 1, padding=0),
+        )
+
+    def _create_proj_branch(self) -> nn.Sequential:
+        return nn.Sequential(
+            ConvLayer(self.in_channels, self.in_channels, self.kernel_size,
+                      self.stride, padding=self.padding, groups=self.in_channels, use_act=False),
+            ConvLayer(self.in_channels, self.in_channels, 1, 1, padding=0),
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.stride == 1:
+            x_proj, x = self.channel_shuffle(x)
+            return torch.cat((x_proj, self.branch_main(x)), 1)
+        else:
+            return torch.cat((self.branch_proj(x), self.branch_main(x)), 1)
+
+    def channel_shuffle(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        b, c, h, w = x.shape
+        x = x.reshape(b * c // 2, 2, h * w)
+        x = x.permute(1, 0, 2)
+        x = x.reshape(2, -1, c // 2, h, w)
+        return x[0], x[1]
+
+
 # Newly defined because of slight difference with Bottleneck of custom.py
 class DarknetBlock(nn.Module):
     # Standard bottleneck
@@ -624,15 +715,19 @@ class DarknetBlock(nn.Module):
         out_channels,
         shortcut=True,
         expansion=0.5,
-        #depthwise=False,
+        depthwise=False,
         act_type="silu",
     ):
         super().__init__()
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvLayer(in_channels=in_channels, out_channels=hidden_channels,
                                 kernel_size=1, stride=1, act_type=act_type)
-        self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
-                                kernel_size=3, stride=1, act_type=act_type)
+        if depthwise:
+            self.conv2 = SeparableConvLayer(in_channels=hidden_channels, out_channels=out_channels,
+                                            kernel_size=3, stride=1, act_type=act_type)
+        else:
+            self.conv2 = ConvLayer(in_channels=hidden_channels, out_channels=out_channels,
+                                    kernel_size=3, stride=1, act_type=act_type)
         self.use_add = shortcut and in_channels == out_channels
 
     def forward(self, x):

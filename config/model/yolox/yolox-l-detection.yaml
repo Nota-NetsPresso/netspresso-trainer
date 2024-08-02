@@ -13,6 +13,7 @@ model:
     backbone:
       name: cspdarknet
       params:
+        depthwise: False
         dep_mul: &dep_mul 1.0
         wid_mul: 1.0
         act_type: &act_type "silu"
@@ -22,15 +23,19 @@ model:
       params:
         dep_mul: *dep_mul
         act_type: *act_type
+        depthwise: False
     head:
       name: anchor_free_decoupled_head
       params:
-        act_type: *act_type
-        # postprocessor - decode
-        score_thresh: 0.01
-        # postprocessor - nms
-        nms_thresh: 0.65
-        class_agnostic: False
+        act_type: *act_type 
+        depthwise: False
+  postprocessor: 
+    params: 
+      # postprocessor - decode
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      class_agnostic: False
   losses:
     - criterion: yolox_loss
       weight: ~
