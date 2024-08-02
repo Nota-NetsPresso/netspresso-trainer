@@ -14,17 +14,16 @@
 #
 # ----------------------------------------------------------------------------
 
-import argparse
-import json
 import os
-import queue
-import shutil
-import subprocess
-import threading
 import time
-from pathlib import Path
-
+import json
+import queue
 import torch
+import shutil
+import argparse
+import threading
+import subprocess
+from pathlib import Path
 from tqdm import tqdm
 
 DEFAULT_DATA_DIR = './data'
@@ -79,13 +78,27 @@ def txtywh2cxcywh(top_left_x, top_left_y, width, height):
 
 
 def cxcywh2cxcywhn(cx, cy, w, h, img_w, img_h):
-    cx = cx / img_w
-    cy = cy / img_h
-    w = w / img_w
-    h = h / img_h
-    return cx, cy, w, h
+    return cx / img_w, cy / img_h, w / img_w, h / img_h
 
-def download_worker(q, split, max_retries=30, delay=5):
+def download_file(url, path, max_retries=30, delay=5):
+    for attempt in range(max_retries):
+        try:
+            subprocess.run([
+                "curl", "-#", "-L", "-o", str(path),
+                "--connect-timeout", "30",
+                "--max-time", "300",
+                "-C", "-",
+                url
+            ], check=True)
+            print(f"Successfully downloaded {url} to {path}")
+            return
+        except subprocess.CalledProcessError as e:
+            print(f"Attempt {attempt + 1} failed to download {url}: {e}")
+            if attempt < max_retries - 1:
+                time.sleep(delay)
+    raise Exception(f"Failed to download {url} after {max_retries} attempts")
+
+def download_worker(q, split, base_url, images_dir):
     while True:
         try:
             i = q.get(block=False)
@@ -94,132 +107,104 @@ def download_worker(q, split, max_retries=30, delay=5):
 
         print(f'Download {split} images patch {i}...')
         image_download_path = Path(DOWNLOAD_DIR) / f'objects365_{split}_patch{i}.tar.gz'
-        if image_download_path.exists():
-            print(f'Download path {image_download_path} already exists! download step is skipped')
-        else:
+        if not image_download_path.exists():
             version = 1 if i < 16 else 2
             download_url = f'{base_url}images/v{version}/patch{i}.tar.gz' if split == 'val' else f'{base_url}patch{i}.tar.gz'
-            for attempt in range(max_retries):
-                try:
-                    subprocess.run([
-                        "curl", "-#", "-L", "-o", str(image_download_path),
-                        "--connect-timeout", "30",
-                        "--max-time", "300",
-                        "-C", "-",
-                        download_url
-                    ], check=True)
-                    print(f"Successfully downloaded {download_url} to {image_download_path}")
-                    break
-                except subprocess.CalledProcessError as e:
-                    print(f"Attempt {attempt + 1} failed to download {download_url}: {e}")
-                    if attempt < max_retries - 1:
-                        time.sleep(delay)
-                    else:
-                        print(f"Failed to download {download_url} after {max_retries} attempts")
-                        raise
+            download_file(download_url, image_download_path)
 
         print(f'Unzip {split} images {image_download_path} file ...')
         subprocess.run(["tar", "xfz", image_download_path, "--directory", images_dir, "--strip-components", '1'], check=True)
         print(f'Done patch {i}')
         q.task_done()
 
-if __name__=="__main__":
-    # Set argument (data directory)
+def process_annotations(annotation_path, label_dir):
+    with open(annotation_path) as f:
+        ann_json = json.load(f)
+
+    annotations = {image_info['id']: [image_info['file_name']] for image_info in ann_json['images']}
+    imgid_to_info = {info['id']: info for info in ann_json['images']}
+
+    for ann in tqdm(ann_json['annotations']):
+        image_id = ann['image_id']
+        label = ann['category_id'] - 1
+        top_left_x, top_left_y, width, height = ann['bbox']
+        cx, cy, w, h = txtywh2cxcywh(top_left_x, top_left_y, width, height)
+        cx, cy, w, h = cxcywh2cxcywhn(cx, cy, w, h, imgid_to_info[image_id]['width'], imgid_to_info[image_id]['height'])
+        instance = [label, cx, cy, w, h]
+        annotations[image_id].append(instance)
+
+    for _, info in tqdm(annotations.items()):
+        file_name = info[0].split('/')[-1]
+        texts = '\n'.join([f'{" ".join(map(str, line))}' for line in info[1:]])
+        with open((label_dir / file_name).with_suffix('.txt'), 'w') as f:
+            f.write(texts)
+
+def process_split(split, patches, base_url, objects365_path, num_threads):
+    ann_ext = '.tar.gz' if split == 'train' else '.json'
+    ann_download_path = Path(DOWNLOAD_DIR) / f'objects365_annotation_{split}{ann_ext}'
+    annotation_dir = objects365_path / 'annotations'
+    annotation_path = annotation_dir / f'zhiyuan_objv2_{split}.json'
+    label_dir = objects365_path / 'labels' / split
+    images_dir = objects365_path / 'images' / split
+
+    for dir_path in [label_dir, images_dir, annotation_dir]:
+        shutil.rmtree(dir_path, ignore_errors=True)
+        os.makedirs(dir_path, exist_ok=True)
+
+    if not ann_download_path.exists():
+        print(f'Download {split} annotation file ...')
+        download_url = f'{base_url}zhiyuan_objv2_{split}'
+        torch.hub.download_url_to_file(f'{download_url}{ann_ext}', ann_download_path)
+
+    if split == 'train':
+        print('Unzip training annotation tar.gz file ...')
+        shutil.unpack_archive(ann_download_path, annotation_dir, "gztar")
+    else:
+        print('Moving validation annotation .json file to the appropriate location ...')
+        shutil.copyfile(ann_download_path, annotation_path)
+
+    download_work_queue = queue.Queue()
+    for i in range(patches):
+        download_work_queue.put(i)
+
+    threads = []
+    for _ in range(num_threads):
+        t = threading.Thread(target=download_worker, args=(download_work_queue, split, base_url, images_dir))
+        t.start()
+        threads.append(t)
+
+    download_work_queue.join()
+    for t in threads:
+        t.join()
+
+    print(f"All {split} image patches processed")
+    print(f'Building {split} labels ...')
+
+    process_annotations(annotation_path, label_dir)
+
+def main():
     parser = argparse.ArgumentParser(description="Parser for objects365 dataset downloader.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
     parser.add_argument('--num_threads', type=int, default=1)
     args = parser.parse_args()
 
-    # Download objects365 dataset
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
     objects365_path = Path(args.dir) / 'objects365'
     os.makedirs(objects365_path, exist_ok=True)
 
-    for split, patches in [('train', 51), ('val', 44)]:
-        base_url = f"https://dorc.ks3-cn-beijing.ksyun.com/data-set/2020Objects365%E6%95%B0%E6%8D%AE%E9%9B%86/{split}/"
-        ann_ext = '.tar.gz' if split == 'train' else '.json'
-        ann_download_path = Path(DOWNLOAD_DIR) / f'objects365_annotation_{split}{ann_ext}'
-        annotation_dir = objects365_path / 'annotations'
-        annotation_path = annotation_dir / f'zhiyuan_objv2_{split}.json'
-        label_dir = objects365_path / 'labels' / split
-        images_dir = objects365_path / 'images' / split
-        try:
-            shutil.rmtree(images_dir)
-            shutil.rmtree(label_dir)
-        except OSError as e:
-            print(e)
+    splits = {
+        'train': {'patches': 51, 'base_url': "https://dorc.ks3-cn-beijing.ksyun.com/data-set/2020Objects365%E6%95%B0%E6%8D%AE%E9%9B%86/train/"},
+        'val': {'patches': 44, 'base_url': "https://dorc.ks3-cn-beijing.ksyun.com/data-set/2020Objects365%E6%95%B0%E6%8D%AE%E9%9B%86/val/"}
+    }
 
-        os.makedirs(label_dir, exist_ok=True)
-        os.makedirs(images_dir, exist_ok=True)
-        os.makedirs(annotation_dir, exist_ok=True)
-        if ann_download_path.exists():
-            print(f'Download path {ann_download_path} already exists! download step is skipped')
-        else:
-            print(f'Download {split} annotation file ...')
-            download_url = f'{base_url}zhiyuan_objv2_{split}'
-            torch.hub.download_url_to_file(f'{download_url}{ann_ext}', ann_download_path)
-
-        if split == 'train':
-            print('Unzip training annotation tar.gz file ...')
-            shutil.unpack_archive(ann_download_path, annotation_dir, "gztar")
-            print('Done!')
-        else:
-            print('validation annotation .json file is already unzipped, Moving the file to the appropriate location ...')
-            shutil.copyfile(ann_download_path, annotation_path)
-            print('Done!')
-
-        download_work_queue = queue.Queue()
-        for i in range(patches):
-            download_work_queue.put(i)
-
-        threads = []
-        for _ in range(args.num_threads):
-            t = threading.Thread(target=download_worker, args=(download_work_queue, split))
-            t.start()
-            threads.append(t)
-
-        download_work_queue.join()
-        for t in threads:
-            t.join()
-
-        print(f"All {split} image patches processed")
-        print(f'Building {split} labels ...')
-
-        with open(annotation_path) as f:
-            ann_json = json.load(f)
-
-        category = ann_json['categories']
-
-        annotations = {image_info['id']: [image_info['file_name']] for image_info in ann_json['images']}
-        imgid_to_info = {info['id']: info for info in ann_json['images']}
-        for ann in tqdm(ann_json['annotations']):
-            image_id = ann['image_id']
-            label = ann['category_id'] - 1  # The class ID of Objects365 dataset is started with 1, but ours not
-
-            # TODO: Support various box type e.g. xyxy
-            top_left_x, top_left_y, width, height  = ann['bbox']
-            cx, cy, w, h = txtywh2cxcywh(top_left_x, top_left_y, width, height)
-            cx, cy, w, h = cxcywh2cxcywhn(cx, cy, w, h, imgid_to_info[image_id]['width'], imgid_to_info[image_id]['height'])
-
-            instance = [label, cx, cy, w, h]
-            annotations[image_id].append(instance)
-        names = []
-        for _, info in tqdm(annotations.items()):
-            file_name = info[0].split('/')[-1]
-            names.append(file_name)
-            texts = ''
-            if len(info) != 1:
-                for line in info[1:]:
-                    texts += f'{line[0]} {line[1]} {line[2]} {line[3]} {line[4]}\n'
-
-            with open((label_dir / file_name).with_suffix('.txt'), 'w') as f:
-                f.write(texts)
+    for split, info in splits.items():
+        process_split(split, info['patches'], info['base_url'], objects365_path, args.num_threads)
 
     id_mapping = [CLASS365_LABEL_TO_NAME[i] for i in range(365)]
     with open(objects365_path / 'id_mapping.json', 'w') as f:
         json.dump(id_mapping, f)
 
-    try:
-        shutil.rmtree(objects365_path / 'annotations')
-    except OSError as e:
-        print(e)
+    shutil.rmtree(objects365_path / 'annotations', ignore_errors=True)
+
+if __name__ == "__main__":
+    main()
