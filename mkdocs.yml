@@ -178,6 +178,7 @@ nav:
     - Model:
       - Overview: components/model/overview.md
       - Losses: components/model/losses.md
+      - Postprocessors: components/model/postprocessors.md
     - Logging: components/logging.md
     - Environment: components/environment.md
   - Models:
@@ -205,6 +206,12 @@ nav:
     - Layers:
       - Activations: models/layers/activations.md
       - Normalizations: models/layers/normalizations.md
-  - Benchmarks & Checkpoints: 
-    - Benchmarks & Checkpoints: benchmarks/benchmarks.md
+  - Benchmarks & Deployment: 
+    - Benchmarks: benchmarks/benchmarks.md
+    - Compression compatibility matrix: benchmarks/compression_compat_matrix.md
+    - Device compatibility matrix: 
+      - TensorRT: benchmarks/device_compat_matrix/tensorrt.md
+      - TFLite: benchmarks/device_compat_matrix/tflite.md
+    - TFLite runtime examples:
+      - YOLOX-s: benchmarks/tflite_runtime_examples/yolox-s.md
   - NetsPresso: https://netspresso.ai/

@@ -4,34 +4,6 @@ Decoupled detection head with anchors based on [Focal Loss for Dense Object Dete
 
 We have named the detection head of RetinaNet as AnchorDecoupledHead to represent it in a more general term. AnchorDecoupledHead consists of a box regression head and a classification head for the given intermediate features, predicting detection boxes for the anchors at each feature's pixel location. Additionally, we provide the option to adjust the number of convolution layers used in the heads through the `num_layers` value, it is equivalent with RetinaNet when set to 4.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting backbones</th>
-    <th>Supporting necks</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      ResNet<br />
-      MobileNetV3<br />
-      MixNet<br />
-      CSPDarkNet<br />
-      MobileViT<br />
-      MixTransformer<br />
-      EfficientFormer
-    </td>
-    <td>
-    FPN<br />
-    YOLOPAFPN<br />
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
