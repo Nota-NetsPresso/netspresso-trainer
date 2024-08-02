@@ -21,10 +21,10 @@ def train_with_inline_yaml():
     from netspresso_trainer import train_with_yaml
     logging_dir = train_with_yaml(
         # gpus="0,1",
-        data="config/data/beans.yaml",
+        data="config/data/huggingface/beans.yaml",
         augmentation="config/augmentation/classification.yaml",
         model="config/model/resnet/resnet50-classification.yaml",
-        training="config/training/classification.yaml",
+        training="config/training.yaml",
         logging="config/logging.yaml",
         environment="config/environment.yaml",
         log_level='INFO'
