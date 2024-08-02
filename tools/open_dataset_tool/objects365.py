@@ -85,7 +85,7 @@ def cxcywh2cxcywhn(cx, cy, w, h, img_w, img_h):
     h = h / img_h
     return cx, cy, w, h
 
-def download_worker(q, split, max_retries=5, delay=5):
+def download_worker(q, split, max_retries=30, delay=5):
     while True:
         try:
             i = q.get(block=False)
