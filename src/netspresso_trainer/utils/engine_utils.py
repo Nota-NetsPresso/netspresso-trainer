@@ -191,7 +191,7 @@ def get_new_logging_dir(output_root_dir, project_id, mode: Literal['training', '
 
     summary_path = new_logging_dir / f"{mode}_summary.json"
     with open(summary_path, 'w') as f:
-        json.dump({"success": False}, f, indent=4)
+        json.dump({"status": "", "error_stats": ""}, f, indent=4)
 
     return new_logging_dir
 
