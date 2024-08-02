@@ -2,21 +2,6 @@
 
 PIDNet model based on [PIDNet: A Real-time Semantic Segmentation Network Inspired by PID Controllers](https://arxiv.org/abs/2206.02066).
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting Task(s)</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>Segmentation</td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
