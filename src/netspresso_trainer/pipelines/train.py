@@ -295,7 +295,7 @@ class TrainingPipeline(BasePipeline):
             logger.error(e)
             pass
 
-    def save_summary(self, end_training=False):
+    def save_summary(self, end_training=False, status="", error_stats=""):
         training_summary = TrainingSummary(
             total_epoch=self.conf.training.epochs,
             train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
@@ -314,7 +314,9 @@ class TrainingPipeline(BasePipeline):
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
             training_summary.params = params
-            training_summary.success = True
+
+        training_summary.status = status
+        training_summary.error_stats = error_stats
 
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "training_summary.json"

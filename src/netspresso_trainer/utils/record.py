@@ -146,7 +146,8 @@ class TrainingSummary:
     total_train_time: Optional[float] = None
     best_epoch: int = field(init=False)
     last_epoch: int = field(init=False)
-    success: bool = False
+    status: str = ""
+    error_stats: str = ""
 
     def __post_init__(self):
         self.last_epoch = list(self.train_losses.keys())[-1]
