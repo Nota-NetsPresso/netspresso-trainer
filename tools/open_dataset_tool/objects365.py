@@ -144,8 +144,8 @@ if __name__=="__main__":
         label_dir = objects365_path / 'labels' / split
         images_dir = objects365_path / 'images' / split
         try:
-            shutil.rmtree(images_dir, ignore_errors=True)
-            shutil.rmtree(label_dir, ignore_errors=True)
+            shutil.rmtree(images_dir)
+            shutil.rmtree(label_dir)
         except OSError as e:
             print(e)
 
