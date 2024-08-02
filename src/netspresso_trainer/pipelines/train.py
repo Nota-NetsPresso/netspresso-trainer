@@ -179,6 +179,10 @@ class TrainingPipeline(BasePipeline):
             raise e
         except Exception as e:
             logger.error(str(e))
+            if self.single_gpu_or_rank_zero:
+                self.save_checkpoint(epoch=num_epoch)
+                self.save_best()
+                self.save_summary()
             raise e
 
     def train_one_epoch(self, epoch):
