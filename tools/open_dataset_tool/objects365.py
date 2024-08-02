@@ -17,14 +17,13 @@
 import os
 import time
 import json
-import queue
 import torch
 import shutil
 import argparse
-import threading
 import subprocess
 from pathlib import Path
 from tqdm import tqdm
+from multiprocessing import Pool
 
 DEFAULT_DATA_DIR = './data'
 DOWNLOAD_DIR = './data/download'
@@ -80,11 +79,12 @@ def txtywh2cxcywh(top_left_x, top_left_y, width, height):
 def cxcywh2cxcywhn(cx, cy, w, h, img_w, img_h):
     return cx / img_w, cy / img_h, w / img_w, h / img_h
 
-def download_file(url, path, max_retries=30, delay=5):
+def download_file(url, path, max_retries=30, delay=5, silent=True):
+    silent_option = "sS" if silent else ""
     for attempt in range(max_retries):
         try:
             subprocess.run([
-                "curl", "-#", "-L", "-o", str(path),
+                "curl", "-#", f"-{silent_option}L", "-o", str(path),
                 "--connect-timeout", "30",
                 "--max-time", "300",
                 "-C", "-",
@@ -98,24 +98,18 @@ def download_file(url, path, max_retries=30, delay=5):
                 time.sleep(delay)
     raise Exception(f"Failed to download {url} after {max_retries} attempts")
 
-def download_worker(q, split, base_url, images_dir):
-    while True:
-        try:
-            i = q.get(block=False)
-        except queue.Empty:
-            break
+def download_worker(i, split, base_url, images_dir, silent=True):
+    print(f'Download {split} images patch {i}...')
+    image_download_path = Path(DOWNLOAD_DIR) / f'objects365_{split}_patch{i}.tar.gz'
+    if not image_download_path.exists():
+        version = 1 if i < 16 else 2
+        download_url = f'{base_url}images/v{version}/patch{i}.tar.gz' if split == 'val' else f'{base_url}patch{i}.tar.gz'
+        download_file(download_url, image_download_path, silent=silent)
 
-        print(f'Download {split} images patch {i}...')
-        image_download_path = Path(DOWNLOAD_DIR) / f'objects365_{split}_patch{i}.tar.gz'
-        if not image_download_path.exists():
-            version = 1 if i < 16 else 2
-            download_url = f'{base_url}images/v{version}/patch{i}.tar.gz' if split == 'val' else f'{base_url}patch{i}.tar.gz'
-            download_file(download_url, image_download_path)
-
-        print(f'Unzip {split} images {image_download_path} file ...')
-        subprocess.run(["tar", "xfz", image_download_path, "--directory", images_dir, "--strip-components", '1'], check=True)
-        print(f'Done patch {i}')
-        q.task_done()
+    print(f'Unzip {split} images {image_download_path} file ...')
+    subprocess.run(["tar", "xfz", image_download_path, "--directory", images_dir, "--strip-components", '1'], check=True)
+    print(f'Done patch {i}')
+        
 
 def process_annotations(annotation_path, label_dir):
     with open(annotation_path) as f:
@@ -163,19 +157,9 @@ def process_split(split, patches, base_url, objects365_path, num_threads):
         print('Moving validation annotation .json file to the appropriate location ...')
         shutil.copyfile(ann_download_path, annotation_path)
 
-    download_work_queue = queue.Queue()
-    for i in range(patches):
-        download_work_queue.put(i)
-
-    threads = []
-    for _ in range(num_threads):
-        t = threading.Thread(target=download_worker, args=(download_work_queue, split, base_url, images_dir))
-        t.start()
-        threads.append(t)
-
-    download_work_queue.join()
-    for t in threads:
-        t.join()
+    args = [(i, split, base_url, images_dir, num_threads > 1) for i in range(patches)]
+    with Pool(num_threads) as pool:
+        pool.starmap(download_worker, args)
 
     print(f"All {split} image patches processed")
     print(f'Building {split} labels ...')
