@@ -178,11 +178,12 @@ class TrainingPipeline(BasePipeline):
                 self.save_summary()
             raise e
         except Exception as e:
-            logger.error(str(e))
+            logger.error("Error occurred! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
                 self.save_checkpoint(epoch=num_epoch)
                 self.save_best()
                 self.save_summary()
+            logger.error(str(e))
             raise e
 
     def train_one_epoch(self, epoch):
