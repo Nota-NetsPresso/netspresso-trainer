@@ -5,6 +5,7 @@
 - Add YOLOX-nano and YOLOX-tiny by `@hglee98` in [PR 467](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/467)
 - Separate postprocessor configuration hierarchy by `@hglee98` in [PR 470](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/470)
 - Add YOLO-Fastest by `@hglee98` in [PR 471](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/471)
+- Write detailed status on training_summary by `@illian01` in [PR 487](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/487)
 
 ## Bug Fixes:
 
