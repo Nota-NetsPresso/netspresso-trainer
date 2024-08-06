@@ -18,7 +18,9 @@ model:
         wid_mul: 0.5
         act_type: &act_type "silu"
       stage_params: ~
-    neck: ~
+    neck:
+      name: rtdetr_hybrid_encoder
+      params: ~
     head:
       name: rtdetr_head
       params:
