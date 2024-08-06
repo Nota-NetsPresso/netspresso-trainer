@@ -358,23 +358,24 @@ class RTDETRTransformer(nn.Module):
         self.num_classes = num_classes
         feat_channels = intermediate_features_dim
 
-        # TODO: Get from config
-        self.hidden_dim = 256
-        self.nhead = 8
+        self.hidden_dim = params.hidden_dim
+        self.nhead = params.num_attention_heads
         self.feat_strides = [8, 16, 32]
-        self.num_levels = 3
-        self.num_queries = 300
-        self.eps = 1e-2
-        self.num_decoder_layers = 3 # 6
-        self.eval_spatial_size = None
-        self.aux_loss = True
+        self.num_levels = params.num_levels
+        self.num_queries = params.num_queries
+        self.eps = params.eps
+        self.num_decoder_layers = params.num_decoder_layers # 6
+        self.eval_spatial_size = params.eval_spatial_size
+        
+        position_embed_type = params.position_embed_type
+        num_decoder_points = params.num_decoder_points
+        dim_feedforward = params.dim_feedforward
+        dropout = params.dropout
+        activation = params.act_type
 
-        position_embed_type='sine'
-        num_decoder_points=4
-        dim_feedforward=1024
-        dropout=0.
-        activation="relu"
-        num_denoising=100
+        # TODO: Move to loss module
+        self.aux_loss = True
+        num_denoising = 100
         label_noise_ratio=0.5
         box_noise_scale=1.0
         learnt_init_query=False
