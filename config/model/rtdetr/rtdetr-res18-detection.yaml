@@ -20,7 +20,18 @@ model:
       stage_params: ~
     neck:
       name: rtdetr_hybrid_encoder
-      params: ~
+      params:
+        hidden_dim: 256
+        use_encoder_idx: [2]
+        num_encoder_layers: 1
+        pe_temperature: 10000
+        num_attention_heads: 8
+        dim_feedforward: 1024
+        dropout: 0.0
+        attn_act_type: gelu
+        expansion: 0.5
+        depth_mult: 1.0
+        conv_act_type: silu
     head:
       name: rtdetr_head
       params:

@@ -29,6 +29,7 @@ import torch.nn.functional as F
 from netspresso_trainer.models.op.registry import ACTIVATION_REGISTRY
 
 
+# TODO: Replace with custom implementation
 class ConvNormLayer(nn.Module):
     def __init__(self, ch_in, ch_out, kernel_size, stride, padding=None, bias=False, act=None):
         super().__init__()
@@ -46,6 +47,7 @@ class ConvNormLayer(nn.Module):
         return self.act(self.norm(self.conv(x)))
 
 
+# TODO: Replace with custom implementation
 class RepVggBlock(nn.Module):
     def __init__(self, ch_in, ch_out, act='relu'):
         super().__init__()
@@ -99,6 +101,7 @@ class RepVggBlock(nn.Module):
         return kernel * t, beta - running_mean * gamma / std
 
 
+# TODO: Replace with custom implementation
 class CSPRepLayer(nn.Module):
     def __init__(self,
                  in_channels,
@@ -201,22 +204,22 @@ class HybridEncoder(nn.Module):
         params: DictConfig,    
     ):
         super().__init__()
-        # TODO: Get from config
         self.in_channels = intermediate_features_dim
-        self.feat_strides = [8, 16, 32]
-        self.hidden_dim = 256
-        self.use_encoder_idx = [2]
-        self.num_encoder_layers = 1
-        self.pe_temperature = 10000
+        self.feat_strides = [8, 16, 32] # TODO: Get from other source
+        # TODO: Get from config
+        self.hidden_dim = params.hidden_dim
+        self.use_encoder_idx = params.use_encoder_idx
+        self.num_encoder_layers = params.num_encoder_layers
+        self.pe_temperature = params.pe_temperature
         self.eval_spatial_size = None
 
-        nhead = 8
-        dim_feedforward = 1024
-        dropout = 0.0
-        enc_act = 'gelu'
-        expansion = 0.5# 1.0
-        depth_mult = 1.0
-        act = 'silu'
+        nhead = params.num_attention_heads
+        dim_feedforward = params.dim_feedforward
+        dropout = params.dropout
+        enc_act = params.attn_act_type
+        expansion = params.expansion
+        depth_mult = params.depth_mult
+        act = params.conv_act_type
 
         self.out_channels = [self.hidden_dim for _ in range(len(self.in_channels))]
         self.out_strides = self.feat_strides
