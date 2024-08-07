@@ -15,5 +15,5 @@
 # ----------------------------------------------------------------------------
 
 from .experimental.fpn import fpn, lightfpn
-from .experimental.yolopafpn import yolopafpn
 from .experimental.rtdetr_hybrid_encoder import rtdetr_hybrid_encoder
+from .experimental.yolopafpn import yolopafpn
