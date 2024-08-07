@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add RT-DETR by `@illian01` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490)
 
 ## Bug Fixes:
 
