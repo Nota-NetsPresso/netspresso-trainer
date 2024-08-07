@@ -357,10 +357,10 @@ class RTDETRTransformer(nn.Module):
 
         self.num_classes = num_classes
         feat_channels = intermediate_features_dim
+        self.feat_strides = [8, 16, 32] # TODO: Get from other source
 
         self.hidden_dim = params.hidden_dim
         self.nhead = params.num_attention_heads
-        self.feat_strides = [8, 16, 32]
         self.num_levels = params.num_levels
         self.num_queries = params.num_queries
         self.eps = params.eps
