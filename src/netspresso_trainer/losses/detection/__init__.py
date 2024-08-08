@@ -16,3 +16,4 @@
 
 from .retinanet import RetinaNetLoss
 from .yolox import YOLOXLoss
+from .rtdetr import DETRLoss
