@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Update pi 4b deployment benchmark by `@illian01` in [PR 492](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/492)
 
 # v1.0.0
 
