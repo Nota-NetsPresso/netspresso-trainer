@@ -262,6 +262,8 @@ class TrainingPipeline(BasePipeline):
     def save_best(self):
         valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
                 if 'valid_losses' in record}
+        if not valid_losses:
+            return # No validation loss recorded
         best_epoch = min(valid_losses, key=valid_losses.get)
 
         logging_dir = self.logger.result_dir
