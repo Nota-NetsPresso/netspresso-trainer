@@ -49,7 +49,10 @@ model:
         act_type: relu
         num_denoising: 100
         label_noise_ratio: 0.5
-  postprocessor: ~
+  postprocessor:
+    params:
+      num_top_queries: 300
+      score_thresh: 0.0
   losses:
     - criterion: detr_loss
       weight: ~
