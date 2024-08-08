@@ -1,6 +1,6 @@
 model:
   task: detection
-  name: yolox_s
+  name: rtdetr-res18
   checkpoint:
     use_pretrained: True
     load_head: False
