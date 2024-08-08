@@ -25,6 +25,34 @@ from torchvision.ops import boxes as box_ops
 from ..models.utils import ModelOutput
 
 
+def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):
+    pred = pred['pred']
+    boxes, logits = pred[..., :4], pred[..., 4:]
+
+    num_classes = logits.shape[-1]
+
+    boxes = torchvision.ops.box_convert(boxes, in_fmt='cxcywh', out_fmt='xyxy')
+
+    h, w = original_shape[1], original_shape[2]
+    boxes[..., ::2] *= w
+    boxes[..., 1::2] *= h
+
+    scores = torch.sigmoid(logits)
+    scores, index = torch.topk(scores.flatten(1), num_top_queries, axis=-1)
+    labels = index % num_classes
+    index = index // num_classes
+    boxes = boxes.gather(dim=1, index=index.unsqueeze(-1).repeat(1, 1, boxes.shape[-1]))
+
+    # x1, y1, x2, y2, obj_conf, pred_score, pred_label
+    detections = []
+    for box, score, label in zip(boxes, scores, labels):
+        keep = score > score_thresh
+        # TODO: Dummy obj_conf should be removed
+        detections.append(torch.cat([box[keep], torch.ones_like(score[keep].unsqueeze(-1)), score[keep].unsqueeze(-1), label[keep].unsqueeze(-1)], dim=-1))
+
+    return detections
+
+
 def anchor_decoupled_head_decode(pred, original_shape, topk_candidates=1000, score_thresh=0.05):
     box_coder = BoxCoder(weights=(1.0, 1.0, 1.0, 1.0))
 
@@ -172,6 +200,9 @@ class DetectionPostprocessor:
         elif head_name == 'anchor_decoupled_head' or head_name == 'yolo_fastest_head_v2':
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        elif head_name == 'rtdetr_head':
+            self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries)
+            self.postprocess = None
         else:
             self.decode_outputs = None
             self.postprocess = None
