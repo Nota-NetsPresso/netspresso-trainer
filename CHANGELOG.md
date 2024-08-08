@@ -2,9 +2,28 @@
 
 ## New Features:
 
+- Add RT-DETR by `@illian01` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490)
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v1.0.0
+
+## New Features:
+
 - Add YOLOX-nano and YOLOX-tiny by `@hglee98` in [PR 467](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/467)
 - Separate postprocessor configuration hierarchy by `@hglee98` in [PR 470](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/470)
 - Add YOLO-Fastest by `@hglee98` in [PR 471](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/471)
+- Write detailed status on training_summary by `@illian01` in [PR 487](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/487)
 
 ## Bug Fixes:
 
@@ -19,6 +38,7 @@ No changes to highlight.
 - Change attention bias interpolate method by `@illian01` in [PR 468](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/468)
 - Fix ViT token number in positional encoding for torch.fx compile step by `@illian01` in [PR 475](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/475)
 - Remove output typing of PIDNet by `@illian01` in [PR 477](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/477)
+- Update documentation by `@illian01` in [PR 483](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/483), [PR 485](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/485)
 
 # v0.2.2
 

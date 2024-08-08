@@ -168,16 +168,21 @@ class TrainingPipeline(BasePipeline):
             if self.single_gpu_or_rank_zero:
                 self.logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
                 self.save_best()
-                self.save_summary(end_training=True)
+                self.save_summary(end_training=True, status="success")
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
             if self.single_gpu_or_rank_zero:
                 self.save_checkpoint(epoch=num_epoch)
                 self.save_best()
-                self.save_summary()
+                self.save_summary(status="stop")
             raise e
         except Exception as e:
+            logger.error("Error occurred! Try saving the current checkpoint...")
+            if self.single_gpu_or_rank_zero:
+                self.save_checkpoint(epoch=num_epoch)
+                self.save_best()
+                self.save_summary(status="error", error_stats=str(e))
             logger.error(str(e))
             raise e
 
@@ -290,7 +295,7 @@ class TrainingPipeline(BasePipeline):
             logger.error(e)
             pass
 
-    def save_summary(self, end_training=False):
+    def save_summary(self, end_training=False, status="", error_stats=""):
         training_summary = TrainingSummary(
             total_epoch=self.conf.training.epochs,
             train_losses={epoch: record['train_losses'].get('total') for epoch, record in self.training_history.items()},
@@ -309,7 +314,9 @@ class TrainingPipeline(BasePipeline):
             training_summary.total_train_time = total_train_time
             training_summary.macs = macs
             training_summary.params = params
-            training_summary.success = True
+
+        training_summary.status = status
+        training_summary.error_stats = error_stats
 
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "training_summary.json"

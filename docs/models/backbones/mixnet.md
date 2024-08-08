@@ -4,31 +4,6 @@ MixNet backbone based on [MixConv: Mixed Depthwise Convolutional Kernels](https:
 
 Similar with MobileNetV3, we provide a configuration that allows users to define each MixDepthBlock in MixNet individually. You can specify in a list format the number and form of each MixDepthBlock for every stage. Using this, we pre-construct and provide MixNet family models.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |

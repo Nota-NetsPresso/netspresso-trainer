@@ -33,10 +33,10 @@ from .backbones import (
 from .base import ClassificationModel, DetectionModel, PoseEstimationModel, SegmentationModel, TaskModel
 from .full import pidnet
 from .heads.classification import fc
-from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head, yolo_fastest_head_v2
+from .heads.detection import anchor_decoupled_head, anchor_free_decoupled_head, rtdetr_head, yolo_fastest_head_v2
 from .heads.pose_estimation import rtmcc
 from .heads.segmentation import all_mlp_decoder
-from .necks import fpn, lightfpn, yolopafpn
+from .necks import fpn, lightfpn, rtdetr_hybrid_encoder, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
@@ -54,6 +54,7 @@ MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
     'fpn': fpn,
     'lightfpn': lightfpn,
     'yolopafpn': yolopafpn,
+    'rtdetr_hybrid_encoder': rtdetr_hybrid_encoder,
 }
 
 MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -66,7 +67,8 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
     'detection': {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,
         'anchor_decoupled_head': anchor_decoupled_head,
-        'yolo_fastest_head_v2': yolo_fastest_head_v2
+        'yolo_fastest_head_v2': yolo_fastest_head_v2,
+        'rtdetr_head': rtdetr_head
     },
     'pose_estimation': {
         'rtmcc': rtmcc,

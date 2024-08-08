@@ -4,31 +4,6 @@ EfficientFormer backbone based on [EfficientFormer: Vision Transformers at Mobil
 
 EfficientFormer is designed following the design principle of MetaFormer, constructing its backbone by stacking MetaBlocks. 4D MetaBlocks are employed throughout the model, and 3D MetaBlocks are used at the end of the backbone to enhance the model's expression power. We provide configuration options to adjust the design settings including repetition values for 3D and 4D MetaBlocks.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting necks</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      FPN<br />
-      YOLOPAFPN
-    </td>
-    <td>
-      FC<br />
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
