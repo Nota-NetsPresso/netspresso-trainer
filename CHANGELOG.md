@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix handling error in case of error occured in first epoch by `@illian01` in [PR 493](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/493)
 
 ## Breaking Changes:
 
