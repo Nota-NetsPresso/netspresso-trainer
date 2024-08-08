@@ -94,6 +94,7 @@ def download_file(url, path, max_retries=30, delay=5, silent=True):
             return
         except subprocess.CalledProcessError as e:
             print(f"Attempt {attempt + 1} failed to download {url}: {e}")
+            print(f"Retry download after {delay} seconds ...")
             if attempt < max_retries - 1:
                 time.sleep(delay)
     raise Exception(f"Failed to download {url} after {max_retries} attempts")
