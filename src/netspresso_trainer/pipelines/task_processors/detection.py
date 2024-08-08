@@ -85,7 +85,7 @@ class DetectionProcessor(BaseTaskProcessor):
                    'num_classes': self.num_classes,}
 
         out = eval_model(images)
-        loss_factory.calc(out, targets, phase='valid')
+        #loss_factory.calc(out, targets, phase='valid')
 
         pred = self.postprocessor(out, original_shape=images[0].shape)
 

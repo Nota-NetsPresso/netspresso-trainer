@@ -29,8 +29,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-#from ....op.registry import ACTIVATION_REGISTRY
-from netspresso_trainer.models.op.registry import ACTIVATION_REGISTRY
+from ....utils import ModelOutput
+from ....op.registry import ACTIVATION_REGISTRY
 
 
 def deformable_attention_core_func(value, value_spatial_shapes, sampling_locations, attention_weights):
@@ -620,7 +620,8 @@ class RTDETRTransformer(nn.Module):
         #     dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta['dn_num_split'], dim=2)
         #     dn_out_logits, out_logits = torch.split(out_logits, dn_meta['dn_num_split'], dim=2)
 
-        out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
+        # out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
+        out = torch.cat([out_bboxes[-1], out_logits[-1]], dim=-1)
 
         # if self.training and self.aux_loss:
         #     out['aux_outputs'] = self._set_aux_loss(out_logits[:-1], out_bboxes[:-1])
@@ -630,7 +631,7 @@ class RTDETRTransformer(nn.Module):
         #         out['dn_aux_outputs'] = self._set_aux_loss(dn_out_logits, dn_out_bboxes)
         #         out['dn_meta'] = dn_meta
 
-        return out
+        return ModelOutput(pred=out)
 
 
 def rtdetr_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RTDETRTransformer:

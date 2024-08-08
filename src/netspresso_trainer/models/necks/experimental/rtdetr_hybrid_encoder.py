@@ -26,7 +26,8 @@ import torch
 import torch.nn as nn 
 import torch.nn.functional as F 
 
-from netspresso_trainer.models.op.registry import ACTIVATION_REGISTRY
+from ...utils import BackboneOutput
+from ...op.registry import ACTIVATION_REGISTRY
 
 
 # TODO: Replace with custom implementation
@@ -339,7 +340,7 @@ class HybridEncoder(nn.Module):
             out = self.pan_blocks[idx](torch.concat([downsample_feat, feat_high], dim=1))
             outs.append(out)
 
-        return outs
+        return BackboneOutput(intermediate_features=outs)
 
 def rtdetr_hybrid_encoder(intermediate_features_dim, conf_model_neck, **kwargs):
     return HybridEncoder(intermediate_features_dim=intermediate_features_dim, params=conf_model_neck.params)
