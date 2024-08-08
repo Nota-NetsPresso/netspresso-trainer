@@ -26,7 +26,7 @@ from tqdm import tqdm
 from multiprocessing import Pool
 
 DEFAULT_DATA_DIR = './data'
-DOWNLOAD_DIR = './data/download'
+DOWNLOAD_DIR = './data/download/objects365'
 CLASS365_NAME_TO_LABEL = {
     "Person": 0, "Sneakers": 1, "Chair": 2, "Other Shoes": 3, "Hat": 4, "Car": 5, "Lamp": 6, "Glasses": 7, "Bottle": 8, "Desk": 9,
     "Cup": 10, "Street Lights": 11, "Cabinet/shelf": 12, "Handbag/Satchel": 13, "Bracelet": 14, "Plate": 15, "Picture/Frame": 16, "Helmet": 17, "Book": 18, "Gloves": 19,
