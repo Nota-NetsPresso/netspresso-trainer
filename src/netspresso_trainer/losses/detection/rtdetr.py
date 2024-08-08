@@ -1,10 +1,10 @@
 import torch
-import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torchvision
 from scipy.optimize import linear_sum_assignment
 from torchvision.ops.boxes import box_area
+
 
 def box_iou(boxes1, boxes2):
     area1 = box_area(boxes1)
@@ -66,7 +66,7 @@ class HungarianMatcher(nn.Module):
         self.EPS = 1e-8
 
         assert self.cost_class != 0 or self.cost_bbox != 0 or self.cost_giou != 0, "All costs can't be zeros."
-    
+
     @torch.no_grad()
     def forward(self, outputs, targets):
         bs, num_queries = outputs["pred_logits"].shape[:2]
@@ -90,7 +90,7 @@ class HungarianMatcher(nn.Module):
             out_prob = out_prob[:, tgt_ids]
             neg_cost_class = (1 - self.alpha) * (out_prob**self.gamma) * (-(1 - out_prob + self.EPS).log())
             pos_cost_class = self.alpha * ((1 - out_prob)**self.gamma) * (-(out_prob + self.EPS).log())
-            cost_class = pos_cost_class - neg_cost_class        
+            cost_class = pos_cost_class - neg_cost_class
         else:
             cost_class = -out_prob[:, tgt_ids]
 
@@ -99,7 +99,7 @@ class HungarianMatcher(nn.Module):
 
         # Compute the giou cost betwen boxes
         cost_giou = -generalized_box_iou(box_cxcywh_to_xyxy(out_bbox), tgt_bbox)
-        
+
         # Final cost matrix
         C = self.cost_bbox * cost_bbox + self.cost_class * cost_class + self.cost_giou * cost_giou
         C = C.view(bs, num_queries, -1).cpu()
@@ -132,7 +132,7 @@ class DETRLoss(nn.Module):
         # self.num_classes = num_classes
         self.matcher = eval(matcher.type)(matcher.weight_dict, matcher.alpha, matcher.gamma, matcher.use_focal_loss)
         self.weight_dict = weight_dict
-        self.losses = losses 
+        self.losses = losses
 
         self.alpha = alpha
         self.gamma = gamma
@@ -216,7 +216,7 @@ class DETRLoss(nn.Module):
 
         pred_score = F.sigmoid(src_logits).detach()
         weight = self.alpha * pred_score.pow(self.gamma) * (1 - target) + target_score
-        
+
         loss = F.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction='none')
         loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
         return {'loss_vfl': loss}
@@ -400,7 +400,7 @@ class DETRLoss(nn.Module):
         dn_positive_idx, dn_num_group = dn_meta["dn_positive_idx"], dn_meta["dn_num_group"]
         num_gts = [len(t['labels']) for t in targets]
         device = targets[0]['labels'].device
-        
+
         dn_match_indices = []
         for i, num_gt in enumerate(num_gts):
             if num_gt > 0:
@@ -411,7 +411,7 @@ class DETRLoss(nn.Module):
             else:
                 dn_match_indices.append((torch.zeros(0, dtype=torch.int64, device=device), \
                     torch.zeros(0, dtype=torch.int64,  device=device)))
-        
+
         return dn_match_indices
 
     def normalize_bboxes(self, bboxes, img_size):
@@ -422,7 +422,7 @@ class DETRLoss(nn.Module):
             h, w = img_size
         scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
         return bboxes / scale
-    
+
 
 @torch.no_grad()
 def accuracy(output, target, topk=(1,)):
