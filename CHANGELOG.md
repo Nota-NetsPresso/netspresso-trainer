@@ -2,11 +2,11 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add RT-DETR by `@illian01` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490), [PR 491](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/491)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix handling error in case of error occured in first epoch by `@illian01` in [PR 493](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/493)
 
 ## Breaking Changes:
 
@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Update pi 4b deployment benchmark by `@illian01` in [PR 492](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/492)
 
 # v1.0.0
 

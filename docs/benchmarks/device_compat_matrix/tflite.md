@@ -13,7 +13,7 @@ Using NetsPresso, you can utilize more various devices than listed in this docum
 | Classification | MobileNetV3-s | (224, 224) | 3 | 0.5 | ✅ | 8.0722 | - | 5.25 | onnx_opset=13 |
 | Classification | MovileViT-s | (256, 256) | 3 | 0.5 | ❌ |  |  |  | onnx_opset=13 |
 | Classification | ResNet50 | (224, 224) | 3 | 0.5 | ✅ | 187.1840 | - | 87.95 | onnx_opset=13 |
-| Classification | ViT-tiny | (224, 224) | 3 | 0.5 | ❌ |  |  |  | onnx_opset=13 |
+| Classification | ViT-tiny | (224, 224) | 3 | 0.5 | ✅ | 197.286 | - | 39.1172 | onnx_opset=13 |
 | Segmentation | PIDNet-s | (512, 512) | 35 | 0.5 | ✅ | 306.75 | - | 69.52 | onnx_opset=13 |
 | Segmentation | SegFormet-b0 | (512, 512) | 35 | 0.5 | ✅ | 1645.6 | - | 277.234 | onnx_opset=13 |
 | Detection | YOLOX-s | (640, 640) | 4 | 0.5 | ✅ | 660.287 | - | 101.457 | onnx_opset=13 |

@@ -29,4 +29,5 @@ POSTPROCESSOR_DICT = {
     'anchor_decoupled_head': DetectionPostprocessor,
     'yolo_fastest_head_v2': DetectionPostprocessor,
     'rtmcc': PoseEstimationPostprocessor,
+    'rtdetr_head': DetectionPostprocessor,
 }
