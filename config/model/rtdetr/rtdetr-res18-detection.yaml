@@ -66,3 +66,4 @@ model:
         # use_focal_loss: True
         alpha: 0.25
         gamma: 2.0
+        use_focal_loss: true
