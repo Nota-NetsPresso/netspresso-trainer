@@ -134,7 +134,7 @@ def process_annotations(annotation_path, label_dir):
         with open((label_dir / file_name).with_suffix('.txt'), 'w') as f:
             f.write(texts)
 
-def process_split(split, patches, base_url, objects365_path, num_threads):
+def process_split(split, patches, base_url, objects365_path, num_process):
     ann_ext = '.tar.gz' if split == 'train' else '.json'
     ann_download_path = Path(DOWNLOAD_DIR) / f'objects365_annotation_{split}{ann_ext}'
     annotation_dir = objects365_path / 'annotations'
@@ -158,8 +158,8 @@ def process_split(split, patches, base_url, objects365_path, num_threads):
         print('Moving validation annotation .json file to the appropriate location ...')
         shutil.copyfile(ann_download_path, annotation_path)
 
-    args = [(i, split, base_url, images_dir, num_threads > 1) for i in range(patches)]
-    with Pool(num_threads) as pool:
+    args = [(i, split, base_url, images_dir, num_process > 1) for i in range(patches)]
+    with Pool(num_process) as pool:
         pool.starmap(download_worker, args)
 
     print(f"All {split} image patches processed")
@@ -170,7 +170,7 @@ def process_split(split, patches, base_url, objects365_path, num_threads):
 def main():
     parser = argparse.ArgumentParser(description="Parser for objects365 dataset downloader.")
     parser.add_argument('--dir', type=str, default=DEFAULT_DATA_DIR)
-    parser.add_argument('--num_threads', type=int, default=1)
+    parser.add_argument('--num_process', type=int, default=1)
     args = parser.parse_args()
 
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -183,7 +183,7 @@ def main():
     }
 
     for split, info in splits.items():
-        process_split(split, info['patches'], info['base_url'], objects365_path, args.num_threads)
+        process_split(split, info['patches'], info['base_url'], objects365_path, args.num_process)
 
     id_mapping = [CLASS365_LABEL_TO_NAME[i] for i in range(365)]
     with open(objects365_path / 'id_mapping.json', 'w') as f:
