@@ -3,7 +3,7 @@ model:
   name: resnet18
   checkpoint:
     use_pretrained: True
-    load_head: False
+    load_head: True
     path: ~
     fx_model_path: ~
     optimizer_path: ~
@@ -15,6 +15,9 @@ model:
       params:
         block_type: basicblock
         norm_type: batch_norm
+        return_stage_idx: ~
+        split_stem_conv: False
+        first_stage_shortcut_conv: False
       stage_params:
         - 
           channels: 64
@@ -23,14 +26,17 @@ model:
           channels: 128
           num_blocks: 2
           replace_stride_with_dilation: False
+          replace_stride_with_pooling: False
         - 
           channels: 256
           num_blocks: 2
           replace_stride_with_dilation: False
+          replace_stride_with_pooling: False
         - 
           channels: 512
           num_blocks: 2
           replace_stride_with_dilation: False
+          replace_stride_with_pooling: False
     head:
       name: fc
       params:
