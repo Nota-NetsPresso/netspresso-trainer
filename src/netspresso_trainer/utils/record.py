@@ -150,11 +150,8 @@ class TrainingSummary:
     error_stats: str = ""
 
     def __post_init__(self):
-        self.last_epoch = list(self.train_losses.keys())[-1]
-        try: # self.valid_losses is empty if validation is not performed
-            self.best_epoch = min(self.valid_losses, key=self.valid_losses.get)
-        except ValueError:
-            self.best_epoch = self.last_epoch
+        self.last_epoch = 1 if not self.train_losses else list(self.train_losses.keys())[-1] # self.train_losses is empty if error occurs before first epoch done
+        self.best_epoch = self.last_epoch if not self.valid_losses else min(self.valid_losses, key=self.valid_losses.get) # self.valid_losses is empty if validation is not performed
 
 @dataclass
 class EvaluationSummary:
