@@ -107,7 +107,7 @@ class ResNet(nn.Module):
         for stage in stage_params[1:]:
             layer = self._make_layer(block, stage.channels, stage.num_blocks, stride=2,
                                      dilate=stage.replace_stride_with_dilation,
-                                     expansion=expansion)
+                                     expansion=expansion, downsample_pooling=stage.replace_stride_with_pooling)
             stages.append(layer)
 
         self.stages = nn.ModuleList(stages)
@@ -136,7 +136,7 @@ class ResNet(nn.Module):
 
     def _make_layer(self, block: Type[Union[BasicBlock, Bottleneck]], planes: int, blocks: int,
                     stride: int = 1, dilate: bool = False, expansion: Optional[int] = None,
-                    downsample_flag: bool = False) -> nn.Sequential:
+                    downsample_flag: bool = False, downsample_pooling: bool = False) -> nn.Sequential:
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -146,11 +146,21 @@ class ResNet(nn.Module):
             self.dilation *= stride
             stride = 1
         if stride != 1 or self.inplanes != planes * expansion or downsample_flag:
-            downsample = ConvLayer(
-                in_channels=self.inplanes, out_channels=planes * expansion,
-                kernel_size=1, stride=stride, bias=False,
-                norm_type=norm_layer, use_act=False
-            )
+            if downsample_pooling:
+                downsample = nn.Sequential(
+                    nn.AvgPool2d(kernel_size=stride, stride=stride, ceil_mode=True, count_include_pad=False),
+                    ConvLayer(
+                        in_channels=self.inplanes, out_channels=planes * expansion,
+                        kernel_size=1, stride=1, bias=False,
+                        norm_type=norm_layer, use_act=False
+                    )
+                )
+            else:
+                downsample = ConvLayer(
+                    in_channels=self.inplanes, out_channels=planes * expansion,
+                    kernel_size=1, stride=stride, bias=False,
+                    norm_type=norm_layer, use_act=False
+                )
 
         layers = []
         layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
