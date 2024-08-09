@@ -102,10 +102,9 @@ def download_file(url, path, max_retries=30, delay=5, silent=True):
 def download_worker(i, split, base_url, images_dir, silent=True):
     print(f'Download {split} images patch {i}...')
     image_download_path = Path(DOWNLOAD_DIR) / f'objects365_{split}_patch{i}.tar.gz'
-    if not image_download_path.exists():
-        version = 1 if i < 16 else 2
-        download_url = f'{base_url}images/v{version}/patch{i}.tar.gz' if split == 'val' else f'{base_url}patch{i}.tar.gz'
-        download_file(download_url, image_download_path, silent=silent)
+    version = 1 if i < 16 else 2
+    download_url = f'{base_url}images/v{version}/patch{i}.tar.gz' if split == 'val' else f'{base_url}patch{i}.tar.gz'
+    download_file(download_url, image_download_path, silent=silent)
 
     print(f'Unzip {split} images {image_download_path} file ...')
     subprocess.run(["tar", "xfz", image_download_path, "--directory", images_dir, "--strip-components", '1'], check=True)
