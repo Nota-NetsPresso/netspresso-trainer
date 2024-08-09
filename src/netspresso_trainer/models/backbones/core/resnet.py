@@ -51,6 +51,8 @@ class ResNet(nn.Module):
         self.task = task.lower()
         assert self.task in SUPPORTING_TASK, f'ResNet is not supported on {self.task} task now.'
         self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+        self.return_stage_idx = params.return_stage_idx if params.return_stage_idx else [-1]
+        self.split_stem_conv = params.split_stem_conv
 
         super(ResNet, self).__init__()
 
@@ -77,20 +79,35 @@ class ResNet(nn.Module):
         if expansion is None:
             expansion = block.expansion
 
-        self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
-                               kernel_size=7, stride=2, padding=3,
-                               bias=False, norm_type='batch_norm', act_type='relu')
+        if self.split_stem_conv:
+            intermediate_stem_inplanes = self.inplanes // 2
+            self.conv1 = nn.Sequential(
+                ConvLayer(in_channels=3, out_channels=intermediate_stem_inplanes,
+                                kernel_size=3, stride=2, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+                ConvLayer(in_channels=intermediate_stem_inplanes, out_channels=intermediate_stem_inplanes,
+                                kernel_size=3, stride=1, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+                ConvLayer(in_channels=intermediate_stem_inplanes, out_channels=self.inplanes,
+                                kernel_size=3, stride=1, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+            )   
+        else:
+            self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
+                                kernel_size=7, stride=2, padding=3,
+                                bias=False, norm_type='batch_norm', act_type='relu')
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         stages: List[nn.Module] = []
 
         first_stage = stage_params[0]
-        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, expansion=expansion)
+        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, 
+                                 expansion=expansion, downsample_flag=params.first_stage_shortcut_conv)
         stages.append(layer)
         for stage in stage_params[1:]:
             layer = self._make_layer(block, stage.channels, stage.num_blocks, stride=2,
                                      dilate=stage.replace_stride_with_dilation,
-                                     expansion=expansion)
+                                     expansion=expansion, downsample_pooling=stage.replace_stride_with_pooling)
             stages.append(layer)
 
         self.stages = nn.ModuleList(stages)
@@ -98,7 +115,7 @@ class ResNet(nn.Module):
 
         hidden_sizes = [stage.channels * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
-        self._intermediate_features_dim = hidden_sizes
+        self._intermediate_features_dim = [hidden_sizes[i] for i in self.return_stage_idx]
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -118,7 +135,8 @@ class ResNet(nn.Module):
                     nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
 
     def _make_layer(self, block: Type[Union[BasicBlock, Bottleneck]], planes: int, blocks: int,
-                    stride: int = 1, dilate: bool = False, expansion: Optional[int] = None) -> nn.Sequential:
+                    stride: int = 1, dilate: bool = False, expansion: Optional[int] = None,
+                    downsample_flag: bool = False, downsample_pooling: bool = False) -> nn.Sequential:
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -127,12 +145,22 @@ class ResNet(nn.Module):
         if dilate:
             self.dilation *= stride
             stride = 1
-        if stride != 1 or self.inplanes != planes * expansion:
-            downsample = ConvLayer(
-                in_channels=self.inplanes, out_channels=planes * expansion,
-                kernel_size=1, stride=stride, bias=False,
-                norm_type=norm_layer, use_act=False
-            )
+        if stride != 1 or self.inplanes != planes * expansion or downsample_flag:
+            if downsample_pooling:
+                downsample = nn.Sequential(
+                    nn.AvgPool2d(kernel_size=stride, stride=stride, ceil_mode=True, count_include_pad=False),
+                    ConvLayer(
+                        in_channels=self.inplanes, out_channels=planes * expansion,
+                        kernel_size=1, stride=1, bias=False,
+                        norm_type=norm_layer, use_act=False
+                    )
+                )
+            else:
+                downsample = ConvLayer(
+                    in_channels=self.inplanes, out_channels=planes * expansion,
+                    kernel_size=1, stride=stride, bias=False,
+                    norm_type=norm_layer, use_act=False
+                )
 
         layers = []
         layers.append(block(self.inplanes, planes, stride, downsample, self.groups,
@@ -151,9 +179,9 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
 
         all_hidden_states = () if self.use_intermediate_features else None
-        for stage in self.stages:
+        for stage_idx, stage in enumerate(self.stages):
             x = stage(x)
-            if self.use_intermediate_features:
+            if self.use_intermediate_features and stage_idx in self.return_stage_idx:
                 all_hidden_states = all_hidden_states + (x,)
 
         if self.use_intermediate_features:
