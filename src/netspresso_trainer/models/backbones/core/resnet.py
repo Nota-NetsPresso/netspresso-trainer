@@ -52,6 +52,7 @@ class ResNet(nn.Module):
         assert self.task in SUPPORTING_TASK, f'ResNet is not supported on {self.task} task now.'
         self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
         self.return_stage_idx = params.return_stage_idx
+        self.split_stem_conv = params.split_stem_conv
 
         super(ResNet, self).__init__()
 
@@ -78,9 +79,23 @@ class ResNet(nn.Module):
         if expansion is None:
             expansion = block.expansion
 
-        self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
-                               kernel_size=7, stride=2, padding=3,
-                               bias=False, norm_type='batch_norm', act_type='relu')
+        if self.split_stem_conv:
+            intermediate_stem_inplanes = self.inplanes // 2
+            self.conv1 = nn.Sequential(
+                ConvLayer(in_channels=3, out_channels=intermediate_stem_inplanes,
+                                kernel_size=3, stride=2, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+                ConvLayer(in_channels=intermediate_stem_inplanes, out_channels=intermediate_stem_inplanes,
+                                kernel_size=3, stride=1, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+                ConvLayer(in_channels=intermediate_stem_inplanes, out_channels=self.inplanes,
+                                kernel_size=3, stride=1, padding=1,
+                                bias=False, norm_type='batch_norm', act_type='relu'),
+            )   
+        else:
+            self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
+                                kernel_size=7, stride=2, padding=3,
+                                bias=False, norm_type='batch_norm', act_type='relu')
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         stages: List[nn.Module] = []
