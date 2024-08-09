@@ -51,6 +51,7 @@ class ResNet(nn.Module):
         self.task = task.lower()
         assert self.task in SUPPORTING_TASK, f'ResNet is not supported on {self.task} task now.'
         self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
+        self.return_stage_idx = params.return_stage_idx
 
         super(ResNet, self).__init__()
 
@@ -98,7 +99,7 @@ class ResNet(nn.Module):
 
         hidden_sizes = [stage.channels * expansion for stage in stage_params]
         self._feature_dim = hidden_sizes[-1]
-        self._intermediate_features_dim = hidden_sizes
+        self._intermediate_features_dim = [hidden_sizes[i] for i in self.return_stage_idx]
 
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
@@ -151,9 +152,9 @@ class ResNet(nn.Module):
         x = self.maxpool(x)
 
         all_hidden_states = () if self.use_intermediate_features else None
-        for stage in self.stages:
+        for stage_idx, stage in enumerate(self.stages):
             x = stage(x)
-            if self.use_intermediate_features:
+            if self.use_intermediate_features and stage_idx in self.return_stage_idx:
                 all_hidden_states = all_hidden_states + (x,)
 
         if self.use_intermediate_features:
