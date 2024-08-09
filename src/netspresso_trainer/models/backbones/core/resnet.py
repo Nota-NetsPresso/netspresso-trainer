@@ -51,7 +51,7 @@ class ResNet(nn.Module):
         self.task = task.lower()
         assert self.task in SUPPORTING_TASK, f'ResNet is not supported on {self.task} task now.'
         self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
-        self.return_stage_idx = params.return_stage_idx
+        self.return_stage_idx = params.return_stage_idx if params.return_stage_idx else [-1]
         self.split_stem_conv = params.split_stem_conv
 
         super(ResNet, self).__init__()
