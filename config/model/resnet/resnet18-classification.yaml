@@ -3,7 +3,7 @@ model:
   name: resnet18
   checkpoint:
     use_pretrained: True
-    load_head: True
+    load_head: False
     path: ~
     fx_model_path: ~
     optimizer_path: ~
