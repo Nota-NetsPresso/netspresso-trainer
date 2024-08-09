@@ -101,7 +101,8 @@ class ResNet(nn.Module):
         stages: List[nn.Module] = []
 
         first_stage = stage_params[0]
-        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, expansion=expansion)
+        layer = self._make_layer(block, first_stage.channels, first_stage.num_blocks, 
+                                 expansion=expansion, downsample_flag=params.first_stage_shortcut_conv)
         stages.append(layer)
         for stage in stage_params[1:]:
             layer = self._make_layer(block, stage.channels, stage.num_blocks, stride=2,
@@ -134,7 +135,8 @@ class ResNet(nn.Module):
                     nn.init.constant_(m.bn2.weight, 0)  # type: ignore[arg-type]
 
     def _make_layer(self, block: Type[Union[BasicBlock, Bottleneck]], planes: int, blocks: int,
-                    stride: int = 1, dilate: bool = False, expansion: Optional[int] = None) -> nn.Sequential:
+                    stride: int = 1, dilate: bool = False, expansion: Optional[int] = None,
+                    downsample_flag: bool = False) -> nn.Sequential:
         norm_layer = self._norm_layer
         downsample = None
         previous_dilation = self.dilation
@@ -143,7 +145,7 @@ class ResNet(nn.Module):
         if dilate:
             self.dilation *= stride
             stride = 1
-        if stride != 1 or self.inplanes != planes * expansion:
+        if stride != 1 or self.inplanes != planes * expansion or downsample_flag:
             downsample = ConvLayer(
                 in_channels=self.inplanes, out_channels=planes * expansion,
                 kernel_size=1, stride=stride, bias=False,
