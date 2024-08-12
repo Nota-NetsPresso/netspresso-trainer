@@ -340,7 +340,7 @@ class DETRLoss(nn.Module):
         """
         self.num_classes = targets['num_classes']
         img_size = targets['img_size']
-        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:]}
+        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:], 'aux_outputs': out['aux_pred']}
         empty_weight = torch.ones(self.num_classes + 1)
         empty_weight[-1] = 1e-4
         self.register_buffer('empty_weight', empty_weight)
@@ -372,7 +372,7 @@ class DETRLoss(nn.Module):
             losses.update(l_dict)
 
         # In case of auxiliary losses, we repeat this process with the output of each intermediate layer.
-        if 'aux_outputs' in outputs:
+        if outputs['aux_outputs'] is not None:
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
                 indices = self.matcher(aux_outputs, targets)
                 for loss in self.losses:
