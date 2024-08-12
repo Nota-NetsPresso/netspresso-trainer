@@ -1,9 +1,9 @@
 model:
   task: detection
-  name: rtdetr
+  name: rtdetr_res18
   checkpoint:
     use_pretrained: True
-    load_head: False
+    load_head: True
     path: ~
     fx_model_path: ~
     optimizer_path: ~
