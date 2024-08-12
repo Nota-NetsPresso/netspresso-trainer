@@ -201,7 +201,7 @@ class DetectionPostprocessor:
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'rtdetr_head':
-            self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries)
+            self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries, score_thresh=params.score_thresh)
             self.postprocess = None
         else:
             self.decode_outputs = None
