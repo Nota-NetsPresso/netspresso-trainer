@@ -101,7 +101,7 @@ class DetectionModel(TaskModel):
         if getattr(self.head, 'num_denoising', 0) > 0:
             out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         else:
-            out: DetectionModelOutput = self.head(features['intermediate_features']) 
+            out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out
 
 class PoseEstimationModel(TaskModel):

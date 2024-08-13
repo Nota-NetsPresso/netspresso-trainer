@@ -18,7 +18,8 @@ Based on the RT-DETR implementation of lyuwenyu.
 https://github.com/lyuwenyu/RT-DETR/blob/main/rtdetr_pytorch/src/zoo/rtdetr/denoising.py
 """
 
-import torch 
+import torch
+
 
 def inverse_sigmoid(x: torch.Tensor, eps: float=1e-5) -> torch.Tensor:
     x = x.clip(min=0., max=1.)
@@ -51,7 +52,7 @@ def get_contrastive_denoising_training_group(targets,
 
     num_gts = [len(t['labels']) for t in targets]
     device = targets[0]['labels'].device
-    
+
     max_gt_num = max(num_gts)
     if max_gt_num == 0:
         return None, None, None, None
@@ -112,7 +113,7 @@ def get_contrastive_denoising_training_group(targets,
     attn_mask = torch.full([tgt_size, tgt_size], False, dtype=torch.bool, device=device)
     # match query cannot see the reconstruction
     attn_mask[num_denoising:, :num_denoising] = True
-    
+
     # reconstruct cannot see each other
     for i in range(num_group):
         if i == 0:
@@ -122,11 +123,11 @@ def get_contrastive_denoising_training_group(targets,
         else:
             attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), max_gt_num * 2 * (i + 1): num_denoising] = True
             attn_mask[max_gt_num * 2 * i: max_gt_num * 2 * (i + 1), :max_gt_num * 2 * i] = True
-        
+
     dn_meta = {
         "dn_positive_idx": dn_positive_idx,
         "dn_num_group": num_group,
         "dn_num_split": [num_denoising, num_queries]
     }
-    
+
     return input_query_class, input_query_bbox, attn_mask, dn_meta
