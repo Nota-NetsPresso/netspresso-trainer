@@ -31,6 +31,7 @@ import torch.nn.init as init
 
 from ....utils import ModelOutput
 from ....op.registry import ACTIVATION_REGISTRY
+from ....op.denoising import get_contrastive_denoising_training_group
 
 
 def deformable_attention_core_func(value, value_spatial_shapes, sampling_locations, attention_weights):
@@ -585,21 +586,29 @@ class RTDETRTransformer(nn.Module):
         # input projection and embedding
         (memory, spatial_shapes, level_start_index) = self._get_encoder_input(feats)
 
-        # TODO: Denoising training
         # prepare denoising training
-        # if self.training and self.num_denoising > 0:
-        #     denoising_class, denoising_bbox_unact, attn_mask, dn_meta = \
-        #         get_contrastive_denoising_training_group(targets, \
-        #             self.num_classes, 
-        #             self.num_queries, 
-        #             self.denoising_class_embed, 
-        #             num_denoising=self.num_denoising, 
-        #             label_noise_ratio=self.label_noise_ratio, 
-        #             box_noise_scale=self.box_noise_scale, )
-        # else:
-        #     denoising_class, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
-        denoising_class, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
-
+        if self.training and self.num_denoising > 0:
+            assert targets is not None
+            img_size = targets['img_size']
+            targets = targets['gt']
+            # Normalize bounding boxes
+            gt_for_denoising = list()
+            for idx, t in enumerate(targets):
+                temp_gt = dict()
+                normalized_bboxes = self.normalize_bboxes(t['boxes'], img_size)
+                temp_gt['boxes'] = normalized_bboxes
+                temp_gt['labels'] = t['labels']
+                gt_for_denoising.append(temp_gt)
+            denoising_class, denoising_bbox_unact, attn_mask, dn_meta = \
+                get_contrastive_denoising_training_group(gt_for_denoising, \
+                    self.num_classes, 
+                    self.num_queries, 
+                    self.denoising_class_embed, 
+                    num_denoising=self.num_denoising, 
+                    label_noise_ratio=self.label_noise_ratio, 
+                    box_noise_scale=self.box_noise_scale, )
+        else:
+            denoising_class, denoising_bbox_unact, attn_mask, dn_meta = None, None, None, None
         target, init_ref_points_unact, enc_topk_bboxes, enc_topk_logits = \
             self._get_decoder_input(memory, spatial_shapes, denoising_class, denoising_bbox_unact)
 
@@ -615,25 +624,24 @@ class RTDETRTransformer(nn.Module):
             self.query_pos_head,
             attn_mask=attn_mask)
 
-        # TODO: aux loss
-        # if self.training and dn_meta is not None:
-        #     dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta['dn_num_split'], dim=2)
-        #     dn_out_logits, out_logits = torch.split(out_logits, dn_meta['dn_num_split'], dim=2)
+        if self.training and dn_meta is not None:
+            dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta['dn_num_split'], dim=2)
+            dn_out_logits, out_logits = torch.split(out_logits, dn_meta['dn_num_split'], dim=2)
 
-        # out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
         out = torch.cat([out_bboxes[-1], out_logits[-1]], dim=-1)
 
         if self.training and self.use_aux_loss:
             aux_outputs = self._set_aux_loss(out_logits[:-1], out_bboxes[:-1])
             aux_outputs.extend(self._set_aux_loss([enc_topk_logits], [enc_topk_bboxes]))
+            if self.training and dn_meta is not None:
+                dn_aux_outputs = self._set_aux_loss(dn_out_logits, dn_out_bboxes)
+            else:
+                dn_aux_outputs = None
         else:
             aux_outputs = None
-            
-        #     if self.training and dn_meta is not None:
-        #         out['dn_aux_outputs'] = self._set_aux_loss(dn_out_logits, dn_out_bboxes)
-        #         out['dn_meta'] = dn_meta
-
-        return ModelOutput(pred=out, aux_pred=aux_outputs)
+            dn_aux_outputs = None
+        
+        return ModelOutput(pred=out, aux_pred=aux_outputs, dn_aux_pred=dn_aux_outputs, dn_meta=dn_meta)
 
     def _set_aux_loss(self, outputs_class, outputs_coord):
         return [{'pred_logits': a, 'pred_boxes': b}

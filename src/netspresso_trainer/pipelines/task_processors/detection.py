@@ -40,7 +40,7 @@ class DetectionProcessor(BaseTaskProcessor):
         optimizer.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
-            #TODO: This is a temporary block
+            #TODO: This is a temporary block for the RT-DETR denoising training
             model_module = train_model if not self.conf.distributed else train_model.module
             if hasattr(model_module, 'head') and getattr(model_module.head, 'num_denoising', 0) > 0:
                 out = train_model(images, targets=targets)
