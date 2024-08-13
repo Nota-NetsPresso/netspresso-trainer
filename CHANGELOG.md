@@ -9,6 +9,7 @@
 ## Bug Fixes:
 
 - Fix handling error in case of error occured in first epoch by `@illian01` in [PR 493](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/493)
+- Fix error in FLOPs computation by `@illian01` in [PR 499](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/499)
 
 ## Breaking Changes:
 
