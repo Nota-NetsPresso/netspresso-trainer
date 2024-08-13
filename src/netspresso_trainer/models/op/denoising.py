@@ -68,10 +68,10 @@ def get_contrastive_denoising_training_group(targets,
     for i in range(bs):
         num_gt = num_gts[i]
         if num_gt > 0:
+            boxes = box_xyxy_to_cxcywh(targets[i]['boxes'])
             input_query_class[i, :num_gt] = targets[i]['labels']
-            input_query_bbox[i, :num_gt] = targets[i]['boxes']
+            input_query_bbox[i, :num_gt] = boxes
             pad_gt_mask[i, :num_gt] = 1
-    input_query_bbox = box_xyxy_to_cxcywh(input_query_bbox) 
     # each group has positive and negative queries.
     input_query_class = input_query_class.tile([1, 2 * num_group])
     input_query_bbox = input_query_bbox.tile([1, 2 * num_group, 1])
