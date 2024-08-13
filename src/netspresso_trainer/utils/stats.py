@@ -34,6 +34,8 @@ def get_params_and_flops(model: nn.Module, sample_input: torch.Tensor):
 def _params_and_macs_fvcore(model: nn.Module, sample_input: torch.Tensor):
     fvcore_logger = logging.getLogger('fvcore')
     fvcore_logger.setLevel(logging.CRITICAL)
-    flops = FlopCountAnalysis(model, sample_input).total()
+    # According to https://detectron2.readthedocs.io/en/latest/modules/fvcore.html#fvcore.nn.FlopCountAnalysis,
+    # fvcore's one flop is equivalent to one multiply-add operation. This is considered as a MAC operation.
+    flops = FlopCountAnalysis(model, sample_input).total() * 2 # Multiply by 2 to get FLOPs
     params = sum(p.numel() for p in model.parameters())
     return flops, params
