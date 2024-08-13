@@ -638,6 +638,15 @@ class RTDETRTransformer(nn.Module):
     def _set_aux_loss(self, outputs_class, outputs_coord):
         return [{'pred_logits': a, 'pred_boxes': b}
                 for a, b in zip(outputs_class, outputs_coord)]
+    
+    def normalize_bboxes(self, bboxes, img_size):
+        """ Normalize bounding boxes to [0, 1] range """
+        if isinstance(img_size, int):
+            h = w = img_size
+        else:
+            h, w = img_size
+        scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
+        return bboxes / scale
 
 
 def rtdetr_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RTDETRTransformer:
