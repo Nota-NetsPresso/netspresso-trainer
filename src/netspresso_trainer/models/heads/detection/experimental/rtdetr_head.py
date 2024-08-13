@@ -376,8 +376,8 @@ class RTDETRTransformer(nn.Module):
 
         # TODO: Move to loss module
         self.use_aux_loss = params.use_aux_loss
-        num_denoising = 100
-        label_noise_ratio=0.5
+        num_denoising = params.num_denoising
+        label_noise_ratio = params.label_noise_ratio
         box_noise_scale=1.0
         learnt_init_query=False
         eval_idx=-1
