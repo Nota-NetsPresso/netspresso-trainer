@@ -92,15 +92,15 @@ class InferencePipeline(BasePipeline):
         self.save_summary(time_for_inference)
 
     def save_summary(self, time_for_inference):
-        macs, params = get_params_and_flops(self.model, self.sample_input.float())
+        flops, params = get_params_and_flops(self.model, self.sample_input.float())
         inference_summary = InferenceSummary(
-            macs=macs,
+            flops=flops,
             params=params,
             total_inference_time=time_for_inference,
             success=True,
         )
 
-        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "inference_summary.json"
 
