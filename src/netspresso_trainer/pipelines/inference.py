@@ -29,7 +29,7 @@ from tqdm import tqdm
 
 from ..loggers.base import TrainingLogger
 from ..utils.record import InferenceSummary, Timer
-from ..utils.stats import get_params_and_macs
+from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
@@ -92,7 +92,7 @@ class InferencePipeline(BasePipeline):
         self.save_summary(time_for_inference)
 
     def save_summary(self, time_for_inference):
-        macs, params = get_params_and_macs(self.model, self.sample_input.float())
+        macs, params = get_params_and_flops(self.model, self.sample_input.float())
         inference_summary = InferenceSummary(
             macs=macs,
             params=params,
