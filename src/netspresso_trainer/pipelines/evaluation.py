@@ -31,7 +31,7 @@ from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
 from ..utils.record import EvaluationSummary, Timer
-from ..utils.stats import get_params_and_macs
+from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
@@ -107,7 +107,7 @@ class EvaluationPipeline(BasePipeline):
         self.save_summary(losses, metrics, time_for_evaluation)
 
     def save_summary(self, losses, metrics, time_for_evaluation):
-        flops, params = get_params_and_macs(self.model, self.sample_input.float())
+        flops, params = get_params_and_flops(self.model, self.sample_input.float())
         evaluation_summary = EvaluationSummary(
             losses=losses,
             metrics=metrics,

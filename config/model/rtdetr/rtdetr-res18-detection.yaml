@@ -1,23 +1,42 @@
 model:
   task: detection
-  name: yolox_s
+  name: rtdetr_res18
   checkpoint:
     use_pretrained: True
     load_head: False
-    path: ~ 
+    path: ~
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
   architecture:
     full: ~ # auto
     backbone:
-      name: cspdarknet
+      name: resnet
       params:
-        depthwise: False
-        dep_mul: &dep_mul 0.33
-        wid_mul: 0.5
-        act_type: &act_type "silu"
-      stage_params: ~
+        block_type: basicblock
+        norm_type: batch_norm
+        return_stage_idx: [1, 2, 3]
+        split_stem_conv: True
+        first_stage_shortcut_conv: True
+      stage_params:
+        - 
+          channels: 64
+          num_blocks: 2
+        - 
+          channels: 128
+          num_blocks: 2
+          replace_stride_with_dilation: False
+          replace_stride_with_pooling: True
+        - 
+          channels: 256
+          num_blocks: 2
+          replace_stride_with_dilation: False
+          replace_stride_with_pooling: True
+        - 
+          channels: 512
+          num_blocks: 2
+          replace_stride_with_dilation: False
+          replace_stride_with_pooling: True
     neck:
       name: rtdetr_hybrid_encoder
       params:
