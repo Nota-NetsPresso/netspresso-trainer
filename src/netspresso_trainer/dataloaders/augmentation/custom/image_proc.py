@@ -465,6 +465,46 @@ class RandomErasing(T.RandomErasing):
         return image, label, mask, bbox, keypoint
 
 
+class RandomIoUCrop:
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/stable/_modules/torchvision/transforms/v2/_geometry.html#RandomIoUCrop
+    """
+    visualize = True
+    def __init__(
+        self,
+        min_scale: float,
+        max_scale: float,
+        min_aspect_ratio: float,
+        max_aspect_ratio: float,
+        p: float,
+        sampler_options: Optional[List[float]] = None,
+        trials: int = 40,
+    ):
+        self.min_scale = min_scale
+        self.max_scale = max_scale
+        self.min_aspect_ratio = min_aspect_ratio
+        self.max_aspect_ratio = max_aspect_ratio
+        if sampler_options is None:
+            sampler_options = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        self.options = sampler_options
+        self.trials = trials
+        self.p = p
+    
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        if not isinstance(image, (torch.Tensor, Image.Image)):
+            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
+
+        if isinstance(image, Image.Image):
+            w, h = image.size
+        else:
+            w, h = image.shape[-1], image.shape[-2]
+        
+        if random.random() < self.p:
+            pass
+
+        return image, label, mask, bbox, keypoint
+
 class RandomZoomOut:
     """
     Based on the torchvision implementation.
