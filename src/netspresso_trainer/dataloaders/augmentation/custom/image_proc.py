@@ -464,6 +464,43 @@ class RandomErasing(T.RandomErasing):
         return image, label, mask, bbox, keypoint
 
 
+class RandomZoomOut:
+    visualize = True
+
+    def __init__(
+        self,
+        fill: int,
+        side_range: Sequence[float],
+        p: float,
+
+    ) -> None:
+        self._check_sequence_input(side_range, "side_range", req_sizes=(2,))
+        if side_range[0] < 1.0 or side_range[0] > side_range[1]:
+            raise ValueError("Invalid side range provided {}.".format(side_range))
+        self.fill = fill
+        self.side_range = side_range
+        self.p = p
+    
+    def _check_sequence_input(self, x, name, req_sizes):
+        msg = req_sizes[0] if len(req_sizes) < 2 else " or ".join([str(s) for s in req_sizes])
+        if not isinstance(x, Sequence):
+            raise TypeError(f"{name} should be a sequence of length {msg}.")
+        if len(x) not in req_sizes:
+            raise ValueError(f"{name} should be a sequence of length {msg}.")
+    
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        if not isinstance(image, (torch.Tensor, Image.Image)):
+            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
+
+        if isinstance(image, Image.Image):
+            w, h = image.size
+        else:
+            w, h = image.shape[-1], image.shape[-2]
+        
+        if random.random() < self.p:
+            pass
+
+
 class TrivialAugmentWide(torch.nn.Module):
     """
     Based on the torchvision implementation.
