@@ -470,7 +470,7 @@ class RandomZoomOut:
     def __init__(
         self,
         fill: int,
-        side_range: Sequence[float],
+        side_range: List[float],
         p: float,
 
     ) -> None:
