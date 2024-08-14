@@ -465,6 +465,10 @@ class RandomErasing(T.RandomErasing):
 
 
 class RandomZoomOut:
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/0.18/_modules/torchvision/transforms/v2/_geometry.html#RandomZoomOut
+    """
     visualize = True
 
     def __init__(
