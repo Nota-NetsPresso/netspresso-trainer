@@ -29,6 +29,7 @@ from torch import Tensor
 from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
 from torchvision.transforms.transforms import _check_sequence_input
+from torchvision.ops.boxes import box_iou
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -499,11 +500,52 @@ class RandomIoUCrop:
             w, h = image.size
         else:
             w, h = image.shape[-1], image.shape[-2]
-        
         if random.random() < self.p:
-            pass
+            while True:
+                idx = int(torch.randint(low=0, high=len(self.options), size=(1,)))
+                min_jaccard_overlap = self.options[idx]
+                if min_jaccard_overlap >= 1.0:
+                    return image, label, mask, bbox, keypoint
+                for _ in range(self.trials):
+                    r = self.min_scale + (self.max_scale - self.min_scale) * torch.rand(2)
+                    new_w = int(w * r[0])
+                    new_h = int(h * r[1])
+                    aspect_ratio = new_w / new_h
+                    if not (self.min_aspect_ratio <= aspect_ratio <= self.max_aspect_ratio):
+                        continue
+                    
+                    # check for 0 area crops
+                    r = torch.rand(2)
+                    left = int((w - new_w) * r[0])
+                    top = int((h - new_h) * r[1])
+                    right = left + new_w
+                    bottom = top + new_h
+                    if left == right or top == bottom:
+                        continue
+                    xyxy_bboxes = bbox
+                    cx = 0.5 * (xyxy_bboxes[..., 0] + xyxy_bboxes[..., 2])
+                    cy = 0.5 * (xyxy_bboxes[..., 1] + xyxy_bboxes[..., 3])
+                    is_within_crop_area = (left < cx) & (cx < right) & (top < cy) & (cy < bottom)
+                    if not is_within_crop_area.any():
+                        continue
+                    xyxy_bboxes = torch.tensor(xyxy_bboxes[is_within_crop_area])
+                    ious = box_iou(
+                        xyxy_bboxes,
+                        torch.tensor([[left, top, right, bottom]], dtype=xyxy_bboxes.dtype, 
+                                     device=xyxy_bboxes.device),)
+                    if ious.max() < min_jaccard_overlap:
+                        continue
+                    image = F.crop(image, top, left, new_h, new_w)
+                    if bbox is not None:
+                        bbox = self._crop_bbox(bbox, top, left, new_h, new_w)
+                    return image, label, mask, bbox, keypoint
 
         return image, label, mask, bbox, keypoint
+
+    def _crop_bbox(self, bbox, i, j, h, w):
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+        return bbox
 
 class RandomZoomOut:
     """
