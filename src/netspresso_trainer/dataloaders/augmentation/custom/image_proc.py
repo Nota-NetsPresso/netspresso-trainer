@@ -28,6 +28,7 @@ import torchvision.transforms.functional as F
 from torch import Tensor
 from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
+from torchvision.transforms.transforms import _check_sequence_input
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -478,10 +479,11 @@ class RandomZoomOut:
         p: float,
 
     ) -> None:
-        self._check_sequence_input(side_range, "side_range", req_sizes=(2,))
+        _check_sequence_input(side_range, "side_range", req_sizes=(2,))
         if side_range[0] < 1.0 or side_range[0] > side_range[1]:
             raise ValueError("Invalid side range provided {}.".format(side_range))
         self.fill = fill
+        self.padding_mode = 'constant'
         self.side_range = side_range
         self.p = p
     
@@ -502,7 +504,26 @@ class RandomZoomOut:
             w, h = image.shape[-1], image.shape[-2]
         
         if random.random() < self.p:
-            pass
+            r = self.side_range[0] + torch.rand(1) * (self.side_range[1] - self.side_range[0])
+            canvas_width = int(w * r)
+            canvas_height = int(h * r)
+
+            r = torch.rand(2)
+            left= int((canvas_width - w) * r[0])
+            top = int((canvas_height - h) * r[1])
+            right = canvas_width - (left + w)
+            bottom = canvas_height - (top + h)
+            padding_ltrb = [left, top, right, bottom]
+            image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
+            if mask is not None:
+                mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
+            if bbox is not None:
+                padding_left, padding_top, _, _ = padding_ltrb
+                bbox[..., 0:4:2] += padding_left
+                bbox[..., 1:4:2] += padding_top
+            #TODO: Compute Keypoint
+
+        return image, label, mask, bbox, keypoint
 
 
 class TrivialAugmentWide(torch.nn.Module):
