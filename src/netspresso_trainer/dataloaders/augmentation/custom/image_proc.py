@@ -26,10 +26,10 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from torch import Tensor
+from torchvision.ops.boxes import box_iou
 from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
 from torchvision.transforms.transforms import _check_sequence_input
-from torchvision.ops.boxes import box_iou
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -491,7 +491,7 @@ class RandomIoUCrop:
         self.options = sampler_options
         self.trials = trials
         self.p = p
-    
+
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
@@ -513,7 +513,7 @@ class RandomIoUCrop:
                     aspect_ratio = new_w / new_h
                     if not (self.min_aspect_ratio <= aspect_ratio <= self.max_aspect_ratio):
                         continue
-                    
+
                     # check for 0 area crops
                     r = torch.rand(2)
                     left = int((w - new_w) * r[0])
@@ -531,7 +531,7 @@ class RandomIoUCrop:
                     xyxy_bboxes = torch.tensor(xyxy_bboxes[is_within_crop_area])
                     ious = box_iou(
                         xyxy_bboxes,
-                        torch.tensor([[left, top, right, bottom]], dtype=xyxy_bboxes.dtype, 
+                        torch.tensor([[left, top, right, bottom]], dtype=xyxy_bboxes.dtype,
                                      device=xyxy_bboxes.device),)
                     if ious.max() < min_jaccard_overlap:
                         continue
@@ -568,7 +568,7 @@ class RandomZoomOut:
         self.padding_mode = 'constant'
         self.side_range = side_range
         self.p = p
-    
+
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
         if not isinstance(image, (torch.Tensor, Image.Image)):
             raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
@@ -577,7 +577,7 @@ class RandomZoomOut:
             w, h = image.size
         else:
             w, h = image.shape[-1], image.shape[-2]
-        
+
         if random.random() < self.p:
             r = self.side_range[0] + torch.rand(1) * (self.side_range[1] - self.side_range[0])
             canvas_width = int(w * r)
