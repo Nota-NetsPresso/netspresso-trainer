@@ -139,6 +139,7 @@ def build_pipeline(
                                             single_gpu_or_rank_zero=single_gpu_or_rank_zero,
                                             is_graphmodule_training=is_graphmodule_training,
                                             model_ema=model_ema,
+                                            model_max_norm=model_max_norm,
                                             start_epoch=start_epoch,
                                             cur_epoch=cur_epoch,
                                             profile=profile)
