@@ -1,6 +1,7 @@
 training:
   epochs: 30
   mixed_precision: False
+  max_norm: ~
   ema: ~
   optimizer:
     name: adamw
