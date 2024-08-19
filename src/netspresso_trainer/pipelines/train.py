@@ -66,6 +66,7 @@ class TrainingPipeline(BasePipeline):
         single_gpu_or_rank_zero: bool,
         is_graphmodule_training: bool,
         model_ema: Optional[ModelEMA],
+        model_max_norm: Optional[float],
         start_epoch: int,
         cur_epoch: c_int,
         profile: bool,
@@ -80,6 +81,7 @@ class TrainingPipeline(BasePipeline):
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
         self.is_graphmodule_training = is_graphmodule_training
         self.model_ema = model_ema
+        self.model_max_norm = model_max_norm
         self.start_epoch = start_epoch
         self.cur_epoch = cur_epoch
         self.profile = profile  # TODO: provide torch_tb_profiler for training
@@ -189,7 +191,7 @@ class TrainingPipeline(BasePipeline):
     def train_one_epoch(self, epoch):
         outputs = []
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
-            out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory)
+            out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory, self.model_max_norm)
             if self.model_ema:
                 self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
             outputs.append(out)
