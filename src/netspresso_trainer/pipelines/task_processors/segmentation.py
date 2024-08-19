@@ -14,7 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 
@@ -25,7 +25,7 @@ class SegmentationProcessor(BaseTaskProcessor):
     def __init__(self, conf, postprocessor, devices, **kwargs):
         super(SegmentationProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
 
-    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory, model_max_norm: Optional[float]=None):
         train_model.train()
         batch['indices']
         images = batch['pixel_values'].to(self.devices)
@@ -43,6 +43,11 @@ class SegmentationProcessor(BaseTaskProcessor):
             loss_factory.calc(out, target, phase='train')
 
         loss_factory.backward(self.grad_scaler)
+        if model_max_norm:
+            # Unscales the gradients of optimizer's assigned parameters in-place
+            self.grad_scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(train_model.parameters(), model_max_norm)
+        # optimizer's gradients are already unscaled, so scaler.step doesn't unscale them,
         self.grad_scaler.step(optimizer)
         self.grad_scaler.update()
 
