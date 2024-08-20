@@ -3,8 +3,8 @@ model:
   name: rtdetr_res50
   checkpoint:
     use_pretrained: True
-    load_head: True
-    path: rtdetr_res50_coco.safetensors
+    load_head: False
+    path: ~
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
