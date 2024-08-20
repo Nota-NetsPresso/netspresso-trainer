@@ -18,6 +18,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Update pi 4b deployment benchmark by `@illian01` in [PR 492](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/492)
+- Clamp bbox for detection dataset loading by `@hglee98` in [PR 503](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/503#pullrequestreview-2247173939)
 
 # v1.0.0
 
