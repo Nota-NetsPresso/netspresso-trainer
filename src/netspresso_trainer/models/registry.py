@@ -25,6 +25,7 @@ from .backbones import (
     mixnet,
     mixtransformer,
     mobilenetv3,
+    mobilenetv4,
     mobilevit,
     resnet,
     shufflenetv2,
@@ -41,6 +42,7 @@ from .necks import fpn, lightfpn, rtdetr_hybrid_encoder, yolopafpn
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'resnet': resnet,
     'mobilenetv3': mobilenetv3,
+    'mobilenetv4': mobilenetv4,
     'mixtransformer': mixtransformer,
     'mobilevit': mobilevit,
     'vit': vit,
