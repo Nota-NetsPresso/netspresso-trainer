@@ -25,8 +25,9 @@ from .base import BaseTaskProcessor
 class ClassificationProcessor(BaseTaskProcessor):
     def __init__(self, conf, postprocessor, devices, **kwargs):
         super(ClassificationProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
+        self.max_norm = kwargs.get('max_norm')
 
-    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory, model_max_norm: Optional[float]=None):
+    def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
         indices, images, labels = batch
         images = images.to(self.devices).to(self.data_type)
@@ -43,10 +44,10 @@ class ClassificationProcessor(BaseTaskProcessor):
         pred = self.postprocessor(out)
 
         loss_factory.backward(self.grad_scaler)
-        if model_max_norm:
+        if self.max_norm:
             # Unscales the gradients of optimizer's assigned parameters in-place
             self.grad_scaler.unscale_(optimizer)
-            torch.nn.utils.clip_grad_norm_(train_model.parameters(), model_max_norm)
+            torch.nn.utils.clip_grad_norm_(train_model.parameters(), self.max_norm)
         # optimizer's gradients are already unscaled, so scaler.step doesn't unscale them,
         self.grad_scaler.step(optimizer)
         self.grad_scaler.update()
