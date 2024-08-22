@@ -759,13 +759,9 @@ class RandomResize:
         self,
         base_size: List,
         stride: int,
-        random_range: Union[int, List],
+        random_range: int,
         interpolation: str,
     ):
-        if isinstance(random_range, Sequence):
-            _check_sequence_input(random_range, 'random_range', req_sizes=(2,))
-            if random_range[0] > random_range[1]:
-                raise ValueError("Invalid side range provided {}.".format(random_range))
         self.base_size = base_size
         self.stride = stride
         self.random_range = random_range
@@ -773,10 +769,7 @@ class RandomResize:
         self.counter = 0
 
     def random_set(self):
-        if isinstance(self.random_range, int):
-            delta = self.stride * random.randint(-self.random_range, self.random_range)
-        elif isinstance(self.random_range, Sequence):
-            delta = self.stride * random.randint(self.random_range[0], self.random_range[1])
+        delta = self.stride * random.randint(-self.random_range, self.random_range)
         size = [self.base_size[0] + delta, self.base_size[1] + delta]
         self.resize.size = size
 
