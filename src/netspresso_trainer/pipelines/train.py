@@ -66,7 +66,6 @@ class TrainingPipeline(BasePipeline):
         single_gpu_or_rank_zero: bool,
         is_graphmodule_training: bool,
         model_ema: Optional[ModelEMA],
-        model_max_norm: Optional[float],
         start_epoch: int,
         cur_epoch: c_int,
         profile: bool,
@@ -81,7 +80,6 @@ class TrainingPipeline(BasePipeline):
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
         self.is_graphmodule_training = is_graphmodule_training
         self.model_ema = model_ema
-        self.model_max_norm = model_max_norm
         self.start_epoch = start_epoch
         self.cur_epoch = cur_epoch
         self.profile = profile  # TODO: provide torch_tb_profiler for training
