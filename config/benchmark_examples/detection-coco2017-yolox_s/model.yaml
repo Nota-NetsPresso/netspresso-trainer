@@ -13,6 +13,7 @@ model:
     backbone:
       name: cspdarknet
       params:
+        depthwise: False
         dep_mul: &dep_mul 0.33
         wid_mul: 0.5
         act_type: &act_type "silu"
@@ -20,11 +21,13 @@ model:
     neck:
       name: yolopafpn
       params:
+        depthwise: False
         dep_mul: *dep_mul
         act_type: *act_type
     head:
       name: anchor_free_decoupled_head
       params:
+        depthwise: False
         act_type: *act_type
   postprocessor: 
     params: 
