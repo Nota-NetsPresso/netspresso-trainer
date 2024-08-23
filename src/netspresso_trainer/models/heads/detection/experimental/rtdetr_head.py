@@ -374,7 +374,7 @@ class RTDETRTransformer(nn.Module):
         activation = params.act_type
 
         # TODO: Move to loss module
-        self.aux_loss = True
+        self.use_aux_loss = params.use_aux_loss
         num_denoising = 100
         label_noise_ratio=0.5
         box_noise_scale=1.0
@@ -623,15 +623,21 @@ class RTDETRTransformer(nn.Module):
         # out = {'pred_logits': out_logits[-1], 'pred_boxes': out_bboxes[-1]}
         out = torch.cat([out_bboxes[-1], out_logits[-1]], dim=-1)
 
-        # if self.training and self.aux_loss:
-        #     out['aux_outputs'] = self._set_aux_loss(out_logits[:-1], out_bboxes[:-1])
-        #     out['aux_outputs'].extend(self._set_aux_loss([enc_topk_logits], [enc_topk_bboxes]))
+        if self.training and self.use_aux_loss:
+            aux_outputs = self._set_aux_loss(out_logits[:-1], out_bboxes[:-1])
+            aux_outputs.extend(self._set_aux_loss([enc_topk_logits], [enc_topk_bboxes]))
+        else:
+            aux_outputs = None
             
         #     if self.training and dn_meta is not None:
         #         out['dn_aux_outputs'] = self._set_aux_loss(dn_out_logits, dn_out_bboxes)
         #         out['dn_meta'] = dn_meta
 
-        return ModelOutput(pred=out)
+        return ModelOutput(pred=out, aux_pred=aux_outputs)
+
+    def _set_aux_loss(self, outputs_class, outputs_coord):
+        return [{'pred_logits': a, 'pred_boxes': b}
+                for a, b in zip(outputs_class, outputs_coord)]
 
 
 def rtdetr_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RTDETRTransformer:

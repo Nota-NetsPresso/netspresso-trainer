@@ -51,6 +51,8 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'yolox_m': 'coco',
     'yolox_l': 'coco',
     'yolox_x': 'coco',
+    'rtdetr_res18': 'coco',
+    'rtdetr_res50': 'coco',
 }
 
 MODEL_CHECKPOINT_URL_DICT = {
@@ -110,6 +112,12 @@ MODEL_CHECKPOINT_URL_DICT = {
     },
     'yolox_x': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_x_coco.safetensors?versionId=NWskUEbSGviBWskHQ3P1dQZXnRXOR1WN",
+    },
+    'rtdetr_res18': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/rtdetr/rtdetr_res18_coco.safetensors?versionId=uu9v49NI6rQx8wOY6bJbEXUFOG_R9xqH",
+    },
+    'rtdetr_res50': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/rtdetr/rtdetr_res50_coco.safetensors?versionId=JHmnjY13BEflpnDCYPFJ1c17UwpqDrLQ",
     },
 }
 

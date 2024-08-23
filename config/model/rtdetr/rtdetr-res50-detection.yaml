@@ -1,6 +1,6 @@
 model:
   task: detection
-  name: rtdetr_res18
+  name: rtdetr_res50
   checkpoint:
     use_pretrained: True
     load_head: False
@@ -13,7 +13,7 @@ model:
     backbone:
       name: resnet
       params:
-        block_type: basicblock
+        block_type: bottleneck
         norm_type: batch_norm
         return_stage_idx: [1, 2, 3]
         split_stem_conv: True
@@ -21,20 +21,20 @@ model:
       stage_params:
         - 
           channels: 64
-          num_blocks: 2
+          num_blocks: 3
         - 
           channels: 128
-          num_blocks: 2
+          num_blocks: 4
           replace_stride_with_dilation: False
           replace_stride_with_pooling: True
         - 
           channels: 256
-          num_blocks: 2
+          num_blocks: 6
           replace_stride_with_dilation: False
           replace_stride_with_pooling: True
         - 
           channels: 512
-          num_blocks: 2
+          num_blocks: 3
           replace_stride_with_dilation: False
           replace_stride_with_pooling: True
     neck:
@@ -48,7 +48,7 @@ model:
         dim_feedforward: 1024
         dropout: 0.0
         attn_act_type: gelu
-        expansion: 0.5
+        expansion: 1.0
         depth_mult: 1.0
         conv_act_type: silu
     head:
@@ -59,7 +59,7 @@ model:
         num_levels: 3
         num_queries: 300
         eps: 1e-2
-        num_decoder_layers: 3
+        num_decoder_layers: 6
         eval_spatial_size: ~
         position_embed_type: sine
         num_decoder_points: 4

@@ -40,7 +40,7 @@ from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
-from ..utils.stats import get_params_and_macs
+from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
@@ -311,10 +311,10 @@ class TrainingPipeline(BasePipeline):
         )
         if end_training:
             total_train_time = self.timer.get(name='train_all', as_pop=True)
-            macs, params = get_params_and_macs(self.model, self.sample_input.float())
-            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | MACs: {(macs/1e9):.2f}G")
+            flops, params = get_params_and_flops(self.model, self.sample_input.float())
+            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
             training_summary.total_train_time = total_train_time
-            training_summary.macs = macs
+            training_summary.flops = flops
             training_summary.params = params
 
         training_summary.status = status

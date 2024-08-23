@@ -141,7 +141,7 @@ class TrainingSummary:
     valid_metrics: TYPE_SUMMARY_RECORD
     metrics_list: List[str]
     primary_metric: str
-    macs: Optional[int] = None
+    flops: Optional[int] = None
     params: Optional[int] = None
     total_train_time: Optional[float] = None
     best_epoch: int = field(init=False)
@@ -167,7 +167,7 @@ class EvaluationSummary:
 
 @dataclass
 class InferenceSummary:
-    macs: Optional[int] = None
+    flops: Optional[int] = None
     params: Optional[int] = None
     total_inference_time: Optional[float] = None
     success: bool = False
