@@ -33,13 +33,13 @@ SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimati
 class FusedIB(nn.Module):
     # Based on MobileNetV4: https://arxiv.org/pdf/2404.10518
     # Only for MobileNetV4
-    def __init__(self, in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type) -> None:
+    def __init__(self, in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type, out_act):
         super().__init__()
         self.block = []
         self.block.append(ConvLayer(in_channel, hidden_channel, kernel_size=kernel_size, 
                                     stride=stride, bias=False, norm_type=norm_type, act_type=act_type))
         self.block.append(ConvLayer(hidden_channel, out_channel, kernel_size=1, 
-                                    stride=1, bias=False, norm_type=norm_type, act_type=act_type))
+                                    stride=1, bias=False, norm_type=norm_type, use_act=out_act, act_type=act_type if out_act else None))
         self.block = nn.Sequential(*self.block)
 
     def forward(self, x):
@@ -88,11 +88,12 @@ class MobileNetV4(nn.Module):
                 out_channels = stage_param['out_channels']
                 kernel_sizes = stage_param['kernel_size']
                 strides = stage_param['stride']
+                out_acts = stage_param['out_act']
 
-                block_info = zip(in_channels, hidden_channels, out_channels, kernel_sizes, strides)
-                for in_channel, hidden_channel, out_channel, kernel_size, stride in block_info:
+                block_info = zip(in_channels, hidden_channels, out_channels, kernel_sizes, strides, out_acts)
+                for in_channel, hidden_channel, out_channel, kernel_size, stride, out_act in block_info:
                     stage.append(
-                        FusedIB(in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type)
+                        FusedIB(in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type, out_act)
                     )
 
             elif block_type == 'universal_inverted_residual':
