@@ -53,19 +53,19 @@ class MobileNetV4(nn.Module):
         norm_type = 'batch_norm'
         act_type = 'relu'
 
-        self.conv_stem = ConvLayer(3, 32, kernel_size=3, stride=2, padding=1, bias=False, norm_type=norm_type, act_type=act_type)
+        self.conv_stem = ConvLayer(3, 32, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type)
 
         stages = []
 
         # TODO: Replace with for loop
         stage1 = [
-            ConvLayer(32, 32, kernel_size=3, stride=2, padding=1, bias=False, norm_type=norm_type, act_type=act_type),
-            ConvLayer(32, 32, kernel_size=1, stride=1, padding=1, bias=False, norm_type=norm_type, act_type=act_type),
+            ConvLayer(32, 32, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type),
+            ConvLayer(32, 32, kernel_size=1, stride=1, bias=False, norm_type=norm_type, act_type=act_type),
         ]
 
         stage2 = [
-            ConvLayer(32, 96, kernel_size=3, stride=2, padding=1, bias=False, norm_type=norm_type, act_type=act_type),
-            ConvLayer(96, 64, kernel_size=1, stride=1, padding=1, bias=False, norm_type=norm_type, act_type=act_type),
+            ConvLayer(32, 96, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type),
+            ConvLayer(96, 64, kernel_size=1, stride=1, bias=False, norm_type=norm_type, act_type=act_type),
         ]
 
         stage3 = [
