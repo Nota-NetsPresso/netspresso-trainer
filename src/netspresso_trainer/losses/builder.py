@@ -40,8 +40,7 @@ class LossFactory:
 
         for loss_element in self.conf_model.losses:
             criterion = loss_element.criterion
-            loss_config = {k: v for k, v in loss_element.items() if k not in [
-                'criterion', 'weight']}
+            loss_config = {k: v for k, v in loss_element.items() if k not in ['criterion', 'weight']}
             loss = LOSS_DICT[criterion](**loss_config, **kwargs)
 
             self.loss_func_dict.update({criterion: loss})
@@ -90,11 +89,9 @@ class LossFactory:
         for loss_key, loss_func in self.loss_func_dict.items():
             loss_val = loss_func(out, target)
             self.loss_val_per_epoch[phase][loss_key].update(loss_val.item())
-            self.total_loss_for_backward += loss_val * \
-                self.loss_weight_dict[loss_key]
+            self.total_loss_for_backward += loss_val * self.loss_weight_dict[loss_key]
 
-        self.loss_val_per_epoch[phase]['total'].update(
-            self.total_loss_for_backward.item())
+        self.loss_val_per_epoch[phase]['total'].update(self.total_loss_for_backward.item())
 
 
 def build_losses(conf_model, **kwargs):
