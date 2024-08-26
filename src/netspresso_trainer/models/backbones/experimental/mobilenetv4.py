@@ -14,10 +14,6 @@
 #
 # ----------------------------------------------------------------------------
 
-"""
-Based on the Torchvision implementation of MobileNetV3.
-https://pytorch.org/vision/main/_modules/torchvision/models/mobilenetv3.html
-"""
 from typing import List, Dict, Optional
 
 from omegaconf import DictConfig
