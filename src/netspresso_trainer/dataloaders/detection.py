@@ -113,6 +113,10 @@ class DetectionCustomDataset(BaseCustomDataset):
         # right, bottom (rb)
         converted[..., 2] = w * (original[..., 0] + original[..., 2] / 2) + padw
         converted[..., 3] = h * (original[..., 1] + original[..., 3] / 2) + padh
+
+        # bbox clamping
+        np.clip(converted[..., 0::2], a_min=0, a_max=w, out=converted[..., 0::2])
+        np.clip(converted[..., 1::2], a_min=0, a_max=h, out=converted[..., 1::2])
         return converted
 
     def cache_dataset(self, sampler, distributed):
