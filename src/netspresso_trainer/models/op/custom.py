@@ -361,7 +361,7 @@ class InvertedResidual(nn.Module):
         return result
 
 
-class UniversalInvertedBottleneckBlock(nn.Module):
+class UniversalInvertedResidualBlock(nn.Module):
     # Based on MobileNetV4: https://arxiv.org/pdf/2404.10518
     def __init__(
         self,

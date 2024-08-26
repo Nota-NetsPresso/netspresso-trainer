@@ -25,7 +25,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ...op.custom import ConvLayer, UniversalInvertedBottleneckBlock
+from ...op.custom import ConvLayer, UniversalInvertedResidualBlock
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -69,21 +69,21 @@ class MobileNetV4(nn.Module):
         ]
 
         stage3 = [
-            UniversalInvertedBottleneckBlock(64, 192, 96, True, 5, True, 5, 2, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(96, 384, 96, True, 3, False, None, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(64, 192, 96, True, 5, True, 5, 2, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 384, 96, True, 3, False, None, 1, norm_type, act_type),
         ]
 
         stage4 = [
-            UniversalInvertedBottleneckBlock(96, 576, 128, True, 3, True, 3, 2, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(128, 512, 128, True, 5, True, 5, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(128, 512, 128, False, None, True, 5, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(128, 384, 128, False, None, True, 5, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedBottleneckBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(96, 576, 128, True, 3, True, 3, 2, norm_type, act_type),
+            UniversalInvertedResidualBlock(128, 512, 128, True, 5, True, 5, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 5, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(128, 384, 128, False, None, True, 5, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
+            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
         ]
 
         stages = [stage1, stage2, stage3, stage4]
