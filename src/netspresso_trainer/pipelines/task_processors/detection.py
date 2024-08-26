@@ -46,7 +46,6 @@ class DetectionProcessor(BaseTaskProcessor):
         loss_factory.backward(self.grad_scaler)
         if self.max_norm:
             # Unscales the gradients of optimizer's assigned parameters in-place
-            print(self.max_norm)
             self.grad_scaler.unscale_(optimizer)
             torch.nn.utils.clip_grad_norm_(train_model.parameters(), self.max_norm)
         # optimizer's gradients are already unscaled, so scaler.step doesn't unscale them,
