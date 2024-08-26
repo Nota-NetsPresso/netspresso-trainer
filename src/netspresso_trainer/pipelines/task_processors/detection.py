@@ -25,7 +25,6 @@ class DetectionProcessor(BaseTaskProcessor):
     def __init__(self, conf, postprocessor, devices, **kwargs):
         super(DetectionProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
         self.num_classes = kwargs['num_classes']
-        self.max_norm = kwargs.get('max_norm')
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()

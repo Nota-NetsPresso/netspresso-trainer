@@ -24,7 +24,6 @@ from .base import BaseTaskProcessor
 class SegmentationProcessor(BaseTaskProcessor):
     def __init__(self, conf, postprocessor, devices, **kwargs):
         super(SegmentationProcessor, self).__init__(conf, postprocessor, devices, **kwargs)
-        self.max_norm = kwargs.get('max_norm')
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
