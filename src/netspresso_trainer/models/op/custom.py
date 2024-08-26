@@ -382,6 +382,7 @@ class UniversalInvertedBottleneckBlock(nn.Module):
         if not (1 <= stride <= 2):
             raise ValueError("illegal stride value")
 
+        self.use_res_connect = stride == 1 and in_channels == out_channels
         layers: List[nn.Module] = []
 
         # extra depthwise conv
@@ -395,7 +396,7 @@ class UniversalInvertedBottleneckBlock(nn.Module):
                     stride=1,
                     groups=in_channels,
                     norm_type=norm_type,
-                    act_type=act_type,
+                    use_act=False # No activation for extra depthwise conv
                 )
             )
 
@@ -437,7 +438,7 @@ class UniversalInvertedBottleneckBlock(nn.Module):
                 out_channels=out_channels,
                 kernel_size=1,
                 norm_type=norm_type,
-                use_act=False
+                use_act=False # No activation for project conv
             )
         )
 
@@ -447,6 +448,8 @@ class UniversalInvertedBottleneckBlock(nn.Module):
 
     def forward(self, input: Tensor) -> Tensor:
         result = self.block(input)
+        if self.use_res_connect:
+            result = result + input
         return result
 
 
