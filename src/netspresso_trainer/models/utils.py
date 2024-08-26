@@ -73,7 +73,7 @@ MODEL_CHECKPOINT_URL_DICT = {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_large_imagenet1k.safetensors?versionId=jPG4LAueBDO5VrFGLQ51_z.iDHa5lOgP",
     },
     'mobilenet_v4_conv_small': {
-        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv4/mobilenet_v4_conv_small_imagenet1k.safetensors?versionId=9JNrOTbOswyJBnfk6NwGAIZRwBlIE1Jy",
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv4/mobilenet_v4_conv_small_imagenet1k.safetensors?versionId=k8VYpxy5fdTzgyiYbbR1Smv8gTT2bMuF",
     },
     'segformer_b0': {
         'ade20k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0_ade20k.safetensors?versionId=0RRDpZeHb2VvVzFo2jGZN4A4bVQ.k49l",
