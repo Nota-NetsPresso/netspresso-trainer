@@ -65,57 +65,77 @@ class MobileNetV4(nn.Module):
 
         super(MobileNetV4, self).__init__()
 
-        # Implement on conv-small
-        norm_type = 'batch_norm'
-        act_type = 'relu'
+        # Parameters
+        stem_out_channel = params.stem_out_channel
+        stem_kernel_size = params.stem_kernel_size
+        stem_stride = params.stem_stride
+        final_conv_out_channel = params.final_conv_out_channel
+        final_conv_kernel_size = params.final_conv_kernel_size
+        final_conv_stride = params.final_conv_stride
+        norm_type = params.norm_type
+        act_type = params.act_type
+        self.return_stage_idx = params.return_stage_idx if params.return_stage_idx else [len(stage_params) - 1]
 
-        self.conv_stem = ConvLayer(3, 32, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type)
+        # Define model
+        self.conv_stem = ConvLayer(3, stem_out_channel, kernel_size=stem_kernel_size, stride=stem_stride,
+                                   bias=False, norm_type=norm_type, act_type=act_type)
 
         stages = []
 
-        # TODO: Replace with for loop
-        stage1 = [
-            ConvLayer(32, 32, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type),
-            ConvLayer(32, 32, kernel_size=1, stride=1, bias=False, norm_type=norm_type, act_type=act_type),
-        ]
+        for stage_param in stage_params:
+            stage = []
 
-        stage2 = [
-            ConvLayer(32, 96, kernel_size=3, stride=2, bias=False, norm_type=norm_type, act_type=act_type),
-            ConvLayer(96, 64, kernel_size=1, stride=1, bias=False, norm_type=norm_type, act_type=act_type),
-        ]
+            block_type = stage_param['block_type']
+            if block_type == 'fused_inverted':
+                in_channels = stage_param['in_channels']
+                hidden_channels = stage_param['hidden_channels']
+                out_channels = stage_param['out_channels']
+                kernel_sizes = stage_param['kernel_size']
+                strides = stage_param['stride']
 
-        stage3 = [
-            UniversalInvertedResidualBlock(64, 192, 96, True, 5, True, 5, 2, norm_type, act_type),
-            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(96, 192, 96, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(96, 384, 96, True, 3, False, None, 1, norm_type, act_type),
-        ]
+                block_info = zip(in_channels, hidden_channels, out_channels, kernel_sizes, strides)
+                for in_channel, hidden_channel, out_channel, kernel_size, stride in block_info:
+                    stage.append(
+                        FusedIB(in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type)
+                    )
 
-        stage4 = [
-            UniversalInvertedResidualBlock(96, 576, 128, True, 3, True, 3, 2, norm_type, act_type),
-            UniversalInvertedResidualBlock(128, 512, 128, True, 5, True, 5, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 5, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(128, 384, 128, False, None, True, 5, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
-            UniversalInvertedResidualBlock(128, 512, 128, False, None, True, 3, 1, norm_type, act_type),
-        ]
+            elif block_type == 'universal_inverted_residual':
+                in_channels = stage_param['in_channels']
+                hidden_channels = stage_param['hidden_channels']
+                out_channels = stage_param['out_channels']
+                extra_dws = stage_param['extra_dw']
+                extra_kernel_sizes = stage_param['extra_dw_kernel_size']
+                middle_dws = stage_param['middle_dw']
+                middle_kernel_sizes = stage_param['middle_dw_kernel_size']
+                strides = stage_param['stride']
 
-        stages = [stage1, stage2, stage3, stage4]
+                block_info = zip(in_channels, hidden_channels, out_channels, extra_dws, extra_kernel_sizes, middle_dws, middle_kernel_sizes, strides)
+                for in_channel, hidden_channel, out_channel, extra_dw, extra_kernel_size, middle_dw, middle_kernel_size, stride in block_info:
+                    stage.append(
+                        UniversalInvertedResidualBlock(in_channel, hidden_channel, out_channel, extra_dw, extra_kernel_size, middle_dw, middle_kernel_size, stride, norm_type, act_type)
+                    )
+
+            else:
+                raise ValueError(f'Unknown block type: {block_type}')
+
+            stages.append(stage)
 
         # Add conv on last stage
-        stages[-1].append(ConvLayer(128, 960, kernel_size=1, stride=1, bias=False, norm_type=norm_type, act_type=act_type))
+        final_conv_in_channel = stage_params[-1]['out_channels'][-1]
+        stages[-1].append(
+            ConvLayer(final_conv_in_channel, final_conv_out_channel, kernel_size=final_conv_kernel_size, 
+                      stride=final_conv_stride, bias=False, norm_type=norm_type, act_type=act_type)
+        )
 
         # Build stages
         stages = [nn.Sequential(*stage) for stage in stages]
         self.stages = nn.ModuleList(stages)
 
         self.avgpool = nn.AdaptiveAvgPool2d(1)
-        self._feature_dim = 960
-
-        # Dummy
-        self._intermediate_features_dim = [64, 96, 960]
+        self._feature_dim = final_conv_out_channel
+        stage_out_channels = [stage_param['out_channels'][-1] for stage_param in stage_params]
+        stage_out_channels[-1] = final_conv_out_channel # Replace with final conv out channel
+        self._intermediate_features_dim = [stage_out_channels[i] for i in self.return_stage_idx]
 
     def forward(self, x: Tensor):
         x = self.conv_stem(x)
