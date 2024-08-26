@@ -34,6 +34,22 @@ __all__ = ['mobilenetv4']
 SUPPORTING_TASK = ['classification', 'segmentation', 'detection', 'pose_estimation']
 
 
+class FusedIB(nn.Module):
+    # Based on MobileNetV4: https://arxiv.org/pdf/2404.10518
+    # Only for MobileNetV4
+    def __init__(self, in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type) -> None:
+        super().__init__()
+        self.block = []
+        self.block.append(ConvLayer(in_channel, hidden_channel, kernel_size=kernel_size, 
+                                    stride=stride, bias=False, norm_type=norm_type, act_type=act_type))
+        self.block.append(ConvLayer(hidden_channel, out_channel, kernel_size=1, 
+                                    stride=1, bias=False, norm_type=norm_type, act_type=act_type))
+        self.block = nn.Sequential(*self.block)
+
+    def forward(self, x):
+        return self.block(x)
+
+
 class MobileNetV4(nn.Module):
 
     def __init__(
