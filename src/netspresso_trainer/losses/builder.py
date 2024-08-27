@@ -66,7 +66,7 @@ class LossFactory:
     def backward(self, grad_scaler: torch.cuda.amp.GradScaler):
         assert not self._dirty_backward
         self.total_loss_for_backward.requires_grad_(True)
-        grad_scaler.scale(self.total_loss_for_backward.mean()).backward()
+        grad_scaler.scale(self.total_loss_for_backward).backward()
         self._dirty_backward = True
 
     def result(self, phase='train'):
