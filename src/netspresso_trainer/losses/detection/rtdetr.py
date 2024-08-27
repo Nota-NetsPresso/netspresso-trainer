@@ -387,7 +387,7 @@ class DETRLoss(nn.Module):
                     l_dict = {k + f'_dn_{i}': v for k, v in l_dict.items()}
                     losses.update(l_dict)
 
-        total_loss = torch.cat(list(losses.values())).sum()
+        total_loss = torch.stack(list(losses.values())).sum()
         return total_loss
 
     @staticmethod
