@@ -26,8 +26,10 @@ import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 from torch import Tensor
+from torchvision.ops.boxes import box_iou
 from torchvision.transforms.autoaugment import _apply_op
 from torchvision.transforms.functional import InterpolationMode
+from torchvision.transforms.transforms import _check_sequence_input
 
 BBOX_CROP_KEEP_THRESHOLD = 0.2
 MAX_RETRY = 5
@@ -461,6 +463,141 @@ class RandomErasing(T.RandomErasing):
             image.paste(v, (y, x))
             # TODO: Object-aware
             return image, label, mask, bbox, keypoint
+        return image, label, mask, bbox, keypoint
+
+
+class RandomIoUCrop:
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/stable/_modules/torchvision/transforms/v2/_geometry.html#RandomIoUCrop
+    """
+    visualize = True
+    def __init__(
+        self,
+        min_scale: float,
+        max_scale: float,
+        min_aspect_ratio: float,
+        max_aspect_ratio: float,
+        p: float,
+        sampler_options: Optional[List[float]] = None,
+        trials: int = 40,
+    ):
+        self.min_scale = min_scale
+        self.max_scale = max_scale
+        self.min_aspect_ratio = min_aspect_ratio
+        self.max_aspect_ratio = max_aspect_ratio
+        if sampler_options is None:
+            sampler_options = [0.0, 0.1, 0.3, 0.5, 0.7, 0.9, 1.0]
+        self.options = sampler_options
+        self.trials = trials
+        self.p = p
+
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        if not isinstance(image, (torch.Tensor, Image.Image)):
+            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
+
+        if isinstance(image, Image.Image):
+            w, h = image.size
+        else:
+            w, h = image.shape[-1], image.shape[-2]
+        if random.random() < self.p:
+            while True:
+                idx = int(torch.randint(low=0, high=len(self.options), size=(1,)))
+                min_jaccard_overlap = self.options[idx]
+                if min_jaccard_overlap >= 1.0:
+                    return image, label, mask, bbox, keypoint
+                for _ in range(self.trials):
+                    r = self.min_scale + (self.max_scale - self.min_scale) * torch.rand(2)
+                    new_w = int(w * r[0])
+                    new_h = int(h * r[1])
+                    aspect_ratio = new_w / new_h
+                    if not (self.min_aspect_ratio <= aspect_ratio <= self.max_aspect_ratio):
+                        continue
+
+                    # check for 0 area crops
+                    r = torch.rand(2)
+                    left = int((w - new_w) * r[0])
+                    top = int((h - new_h) * r[1])
+                    right = left + new_w
+                    bottom = top + new_h
+                    if left == right or top == bottom:
+                        continue
+                    xyxy_bboxes = bbox
+                    cx = 0.5 * (xyxy_bboxes[..., 0] + xyxy_bboxes[..., 2])
+                    cy = 0.5 * (xyxy_bboxes[..., 1] + xyxy_bboxes[..., 3])
+                    is_within_crop_area = (left < cx) & (cx < right) & (top < cy) & (cy < bottom)
+                    if not is_within_crop_area.any():
+                        continue
+                    xyxy_bboxes = torch.tensor(xyxy_bboxes[is_within_crop_area])
+                    ious = box_iou(
+                        xyxy_bboxes,
+                        torch.tensor([[left, top, right, bottom]], dtype=xyxy_bboxes.dtype,
+                                     device=xyxy_bboxes.device),)
+                    if ious.max() < min_jaccard_overlap:
+                        continue
+                    image = F.crop(image, top, left, new_h, new_w)
+                    if bbox is not None:
+                        bbox = self._crop_bbox(bbox, top, left, new_h, new_w)
+                    return image, label, mask, bbox, keypoint
+
+        return image, label, mask, bbox, keypoint
+
+    def _crop_bbox(self, bbox, i, j, h, w):
+        bbox[..., 0:4:2] = np.clip(bbox[..., 0:4:2] - j, 0, w)
+        bbox[..., 1:4:2] = np.clip(bbox[..., 1:4:2] - i, 0, h)
+        return bbox
+
+class RandomZoomOut:
+    """
+    Based on the torchvision implementation.
+    https://pytorch.org/vision/0.18/_modules/torchvision/transforms/v2/_geometry.html#RandomZoomOut
+    """
+    visualize = True
+
+    def __init__(
+        self,
+        fill: int,
+        side_range: List[float],
+        p: float,
+
+    ) -> None:
+        _check_sequence_input(side_range, "side_range", req_sizes=(2,))
+        if side_range[0] < 1.0 or side_range[0] > side_range[1]:
+            raise ValueError("Invalid side range provided {}.".format(side_range))
+        self.fill = fill
+        self.padding_mode = 'constant'
+        self.side_range = side_range
+        self.p = p
+
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        if not isinstance(image, (torch.Tensor, Image.Image)):
+            raise TypeError("Image should be Tensor or PIL.Image. Got {}".format(type(image)))
+
+        if isinstance(image, Image.Image):
+            w, h = image.size
+        else:
+            w, h = image.shape[-1], image.shape[-2]
+
+        if random.random() < self.p:
+            r = self.side_range[0] + torch.rand(1) * (self.side_range[1] - self.side_range[0])
+            canvas_width = int(w * r)
+            canvas_height = int(h * r)
+
+            r = torch.rand(2)
+            left= int((canvas_width - w) * r[0])
+            top = int((canvas_height - h) * r[1])
+            right = canvas_width - (left + w)
+            bottom = canvas_height - (top + h)
+            padding_ltrb = [left, top, right, bottom]
+            image = F.pad(image, padding_ltrb, fill=self.fill, padding_mode=self.padding_mode)
+            if mask is not None:
+                mask = F.pad(mask, padding_ltrb, fill=255, padding_mode=self.padding_mode)
+            if bbox is not None:
+                padding_left, padding_top, _, _ = padding_ltrb
+                bbox[..., 0:4:2] += padding_left
+                bbox[..., 1:4:2] += padding_top
+            #TODO: Compute Keypoint
+
         return image, label, mask, bbox, keypoint
 
 

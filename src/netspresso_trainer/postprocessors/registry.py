@@ -23,6 +23,7 @@ from .segmentation import SegmentationPostprocessor
 
 POSTPROCESSOR_DICT = {
     'fc': ClassificationPostprocessor,
+    'fc_conv': ClassificationPostprocessor,
     'all_mlp_decoder': SegmentationPostprocessor,
     'anchor_free_decoupled_head': DetectionPostprocessor,
     'pidnet': SegmentationPostprocessor,
