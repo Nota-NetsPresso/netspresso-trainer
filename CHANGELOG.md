@@ -47,7 +47,7 @@ No changes to highlight.
 - Fix ViT token number in positional encoding for torch.fx compile step by `@illian01` in [PR 475](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/475)
 - Remove output typing of PIDNet by `@illian01` in [PR 477](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/477)
 - Update documentation by `@illian01` in [PR 483](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/483), [PR 485](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/485)
-- Minor refactorings by `hglee98` in [PR 513](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/513)
+- Minor refactorings by `hglee98` in [PR 513](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/513), [PR 518](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/518#pullrequestreview-2262154284)
 
 # v0.2.2
 
