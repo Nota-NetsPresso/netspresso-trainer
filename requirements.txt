@@ -9,3 +9,9 @@ tensorboard
 fvcore
 safetensors
 loguru>=0.6.0
+datasets
+gradio==3.50.2
+torch_tb_profiler
+scipy
+pandas
+requests
