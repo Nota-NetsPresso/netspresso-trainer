@@ -14,7 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from typing import Literal
+from typing import Literal, Optional
 
 import torch
 
@@ -44,6 +44,11 @@ class DetectionProcessor(BaseTaskProcessor):
             loss_factory.calc(out, targets, phase='train')
 
         loss_factory.backward(self.grad_scaler)
+        if self.max_norm:
+            # Unscales the gradients of optimizer's assigned parameters in-place
+            self.grad_scaler.unscale_(optimizer)
+            torch.nn.utils.clip_grad_norm_(train_model.parameters(), self.max_norm)
+        # optimizer's gradients are already unscaled, so scaler.step doesn't unscale them,
         self.grad_scaler.step(optimizer)
         self.grad_scaler.update()
 

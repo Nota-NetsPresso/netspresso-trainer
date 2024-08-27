@@ -35,8 +35,10 @@ class BaseTaskProcessor(ABC):
         #TODO: Temporarily set ``mixed_precision`` as optional since this is experimental
         if hasattr(conf, 'training'):
             self.mixed_precision = conf.training.mixed_precision if hasattr(conf.training, 'mixed_precision') else False
+            self.max_norm = conf.training.max_norm if hasattr(conf.training, 'max_norm') else None
         else:
             self.mixed_precision = False
+            self.max_norm = None
         if self.mixed_precision:
             if self.single_gpu_or_rank_zero:
                 logger.info("-" * 40)
