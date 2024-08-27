@@ -37,6 +37,9 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'resnet50': 'imagenet1k',
     'mobilenet_v3_small': 'imagenet1k',
     'mobilenet_v3_large': 'imagenet1k',
+    'mobilenet_v4_conv_small': 'imagenet1k',
+    'mobilenet_v4_conv_medium': 'imagenet1k',
+    'mobilenet_v4_conv_large': 'imagenet1k',
     'segformer_b0': 'ade20k',
     'mobilevit_s': 'imagenet1k',
     'vit_tiny': 'imagenet1k',
@@ -70,6 +73,15 @@ MODEL_CHECKPOINT_URL_DICT = {
     },
     'mobilenet_v3_large': {
         'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv3/mobilenet_v3_large_imagenet1k.safetensors?versionId=jPG4LAueBDO5VrFGLQ51_z.iDHa5lOgP",
+    },
+    'mobilenet_v4_conv_small': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv4/mobilenet_v4_conv_small_imagenet1k.safetensors?versionId=k8VYpxy5fdTzgyiYbbR1Smv8gTT2bMuF",
+    },
+    'mobilenet_v4_conv_medium': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv4/mobilenet_v4_conv_medium_imagenet1k.safetensors?versionId=buTzldKEk8MSWZHehi494KsNMfP3G1Zr",
+    },
+    'mobilenet_v4_conv_large': {
+        'imagenet1k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mobilenetv4/mobilenet_v4_conv_large_imagenet1k.safetensors?versionId=_5D7G_yhUg2YJqwBBgNgUxCHSQPbERSD",
     },
     'segformer_b0': {
         'ade20k': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/segformer/segformer_b0_ade20k.safetensors?versionId=0RRDpZeHb2VvVzFo2jGZN4A4bVQ.k49l",

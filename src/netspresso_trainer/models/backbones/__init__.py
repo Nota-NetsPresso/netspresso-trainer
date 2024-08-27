@@ -21,6 +21,7 @@ from .experimental.efficientformer import efficientformer
 from .experimental.mixnet import mixnet
 from .experimental.mixtransformer import mixtransformer
 from .experimental.mobilenetv3 import mobilenetv3
+from .experimental.mobilenetv4 import mobilenetv4
 from .experimental.mobilevit import mobilevit
 from .experimental.shufflenetv2 import shufflenetv2
 from .experimental.vit import vit
