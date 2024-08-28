@@ -317,7 +317,7 @@ class DETRLoss(nn.Module):
         """
         self.num_classes = targets['num_classes']
         img_size = targets['img_size']
-        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:], 'aux_outputs': out['aux_pred']}
+        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:], 'aux_outputs': out['aux_pred'], 'dn_aux_outputs': out['dn_aux_pred'], 'dn_meta': out['dn_meta']}
         empty_weight = torch.ones(self.num_classes + 1)
         empty_weight[-1] = 1e-4
         self.register_buffer('empty_weight', empty_weight)
@@ -366,13 +366,12 @@ class DETRLoss(nn.Module):
                     losses.update(l_dict)
 
         # In case of cdn auxiliary losses. For rtdetr
-        if 'dn_aux_outputs' in outputs:
+        if outputs['dn_aux_outputs'] is not None:
             assert 'dn_meta' in outputs, ''
             indices = self.get_cdn_matched_indices(outputs['dn_meta'], targets)
             num_boxes = num_boxes * outputs['dn_meta']['dn_num_group']
 
             for i, aux_outputs in enumerate(outputs['dn_aux_outputs']):
-                # indices = self.matcher(aux_outputs, targets)
                 for loss in self.losses:
                     if loss == 'masks':
                         # Intermediate masks losses are too costly to compute, we ignore them.

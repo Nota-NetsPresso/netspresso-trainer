@@ -36,7 +36,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         optimizer.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
-            out = train_model(images)
+            out = train_model(images, targets=target)
             loss_factory.calc(out, target, phase='train')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
