@@ -136,14 +136,20 @@ class MobileNetV4(nn.Module):
 
     def forward(self, x: Tensor):
         x = self.conv_stem(x)
-        for stage in self.stages:
-            x = stage(x)
 
+        all_hidden_states = () if self.use_intermediate_features else None
+        for stage_idx, stage in enumerate(self.stages):
+            x = stage(x)
+            if self.use_intermediate_features and stage_idx in self.return_stage_idx:
+                all_hidden_states = all_hidden_states + (x, )
+
+        if self.use_intermediate_features:
+            return BackboneOutput(intermediate_features=all_hidden_states)
+        
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
 
         return BackboneOutput(last_feature=x)
-
     @property
     def feature_dim(self):
         return self._feature_dim
