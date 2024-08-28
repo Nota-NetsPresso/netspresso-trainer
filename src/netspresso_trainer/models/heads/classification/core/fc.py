@@ -45,7 +45,7 @@ class FC(nn.Module):
         classifier.append(nn.Linear(prev_size, num_classes))
         self.classifier = nn.Sequential(*classifier)
         
-    def forward(self, x: Union[Tensor, Proxy]) -> ModelOutput:
+    def forward(self, x: Union[Tensor, Proxy], targets=None) -> ModelOutput:
         x = self.classifier(x)
         return ModelOutput(pred=x)
 
@@ -71,7 +71,7 @@ class FCConv(nn.Module):
 
         self.classifier = nn.Sequential(*classifier)
 
-    def forward(self, x: Union[Tensor, Proxy]) -> ModelOutput:
+    def forward(self, x: Union[Tensor, Proxy], targets=None) -> ModelOutput:
         x = self.classifier(x.unsqueeze(-1).unsqueeze(-1))
         x = torch.flatten(x, 1)
         return ModelOutput(pred=x)

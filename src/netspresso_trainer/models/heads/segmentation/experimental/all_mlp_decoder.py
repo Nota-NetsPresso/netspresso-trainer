@@ -53,7 +53,7 @@ class AllMLPDecoder(nn.Module):
         self.dropout = nn.Dropout(classifier_dropout_prob)
         self.classifier = nn.Conv2d(intermediate_channels, num_classes, kernel_size=1)
 
-    def forward(self, encoder_hidden_states: FXTensorListType):
+    def forward(self, encoder_hidden_states: FXTensorListType, targets=None):
 
         all_hidden_states = ()
         for encoder_hidden_state, mlp in zip(encoder_hidden_states, self.linear_c):
