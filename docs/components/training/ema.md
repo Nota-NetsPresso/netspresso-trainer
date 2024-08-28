@@ -43,7 +43,7 @@ applied_decay = decay * (1 - math.exp(-counter / beta)
 
 | Field <img width=200/> | Description |
 |---|---|
-| `training.epochs` | (str) Name must be "exp_decay" to use constant decay. |
+| `training.name` | (str) Name must be "exp_decay" to use constant decay. |
 | `training.decay` | (float) The decay rate for EMA. For exponential decay, this means maximum decay value. Its range must be in [0, 1.0]. |
 | `training.beta` | (float) Determines the speed of convergence of decay to maximum value. |
 

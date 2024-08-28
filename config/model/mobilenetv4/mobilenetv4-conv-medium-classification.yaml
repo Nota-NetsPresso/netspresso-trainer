@@ -1,0 +1,77 @@
+model:
+  task: classification
+  name: mobilenet_v4_conv_medium
+  checkpoint:
+    use_pretrained: True
+    load_head: False
+    path: ~
+    fx_model_path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: mobilenetv4
+      params:
+        stem_out_channel: 32
+        stem_kernel_size: 3
+        stem_stride: 2
+        final_conv_out_channel: 960
+        final_conv_kernel_size: 1
+        final_conv_stride: 1
+        norm_type: batch_norm
+        act_type: relu
+        return_stage_idx: ~
+      stage_params:
+        - 
+          block_type: fused_inverted
+          in_channels: [32]
+          hidden_channels: [128]
+          out_channels: [48]
+          kernel_size: [3]
+          stride: [2]
+          out_act: [False]
+        - 
+          block_type: universal_inverted_residual
+          in_channels: [48, 80]
+          hidden_channels: [192, 160]
+          out_channels: [80, 80]
+          extra_dw: [True, True]
+          extra_dw_kernel_size: [3, 3]
+          middle_dw: [True, True]
+          middle_dw_kernel_size: [5, 3]
+          stride: [2, 1]
+        - 
+          block_type: universal_inverted_residual
+          in_channels: [80, 160, 160, 160, 160, 160, 160, 160]
+          hidden_channels: [480, 640, 640, 640, 640, 640, 320, 640]
+          out_channels: [160, 160, 160, 160, 160, 160, 160, 160]
+          extra_dw: [True, True, True, True, True, True, False, True]
+          extra_dw_kernel_size: [3, 3, 3, 3, 3, 3, ~, 3]
+          middle_dw: [True, True, True, True, True, False, False, False]
+          middle_dw_kernel_size: [5, 3, 3, 5, 3, ~, ~, ~]
+          stride: [2, 1, 1, 1, 1, 1, 1, 1]
+
+        - 
+          block_type: universal_inverted_residual
+          in_channels: [160, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256]
+          hidden_channels: [960, 1024, 1024, 1024, 1024, 1024, 512, 1024, 1024, 1024, 512]
+          out_channels: [256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256]
+          extra_dw: [True, True, True, True, False, True, True, True, False, False, True]
+          extra_dw_kernel_size: [5, 5, 3, 3, ~, 3, 3, 5, ~, ~, 5]
+          middle_dw: [True, True, True, True, False, False, True, True, False, False, False]
+          middle_dw_kernel_size: [5, 5, 5, 5, ~, ~, 5, 5, ~, ~, ~]
+          stride: [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    head:
+      name: fc_conv
+      params:
+        num_layers: 2
+        intermediate_channels: 1280
+        act_type: relu
+        norm_type: batch_norm
+        dropout_prob: 0.
+  postprocessor: ~
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~

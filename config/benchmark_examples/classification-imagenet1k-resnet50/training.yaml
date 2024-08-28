@@ -2,6 +2,7 @@ training:
   epochs: 600
   mixed_precision: False
   ema: ~
+  max_norm: ~
   optimizer:
     name: sgd
     lr: 0.5
