@@ -6,7 +6,7 @@
 - Add Objects365 dataset auto downloader by `@hglee98` in [PR 482](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/482)
 - Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497)
 - Add RandomIoUCrop, RandomZoomOut augmentation by `@hglee98` in [PR 504](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/504)
-- Add MobileNetV4 conv series backbone by `@illian01` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516)
+- Add MobileNetV4 conv series backbone by `@illian01` and `hglee98` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516), [PR 520](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/520)
 - Add gradient clipping feature by `hglee98` in [PR 506](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/506#pullrequestreview-2262064548)
 
 ## Bug Fixes:
