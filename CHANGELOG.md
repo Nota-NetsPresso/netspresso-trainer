@@ -4,7 +4,7 @@
 
 - Add RT-DETR by `@illian01` and `@hglee98` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490), [PR 491](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/491), [PR 494](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/494), [PR 498](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/498#pullrequestreview-2234711140), [PR 500](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/500), [PR 507](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/507), [PR 501](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/501)
 - Add Objects365 dataset auto downloader by `@hglee98` in [PR 482](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/482)
-- Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497)
+- Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497), [PR 523](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/523)
 - Add RandomIoUCrop, RandomZoomOut augmentation by `@hglee98` in [PR 504](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/504)
 - Add MobileNetV4 conv series backbone by `@illian01` and `hglee98` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516), [PR 520](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/520)
 - Add gradient clipping feature by `hglee98` in [PR 506](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/506#pullrequestreview-2262064548)
