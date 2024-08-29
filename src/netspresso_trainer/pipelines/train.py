@@ -276,7 +276,7 @@ class TrainingPipeline(BasePipeline):
 
         if self.is_graphmodule_training:
             best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype), opset_version=self.conf.logging.onnx_export_opset)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
             torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
             logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
@@ -288,7 +288,7 @@ class TrainingPipeline(BasePipeline):
         logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
         try:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype))
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(self.save_dtype), opset_version=self.conf.logging.onnx_export_opset)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
 
             save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))
