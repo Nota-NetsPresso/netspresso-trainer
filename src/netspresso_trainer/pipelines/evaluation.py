@@ -119,7 +119,7 @@ class EvaluationPipeline(BasePipeline):
             success=True,
         )
 
-        logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
+        logger.info(f"[Model stats] | Sample input: {tuple(self.sample_input.shape)} | Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "evaluation_summary.json"
 

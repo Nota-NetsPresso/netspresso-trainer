@@ -312,7 +312,7 @@ class TrainingPipeline(BasePipeline):
         if end_training:
             total_train_time = self.timer.get(name='train_all', as_pop=True)
             flops, params = get_params_and_flops(self.model, self.sample_input.float())
-            logger.info(f"[Model stats] Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
+            logger.info(f"[Model stats] | Sample input: {tuple(self.sample_input.shape)} | Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
             training_summary.total_train_time = total_train_time
             training_summary.flops = flops
             training_summary.params = params
