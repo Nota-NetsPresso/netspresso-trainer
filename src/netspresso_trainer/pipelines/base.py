@@ -49,7 +49,7 @@ class BasePipeline(ABC):
 
     @property
     def sample_input(self):
-        return torch.randn((1, 3, self.conf.logging.onnx_input_size[0], self.conf.logging.onnx_input_size[1]))
+        return torch.randn((1, 3, self.conf.logging.sample_input_size[0], self.conf.logging.sample_input_size[1]))
 
     def log_results(
         self,
