@@ -37,6 +37,13 @@ augmentation:
       stride: 32
       random_range: 5
       interpolation: bilinear
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
   inference:
     - 
       name: resize
@@ -48,3 +55,10 @@ augmentation:
       name: pad
       size: 640
       fill: 144
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
