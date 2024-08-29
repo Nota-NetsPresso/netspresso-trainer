@@ -956,11 +956,14 @@ class Normalize:
         )
 
 
-class ToTensor(T.ToTensor):
+class ToTensor:
     visualize = False
 
+    def __init__(self, pixel_range):
+        self.pixel_range = pixel_range
+
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
-        image = F.to_tensor(image)
+        image = F.to_tensor(image) * self.pixel_range
         if mask is not None:
             mask = torch.as_tensor(np.array(mask), dtype=torch.int64)
         if bbox is not None:
