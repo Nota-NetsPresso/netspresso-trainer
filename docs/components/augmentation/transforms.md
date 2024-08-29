@@ -160,6 +160,29 @@ This MosaicDetection augmentation is based on [YOLOX repository](https://github.
   ```
 </details>
 
+### Nomalize
+
+Apply z-normalization to an image.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "normalize" to use `Normalize` transform. |
+| `mean` | (list) The mean values for normalizing the image. |
+| `std` | (list) The standard deviation values for normalizing the image. |
+
+<details>
+  <summary>Normalize example</summary>
+
+  ```yaml
+  augmentation:
+    train:
+      -
+        name: normalize
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+  ```
+</details>
+
 ### Pad
 
 Pad an image with constant. This augmentation is based on the [Pad](https://pytorch.org/vision/0.15/generated/torchvision.transforms.Pad.html#torchvision.transforms.Pad) in torchvision library.
@@ -417,6 +440,39 @@ Naively resize the input image to the given size. This augmentation follows the 
         interpolation: 'bilinear'
         max_size: ~
         resize_criteria: long
+  ```
+</details>
+
+### ToTensor
+
+The `ToTensor` transform converts data into a tensor that can be fed into a PyTorch model. The `pixel_range` parameter allows you to specify the range of pixel values that each image data point can have.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "totensor" to use `ToTensor` transform. |
+| `pixel_range` | (int) The range of pixel values that the image data will be normalized to. |
+
+<details>
+  <summary>ToTensor example - 1</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: totensor
+        pixel_range: 1.0
+  ```
+</details>
+
+<details>
+  <summary>ToTensor example - 2</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: totensor
+        pixel_range: 255.0
   ```
 </details>
 
