@@ -167,8 +167,8 @@ Apply z-normalization to an image.
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "normalize" to use `Normalize` transform. |
-| `mean` | (list) The mean values for normalizing the image. |
-| `std` | (list) The standard deviation values for normalizing the image. |
+| `mean` | (list[float]) The mean values for normalizing the image. |
+| `std` | (list[float]) The standard deviation values for normalizing the image. |
 
 <details>
   <summary>Normalize example</summary>
@@ -450,7 +450,7 @@ The `ToTensor` transform converts data into a tensor that can be fed into a PyTo
 | Field <img width=200/> | Description |
 |---|---|
 | `name` | (str) Name must be "totensor" to use `ToTensor` transform. |
-| `pixel_range` | (int) The range of pixel values that the image data will be normalized to. |
+| `pixel_range` | (float) The range of pixel values that the image data will be normalized to. |
 
 <details>
   <summary>ToTensor example - 1</summary>
