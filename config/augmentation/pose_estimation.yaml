@@ -12,6 +12,13 @@ augmentation:
       rotation: 60
       rotation_prob: 1.
       size: [256, 256]
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
   inference:
     - 
       name: posetopdownaffine
@@ -22,3 +29,10 @@ augmentation:
       rotation: 0
       rotation_prob: 0.
       size: [256, 256]
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
