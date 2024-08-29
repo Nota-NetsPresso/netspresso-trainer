@@ -21,6 +21,7 @@ from .custom.image_proc import (
     CenterCrop,
     ColorJitter,
     HSVJitter,
+    Normalize,
     Pad,
     PoseTopDownAffine,
     RandomCrop,
@@ -32,6 +33,7 @@ from .custom.image_proc import (
     RandomVerticalFlip,
     RandomZoomOut,
     Resize,
+    ToTensor,
     TrivialAugmentWide,
 )
 from .custom.mixing import Mixing
@@ -56,4 +58,6 @@ TRANSFORM_DICT: Dict[str, Callable] = {
     'autoaugment': AutoAugment,
     'hsvjitter': HSVJitter,
     'posetopdownaffine': PoseTopDownAffine,
+    'totensor': ToTensor,
+    'normalize': Normalize,
 }

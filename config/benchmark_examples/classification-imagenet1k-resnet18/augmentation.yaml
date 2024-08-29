@@ -9,6 +9,13 @@ augmentation:
     - 
       name: randomhorizontalflip
       p: 0.5
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
   inference:
     - 
       name: resize
@@ -19,3 +26,10 @@ augmentation:
     - 
       name: centercrop
       size: 224
+    -
+      name: totensor
+      pixel_range: 1.0
+    -
+      name: normalize
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
