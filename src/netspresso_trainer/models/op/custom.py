@@ -377,6 +377,7 @@ class UniversalInvertedResidualBlock(nn.Module):
         act_type: Optional[str] = None,
         use_se: bool = False,
         se_layer: Callable[..., nn.Module] = partial(SElayer, scale_activation=nn.Hardsigmoid),
+        layer_scale: Optional[float] = None,
     ):
         super().__init__()
         if not (1 <= stride <= 2):
@@ -443,11 +444,17 @@ class UniversalInvertedResidualBlock(nn.Module):
         )
 
         self.block = nn.Sequential(*layers)
+        self.apply_layer_scale = False
+        if layer_scale is not None:
+            self.apply_layer_scale = True
+            self.layer_scale = LayerScale2d(out_channels, layer_scale)
         self.out_channels = out_channels
         self._is_cn = stride > 1
 
     def forward(self, input: Tensor) -> Tensor:
         result = self.block(input)
+        if self.apply_layer_scale:
+            result = self.layer_scale(result)
         if self.use_res_connect:
             result = result + input
         return result

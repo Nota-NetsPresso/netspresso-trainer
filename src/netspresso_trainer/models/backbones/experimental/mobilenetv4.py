@@ -72,6 +72,7 @@ class MobileNetV4(nn.Module):
         norm_type = params.norm_type
         act_type = params.act_type
         self.return_stage_idx = params.return_stage_idx if params.return_stage_idx else [len(stage_params) - 1]
+        self.layer_scale = params.layer_scale
 
         # Define model
         self.conv_stem = ConvLayer(3, stem_out_channel, kernel_size=stem_kernel_size, stride=stem_stride,
@@ -119,7 +120,7 @@ class MobileNetV4(nn.Module):
 
                     stage.append(
                         UniversalInvertedResidualBlock(in_channels, hidden_channels, out_channels, extra_dw, extra_kernel_size, 
-                                                       middle_dw, middle_kernel_size, stride, norm_type, act_type)
+                                                       middle_dw, middle_kernel_size, stride, norm_type, act_type, layer_scale=self.layer_scale)
                     )
 
                 else:
