@@ -7,10 +7,11 @@ logging:
   project_id: ~
   output_dir: ./outputs
   tensorboard: true
-  csv: true
   image: true
   stdout: true
   save_optimizer_state: true
+  sample_input_size: [512, 512] # Used for flops and onnx export
+  onnx_export_opset: 13 # Recommend in range [13, 17]
   validation_epoch: &validation_epoch 5
   save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.
 ```
@@ -33,9 +34,10 @@ The port number `50001` is same with the port forwarded in example docker setup.
 | `logging.project_id` | (str) Project name to save the experiment. If `None`, it is set as `{task}_{model}` (e.g. `segmentation_segformer`). |
 | `logging.output_dir` | (str) Root directory for saving the experiment. Default location is `./outputs`. |
 | `logging.tensorboard` | (bool) Whether to use the tensorboard. |
-| `logging.csv` | (bool) Whether to save the result in csv format. |
 | `logging.image` | (bool) Whether to save the validation results. It is ignored if the task is `classification`. |
 | `logging.stdout` | (bool) Whether to log the standard output. |
 | `logging.save_optimizer_state` | (bool) Whether to save optimizer state with model checkpoint to resume training. |
+| `logging.sample_input_size` | (list[int]) The size of the sample input used for calculating FLOPs and exporting the model to ONNX format. |
+| `logging.onnx_export_opset` | (int) The ONNX opset version to be used for model export |
 | `logging.validation_epoch` | (int) Validation frequency in total training process. |
 | `logging.save_checkpoint_epoch` | (int) Checkpoint saving frequency in total training process. |

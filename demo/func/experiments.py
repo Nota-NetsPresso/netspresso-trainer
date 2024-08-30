@@ -80,7 +80,7 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
                 {
                     "id": f"{experiment_name}/{run_dir.name}", "model": model, "task": hparam.model.task,
                     "data": hparam.data.name, "data_format": hparam.data.format,
-                    "input_image_size": (hparam.logging.onnx_input_size[0], hparam.logging.onnx_input_size[1]),
+                    "input_image_size": (hparam.logging.sample_input_size[0], hparam.logging.sample_input_size[1]),
                     "checkpoint_path":
                     [candidate for candidate in run_dir.glob("*.pt")
                      if candidate.suffix == '.pt' and 'best' in candidate.stem][0],

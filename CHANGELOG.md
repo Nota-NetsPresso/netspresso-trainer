@@ -2,9 +2,14 @@
 
 ## New Features:
 
-- Add RT-DETR by `@illian01` and `@hglee98` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490), [PR 491](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/491), [PR 494](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/494), [PR 498](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/498#pullrequestreview-2234711140), [PR 500](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/500), [PR 507](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/507)
+- Add RT-DETR by `@illian01` and `@hglee98` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490), [PR 491](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/491), [PR 494](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/494), [PR 498](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/498#pullrequestreview-2234711140), [PR 500](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/500), [PR 507](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/507), [PR 501](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/501)
 - Add Objects365 dataset auto downloader by `@hglee98` in [PR 482](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/482)
-- Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497)
+- Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497), [PR 523](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/523)
+- Add RandomIoUCrop, RandomZoomOut augmentation by `@hglee98` in [PR 504](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/504)
+- Add MobileNetV4 backbone by `@illian01` and `hglee98` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516), [PR 520](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/520), [PR 526](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/526)
+- Add gradient clipping feature by `hglee98` in [PR 506](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/506#pullrequestreview-2262064548)
+- Enabled to control `ToTensor` and `Normalization` through config file by `@illian01` in [PR 522](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/522)
+- Enable to set onnx opset version through config file by `@illian01` in [PR 525](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/525)
 
 ## Bug Fixes:
 
@@ -19,6 +24,7 @@ No changes to highlight.
 
 - Update pi 4b deployment benchmark by `@illian01` in [PR 492](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/492)
 - Clamp bbox for detection dataset loading by `@hglee98` in [PR 503](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/503#pullrequestreview-2247173939)
+- Combine requirements and requirements-optional by `@illian01` in [PR 517](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/517)
 
 # v1.0.0
 
@@ -43,6 +49,7 @@ No changes to highlight.
 - Fix ViT token number in positional encoding for torch.fx compile step by `@illian01` in [PR 475](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/475)
 - Remove output typing of PIDNet by `@illian01` in [PR 477](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/477)
 - Update documentation by `@illian01` in [PR 483](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/483), [PR 485](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/485)
+- Minor refactorings by `hglee98` in [PR 513](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/513), [PR 518](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/518#pullrequestreview-2262154284)
 
 # v0.2.2
 

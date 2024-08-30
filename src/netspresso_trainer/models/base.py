@@ -86,7 +86,7 @@ class SegmentationModel(TaskModel):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: ModelOutput = self.head(features['intermediate_features'])
+        out: ModelOutput = self.head(features['intermediate_features'], targets)
         return out
 
 
@@ -98,7 +98,7 @@ class DetectionModel(TaskModel):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: DetectionModelOutput = self.head(features['intermediate_features'])
+        out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
 
 class PoseEstimationModel(TaskModel):
@@ -109,5 +109,5 @@ class PoseEstimationModel(TaskModel):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: DetectionModelOutput = self.head(features['intermediate_features'])
+        out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out

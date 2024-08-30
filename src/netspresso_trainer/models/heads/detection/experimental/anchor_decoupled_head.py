@@ -145,7 +145,7 @@ class RetinaNetRegressionHead(nn.Module):
                 if layer.bias is not None:
                     torch.nn.init.zeros_(layer.bias)
 
-    def forward(self, x):
+    def forward(self, x, targets=None):
         all_bbox_regression = []
 
         for features in x:

@@ -282,35 +282,6 @@ class DETRLoss(nn.Module):
         losses['loss_giou'] = loss_giou.sum() / num_boxes
         return losses
 
-    # def loss_masks(self, outputs, targets, indices, num_boxes):
-    #     """Compute the losses related to the masks: the focal loss and the dice loss.
-    #        targets dicts must contain the key "masks" containing a tensor of dim [nb_target_boxes, h, w]
-    #     """
-    #     assert "pred_masks" in outputs
-
-    #     src_idx = self._get_src_permutation_idx(indices)
-    #     tgt_idx = self._get_tgt_permutation_idx(indices)
-    #     src_masks = outputs["pred_masks"]
-    #     src_masks = src_masks[src_idx]
-    #     masks = [t["masks"] for t in targets]
-    #     # TODO use valid to mask invalid areas due to padding in loss
-    #     target_masks, valid = nested_tensor_from_tensor_list(masks).decompose()
-    #     target_masks = target_masks.to(src_masks)
-    #     target_masks = target_masks[tgt_idx]
-
-    #     # upsample predictions to the target size
-    #     src_masks = interpolate(src_masks[:, None], size=target_masks.shape[-2:],
-    #                             mode="bilinear", align_corners=False)
-    #     src_masks = src_masks[:, 0].flatten(1)
-
-    #     target_masks = target_masks.flatten(1)
-    #     target_masks = target_masks.view(src_masks.shape)
-    #     losses = {
-    #         "loss_mask": sigmoid_focal_loss(src_masks, target_masks, num_boxes),
-    #         "loss_dice": dice_loss(src_masks, target_masks, num_boxes),
-    #     }
-    #     return losses
-
     def _get_src_permutation_idx(self, indices):
         # permute predictions following indices
         batch_idx = torch.cat([torch.full_like(src, i) for i, (src, _) in enumerate(indices)])
@@ -346,7 +317,7 @@ class DETRLoss(nn.Module):
         """
         self.num_classes = targets['num_classes']
         img_size = targets['img_size']
-        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:], 'aux_outputs': out['aux_pred']}
+        outputs = {'pred_boxes': out['pred'][..., :4], 'pred_logits': out['pred'][..., 4:], 'aux_outputs': out['aux_pred'], 'dn_aux_outputs': out['dn_aux_pred'], 'dn_meta': out['dn_meta']}
         empty_weight = torch.ones(self.num_classes + 1)
         empty_weight[-1] = 1e-4
         self.register_buffer('empty_weight', empty_weight)
@@ -395,13 +366,12 @@ class DETRLoss(nn.Module):
                     losses.update(l_dict)
 
         # In case of cdn auxiliary losses. For rtdetr
-        if 'dn_aux_outputs' in outputs:
+        if outputs['dn_aux_outputs'] is not None:
             assert 'dn_meta' in outputs, ''
             indices = self.get_cdn_matched_indices(outputs['dn_meta'], targets)
             num_boxes = num_boxes * outputs['dn_meta']['dn_num_group']
 
             for i, aux_outputs in enumerate(outputs['dn_aux_outputs']):
-                # indices = self.matcher(aux_outputs, targets)
                 for loss in self.losses:
                     if loss == 'masks':
                         # Intermediate masks losses are too costly to compute, we ignore them.
@@ -416,7 +386,7 @@ class DETRLoss(nn.Module):
                     l_dict = {k + f'_dn_{i}': v for k, v in l_dict.items()}
                     losses.update(l_dict)
 
-        total_loss = sum(losses.values())
+        total_loss = torch.stack(list(losses.values())).sum()
         return total_loss
 
     @staticmethod

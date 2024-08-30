@@ -40,6 +40,6 @@ def _save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor,
                                     output_names: {0: 'batch_size'}})
 
 
-def save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor):
+def save_onnx(model: nn.Module, f: Union[str, Path], sample_input: Tensor, opset_version):
     sample_input = sample_input.to(get_device(model))
-    return _save_onnx(model, f, sample_input, opset_version=13, input_names='images', output_names='output')
+    return _save_onnx(model, f, sample_input, opset_version=opset_version, input_names='images', output_names='output')

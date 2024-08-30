@@ -70,10 +70,6 @@ def transforms_custom(conf_augmentation, training):
             transform = TRANSFORM_DICT[name](**augment_kwargs)
             preprocess.append(transform)
 
-    preprocess = preprocess + [
-        TC.ToTensor(),
-        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    ]
     return TC.Compose(preprocess)
 
 
@@ -91,10 +87,6 @@ def train_transforms_pidnet(conf_augmentation, training):
             transform = TRANSFORM_DICT[name](**augment_kwargs)
             preprocess.append(transform)
 
-    preprocess = preprocess + [
-        TC.ToTensor(),
-        TC.Normalize(mean=IMAGENET_DEFAULT_MEAN, std=IMAGENET_DEFAULT_STD)
-    ]
     return TC.Compose(preprocess, additional_targets={'edge': 'mask'})
 
 

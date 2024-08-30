@@ -138,7 +138,7 @@ class YOLOFastestRegressionHead(nn.Module):
         ])
         self.bbox_reg = nn.Conv2d(in_channels, num_anchors * 4, 1, 1, 0, bias=True)
     
-    def forward(self, x): 
+    def forward(self, x, targets=None): 
         all_bbox_regression = []
         out1 = self.layer_1(x[0])
         out2 = self.layer_2(x[1])
