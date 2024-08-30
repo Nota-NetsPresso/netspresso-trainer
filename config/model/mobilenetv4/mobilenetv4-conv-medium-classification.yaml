@@ -3,7 +3,7 @@ model:
   name: mobilenet_v4_conv_medium
   checkpoint:
     use_pretrained: True
-    load_head: False
+    load_head: True
     path: ~
     fx_model_path: ~
     optimizer_path: ~
@@ -30,7 +30,6 @@ model:
           out_channels: [48]
           kernel_size: [3]
           stride: [2]
-          out_act: [False]
         - 
           block_type: ['uir', 'uir']
           in_channels: [48, 80]

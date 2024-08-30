@@ -30,7 +30,6 @@ model:
           out_channels: [48]
           kernel_size: [3]
           stride: [2]
-          out_act: [False]
         - 
           block_type: ['uir', 'uir']
           in_channels: [48, 96]
