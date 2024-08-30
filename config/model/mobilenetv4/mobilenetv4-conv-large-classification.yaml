@@ -22,6 +22,7 @@ model:
         norm_type: batch_norm
         act_type: relu
         return_stage_idx: ~
+        layer_scale: ~
       stage_params:
         # Conv2D: ['conv', out_channels, kernel_size, stride]
         # FusedIB: ['fi', out_channels, hidden_channels, kernel_size, stride]
