@@ -23,8 +23,7 @@ version = (Path("src/netspresso_trainer") / "VERSION").read_text().strip()
 readme_contents = Path("README.md").read_text()
 
 requirements = Path("requirements.txt").read_text().split('\n')
-requirements_optional = Path("requirements-optional.txt").read_text().split('\n')
-requirements_all = requirements + requirements_optional
+requirements_all = requirements
 
 setup(
     name="netspresso_trainer",
@@ -46,7 +45,7 @@ setup(
         ],
     },
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: Science/Research",
         "Operating System :: OS Independent",
