@@ -23,10 +23,10 @@ model:
         act_type: relu
         return_stage_idx: ~
       stage_params:
-        # Conv2D: ['conv', in_channels, out_channels, kernel_size, stride]
-        # FusedIB: ['fi', in_channels, out_channels, hidden_channels, kernel_size, stride]
-        # UniversalInvertedResidualBlock: ['uir', in_channels, out_channels, hidden_channels, extra_dw, extra_dw_kernel_size, middle_dw, middle_dw_kernel_size, stride]
-        # MobileMultiQueryAttention2D: ['mmqa', in_channels, out_channels, hidden_channels, num_attention_heads, query_pooling_stride, key_val_downsample, key_val_downsample_kernel_size, key_val_downsample_stride, stride]
+        # Conv2D: ['conv', out_channels, kernel_size, stride]
+        # FusedIB: ['fi', out_channels, hidden_channels, kernel_size, stride]
+        # UniversalInvertedResidualBlock: ['uir', out_channels, hidden_channels, extra_dw, extra_dw_kernel_size, middle_dw, middle_dw_kernel_size, stride]
+        # MobileMultiQueryAttention2D: ['mmqa', out_channels, attention_channel, num_attention_heads, query_pooling_stride, key_val_downsample, key_val_downsample_kernel_size, key_val_downsample_stride, stride]
         - 
           - ['fi', 48, 128, 3, 2]
         - 
