@@ -3,7 +3,7 @@ model:
   name: mobilenet_v4_conv_large
   checkpoint:
     use_pretrained: True
-    load_head: False
+    load_head: True
     path: ~
     fx_model_path: ~
     optimizer_path: ~
@@ -23,43 +23,41 @@ model:
         act_type: relu
         return_stage_idx: ~
       stage_params:
+        # Conv2D: ['conv', in_channels, out_channels, kernel_size, stride]
+        # FusedIB: ['fi', in_channels, out_channels, hidden_channels, kernel_size, stride]
+        # UniversalInvertedResidualBlock: ['uir', in_channels, out_channels, hidden_channels, extra_dw, extra_dw_kernel_size, middle_dw, middle_dw_kernel_size, stride]
+        # MobileMultiQueryAttention2D: ['mmqa', in_channels, out_channels, hidden_channels, num_attention_heads, query_pooling_stride, key_val_downsample, key_val_downsample_kernel_size, key_val_downsample_stride, stride]
         - 
-          block_type: ['fi']
-          in_channels: [24]
-          hidden_channels: [96]
-          out_channels: [48]
-          kernel_size: [3]
-          stride: [2]
+          - ['fi', 48, 96, 3, 2]
         - 
-          block_type: ['uir', 'uir']
-          in_channels: [48, 96]
-          hidden_channels: [192, 384]
-          out_channels: [96, 96]
-          extra_dw: [True, True]
-          extra_dw_kernel_size: [3, 3]
-          middle_dw: [True, True]
-          middle_dw_kernel_size: [5, 3]
-          stride: [2, 1]
+          - ['uir', 96, 192, True, 3, True, 5, 2]
+          - ['uir', 96, 384, True, 3, True, 3, 1]
         - 
-          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir']
-          in_channels: [96, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192]
-          hidden_channels: [384, 768, 768, 768, 768, 768, 768, 768, 768, 768, 768]
-          out_channels: [192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192]
-          extra_dw: [True, True, True, True, True, True, True, True, True, True, True]
-          extra_dw_kernel_size: [3, 3, 3, 3, 3, 5, 5, 5, 5, 5, 3]
-          middle_dw: [True, True, True, True, True, True, True, True, True, True, False]
-          middle_dw_kernel_size: [5, 3, 3, 3, 5, 3, 3, 3, 3, 3, ~]
-          stride: [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+          - ['uir', 192, 384, True, 3, True, 5, 2]
+          - ['uir', 192, 768, True, 3, True, 3, 1]
+          - ['uir', 192, 768, True, 3, True, 3, 1]
+          - ['uir', 192, 768, True, 3, True, 3, 1]
+          - ['uir', 192, 768, True, 3, True, 5, 1]
+          - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['uir', 192, 768, True, 3, False, ~, 1]
         - 
-          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir']
-          in_channels: [192, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512]
-          hidden_channels: [768, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048]
-          out_channels: [512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512]
-          extra_dw: [True, True, True, True, True, True, True, True, True, True, True, True, True]
-          extra_dw_kernel_size: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5]
-          middle_dw: [True, True, True, True, False, True, False, False, True, True, False, False, False]
-          middle_dw_kernel_size: [5, 5, 5, 5, ~, 3, ~, ~, 3, 5, ~, ~, ~]
-          stride: [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+          - ['uir', 512, 768, True, 5, True, 5, 2]
+          - ['uir', 512, 2048, True, 5, True, 5, 1]
+          - ['uir', 512, 2048, True, 5, True, 5, 1]
+          - ['uir', 512, 2048, True, 5, True, 5, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['uir', 512, 2048, True, 5, True, 3, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['uir', 512, 2048, True, 5, True, 3, 1]
+          - ['uir', 512, 2048, True, 5, True, 5, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
     head:
       name: fc_conv
       params:

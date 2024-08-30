@@ -3,8 +3,8 @@ model:
   name: mobilenet_v4_conv_small
   checkpoint:
     use_pretrained: True
-    load_head: False
-    path: ~
+    load_head: True
+    path: mobilenetv4-conv-small-classification-ported.safetensors
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
@@ -23,40 +23,30 @@ model:
         act_type: relu
         return_stage_idx: ~
       stage_params:
+        # Conv2D: ['conv', in_channels, out_channels, kernel_size, stride]
+        # FusedIB: ['fi', in_channels, out_channels, hidden_channels, kernel_size, stride]
+        # UniversalInvertedResidualBlock: ['uir', in_channels, out_channels, hidden_channels, extra_dw, extra_dw_kernel_size, middle_dw, middle_dw_kernel_size, stride]
+        # MobileMultiQueryAttention2D: ['mmqa', in_channels, out_channels, hidden_channels, num_attention_heads, query_pooling_stride, key_val_downsample, key_val_downsample_kernel_size, key_val_downsample_stride, stride]
         - 
-          block_type: ['conv', 'conv']
-          in_channels: [32, 32]
-          hidden_channels: [~, ~]
-          out_channels: [32, 32]
-          kernel_size: [3, 1]
-          stride: [2, 1]
+          - ['conv', 32, 3, 2]
+          - ['conv', 32, 1, 1]
         - 
-          block_type: ['conv', 'conv']
-          in_channels: [32, 96]
-          hidden_channels: [~, ~]
-          out_channels: [96, 64]
-          kernel_size: [3, 1]
-          stride: [2, 1]
+          - ['conv', 96, 3, 2]
+          - ['conv', 64, 1, 1]
         - 
-          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir']
-          in_channels: [64, 96, 96, 96, 96, 96]
-          hidden_channels: [192, 192, 192, 192, 192, 384]
-          out_channels: [96, 96, 96, 96, 96, 96]
-          extra_dw: [True, False, False, False, False, True]
-          extra_dw_kernel_size: [5, ~, ~, ~, ~, 3]
-          middle_dw: [True, True, True, True, True, False]
-          middle_dw_kernel_size: [5, 3, 3, 3, 3, ~]
-          stride: [2, 1, 1, 1, 1, 1]
+          - ['uir', 96, 192, True, 5, True, 5, 2]
+          - ['uir', 96, 192, False, ~, True, 3, 1]
+          - ['uir', 96, 192, False, ~, True, 3, 1]
+          - ['uir', 96, 192, False, ~, True, 3, 1]
+          - ['uir', 96, 192, False, ~, True, 3, 1]
+          - ['uir', 96, 384, True, 3, False, ~, 1]
         - 
-          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir']
-          in_channels: [96, 128, 128, 128, 128, 128]
-          hidden_channels: [576, 512, 512, 384, 512, 512]
-          out_channels: [128, 128, 128, 128, 128, 128]
-          extra_dw: [True, True, False, False, False, False]
-          extra_dw_kernel_size: [3, 5, ~, ~, ~, ~]
-          middle_dw: [True, True, True, True, True, True]
-          middle_dw_kernel_size: [3, 5, 5, 5, 3, 3]
-          stride: [2, 1, 1, 1, 1, 1]
+          - ['uir', 128, 576, True, 3, True, 3, 2]
+          - ['uir', 128, 512, True, 5, True, 5, 1]
+          - ['uir', 128, 512, False, ~, True, 5, 1]
+          - ['uir', 128, 384, False, ~, True, 5, 1]
+          - ['uir', 128, 512, False, ~, True, 3, 1]
+          - ['uir', 128, 512, False, ~, True, 3, 1]
     head:
       name: fc_conv
       params:

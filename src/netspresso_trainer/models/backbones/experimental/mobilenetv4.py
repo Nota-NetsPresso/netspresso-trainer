@@ -22,6 +22,7 @@ import torch.nn as nn
 from torch import Tensor
 
 from ...op.custom import ConvLayer, UniversalInvertedResidualBlock
+from ...op.base_metaformer import MobileMultiQueryAttention2D
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -78,17 +79,17 @@ class MobileNetV4(nn.Module):
 
         stages = []
 
+        prev_channel = stem_out_channel
         for stage_param in stage_params:
             stage = []
 
-            block_types = stage_param['block_type']
-            assert len(set(block_types).intersection('fi', 'uir')) != 2, 'FusedIB and UniversalInvertedResidualBlock cannot be used together in a stage.'
-            for i, block_type in enumerate(block_types):
+            for i, block_info in enumerate(stage_param):
+                block_type = block_info[0]
                 if block_type == 'conv':
-                    in_channels = stage_param['in_channels'][i]
-                    out_channels = stage_param['out_channels'][i]
-                    kernel_size = stage_param['kernel_size'][i]
-                    stride = stage_param['stride'][i]
+                    in_channels = prev_channel
+                    out_channels = block_info[1]
+                    kernel_size = block_info[2]
+                    stride = block_info[3]
 
                     stage.append(
                         ConvLayer(in_channels, out_channels, kernel_size=kernel_size, stride=stride, 
@@ -96,25 +97,25 @@ class MobileNetV4(nn.Module):
                     )
 
                 elif block_type == 'fi':
-                    in_channels = stage_param['in_channels'][i]
-                    hidden_channels = stage_param['hidden_channels'][i]
-                    out_channels = stage_param['out_channels'][i]
-                    kernel_size = stage_param['kernel_size'][i]
-                    stride = stage_param['stride'][i]
+                    in_channels = prev_channel
+                    out_channels = block_info[1]
+                    hidden_channels = block_info[2]
+                    kernel_size = block_info[3]
+                    stride = block_info[4]
 
                     stage.append(
                         FusedIB(in_channels, hidden_channels, out_channels, kernel_size, stride, norm_type, act_type)
                     )
 
                 elif block_type == 'uir':
-                    in_channels = stage_param['in_channels'][i]
-                    hidden_channels = stage_param['hidden_channels'][i]
-                    out_channels = stage_param['out_channels'][i]
-                    extra_dw = stage_param['extra_dw'][i]
-                    extra_kernel_size = stage_param['extra_dw_kernel_size'][i]
-                    middle_dw = stage_param['middle_dw'][i]
-                    middle_kernel_size = stage_param['middle_dw_kernel_size'][i]
-                    stride = stage_param['stride'][i]
+                    in_channels = prev_channel
+                    out_channels = block_info[1]
+                    hidden_channels = block_info[2]
+                    extra_dw = block_info[3]
+                    extra_kernel_size = block_info[4]
+                    middle_dw = block_info[5]
+                    middle_kernel_size = block_info[6]
+                    stride = block_info[7]
 
                     stage.append(
                         UniversalInvertedResidualBlock(in_channels, hidden_channels, out_channels, extra_dw, extra_kernel_size, 
@@ -124,10 +125,12 @@ class MobileNetV4(nn.Module):
                 else:
                     raise ValueError(f'Unknown block type: {block_type}')
 
+                prev_channel = out_channels
+
             stages.append(stage)
 
         # Add conv on last stage
-        final_conv_in_channel = stage_params[-1]['out_channels'][-1]
+        final_conv_in_channel = prev_channel
         stages[-1].append(
             ConvLayer(final_conv_in_channel, final_conv_out_channel, kernel_size=final_conv_kernel_size, 
                       stride=final_conv_stride, bias=False, norm_type=norm_type, act_type=act_type)
@@ -139,7 +142,7 @@ class MobileNetV4(nn.Module):
 
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self._feature_dim = final_conv_out_channel
-        stage_out_channels = [stage_param['out_channels'][-1] for stage_param in stage_params]
+        stage_out_channels = [stage_param[-1][1] for stage_param in stage_params]
         stage_out_channels[-1] = final_conv_out_channel # Replace with final conv out channel
         self._intermediate_features_dim = [stage_out_channels[i] for i in self.return_stage_idx]
 
