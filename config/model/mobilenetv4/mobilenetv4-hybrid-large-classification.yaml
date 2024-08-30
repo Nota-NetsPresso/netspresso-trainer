@@ -1,6 +1,6 @@
 model:
   task: classification
-  name: mobilenet_v4_conv_large
+  name: mobilenet_v4_hybrid_large
   checkpoint:
     use_pretrained: True
     load_head: False
@@ -20,7 +20,7 @@ model:
         final_conv_kernel_size: 1
         final_conv_stride: 1
         norm_type: batch_norm
-        act_type: relu
+        act_type: gelu
         return_stage_idx: ~
         layer_scale: ~
       stage_params:
@@ -41,9 +41,13 @@ model:
           - ['uir', 192, 768, True, 3, True, 5, 1]
           - ['uir', 192, 768, True, 5, True, 3, 1]
           - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['mmqa', 192, 384, 8, ~, True, 3, 2, 1]
           - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['mmqa', 192, 384, 8, ~, True, 3, 2, 1]
           - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['mmqa', 192, 384, 8, ~, True, 3, 2, 1]
           - ['uir', 192, 768, True, 5, True, 3, 1]
+          - ['mmqa', 192, 384, 8, ~, True, 3, 2, 1]
           - ['uir', 192, 768, True, 3, False, ~, 1]
         - 
           - ['uir', 512, 768, True, 5, True, 5, 2]
@@ -56,8 +60,13 @@ model:
           - ['uir', 512, 2048, True, 5, False, ~, 1]
           - ['uir', 512, 2048, True, 5, True, 3, 1]
           - ['uir', 512, 2048, True, 5, True, 5, 1]
+          - ['mmqa', 512, 512, 8, ~, False, ~, ~, 1]
           - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['mmqa', 512, 512, 8, ~, False, ~, ~, 1]
           - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['mmqa', 512, 512, 8, ~, False, ~, ~, 1]
+          - ['uir', 512, 2048, True, 5, False, ~, 1]
+          - ['mmqa', 512, 512, 8, ~, False, ~, ~, 1]
           - ['uir', 512, 2048, True, 5, False, ~, 1]
     head:
       name: fc_conv

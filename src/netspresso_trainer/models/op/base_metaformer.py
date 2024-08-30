@@ -24,6 +24,8 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
+from ..op.custom import LayerScale2d
+from ..op.depth import DropPath
 from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 from ..utils import BackboneOutput, FXTensorType
 
@@ -223,6 +225,184 @@ class MultiHeadAttention(nn.Module):
             return (context_layer, attention_probs)
 
         return context_layer  # B x S_s x C
+
+
+class MultiQueryAttention2D(nn.Module):
+    def __init__(
+        self,
+        hidden_size,
+        num_attention_heads,
+        attention_hidden_size = None,
+        value_hidden_size = None,
+        attention_scale = None,
+        attention_dropout_prob = 0.0,
+        use_qkv_bias = True,
+        use_cross_attention = False,
+        output_with_attentions = False,
+        query_pooling_stride: Optional[int] = None,
+        key_val_downsample: Optional[bool] = None,
+        key_val_downsample_kernel_size: Optional[int] = None,
+        key_val_downsample_stride: Optional[int] = None,
+        norm_type: Optional[str] = None,
+    ) -> None:
+        super().__init__()
+
+        norm_type = norm_type if norm_type is not None else 'batch_norm'
+        norm_layer = NORM_REGISTRY[norm_type]
+
+        self.attention_hidden_size = attention_hidden_size if attention_hidden_size is not None else hidden_size
+        if attention_hidden_size % num_attention_heads != 0:
+            raise ValueError(
+                f"The hidden size {attention_hidden_size,} is not a multiple of the number of attention "
+                f"heads {num_attention_heads}."
+            )
+
+        self.value_hidden_size = value_hidden_size if value_hidden_size is not None else int(self.attention_hidden_size / num_attention_heads)
+
+        self.num_attention_heads = num_attention_heads
+        self.attention_head_size = int(attention_hidden_size / num_attention_heads)
+
+        self.attention_scale = attention_scale if attention_scale is not None \
+            else math.sqrt(self.attention_head_size)
+
+        self.query = []
+        if query_pooling_stride:
+            self.query.append(nn.AvgPool2d(kernel_size=query_pooling_stride))
+            self.query.append(norm_layer(hidden_size))
+        self.query.append(nn.Conv2d(hidden_size, self.attention_hidden_size,
+                                    kernel_size=1, bias=use_qkv_bias))
+        self.query = nn.Sequential(*self.query)
+
+        self.key = []
+        self.value = []
+        if key_val_downsample:
+            self.key.append(nn.Conv2d(hidden_size, hidden_size, kernel_size=key_val_downsample_kernel_size, padding=key_val_downsample_kernel_size // 2,
+                                      stride=key_val_downsample_stride, bias=use_qkv_bias, groups=hidden_size))
+            self.key.append(norm_layer(hidden_size))
+            self.value.append(nn.Conv2d(hidden_size, hidden_size, kernel_size=key_val_downsample_kernel_size, padding=key_val_downsample_kernel_size // 2,
+                                        stride=key_val_downsample_stride, bias=use_qkv_bias, groups=hidden_size))
+            self.value.append(norm_layer(hidden_size))
+
+        self.key.append(nn.Conv2d(hidden_size, self.attention_head_size, kernel_size=1, bias=use_qkv_bias))
+        self.value.append(nn.Conv2d(hidden_size, self.value_hidden_size, kernel_size=1, bias=use_qkv_bias))
+        self.key = nn.Sequential(*self.key)
+        self.value = nn.Sequential(*self.value)
+
+        self.linear = []
+        if query_pooling_stride:
+            self.linear.append(nn.Upsample(scale_factor=query_pooling_stride, mode='bilinear', align_corners=False))
+        self.linear.append(nn.Conv2d(self.attention_hidden_size, hidden_size, kernel_size=1, bias=False))
+        self.linear = nn.Sequential(*self.linear)
+
+        self.dropout = nn.Dropout(attention_dropout_prob)
+        self.output_with_attentions = output_with_attentions
+
+        self.use_cross_attention = use_cross_attention
+
+    def transpose_for_scores(self, x: Tensor, num_head: int) -> Tensor:
+        x = x.flatten(-2)  # B x C x H x W -> B x C x {H * W}
+        new_x_shape = (x.shape[0], num_head,  x.shape[1] // num_head, x.shape[2])
+        x = x.view(new_x_shape)  # B x C x {H * W} -> B x {head} x C_split x {H * W}
+        return x.permute(0, 1, 3, 2)  # B x {head} x C_split x {H * W} -> B x {head} x {H * W} x C_split
+
+    def forward(
+        self,
+        query_states: Tensor,
+        key_value_states: Optional[Tensor] = None,
+        head_mask: Optional[Tensor] = None,
+    ) -> Union[Tuple[Tensor, Tensor], Tuple[Tensor]]:
+        B, _, H_q, W_q = query_states.shape  # B x hiddin_dim x H_q x W_q
+
+        query = self.query(query_states)
+
+        if not self.use_cross_attention:  # Self-attention
+            key_value_states = query_states
+
+        key = self.key(key_value_states)
+        value = self.value(key_value_states)
+
+        # query_states: B x C_q x H_q x W_q
+        # key_value_states: B x C_kv x H_kv x W_kv
+
+        key_layer = self.transpose_for_scores(key, 1)  # B x C_kv x H_kv x W_kv -> B x 1 x {H_kv * W_kv} x C_kv
+        value_layer = self.transpose_for_scores(value, 1)  # B x C_kv x H_kv x W_kv -> B x 1 x {H_kv * W_kv} x C_kv
+        query_layer = self.transpose_for_scores(query, self.num_attention_heads)  # B x C_q x H_q x W_q -> B x {head} x {H_q * W_q} x C_qsplit
+
+        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+
+        attention_scores = attention_scores / self.attention_scale
+
+        # Normalize the attention scores to probabilities.
+        attention_probs = nn.functional.softmax(attention_scores, dim=-1)
+
+        attention_probs = self.dropout(attention_probs)
+
+        if head_mask is not None:
+            attention_probs = attention_probs * head_mask
+
+        context_layer = torch.matmul(attention_probs, value_layer)
+
+        context_layer = context_layer.permute(0, 1, 3, 2).contiguous()  # B x {head} x {H_q * W*q} x C_qsplit -> B x {head} x C_qsplit x {H_q * W*q}
+        context_layer = context_layer.reshape(B, self.attention_hidden_size, H_q, W_q)  # B x {head} x C_qsplit x {H_q * W*q} -> B x C_q x H_q x W*q
+
+        context_layer = self.linear(context_layer)  # B x C_q x H_q x W_q -> B x hiddin_dim x H_q x W_q
+        context_layer = self.dropout(context_layer)
+
+        if self.output_with_attentions:
+            return (context_layer, attention_probs)
+
+        return context_layer  # B x hiddin_dim x H_q x W_
+
+
+class MobileMultiQueryAttention2D(nn.Module):
+    def __init__(
+        self,
+        hidden_size,
+        num_attention_heads,
+        attention_hidden_size = None,
+        value_hidden_size = None,
+        attention_scale = None,
+        attention_dropout_prob = 0.0,
+        use_qkv_bias = True,
+        use_cross_attention = False,
+        output_with_attentions = False,
+        query_pooling_stride: Optional[int] = None,
+        key_val_downsample: Optional[bool] = None,
+        key_val_downsample_kernel_size: Optional[int] = None,
+        key_val_downsample_stride: Optional[int] = None,
+        norm_type: Optional[str] = None,
+        layer_scale: Optional[float] = None,
+        drop_path: float = 0.0,
+    ) -> None:
+        super().__init__()
+        norm_type = norm_type if norm_type is not None else 'batch_norm'
+        self.norm_layer = NORM_REGISTRY[norm_type](hidden_size)
+        self.attention = MultiQueryAttention2D(
+            hidden_size, num_attention_heads, attention_hidden_size, value_hidden_size, attention_scale, attention_dropout_prob,
+            use_qkv_bias, use_cross_attention, output_with_attentions, query_pooling_stride, key_val_downsample,
+            key_val_downsample_kernel_size, key_val_downsample_stride, norm_type
+        )
+        self.apply_layer_scale = False
+        if layer_scale is not None:
+            self.apply_layer_scale = True
+            self.layer_scale = LayerScale2d(hidden_size, layer_scale)
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+    def forward(
+        self,
+        query_states: Tensor,
+        key_value_states: Optional[Tensor] = None,
+        head_mask: Optional[Tensor] = None,
+    ) -> Union[Tuple[Tensor, Tensor], Tuple[Tensor]]:
+        residual = query_states
+
+        out = self.norm_layer(query_states)
+        out = self.attention(out, key_value_states, head_mask)
+        if self.apply_layer_scale:
+            out = self.layer_scale(out)
+        out = self.drop_path(out) + residual
+        return out
+
 
 class ChannelMLP(nn.Module):
     def __init__(self, hidden_size, intermediate_size, hidden_dropout_prob, hidden_activation_type='silu'):

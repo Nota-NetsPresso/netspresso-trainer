@@ -377,6 +377,7 @@ class UniversalInvertedResidualBlock(nn.Module):
         act_type: Optional[str] = None,
         use_se: bool = False,
         se_layer: Callable[..., nn.Module] = partial(SElayer, scale_activation=nn.Hardsigmoid),
+        layer_scale: Optional[float] = None,
     ):
         super().__init__()
         if not (1 <= stride <= 2):
@@ -443,11 +444,17 @@ class UniversalInvertedResidualBlock(nn.Module):
         )
 
         self.block = nn.Sequential(*layers)
+        self.apply_layer_scale = False
+        if layer_scale is not None:
+            self.apply_layer_scale = True
+            self.layer_scale = LayerScale2d(out_channels, layer_scale)
         self.out_channels = out_channels
         self._is_cn = stride > 1
 
     def forward(self, input: Tensor) -> Tensor:
         result = self.block(input)
+        if self.apply_layer_scale:
+            result = self.layer_scale(result)
         if self.use_res_connect:
             result = result + input
         return result
@@ -827,3 +834,17 @@ class DarknetBlock(nn.Module):
         if self.use_add:
             y = y + x
         return y
+
+
+class LayerScale2d(nn.Module):
+    """
+        Based on timm implementation.
+    """
+    def __init__(self, dim: int, init_values: float = 1e-5, inplace: bool = False):
+        super().__init__()
+        self.inplace = inplace
+        self.gamma = nn.Parameter(init_values * torch.ones(dim))
+
+    def forward(self, x):
+        gamma = self.gamma.view(1, -1, 1, 1)
+        return x.mul_(gamma) if self.inplace else x * gamma

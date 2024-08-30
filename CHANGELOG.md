@@ -6,7 +6,7 @@
 - Add Objects365 dataset auto downloader by `@hglee98` in [PR 482](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/482)
 - Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497), [PR 523](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/523)
 - Add RandomIoUCrop, RandomZoomOut augmentation by `@hglee98` in [PR 504](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/504)
-- Add MobileNetV4 conv series backbone by `@illian01` and `hglee98` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516), [PR 520](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/520)
+- Add MobileNetV4 backbone by `@illian01` and `hglee98` in [PR 516](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/516), [PR 520](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/520), [PR 526](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/526)
 - Add gradient clipping feature by `hglee98` in [PR 506](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/506#pullrequestreview-2262064548)
 - Enabled to control `ToTensor` and `Normalization` through config file by `@illian01` in [PR 522](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/522)
 - Enable to set onnx opset version through config file by `@illian01` in [PR 525](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/525)

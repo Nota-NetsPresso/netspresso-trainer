@@ -1,6 +1,6 @@
 model:
   task: classification
-  name: mobilenet_v4_conv_medium
+  name: mobilenet_v4_hybrid_medium
   checkpoint:
     use_pretrained: True
     load_head: False
@@ -35,25 +35,34 @@ model:
           - ['uir', 80, 160, True, 3, True, 3, 1]
         - 
           - ['uir', 160, 480, True, 3, True, 5, 2]
-          - ['uir', 160, 640, True, 3, True, 3, 1]
+          - ['uir', 160, 320, False, ~, False, ~, 1]
           - ['uir', 160, 640, True, 3, True, 3, 1]
           - ['uir', 160, 640, True, 3, True, 5, 1]
+          - ['mmqa', 160, 256, 4, ~, True, 3, 2, 1]
           - ['uir', 160, 640, True, 3, True, 3, 1]
+          - ['mmqa', 160, 256, 4, ~, True, 3, 2, 1]
           - ['uir', 160, 640, True, 3, False, ~, 1]
-          - ['uir', 160, 320, False, ~, False, ~, 1]
+          - ['mmqa', 160, 256, 4, ~, True, 3, 2, 1]
+          - ['uir', 160, 640, True, 3, True, 3, 1]
+          - ['mmqa', 160, 256, 4, ~, True, 3, 2, 1]
           - ['uir', 160, 640, True, 3, False, ~, 1]
         - 
           - ['uir', 256, 960, True, 5, True, 5, 2]
           - ['uir', 256, 1024, True, 5, True, 5, 1]
           - ['uir', 256, 1024, True, 3, True, 5, 1]
           - ['uir', 256, 1024, True, 3, True, 5, 1]
-          - ['uir', 256, 1024, False, ~, False, ~, 1]
-          - ['uir', 256, 1024, True, 3, False, ~, 1]
+          - ['uir', 256, 512, False, ~, False, ~, 1]
           - ['uir', 256, 512, True, 3, True, 5, 1]
+          - ['uir', 256, 512, False, ~, False, ~, 1]
+          - ['uir', 256, 1024, False, ~, False, ~, 1]
+          - ['mmqa', 256, 256, 4, ~, False, ~, ~, 1]
+          - ['uir', 256, 1024, True, 3, False, ~, 1]
+          - ['mmqa', 256, 256, 4, ~, False, ~, ~, 1]
           - ['uir', 256, 1024, True, 5, True, 5, 1]
-          - ['uir', 256, 1024, False, ~, False, ~, 1]
-          - ['uir', 256, 1024, False, ~, False, ~, 1]
-          - ['uir', 256, 512, True, 5, False, ~, 1]
+          - ['mmqa', 256, 256, 4, ~, False, ~, ~, 1]
+          - ['uir', 256, 1024, True, 5, False, ~, 1]
+          - ['mmqa', 256, 256, 4, ~, False, ~, ~, 1]
+          - ['uir', 256, 1024, True, 5, False, ~, 1]
     head:
       name: fc_conv
       params:
