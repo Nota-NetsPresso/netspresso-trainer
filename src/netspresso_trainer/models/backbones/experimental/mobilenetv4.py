@@ -84,7 +84,18 @@ class MobileNetV4(nn.Module):
             block_types = stage_param['block_type']
             assert len(set(block_types).intersection('fi', 'uir')) != 2, 'FusedIB and UniversalInvertedResidualBlock cannot be used together in a stage.'
             for i, block_type in enumerate(block_types):
-                if block_type == 'fi':
+                if block_type == 'conv':
+                    in_channels = stage_param['in_channels'][i]
+                    out_channels = stage_param['out_channels'][i]
+                    kernel_size = stage_param['kernel_size'][i]
+                    stride = stage_param['stride'][i]
+
+                    stage.append(
+                        ConvLayer(in_channels, out_channels, kernel_size=kernel_size, stride=stride, 
+                                  bias=False, norm_type=norm_type, act_type=act_type)
+                    )
+
+                elif block_type == 'fi':
                     in_channels = stage_param['in_channels'][i]
                     hidden_channels = stage_param['hidden_channels'][i]
                     out_channels = stage_param['out_channels'][i]

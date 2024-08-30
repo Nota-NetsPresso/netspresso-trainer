@@ -24,21 +24,19 @@ model:
         return_stage_idx: ~
       stage_params:
         - 
-          block_type: ['fi']
-          in_channels: [32]
-          hidden_channels: [32]
-          out_channels: [32]
-          kernel_size: [3]
-          stride: [2]
-          out_act: [True]
+          block_type: ['conv', 'conv']
+          in_channels: [32, 32]
+          hidden_channels: [~, ~]
+          out_channels: [32, 32]
+          kernel_size: [3, 1]
+          stride: [2, 1]
         - 
-          block_type: ['fi']
-          in_channels: [32]
-          hidden_channels: [96]
-          out_channels: [64]
-          kernel_size: [3]
-          stride: [2]
-          out_act: [True]
+          block_type: ['conv', 'conv']
+          in_channels: [32, 96]
+          hidden_channels: [~, ~]
+          out_channels: [96, 64]
+          kernel_size: [3, 1]
+          stride: [2, 1]
         - 
           block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir']
           in_channels: [64, 96, 96, 96, 96, 96]
