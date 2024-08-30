@@ -3,8 +3,8 @@ model:
   name: mobilenet_v4_conv_small
   checkpoint:
     use_pretrained: True
-    load_head: True
-    path: mobilenetv4-conv-small-classification-ported.safetensors
+    load_head: False
+    path: ~
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
