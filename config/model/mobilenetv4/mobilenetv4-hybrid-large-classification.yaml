@@ -1,6 +1,6 @@
 model:
   task: classification
-  name: mobilenet_v4_conv_medium
+  name: mobilenet_v4_hybrid_large
   checkpoint:
     use_pretrained: True
     load_head: False
