@@ -24,7 +24,7 @@ model:
         return_stage_idx: ~
       stage_params:
         - 
-          block_type: fused_inverted
+          block_type: ['fi']
           in_channels: [24]
           hidden_channels: [96]
           out_channels: [48]
@@ -32,7 +32,7 @@ model:
           stride: [2]
           out_act: [False]
         - 
-          block_type: universal_inverted_residual
+          block_type: ['uir', 'uir']
           in_channels: [48, 96]
           hidden_channels: [192, 384]
           out_channels: [96, 96]
@@ -42,7 +42,7 @@ model:
           middle_dw_kernel_size: [5, 3]
           stride: [2, 1]
         - 
-          block_type: universal_inverted_residual
+          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir']
           in_channels: [96, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192]
           hidden_channels: [384, 768, 768, 768, 768, 768, 768, 768, 768, 768, 768]
           out_channels: [192, 192, 192, 192, 192, 192, 192, 192, 192, 192, 192]
@@ -52,7 +52,7 @@ model:
           middle_dw_kernel_size: [5, 3, 3, 3, 5, 3, 3, 3, 3, 3, ~]
           stride: [2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
         - 
-          block_type: universal_inverted_residual
+          block_type: ['uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir', 'uir']
           in_channels: [192, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512]
           hidden_channels: [768, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048, 2048]
           out_channels: [512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512, 512]

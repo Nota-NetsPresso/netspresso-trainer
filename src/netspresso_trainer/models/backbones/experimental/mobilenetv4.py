@@ -81,39 +81,38 @@ class MobileNetV4(nn.Module):
         for stage_param in stage_params:
             stage = []
 
-            block_type = stage_param['block_type']
-            if block_type == 'fused_inverted':
-                in_channels = stage_param['in_channels']
-                hidden_channels = stage_param['hidden_channels']
-                out_channels = stage_param['out_channels']
-                kernel_sizes = stage_param['kernel_size']
-                strides = stage_param['stride']
-                out_acts = stage_param['out_act']
+            block_types = stage_param['block_type']
+            assert len(set(block_types).intersection('fi', 'uir')) != 2, 'FusedIB and UniversalInvertedResidualBlock cannot be used together in a stage.'
+            for i, block_type in enumerate(block_types):
+                if block_type == 'fi':
+                    in_channels = stage_param['in_channels'][i]
+                    hidden_channels = stage_param['hidden_channels'][i]
+                    out_channels = stage_param['out_channels'][i]
+                    kernel_size = stage_param['kernel_size'][i]
+                    stride = stage_param['stride'][i]
+                    out_act = stage_param['out_act'][i]
 
-                block_info = zip(in_channels, hidden_channels, out_channels, kernel_sizes, strides, out_acts)
-                for in_channel, hidden_channel, out_channel, kernel_size, stride, out_act in block_info:
                     stage.append(
-                        FusedIB(in_channel, hidden_channel, out_channel, kernel_size, stride, norm_type, act_type, out_act)
+                        FusedIB(in_channels, hidden_channels, out_channels, kernel_size, stride, norm_type, act_type, out_act)
                     )
 
-            elif block_type == 'universal_inverted_residual':
-                in_channels = stage_param['in_channels']
-                hidden_channels = stage_param['hidden_channels']
-                out_channels = stage_param['out_channels']
-                extra_dws = stage_param['extra_dw']
-                extra_kernel_sizes = stage_param['extra_dw_kernel_size']
-                middle_dws = stage_param['middle_dw']
-                middle_kernel_sizes = stage_param['middle_dw_kernel_size']
-                strides = stage_param['stride']
+                elif block_type == 'uir':
+                    in_channels = stage_param['in_channels'][i]
+                    hidden_channels = stage_param['hidden_channels'][i]
+                    out_channels = stage_param['out_channels'][i]
+                    extra_dw = stage_param['extra_dw'][i]
+                    extra_kernel_size = stage_param['extra_dw_kernel_size'][i]
+                    middle_dw = stage_param['middle_dw'][i]
+                    middle_kernel_size = stage_param['middle_dw_kernel_size'][i]
+                    stride = stage_param['stride'][i]
 
-                block_info = zip(in_channels, hidden_channels, out_channels, extra_dws, extra_kernel_sizes, middle_dws, middle_kernel_sizes, strides)
-                for in_channel, hidden_channel, out_channel, extra_dw, extra_kernel_size, middle_dw, middle_kernel_size, stride in block_info:
                     stage.append(
-                        UniversalInvertedResidualBlock(in_channel, hidden_channel, out_channel, extra_dw, extra_kernel_size, middle_dw, middle_kernel_size, stride, norm_type, act_type)
+                        UniversalInvertedResidualBlock(in_channels, hidden_channels, out_channels, extra_dw, extra_kernel_size, 
+                                                       middle_dw, middle_kernel_size, stride, norm_type, act_type)
                     )
 
-            else:
-                raise ValueError(f'Unknown block type: {block_type}')
+                else:
+                    raise ValueError(f'Unknown block type: {block_type}')
 
             stages.append(stage)
 
