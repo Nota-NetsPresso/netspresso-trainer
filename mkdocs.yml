@@ -173,6 +173,7 @@ nav:
     - Training: 
       - Overview: components/training/overview.md
       - EMA: components/training/ema.md
+      - Gradient clipping: components/training/gradient-clipping.md
       - Optimizers: components/training/optimizers.md
       - Schedulers: components/training/schedulers.md
     - Model:
@@ -191,6 +192,7 @@ nav:
       - MixNet: models/backbones/mixnet.md
       - MixTransformer: models/backbones/mixtransformer.md
       - MobileNetV3: models/backbones/mobilenetv3.md
+      - MobileNetV4: models/backbones/mobilenetv4.md
       - MobileViT: models/backbones/mobilevit.md
       - ResNet: models/backbones/resnet.md
       - ViT: models/backbones/vit.md
