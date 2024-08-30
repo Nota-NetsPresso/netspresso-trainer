@@ -123,6 +123,30 @@ class MobileNetV4(nn.Module):
                                                        middle_dw, middle_kernel_size, stride, norm_type, act_type, layer_scale=self.layer_scale)
                     )
 
+                elif block_type == 'mmqa':
+                    in_channels = prev_channel
+                    out_channels = block_info[1]
+                    attention_channel = block_info[2]
+                    num_attention_heads = block_info[3]
+                    quary_pooling_stride = block_info[4]
+                    key_val_downsample = block_info[5]
+                    key_val_downsample_kernel_size = block_info[6]
+                    key_val_downsample_stride = block_info[7]
+                    stride = block_info[8]
+
+                    assert in_channels == out_channels, 'MobileMultiQueryAttention2D requires in_channels == out_channels'
+                    assert stride == 1, 'MobileMultiQueryAttention2D only supports stride=1'
+
+                    stage.append(
+                        MobileMultiQueryAttention2D(in_channels, num_attention_heads, attention_channel,
+                                                    use_qkv_bias=False,
+                                                    query_pooling_stride=quary_pooling_stride,
+                                                    key_val_downsample=key_val_downsample,
+                                                    key_val_downsample_kernel_size=key_val_downsample_kernel_size, 
+                                                    key_val_downsample_stride=key_val_downsample_stride,
+                                                    layer_scale=self.layer_scale)
+                    )
+
                 else:
                     raise ValueError(f'Unknown block type: {block_type}')
 
