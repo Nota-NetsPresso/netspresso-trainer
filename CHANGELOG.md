@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v1.0.1
+
+## New Features:
+
 - Add RT-DETR by `@illian01` and `@hglee98` in [PR 490](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/490), [PR 491](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/491), [PR 494](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/494), [PR 498](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/498#pullrequestreview-2234711140), [PR 500](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/500), [PR 507](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/507), [PR 501](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/501)
 - Add Objects365 dataset auto downloader by `@hglee98` in [PR 482](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/482)
 - Add ResNet model parameters to support various form by `@illian01` in [PR 497](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/497), [PR 523](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/523)
