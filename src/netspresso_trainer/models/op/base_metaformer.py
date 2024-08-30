@@ -24,10 +24,10 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
-from ..op.depth import DropPath
-from ..utils import BackboneOutput, FXTensorType
 from ..op.custom import LayerScale2d
+from ..op.depth import DropPath
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from ..utils import BackboneOutput, FXTensorType
 
 
 class Pooling(nn.Module):
