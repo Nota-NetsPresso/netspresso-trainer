@@ -22,7 +22,7 @@ model:
         norm_type: batch_norm
         act_type: gelu
         return_stage_idx: ~
-        layer_scale: 0.1
+        layer_scale: ~
       stage_params:
         # Conv2D: ['conv', out_channels, kernel_size, stride]
         # FusedIB: ['fi', out_channels, hidden_channels, kernel_size, stride]
