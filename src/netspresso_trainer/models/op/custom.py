@@ -827,3 +827,17 @@ class DarknetBlock(nn.Module):
         if self.use_add:
             y = y + x
         return y
+
+
+class LayerScale2d(nn.Module):
+    """
+        Based on timm implementation.
+    """
+    def __init__(self, dim: int, init_values: float = 1e-5, inplace: bool = False):
+        super().__init__()
+        self.inplace = inplace
+        self.gamma = nn.Parameter(init_values * torch.ones(dim))
+
+    def forward(self, x):
+        gamma = self.gamma.view(1, -1, 1, 1)
+        return x.mul_(gamma) if self.inplace else x * gamma
