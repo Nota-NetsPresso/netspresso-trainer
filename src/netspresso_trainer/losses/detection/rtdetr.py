@@ -100,7 +100,7 @@ class HungarianMatcher(nn.Module):
 
         # We flatten to compute the cost matrices in a batch
         if self.use_focal_loss:
-            out_prob = F.sigmoid(outputs["pred_logits"].flatten(0, 1))
+            out_prob = torch.sigmoid(outputs["pred_logits"].flatten(0, 1))
         else:
             out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
 
@@ -218,7 +218,7 @@ class DETRLoss(nn.Module):
         target_score_o[idx] = ious.to(target_score_o.dtype)
         target_score = target_score_o.unsqueeze(-1) * target
 
-        pred_score = F.sigmoid(src_logits).detach()
+        pred_score = torch.sigmoid(src_logits).detach()
         weight = self.alpha * pred_score.pow(self.gamma) * (1 - target) + target_score
 
         loss = F.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction='none')
