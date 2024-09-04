@@ -310,9 +310,12 @@ class DETRLoss(nn.Module):
         # Compute the average number of target boxes accross all nodes, for normalization purposes
         num_boxes = sum(len(t["labels"]) for t in targets)
         num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
-        # if is_dist_available_and_initialized():
-        #     torch.distributed.all_reduce(num_boxes)
-        # num_boxes = torch.clamp(num_boxes / get_world_size(), min=1).item()
+        if torch.distributed.is_available() and torch.distributed.is_initialized():
+            world_size = torch.distributed.get_world_size()
+            torch.distributed.all_reduce(num_boxes)
+        else:
+            world_size = 1
+        num_boxes = torch.clamp(num_boxes / world_size, min=1).item()
 
         # Compute all the requested losses
         losses = {}
@@ -391,7 +394,7 @@ class DETRLoss(nn.Module):
         else:
             h, w = img_size
         scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
-        return bboxes / scale
+        return bboxes / scale.unsqueeze(0)
 
 
 @torch.no_grad()

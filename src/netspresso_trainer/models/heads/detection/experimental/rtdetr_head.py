@@ -655,7 +655,7 @@ class RTDETRTransformer(nn.Module):
         else:
             h, w = img_size
         scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
-        return bboxes / scale
+        return bboxes / scale.unsqueeze(0)
 
 
 def rtdetr_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RTDETRTransformer:
