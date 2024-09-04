@@ -403,6 +403,7 @@ class RTDETRTransformer(nn.Module):
         if num_denoising > 0: 
             # self.denoising_class_embed = nn.Embedding(num_classes, hidden_dim, padding_idx=num_classes-1) # TODO for load paddle weights
             self.denoising_class_embed = nn.Embedding(self.num_classes+1, self.hidden_dim, padding_idx=self.num_classes)
+            init.normal_(self.denoising_class_embed.weight[:-1])
 
         # decoder embedding
         self.learnt_init_query = learnt_init_query
