@@ -67,6 +67,10 @@ class TaskModel(nn.Module):
     def forward(self, x, label_size=None, targets=None):
         raise NotImplementedError
 
+    @abstractmethod
+    def deploy(self, ):
+        raise NotImplementedError
+
 
 class ClassificationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
@@ -76,6 +80,13 @@ class ClassificationModel(TaskModel):
         features: BackboneOutput = self.backbone(x)
         out: ModelOutput = self.head(features['last_feature'])
         return out
+
+    def deploy(self, ):
+        self.eval()
+        for m in self.modules():
+            if hasattr(m, 'convert_to_deploy'):
+                m.convert_to_deploy()
+        return self
 
 
 class SegmentationModel(TaskModel):
@@ -89,6 +100,13 @@ class SegmentationModel(TaskModel):
         out: ModelOutput = self.head(features['intermediate_features'], targets)
         return out
 
+    def deploy(self, ):
+        self.eval()
+        for m in self.modules():
+            if hasattr(m, 'convert_to_deploy'):
+                m.convert_to_deploy()
+        return self
+
 
 class DetectionModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
@@ -101,6 +119,13 @@ class DetectionModel(TaskModel):
         out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
 
+    def deploy(self, ):
+        self.eval()
+        for m in self.modules():
+            if hasattr(m, 'convert_to_deploy'):
+                m.convert_to_deploy()
+        return self
+
 class PoseEstimationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
@@ -111,3 +136,10 @@ class PoseEstimationModel(TaskModel):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
+
+    def deploy(self, ):
+        self.eval()
+        for m in self.modules():
+            if hasattr(m, 'convert_to_deploy'):
+                m.convert_to_deploy()
+        return self
