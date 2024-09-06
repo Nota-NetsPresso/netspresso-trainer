@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Document updates by `@illian01` in [PR 533](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/533)
 
 # v1.0.1
 
