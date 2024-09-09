@@ -43,8 +43,8 @@ def build_overwrited_dict(optimizer_conf):
             overwrited_config_dict[param_group].lr = module_overwrite_config.lr
         if hasattr(module_overwrite_config, 'weight_decay'):
             overwrited_config_dict[param_group].weight_decay = module_overwrite_config.weight_decay
-        if hasattr(module_overwrite_config, 'no_bias_weight_decay'):
-            overwrited_config_dict[param_group].no_bias_weight_decay = module_overwrite_config.no_bias_weight_decay
+        if hasattr(module_overwrite_config, 'no_bias_decay'):
+            overwrited_config_dict[param_group].no_bias_decay = module_overwrite_config.no_bias_decay
         if hasattr(module_overwrite_config, 'no_norm_weight_decay'):
             overwrited_config_dict[param_group].no_norm_weight_decay = module_overwrite_config.no_norm_weight_decay
 
@@ -55,7 +55,7 @@ def separate_no_weights_decay(params: set, module_config: DictConfig):
     bias_params = set(filter(lambda s: 'bias' in s, params))
     norm_params = set(filter(lambda s: 'norm.weight' in s, params))
     no_decay_params = set()
-    if module_config.no_bias_weight_decay:
+    if module_config.no_bias_decay:
         no_decay_params |= bias_params
         params -= bias_params
     if module_config.no_norm_weight_decay:
@@ -93,7 +93,7 @@ def split_param_groups(model, overwrited_config_dict):
     param_opt_configs = []
     for param_group_key, module_overwrite_config in overwrited_config_dict.items():
         # Remove unnecessary fields
-        del module_overwrite_config['no_bias_weight_decay']
+        del module_overwrite_config['no_bias_decay']
         del module_overwrite_config['no_norm_weight_decay']
 
         params, no_decay_params = param_set_dict[param_group_key]
