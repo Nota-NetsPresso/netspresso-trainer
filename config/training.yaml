@@ -10,10 +10,7 @@ training:
     weight_decay: 0.0005
     no_bias_decay: False
     no_norm_weight_decay: False
-    overwrite:
-      - 
-        param_groups: 'backbone'
-        
+    overwrite: ~
   scheduler:
     name: cosine_no_sgdr
     warmup_epochs: 5
