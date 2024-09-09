@@ -17,8 +17,8 @@
 from typing import Literal
 
 import torch.nn as nn
-from omegaconf import DictConfig
 from loguru import logger
+from omegaconf import DictConfig
 
 from .registry import OPTIMIZER_DICT
 
@@ -71,7 +71,7 @@ def split_param_groups(model, overwrited_config_dict):
 
     # Separate parameters by module
     named_params_dict = dict(model.named_parameters())
-    for k in named_params_dict.keys():
+    for k in named_params_dict:
         if k.startswith('backbone'):
             backbone_params.add(k)
         elif k.startswith('neck'):
