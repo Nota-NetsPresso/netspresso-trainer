@@ -9,6 +9,9 @@ training:
     momentum: 0.9
     weight_decay: 0.0001
     nesterov: False
+    no_bias_weight_decay: False
+    no_norm_weight_decay: False
+    overwrite: ~
   scheduler:
     name: step
     iters_per_phase: 30
