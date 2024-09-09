@@ -51,6 +51,19 @@ def build_overwrited_dict(optimizer_conf):
     return overwrited_config_dict
 
 
+def separate_no_weights_decay(params: set, module_config: DictConfig):
+    bias_params = set(filter(lambda s: 'bias' in s, params))
+    norm_params = set(filter(lambda s: 'norm.weight' in s, params))
+    no_decay_params = set()
+    if module_config.no_bias_weight_decay:
+        no_decay_params |= bias_params
+        params -= bias_params
+    if module_config.no_norm_weight_decay:
+        no_decay_params |= norm_params
+        params -= norm_params
+    return params, no_decay_params
+
+
 def split_param_groups(model, overwrited_config_dict):
     backbone_params = set()
     neck_params = set()
@@ -69,18 +82,6 @@ def split_param_groups(model, overwrited_config_dict):
             raise ValueError(f"Unknown parameter group: {k}") # Only for NetsPresso Trainer defined model
 
     # Separate parameters by weight, bias, and norm
-    def separate_no_weights_decay(params: set, module_config: DictConfig):
-        bias_params = set(filter(lambda s: 'bias' in s, params))
-        norm_params = set(filter(lambda s: 'norm.weight' in s, params))
-        no_decay_params = set()
-        if module_config.no_bias_weight_decay:
-            no_decay_params |= bias_params
-            params -= bias_params
-        if module_config.no_norm_weight_decay:
-            no_decay_params |= norm_params
-            params -= norm_params
-        return params, no_decay_params
-
     backbone_params = separate_no_weights_decay(backbone_params, overwrited_config_dict['backbone'])
     neck_params = separate_no_weights_decay(neck_params, overwrited_config_dict['neck'])
     head_params = separate_no_weights_decay(head_params, overwrited_config_dict['head'])
@@ -98,13 +99,13 @@ def split_param_groups(model, overwrited_config_dict):
         params, no_decay_params = param_set_dict[param_group_key]
 
         module_overwrite_config.group_name = param_group_key + '_group'
-        if len(params) != 0: # Skip if no parameters, e.g. no neck in the model
+        if params: # Skip if no parameters, e.g. no neck in the model
             param_groups.append([named_params_dict[k] for k in params]) # Convert from key to parameters
             param_opt_configs.append(module_overwrite_config.copy())
 
         module_overwrite_config.group_name = param_group_key + '_no_decay_group'
         module_overwrite_config.weight_decay = 0.0
-        if len(no_decay_params) != 0: # Skip if no parameters, e.g. use weight decay for all parameters
+        if no_decay_params: # Skip if no parameters, e.g. use weight decay for all parameters
             param_groups.append([named_params_dict[k] for k in no_decay_params])
             param_opt_configs.append(module_overwrite_config.copy())
 
@@ -136,6 +137,16 @@ def build_optimizer(
             optimizer.add_param_group({'params': param_group, **opt_config})
 
     else:
-        optimizer = OPTIMIZER_DICT[opt_name](no_dist_model.parameters(), optimizer_conf)
+        named_params_dict = dict(no_dist_model.named_parameters())
+
+        params = set(named_params_dict.keys())
+        params, no_decay_params = separate_no_weights_decay(params, optimizer_conf)
+
+        params = [named_params_dict[k] for k in params]
+        no_decay_params = [named_params_dict[k] for k in no_decay_params]
+
+        optimizer = OPTIMIZER_DICT[opt_name](params, optimizer_conf)
+        if no_decay_params:
+            optimizer.add_param_group({'params': no_decay_params, 'weight_decay': 0.0})
 
     return optimizer
