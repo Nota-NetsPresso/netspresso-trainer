@@ -8,8 +8,8 @@ training:
     lr: 6e-5
     betas: [0.9, 0.999]
     weight_decay: 0.0005
-    no_bias_weight_decay: True
-    no_norm_weight_decay: True
+    no_bias_weight_decay: False
+    no_norm_weight_decay: False
     overwrite: ~
   scheduler:
     name: cosine_no_sgdr
