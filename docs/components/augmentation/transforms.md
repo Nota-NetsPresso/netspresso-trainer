@@ -259,7 +259,7 @@ Crop the given image at a random location. This augmentation follows the [Random
 |---|---|
 | `name` | (str) Name must be "randomcrop" to use `RandomCrop` transform. |
 | `size` | (int or list) Desired output size of the crop. If size is an int, a square crop (size, size) is made. If provided a list of length 1, it will be interpreted as (size[0], size[0]). If a list of length 2 is provided, a square crop (size[0], size[1]) is made. |
-
+| `fill` | (int or list) If a single int is provided this is used to fill pixels with constant value. If a list of length 3, it is used to fill R, G, B channels respectively.
 <details>
   <summary>RandomCrop example</summary>
   
@@ -269,6 +269,7 @@ Crop the given image at a random location. This augmentation follows the [Random
       - 
         name: randomcrop
         size: 256
+        fill: 114
   ```
 </details>
 
