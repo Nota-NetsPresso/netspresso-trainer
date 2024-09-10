@@ -100,7 +100,7 @@ class HungarianMatcher(nn.Module):
 
         # We flatten to compute the cost matrices in a batch
         if self.use_focal_loss:
-            out_prob = F.sigmoid(outputs["pred_logits"].flatten(0, 1))
+            out_prob = torch.sigmoid(outputs["pred_logits"].flatten(0, 1))
         else:
             out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
 
@@ -143,8 +143,6 @@ class DETRLoss(nn.Module):
         1) we compute hungarian assignment between ground truth boxes and the outputs of the model
         2) we supervise each pair of matched ground-truth / prediction (supervise class and box)
     """
-    __share__ = ['num_classes', ]
-    __inject__ = ['matcher', ]
 
     def __init__(self, matcher, weight_dict, losses, alpha=0.2, gamma=2.0, cur_epoch=None, **kwargs):
         """ Create the criterion.
@@ -156,14 +154,12 @@ class DETRLoss(nn.Module):
             losses: list of all the losses to be applied. See get_loss for list of available losses.
         """
         super().__init__()
-        # self.num_classes = num_classes
         self.matcher = eval(matcher.type)(matcher.weight_dict, matcher.alpha, matcher.gamma, matcher.use_focal_loss)
         self.weight_dict = weight_dict
         self.losses = losses
 
         self.alpha = alpha
         self.gamma = gamma
-
 
     def loss_labels(self, outputs, targets, indices, num_boxes, log=True):
         """Classification loss (NLL)
@@ -186,19 +182,6 @@ class DETRLoss(nn.Module):
             losses['class_error'] = 100 - accuracy(src_logits[idx], target_classes_o)[0]
         return losses
 
-    def loss_labels_bce(self, outputs, targets, indices, num_boxes, log=True):
-        src_logits = outputs['pred_logits']
-        idx = self._get_src_permutation_idx(indices)
-        target_classes_o = torch.cat([t["labels"][J] for t, (_, J) in zip(targets, indices)])
-        target_classes = torch.full(src_logits.shape[:2], self.num_classes,
-                                    dtype=torch.int64, device=src_logits.device)
-        target_classes[idx] = target_classes_o
-
-        target = F.one_hot(target_classes, num_classes=self.num_classes + 1)[..., :-1]
-        loss = F.binary_cross_entropy_with_logits(src_logits, target * 1., reduction='none')
-        loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
-        return {'loss_bce': loss}
-
     def loss_labels_focal(self, outputs, targets, indices, num_boxes, log=True):
         assert 'pred_logits' in outputs
         src_logits = outputs['pred_logits']
@@ -210,12 +193,6 @@ class DETRLoss(nn.Module):
         target_classes[idx] = target_classes_o
 
         target = F.one_hot(target_classes, num_classes=self.num_classes+1)[..., :-1]
-        # ce_loss = F.binary_cross_entropy_with_logits(src_logits, target * 1., reduction="none")
-        # prob = F.sigmoid(src_logits) # TODO .detach()
-        # p_t = prob * target + (1 - prob) * (1 - target)
-        # alpha_t = self.alpha * target + (1 - self.alpha) * (1 - target)
-        # loss = alpha_t * ce_loss * ((1 - p_t) ** self.gamma)
-        # loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
         loss = torchvision.ops.sigmoid_focal_loss(src_logits, target, self.alpha, self.gamma, reduction='none')
         loss = loss.mean(1).sum() * src_logits.shape[1] / num_boxes
 
@@ -241,7 +218,7 @@ class DETRLoss(nn.Module):
         target_score_o[idx] = ious.to(target_score_o.dtype)
         target_score = target_score_o.unsqueeze(-1) * target
 
-        pred_score = F.sigmoid(src_logits).detach()
+        pred_score = torch.sigmoid(src_logits).detach()
         weight = self.alpha * pred_score.pow(self.gamma) * (1 - target) + target_score
 
         loss = F.binary_cross_entropy_with_logits(src_logits, target_score, weight=weight, reduction='none')
@@ -297,11 +274,8 @@ class DETRLoss(nn.Module):
     def get_loss(self, loss, outputs, targets, indices, num_boxes, **kwargs):
         loss_map = {
             'labels': self.loss_labels,
-            'cardinality': self.loss_cardinality,
             'boxes': self.loss_boxes,
-            # 'masks': self.loss_masks,
-
-            'bce': self.loss_labels_bce,
+            'cardinality': self.loss_cardinality,
             'focal': self.loss_labels_focal,
             'vfl': self.loss_labels_vfl,
         }
@@ -336,9 +310,12 @@ class DETRLoss(nn.Module):
         # Compute the average number of target boxes accross all nodes, for normalization purposes
         num_boxes = sum(len(t["labels"]) for t in targets)
         num_boxes = torch.as_tensor([num_boxes], dtype=torch.float, device=next(iter(outputs.values())).device)
-        # if is_dist_available_and_initialized():
-        #     torch.distributed.all_reduce(num_boxes)
-        # num_boxes = torch.clamp(num_boxes / get_world_size(), min=1).item()
+        if torch.distributed.is_available() and torch.distributed.is_initialized():
+            world_size = torch.distributed.get_world_size()
+            torch.distributed.all_reduce(num_boxes)
+        else:
+            world_size = 1
+        num_boxes = torch.clamp(num_boxes / world_size, min=1).item()
 
         # Compute all the requested losses
         losses = {}
@@ -417,7 +394,7 @@ class DETRLoss(nn.Module):
         else:
             h, w = img_size
         scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
-        return bboxes / scale
+        return bboxes / scale.unsqueeze(0)
 
 
 @torch.no_grad()

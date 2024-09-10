@@ -8,6 +8,7 @@
 ## Bug Fixes:
 
 - Fix bug in RandomCrop and segmentation dataset getitem by `@illian01` in [PR 535](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/535)
+- Handle unexpected error during training rt-detr by `@hglee98` in [PR 530](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/530)
 
 ## Breaking Changes:
 
