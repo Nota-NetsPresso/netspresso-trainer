@@ -209,10 +209,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
 
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(mask))
-            out = self.transform(image=img, mask=mask, edge=edge)
+            out = self.transform(image=img, mask=mask, edge=edge, dataset=self)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float()})
         else:
-            out = self.transform(image=img, mask=mask)
+            out = self.transform(image=img, mask=mask, dataset=self)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask']})
 
         if self._split in ['train', 'training']:
@@ -297,10 +297,10 @@ class SegmentationHFDataset(BaseHFDataset):
 
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(label))
-            out = self.transform(image=img, mask=mask, edge=edge)
+            out = self.transform(image=img, mask=mask, edge=edge, dataset=self)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
         else:
-            out = self.transform(image=img, mask=mask)
+            out = self.transform(image=img, mask=mask, dataset=self)
             outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
 
         outputs.update({'indices': index})
