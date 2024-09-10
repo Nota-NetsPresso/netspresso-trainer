@@ -2,11 +2,12 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add no_weight_decay and overwrite option in optimizer config by `@illian01` in [PR 534](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/534)
+- Fuse reparameterable layers before save by `@hglee98` in [PR 531](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/531)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix bug in RandomCrop and segmentation dataset getitem by `@illian01` in [PR 535](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/535)
 
 ## Breaking Changes:
 
@@ -14,7 +15,8 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Document updates by `@illian01` in [PR 533](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/533)
+- Delete install command for the optional requirements from Dockerfile by `@hglee98` in [PR 532](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/532)
 
 # v1.0.1
 

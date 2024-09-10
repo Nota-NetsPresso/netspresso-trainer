@@ -67,6 +67,13 @@ class TaskModel(nn.Module):
     def forward(self, x, label_size=None, targets=None):
         raise NotImplementedError
 
+    def deploy(self, ):
+        self.eval()
+        for m in self.modules():
+            if hasattr(m, 'convert_to_deploy'):
+                m.convert_to_deploy()
+        return self
+
 
 class ClassificationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
@@ -100,6 +107,7 @@ class DetectionModel(TaskModel):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
+
 
 class PoseEstimationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:

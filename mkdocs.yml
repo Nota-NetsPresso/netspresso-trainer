@@ -211,9 +211,11 @@ nav:
   - Benchmarks & Deployment: 
     - Benchmarks: benchmarks/benchmarks.md
     - Compression compatibility matrix: benchmarks/compression_compat_matrix.md
-    - Device compatibility matrix: 
-      - TensorRT: benchmarks/device_compat_matrix/tensorrt.md
-      - TFLite: benchmarks/device_compat_matrix/tflite.md
+    - Device deployment matrix: 
+      - TensorRT: benchmarks/device_matrix/tensorrt.md
+      - TFLite: benchmarks/device_matrix/tflite.md
+      - OpenVINO: benchmarks/device_matrix/openvino.md
+      - DRP-AI: benchmarks/device_matrix/drpai.md
     - TFLite runtime examples:
       - YOLOX-s: benchmarks/tflite_runtime_examples/yolox-s.md
   - NetsPresso: https://netspresso.ai/

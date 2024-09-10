@@ -88,7 +88,7 @@ def build_pipeline(
         eval_dataloader: DataLoader = dataloaders['valid']
 
         # Build optimizer and scheduler
-        optimizer = build_optimizer(model, optimizer_conf=conf.training.optimizer)
+        optimizer = build_optimizer(model, single_task_model=conf.model.single_task_model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
         optimizer, scheduler, start_epoch = load_optimizer_checkpoint(conf, optimizer, scheduler)
 
