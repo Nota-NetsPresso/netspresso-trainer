@@ -307,6 +307,7 @@ class RandomCrop:
     def __init__(
         self,
         size: Union[int, List],
+        fill: int,
     ):
 
         if not isinstance(size, (int, Sequence)):
@@ -315,7 +316,7 @@ class RandomCrop:
             raise ValueError("If size is a sequence, it should have 1 or 2 values")
         self.size_h = size[0] if isinstance(size, Sequence) else size
         self.size_w = size[1] if isinstance(size, Sequence) else size
-        self.image_pad_if_needed = Pad((self.size_h, self.size_w))
+        self.image_pad_if_needed = Pad((self.size_h, self.size_w), fill=fill)
 
     def _crop_bbox(self, bbox, i, j, h, w):
         area_original = (bbox[..., 2] - bbox[..., 0]) * (bbox[..., 3] - bbox[..., 1])
@@ -330,7 +331,7 @@ class RandomCrop:
         return bbox
 
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
-        image, mask, bbox = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
+        image, _, mask, bbox, _ = self.image_pad_if_needed(image=image, mask=mask, bbox=bbox)
         i, j, h, w = T.RandomCrop.get_params(image, (self.size_h, self.size_w))
         image = F.crop(image, i, j, h, w)
         if mask is not None:

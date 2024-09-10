@@ -9,6 +9,9 @@ training:
     momentum: 0.9
     weight_decay: 2e-5
     nesterov: False
+    no_bias_decay: False
+    no_norm_weight_decay: False
+    overwrite: ~
   scheduler:
     name: cosine_no_sgdr
     warmup_epochs: 5
