@@ -29,5 +29,4 @@ WORKDIR /home/appuser/netspresso-trainer
 COPY . /home/appuser/netspresso-trainer
 
 RUN pip install -r requirements.txt && rm -rf /root/.cache/pip
-RUN pip install -r requirements-optional.txt && rm -rf /root/.cache/pip
 RUN python3 -m pip install -e .
