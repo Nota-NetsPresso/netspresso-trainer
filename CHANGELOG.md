@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Delete install command for the optional requirements from Dockerfile by `@hglee98` in [PR 532](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/532)
 
 # v1.0.1
 
