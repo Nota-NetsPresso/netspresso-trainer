@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix bug in RandomCrop and segmentation dataset getitem by `@illian01` in [PR 535](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/535)
 
 ## Breaking Changes:
 
