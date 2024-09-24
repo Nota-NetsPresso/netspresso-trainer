@@ -42,8 +42,8 @@ class YOLOFastestHeadV2(nn.Module):
         cls_logits, objs = self.cls_head(x)
         bbox_regression = self.reg_head(x)
         outputs = list()
-        for idx in range(len(cls_logits)):
-            pred = torch.cat([bbox_regression[idx], objs[idx], cls_logits[idx]], dim=-1)
+        for reg, obj, logits in zip(bbox_regression, objs, cls_logits):
+            pred = torch.cat([reg, obj, logits], dim=-1)
             outputs.append(pred)
         return ModelOutput(pred=outputs)
 
@@ -87,19 +87,19 @@ class YOLOFastestClassificationHead(nn.Module):
         out2 = self.layer_2(x[1])
         outputs = [out1, out2]
 
-        for idx, features in enumerate(x): 
-            cls_logits = outputs[idx]
+        for features in outputs: 
+            cls_logits = features
             objectness = cls_logits
             cls_logits = self.cls_logits(cls_logits)
             objectness = self.obj(objectness)
             
-            # Permute classification output from (N, A * K, H, W) to (N, HWA, K).
+            # Permute classification output from (N, A * K, H, W) to (N, H, W, A, K).
             N, _, H, W = cls_logits.shape
             cls_logits = cls_logits.view(N, -1, self.num_classes, H, W)
             cls_logits = cls_logits.permute(0, 3, 4, 1, 2)
             all_cls_logits.append(cls_logits)
 
-            # Permute objectness output from (N, A, H, W) to (N, HWA, 1).
+            # Permute objectness output from (N, A, H, W) to (N, H, W, A, K).
             N, _, H, W = objectness.shape
             objectness = objectness.view(N, -1, 1, H, W)
             objectness = objectness.permute(0, 3, 4, 1, 2)
@@ -132,8 +132,8 @@ class YOLOFastestRegressionHead(nn.Module):
         out2 = self.layer_2(x[1])
         outputs = [out1, out2]
 
-        for idx, features in enumerate(x): 
-            bbox_regression = outputs[idx]
+        for features in outputs: 
+            bbox_regression = features
             bbox_regression = self.bbox_reg(bbox_regression)
 
             # Permute bbox regression output from (N, 4 * A, H, W) to (N, HWA, 4).
