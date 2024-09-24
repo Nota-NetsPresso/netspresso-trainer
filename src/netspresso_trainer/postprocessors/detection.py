@@ -164,13 +164,12 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
 def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=None):
     pred = pred['pred']
     device = pred[0].device
-    dtype = pred[0].dtype
 
     anchors_to_multiply = [torch.tensor(anchor, device=device).view(1, 1, 1, -1, 2) for anchor in anchors]
 
     stage_strides= [original_shape[-1] // o.shape[2] for o in pred]
     hw = [x.shape[1:3] for x in pred]
-    
+
     # [batch, n_anchors_all, num_classes + 5]
     for idx in range(len(pred)):
         pred[idx][..., 4:] = pred[idx][..., 4:].sigmoid()
@@ -188,7 +187,7 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
     for idx in range(len(pred)):
         pred[idx] = torch.cat([
             (pred[idx][..., 0:2].sigmoid() + grids[idx]) * strides[idx],
-            torch.exp(pred[idx][..., 2:4]) * anchors_to_multiply[idx], 
+            torch.exp(pred[idx][..., 2:4]) * anchors_to_multiply[idx],
             pred[idx][..., 4:]
         ], dim=-1).reshape(-1, pred[idx].shape[1] * pred[idx].shape[2] * pred[idx].shape[3], pred[idx].shape[-1])
     pred = torch.cat(pred, dim=1)
