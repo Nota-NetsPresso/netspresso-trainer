@@ -161,6 +161,57 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
 
     return detections
 
+def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=None):
+    pred = pred['pred']
+    device = pred[0].device
+    dtype = pred[0].dtype
+
+    anchors_to_multiply = [torch.tensor(anchor, device=device).view(1, 1, 1, -1, 2) for anchor in anchors]
+
+    stage_strides= [original_shape[-1] // o.shape[2] for o in pred]
+    hw = [x.shape[1:3] for x in pred]
+    
+    # [batch, n_anchors_all, num_classes + 5]
+    for idx in range(len(pred)):
+        pred[idx][..., 4:] = pred[idx][..., 4:].sigmoid()
+
+    grids = []
+    strides = []
+    for (hsize, wsize), stride in zip(hw, stage_strides):
+        yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing='ij')
+        grid = torch.stack((xv, yv), 2).view(1, hsize, wsize, -1, 2).to(device)
+        grids.append(grid)
+        shape = grid.shape[:-1]
+        strides.append(torch.full((*shape, 1), stride).to(device))
+
+    # TODO: bbox parsing (grids: list, strides: list, pred: list)
+    for idx in range(len(pred)):
+        pred[idx] = torch.cat([
+            (pred[idx][..., 0:2].sigmoid() + grids[idx]) * strides[idx],
+            torch.exp(pred[idx][..., 2:4]) * anchors_to_multiply[idx], 
+            pred[idx][..., 4:]
+        ], dim=-1).reshape(-1, pred[idx].shape[1] * pred[idx].shape[2] * pred[idx].shape[3], pred[idx].shape[-1])
+    pred = torch.cat(pred, dim=1)
+    box_corner = pred.new(pred.shape)
+    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
+    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
+    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
+    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    pred[:, :, :4] = box_corner[:, :, :4]
+
+    # Discard boxes with low score
+    detections = []
+    for p in pred:
+        class_conf, class_pred = torch.max(p[:, 5:], 1, keepdim=True)
+
+        conf_mask = (p[:, 4] * class_conf.squeeze() >= score_thresh).squeeze()
+
+        # x1, y1, x2, y2, obj_conf, pred_score, pred_label
+        detections.append(
+            torch.cat((p[:, :5], class_conf, class_pred.float()), 1)[conf_mask]
+        )
+    return detections
+
 
 def nms(prediction, nms_thresh=0.45, class_agnostic=False):
     output = [torch.zeros(0, 7).to(prediction[0].device) for i in range(len(prediction))]
@@ -197,8 +248,11 @@ class DetectionPostprocessor:
         if head_name == 'anchor_free_decoupled_head':
             self.decode_outputs = partial(anchor_free_decoupled_head_decode, score_thresh=params.score_thresh)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
-        elif head_name == 'anchor_decoupled_head' or head_name == 'yolo_fastest_head_v2':
+        elif head_name == 'anchor_decoupled_head':
             self.decode_outputs = partial(anchor_decoupled_head_decode, topk_candidates=params.topk_candidates, score_thresh=params.score_thresh)
+            self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        elif head_name == 'yolo_fastest_head_v2':
+            self.decode_outputs = partial(yolo_fastest_head_decode, score_thresh=params.score_thresh, anchors=params.anchors)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'rtdetr_head':
             self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries, score_thresh=params.score_thresh)
