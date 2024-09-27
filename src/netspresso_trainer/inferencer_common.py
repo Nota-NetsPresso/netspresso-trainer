@@ -69,12 +69,7 @@ def inference_common(
     test_dataloader = build_dataloader(conf, task, model_name, dataset=test_dataset, phase='val')
 
     # Build model
-    # TODO: Not implemented for various model types. Only support pytorch model now
-    model = build_model(
-        conf.model, task, test_dataset.num_classes,
-        model_checkpoint=conf.model.checkpoint.path,
-        use_pretrained=conf.model.checkpoint.use_pretrained,
-    )
+    model = build_model(conf.model, test_dataset.num_classes)
 
     model = model.to(device=devices)
     if conf.distributed:
