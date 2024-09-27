@@ -5,7 +5,6 @@ model:
     use_pretrained: False
     load_head: False
     path: ~ 
-    fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
   architecture:
