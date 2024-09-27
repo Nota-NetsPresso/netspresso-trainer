@@ -90,7 +90,7 @@ def _get_experiment_list(experiment_dir) -> List[ExperimentSummary]:
                     "params": summary['params'],
                     "last_epoch": summary['last_epoch'],
                     "best_epoch": best_epoch,
-                    "is_fx_retrain": (hparam.model.checkpoint.fx_model_path is not None)
+                    "is_fx_retrain": (hparam.model.checkpoint.path.endswith('.pt') is not None)
                 }
             )
         )
