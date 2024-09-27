@@ -20,7 +20,6 @@ from typing import Literal, Optional
 import torch
 import torch.distributed as dist
 from omegaconf import DictConfig
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from .dataloaders import build_dataloader, build_dataset
 from .models import SUPPORTING_TASK_LIST, build_model, is_single_task_model
@@ -70,10 +69,6 @@ def train_common(
     eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
     model = build_model(conf.model, train_dataset.num_classes)
-
-    model = model.to(device=devices)
-    if conf.distributed:
-        model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
 
     # Build training pipeline
     pipeline_type = 'train'
