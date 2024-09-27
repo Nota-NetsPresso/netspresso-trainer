@@ -26,6 +26,7 @@ import torch
 from omegaconf import DictConfig, OmegaConf
 
 from ..models import SUPPORTING_TASK_LIST
+from ..models.utils import get_model_format
 
 OUTPUT_ROOT_DIR = "./outputs"
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -198,7 +199,8 @@ def get_new_logging_dir(output_root_dir, project_id, mode: Literal['training', '
 
 def validate_train_config(conf: DictConfig) -> ConfigSummary:
     # Get information from configuration
-    is_graphmodule_training = bool(conf.model.checkpoint.fx_model_path)
+    model_format = get_model_format(conf.model)
+    is_graphmodule_training = model_format == 'torch.fx'
 
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST

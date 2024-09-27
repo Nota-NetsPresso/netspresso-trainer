@@ -12,7 +12,7 @@
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Remove fx_model_path in model configuration and parsing model format by file extensions by `@illian01` in [PR 538](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/538)
 
 ## Other Changes:
 
