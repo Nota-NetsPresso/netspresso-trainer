@@ -236,10 +236,24 @@ def load_from_checkpoint(
     return model
 
 
-def is_single_task_model(conf_model: omegaconf.DictConfig):
-    conf_model_architecture_full = conf_model.architecture.full
+def is_single_task_model(model_conf: omegaconf.DictConfig):
+    conf_model_architecture_full = model_conf.architecture.full
     if conf_model_architecture_full is None:
         return False
     if conf_model_architecture_full.name is None:
         return False
     return True
+
+def get_model_format(model_conf: omegaconf.DictConfig):
+    if not model_conf.checkpoint.path:
+        return 'torch'
+
+    model_path = Path(model_conf.checkpoint.path)
+    ext = model_path.suffix
+
+    if ext == '.safetensors':
+        return 'torch'
+    elif ext == '.pt':
+        return 'torch.fx'
+    else:
+        raise ValueError(f"Unsupported model format: {model_conf.checkpoint.path}")
