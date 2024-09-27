@@ -32,7 +32,7 @@ from .registry import (
     SUPPORTING_TASK_LIST,
     TASK_MODEL_DICT,
 )
-from .utils import load_from_checkpoint, get_model_format
+from .utils import get_model_format, load_from_checkpoint
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_pretrained):
@@ -118,5 +118,5 @@ def build_model(model_conf, num_classes) -> nn.Module:
     elif model_format == 'torch.fx':
         assert Path(model_conf.checkpoint.path).exists()
         model = torch.load(model_conf.checkpoint.path)
-    
+
     return model
