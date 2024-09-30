@@ -45,9 +45,6 @@ class TaskModel(nn.Module):
             self._freeze_backbone()
             logger.info(f"Freeze! {self.backbone_name} is now freezed. Now only tuning with {self.head_name}.")
 
-        self.save_dtype = next(self.parameters()).dtype # If loaded model is float16, save it as float16
-        self = self.float() # Train with float32
-
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
             m.requires_grad = False
