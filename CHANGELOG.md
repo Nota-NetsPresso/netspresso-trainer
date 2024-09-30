@@ -16,6 +16,32 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v1.0.2
+
+## New Features:
+
+- Add no_weight_decay and overwrite option in optimizer config by `@illian01` in [PR 534](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/534)
+- Fuse reparameterable layers before save by `@hglee98` in [PR 531](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/531)
+- Add ONNX model evaluation feature by `@illian01` in [PR 539](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/539)
+- Add ONNX export tool by `@illian01` in [PR 541](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/541)
+- Add VOC 2012 dataset auto-downloader by `@illian01` in [PR 546](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/546)
+
+## Bug Fixes:
+
+- Fix bug in RandomCrop and segmentation dataset getitem by `@illian01` in [PR 535](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/535)
+- Handle unexpected error during training rt-detr by `@hglee98` in [PR 530](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/530)
+- Fix no 'deploy' attribute error in fx model train phase by `@illian01` in [PR 543](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/543)
+- Fix bugs of PIDNet forward and saving by `@illian01` in [PR 544](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/544)
+
+## Breaking Changes:
+
+- Remove fx_model_path in model configuration and parsing model format by file extensions by `@illian01` in [PR 538](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/538)
+
+## Other Changes:
+
+- Document updates by `@illian01` in [PR 533](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/533)
+- Delete install command for the optional requirements from Dockerfile by `@hglee98` in [PR 532](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/532)
+
 # v1.0.1
 
 ## New Features:

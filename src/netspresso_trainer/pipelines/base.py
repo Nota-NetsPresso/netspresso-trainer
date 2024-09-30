@@ -42,8 +42,7 @@ class BasePipeline(ABC):
         self.task = task
         self.task_processor = task_processor
         self.model_name = model_name
-        self.save_dtype = next(model.parameters()).dtype
-        self.model = model.float()
+        self.model = model
         self.logger = logger
         self.timer = timer
 

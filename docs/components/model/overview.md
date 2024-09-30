@@ -12,7 +12,6 @@ model:
     use_pretrained: True
     load_head: False
     path: ~
-    fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
   architecture:
@@ -29,20 +28,19 @@ model:
 
 ## Retraining the model from NetsPresso
 
-If you have compressed model from NetsPresso, then it's time to retrain your model to get the best performance. Netspresso Trainer uses the same configuration format for retraining torch.fx GraphModule. This can be executed by specifying the path to the torch.fx model in the `fx_model_checkpoint` field. Since the torch.fx model file contains the complete model definition, fields like `architecture` become unnecessary, can be ignored.
+If you have compressed model from NetsPresso, then it's time to retrain your model to get the best performance. Netspresso Trainer uses the same configuration format for retraining torch.fx GraphModule. This can be executed by specifying the path to the torch.fx model in the `path`. The torch.fx model must have .pt extension which indicating it is a torch.fx model (In NetsPresso Trainer, vanilla torch model weights file has .safetensors extension). Since the torch.fx model file contains the complete model definition, fields like `architecture` become unnecessary, can be ignored.
 
 ```yaml
 model:
   task: classification
   name: resnet50
   checkpoint:
-    use_pretrained: # This field will be ignored since fx_model_path is activated
-    load_head: # This field will be ignored since fx_model_path is activated
-    path: # This field will be ignored since fx_model_path is activated
-    fx_model_path: ./path_to_your_fx_model.pt
-    optimizer_path: # This field will be ignored since fx_model_path is activated
+    use_pretrained: ~ # This field will be ignored
+    load_head: ~ # This field will be ignored
+    path: ./path_to_your_fx_model.pt # The torch.fx model must have .pt extension which indicating it is a torch.fx model
+    optimizer_path: ~ 
   freeze_backbone: False
-  architecture: # This field will be ignored since fx_model_path is activated
+  architecture: ~ # This field will be ignored
   postprocessor: ~
   losses:
     - criterion: cross_entropy
@@ -62,7 +60,6 @@ model:
 | `model.checkpoint.load_head` | (bool) Whether to use the pretrained checkpoint for `head` module. |
 | `model.checkpoint.path` | (str) Checkpoint path to resume training. If `None` and `use_pretrained` is `False`, you can train you model from scratch. |
 | `model.checkpoint.optimizer_path` | (str) Optimizer checkpoint path for resuming training. |
-| `model.checkpoint.fx_model_path` | (str) Model path for fx model retraining. If you have to train the model from NP Compressor, you have to fill your compressed model path at this field. If `fx_model_path` is filled, `use_pretrained`, `load_head`, `path`, `optimizer_path`, and `freeze_backbone` are ignored. |
 | `model.freeze_backbone` | (bool) Whether to freeze backbone in training. |
 | `model.architecture` | (dict) Detailed configuration of the model architecture. Please see [Model page](../../../models/overview) to find NetsPresso supporting models. |
 | `model.postprocessor` | (dict) Detailed configuration of the model postprocessor. Please see [Postprocessor page](../postprocessor/)|
