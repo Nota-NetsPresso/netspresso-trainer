@@ -24,7 +24,9 @@ from fvcore.nn import FlopCountAnalysis
 from .environment import get_device
 
 
-def get_params_and_flops(model: nn.Module, sample_input: torch.Tensor):
+def get_params_and_flops(model, sample_input: torch.Tensor):
+    if not isinstance(model, nn.Module): # Only support nn.Module
+        return 0, 0
     sample_input = sample_input.to(get_device(model))
     # From v0.0.9
     flops, params = _params_and_flops_fvcore(model, sample_input)
