@@ -22,8 +22,9 @@ import torch
 import torch.nn as nn
 from loguru import logger
 from omegaconf import OmegaConf
+from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
+from .base import ClassificationModel, DetectionModel, ONNXModel, SegmentationModel, TaskModel
 from .registry import (
     MODEL_BACKBONE_DICT,
     MODEL_FULL_DICT,
@@ -88,7 +89,7 @@ def load_backbone_and_head_model(
     return model
 
 
-def build_model(model_conf, num_classes) -> nn.Module:
+def build_model(model_conf, num_classes, devices, distributed) -> nn.Module:
 
     task = model_conf.task
     model_checkpoint = model_conf.checkpoint.path
@@ -99,24 +100,36 @@ def build_model(model_conf, num_classes) -> nn.Module:
     if model_format == 'torch':
         if model_conf.single_task_model:
             model_name = str(model_conf.architecture.full.name).lower()
-            return load_full_model(
+            model = load_full_model(
                 model_conf, model_name, num_classes,
                 model_checkpoint=model_checkpoint,
                 use_pretrained=use_pretrained
             )
+        else:
 
-        backbone_name = str(model_conf.architecture.backbone.name).lower()
-        head_name = str(model_conf.architecture.head.name).lower()
-        freeze_backbone = model_conf.freeze_backbone
-        return load_backbone_and_head_model(
-            model_conf, task, backbone_name, head_name, num_classes,
-            model_checkpoint=model_checkpoint,
-            use_pretrained=use_pretrained,
-            freeze_backbone=freeze_backbone,
-        )
+            backbone_name = str(model_conf.architecture.backbone.name).lower()
+            head_name = str(model_conf.architecture.head.name).lower()
+            freeze_backbone = model_conf.freeze_backbone
+            model = load_backbone_and_head_model(
+                model_conf, task, backbone_name, head_name, num_classes,
+                model_checkpoint=model_checkpoint,
+                use_pretrained=use_pretrained,
+                freeze_backbone=freeze_backbone,
+            )
+
+        model = model.to(device=devices)
+        if distributed:
+            model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
+
+        return model
 
     elif model_format == 'torch.fx':
         assert Path(model_conf.checkpoint.path).exists()
         model = torch.load(model_conf.checkpoint.path)
+
+    elif model_format == 'onnx':
+        assert Path(model_conf.checkpoint.path).exists()
+        model = ONNXModel(model_conf)
+        model.set_provider(devices)
 
     return model

@@ -45,6 +45,9 @@ class TaskModel(nn.Module):
             self._freeze_backbone()
             logger.info(f"Freeze! {self.backbone_name} is now freezed. Now only tuning with {self.head_name}.")
 
+        self.save_dtype = next(self.parameters()).dtype # If loaded model is float16, save it as float16
+        self = self.float() # Train with float32
+
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
             m.requires_grad = False
@@ -119,3 +122,43 @@ class PoseEstimationModel(TaskModel):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
+
+
+class ONNXModel:
+    '''
+        ONNX Model wrapper class for inferencing.
+    '''
+    def __init__(self, model_conf) -> None:
+        import onnxruntime as ort
+        self.name = model_conf.name + '_onnx'
+        self.onnx_path = model_conf.checkpoint.path
+        providers = [
+            ('CUDAExecutionProvider', {
+                'device_id': 0,
+            }),
+            'CPUExecutionProvider',
+        ]
+        self.inference_session = ort.InferenceSession(model_conf.checkpoint.path, providers=providers)
+
+    def _get_name(self):
+        return f"{self.__class__.__name__}[model={self.name}]"
+
+    def __call__(self, x, label_size=None, targets=None):
+        device = x.device
+        x = x.detach().cpu().numpy()
+        out = self.inference_session.run(None, {self.inference_session.get_inputs()[0].name: x})
+        out = [torch.tensor(o).to(device) for o in out]
+
+        if len(out) == 1:
+            out = out[0]
+
+        return ModelOutput(pred=out)
+
+    def eval(self):
+        pass # Do nothing
+
+    def set_provider(self, device):
+        if device.type == 'cuda':
+            self.inference_session.set_providers(['CUDAExecutionProvider'])
+        else:
+            self.inference_session.set_providers(['CPUExecutionProvider'])
