@@ -200,6 +200,7 @@ def get_new_logging_dir(output_root_dir, project_id, mode: Literal['training', '
 def validate_train_config(conf: DictConfig) -> ConfigSummary:
     # Get information from configuration
     model_format = get_model_format(conf.model)
+    assert model_format in ['torch', 'torch.fx'], "Training model format must be either 'torch' or 'torch.fx'. (.safetensors or .pt)"
     is_graphmodule_training = model_format == 'torch.fx'
 
     task = str(conf.model.task).lower()
@@ -216,10 +217,14 @@ def validate_train_config(conf: DictConfig) -> ConfigSummary:
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
 
 
-def validate_evaluation_config(conf: DictConfig) -> ConfigSummary:
+def validate_evaluation_config(conf: DictConfig, gpus: Union[List, int]) -> ConfigSummary:
 
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST
+
+    model_format = get_model_format(conf.model)
+    if model_format == 'onnx':
+        assert isinstance(gpus, int), "ONNX model evaluation must be done on a single GPU."
 
     model_name = str(conf.model.name).lower() + '_evaluation'
 
@@ -229,10 +234,14 @@ def validate_evaluation_config(conf: DictConfig) -> ConfigSummary:
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
 
 
-def validate_inference_config(conf: DictConfig) -> ConfigSummary:
+def validate_inference_config(conf: DictConfig, gpus: Union[List, int]) -> ConfigSummary:
 
     task = str(conf.model.task).lower()
     assert task in SUPPORTING_TASK_LIST
+
+    model_format = get_model_format(conf.model)
+    if model_format == 'onnx':
+        assert isinstance(gpus, int), "ONNX model inference must be done on a single GPU."
 
     model_name = str(conf.model.name).lower() + '_inference'
 
