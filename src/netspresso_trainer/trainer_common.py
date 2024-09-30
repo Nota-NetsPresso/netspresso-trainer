@@ -68,7 +68,7 @@ def train_common(
     train_dataloader = build_dataloader(conf, task, model_name, dataset=train_dataset, phase='train')
     eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
-    model = build_model(conf.model, train_dataset.num_classes)
+    model = build_model(conf.model, train_dataset.num_classes, devices=devices, distributed=conf.distributed)
 
     # Build training pipeline
     pipeline_type = 'train'

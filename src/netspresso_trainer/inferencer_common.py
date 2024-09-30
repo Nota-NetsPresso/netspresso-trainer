@@ -68,7 +68,7 @@ def inference_common(
     test_dataloader = build_dataloader(conf, task, model_name, dataset=test_dataset, phase='val')
 
     # Build model
-    model = build_model(conf.model, test_dataset.num_classes)
+    model = build_model(conf.model, test_dataset.num_classes, devices=devices, distributed=conf.distributed)
 
     # Build evaluation pipeline
     pipeline_type = 'inference'
