@@ -161,36 +161,37 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
 
     return detections
 
+
 def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=None):
     pred = pred['pred']
+    dtype = pred[0].type()
+    stage_strides = [original_shape[-1] // o.shape[-1] for o in pred]
+    hw = [x.shape[-2:] for x in pred]
     device = pred[0].device
-
-    anchors_to_multiply = [torch.tensor(anchor, device=device).view(1, 1, 1, -1, 2) for anchor in anchors]
-
-    stage_strides= [original_shape[-1] // o.shape[2] for o in pred]
-    hw = [x.shape[1:3] for x in pred]
-
-    # [batch, n_anchors_all, num_classes + 5]
-    for idx in range(len(pred)):
-        pred[idx][..., 4:] = pred[idx][..., 4:].sigmoid()
+    anchors = [torch.tensor(anchor, dtype=torch.float).view(-1, 2) for anchor in anchors]
+    num_anchors = anchors[0].shape[0]
+    anchors = torch.stack(anchors, dim=0).to(device)
 
     grids = []
     strides = []
     for (hsize, wsize), stride in zip(hw, stage_strides):
         yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing='ij')
-        grid = torch.stack((xv, yv), 2).view(1, hsize, wsize, -1, 2).to(device)
+        grid = torch.stack((xv, yv), 2).repeat(num_anchors, 1,1,1).view(1, num_anchors, hsize, wsize, 2).type(dtype).to(device)
         grids.append(grid)
         shape = grid.shape[:-1]
         strides.append(torch.full((*shape, 1), stride).to(device))
+    
+    preds = list()
+    for idx, p in enumerate(pred):
+        p = p.reshape(p.shape[0], num_anchors, -1, p.shape[-2], p.shape[-1]).permute(0, 1, 3, 4, 2)
+        p = torch.cat([
+            (p[..., 0:2].sigmoid() + grids[idx]) * strides[idx],
+            p[..., 2:4].sigmoid() * anchors[idx].view(1, num_anchors, 1, 1, 2),
+            p[..., 4:].sigmoid()
+        ], dim=-1).flatten(start_dim=1, end_dim=-2)
+        preds.append(p)
+    pred = torch.cat(preds, dim=1)
 
-    # TODO: bbox parsing (grids: list, strides: list, pred: list)
-    for idx in range(len(pred)):
-        pred[idx] = torch.cat([
-            (pred[idx][..., 0:2].sigmoid() + grids[idx]) * strides[idx],
-            torch.exp(pred[idx][..., 2:4]) * anchors_to_multiply[idx],
-            pred[idx][..., 4:]
-        ], dim=-1).reshape(-1, pred[idx].shape[1] * pred[idx].shape[2] * pred[idx].shape[3], pred[idx].shape[-1])
-    pred = torch.cat(pred, dim=1)
     box_corner = pred.new(pred.shape)
     box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
     box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
@@ -209,6 +210,7 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
         detections.append(
             torch.cat((p[:, :5], class_conf, class_pred.float()), 1)[conf_mask]
         )
+
     return detections
 
 
