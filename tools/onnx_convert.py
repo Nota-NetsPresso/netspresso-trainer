@@ -26,20 +26,20 @@ from netspresso_trainer.models.utils import is_single_task_model
 from netspresso_trainer.utils.onnx import save_onnx
 from omegaconf import OmegaConf
 
-TEMP_NUM_CLASSES = 19
+TEMP_NUM_CLASSES = 80
 
 def parse_args():
 
     parser = argparse.ArgumentParser(description="Parser for NetsPresso fx tracing checker")
 
     parser.add_argument(
-        '-c', '--config-path', type=str, default="config/model/pidnet/pidnet-s-segmentation.yaml",
+        '-c', '--config-path', type=str, default="config/model/yolox/yolox-s-detection.yaml",
         help="Model config path")
     parser.add_argument(
         '-o', '--output-dir', type=str, default="onnx/",
         help="ONNX model output path")
     parser.add_argument(
-        '--sample-size', type=list, default=[512, 512],
+        '--sample-size', type=list, default=[640, 640],
         help="Model config path")
     parser.add_argument(
         '--debug', action='store_true', help="Debug mode to check with the error message")
