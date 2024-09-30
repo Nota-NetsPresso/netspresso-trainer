@@ -22,6 +22,7 @@ from typing import Dict, List, Optional, Union
 import torch
 import torch.nn as nn
 from netspresso_trainer.models import build_model
+from netspresso_trainer.models.utils import is_single_task_model
 from netspresso_trainer.utils.onnx import save_onnx
 from omegaconf import OmegaConf
 
@@ -64,7 +65,7 @@ if __name__ == '__main__':
             print(f"ONNX export for ({model_config_path})..... ", end='', flush=True)            
             config = OmegaConf.load(model_config_path)
             config = config.model
-            config.single_task_model = True
+            config.single_task_model = is_single_task_model(config)
             torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES, devices=torch.device("cpu"), distributed=False)
             print(torch_model)
             save_onnx(torch_model, f=Path(args.output_dir) / f"{model_config_path.stem}.onnx",
