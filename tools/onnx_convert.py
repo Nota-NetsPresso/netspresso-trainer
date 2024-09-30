@@ -58,13 +58,13 @@ def get_model_config_path_list(config_path_or_dir: Path) -> List[Path]:
 
 if __name__ == '__main__':
     args = parse_args()
-    
-    config_path_list = get_model_config_path_list(Path(args.config_path))        
+
+    config_path_list = get_model_config_path_list(Path(args.config_path))
     os.makedirs(args.output_dir, exist_ok=True)
-    
+
     for model_config_path in config_path_list:
         try:
-            print(f"ONNX export for ({model_config_path})..... ", end='', flush=True)            
+            print(f"ONNX export for ({model_config_path})..... ", end='', flush=True)
             config = OmegaConf.load(model_config_path)
             config = config.model
             config.single_task_model = is_single_task_model(config)
