@@ -15,6 +15,7 @@
 # ----------------------------------------------------------------------------
 
 import argparse
+import os
 from itertools import chain
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -59,6 +60,7 @@ if __name__ == '__main__':
     args = parse_args()
     
     config_path_list = get_model_config_path_list(Path(args.config_path))        
+    os.makedirs(args.output_dir, exist_ok=True)
     
     for model_config_path in config_path_list:
         try:
