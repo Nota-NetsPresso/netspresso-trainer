@@ -24,20 +24,22 @@ model:
       name: yolo_fastest_head_v2
       params:
         anchors:
-          - [12,18, 37,49, 52,132]  # P2
-          - [115,73, 119,199, 242,238]  # P3
+          - [12.,18., 37.,49., 52.,132.]  # P2
+          - [115.,73., 119.,199., 242.,238.]  # P3
   postprocessor: 
     params:
       # postprocessor - decode
-      anchors:
-          - [12,18, 37,49, 52,132]  # P2
-          - [115,73, 119,199, 242,238]  # P3
-      topk_candidates: 1000
-      score_thresh: 0.05
+      score_thresh: 0.01
       # postprocessor - nms
-      nms_thresh: 0.45
+      nms_thresh: 0.65
+      anchors:
+          - [12.,18., 37.,49., 52.,132.]  # P2
+          - [115.,73., 119.,199., 242.,238.]  # P3
       class_agnostic: False
-  # Temporary loss to test the full YOLOFastestV2 model to work right
   losses:
-    - criterion: retinanet_loss
+    - criterion: yolofastest_loss
+      anchors:
+            - [12.,18., 37.,49., 52.,132.]  # P2
+            - [115.,73., 119.,199., 242.,238.]  # P3
+      l1_activate_epoch: ~
       weight: ~
