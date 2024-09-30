@@ -238,7 +238,8 @@ class TrainingPipeline(BasePipeline):
             model = self.model_ema.ema_model
         else:
             model = self.model.module if hasattr(self.model, 'module') else self.model
-        model.deploy()
+        if hasattr(model, 'deploy'):
+            model.deploy()
         save_dtype = model.save_dtype
 
         if save_dtype == torch.float16:
@@ -276,7 +277,9 @@ class TrainingPipeline(BasePipeline):
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         save_dtype = model.save_dtype
-        best_model_to_save = copy.deepcopy(model).deploy()
+        best_model_to_save = copy.deepcopy(model)
+        if hasattr(best_model_to_save, 'deploy'):
+            best_model_to_save.deploy()
 
         if self.is_graphmodule_training:
             best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
