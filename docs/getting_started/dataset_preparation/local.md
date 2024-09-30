@@ -173,6 +173,16 @@ Objects365 dataset will be automatically downloaded to `./data/download/objects3
 python ./tools/open_dataset_tool/objects365.py --dir ./data --num_process 4
 ```
 
+#### PascalVOC 2012
+ 
+Run `voc2012_det.py` python file with your dataset directory as an argument.
+
+PascalVOC 2012 dataset will be automatically downloaded to `./data/download`. After executing scripts, you can use  [pre-defined configuration](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/dev/config/data/local/voc2012_det.yaml).
+
+```bash
+python ./tools/open_dataset_tool/voc2012_det.py --dir ./data
+```
+
 ### Pose estimation
 
 #### WFLW
