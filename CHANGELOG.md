@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v1.0.2
+
+## New Features:
+
 - Add no_weight_decay and overwrite option in optimizer config by `@illian01` in [PR 534](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/534)
 - Fuse reparameterable layers before save by `@hglee98` in [PR 531](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/531)
 - Add ONNX model evaluation feature by `@illian01` in [PR 539](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/539)
