@@ -5,6 +5,7 @@
 - Add no_weight_decay and overwrite option in optimizer config by `@illian01` in [PR 534](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/534)
 - Fuse reparameterable layers before save by `@hglee98` in [PR 531](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/531)
 - Add ONNX model evaluation feature by `@illian01` in [PR 539](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/539)
+- Add ONNX export tool by `@illian01` in [PR 541](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/541)
 
 ## Bug Fixes:
 
