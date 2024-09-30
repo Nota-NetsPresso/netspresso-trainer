@@ -132,7 +132,13 @@ class ONNXModel:
         import onnxruntime as ort
         self.name = model_conf.name + '_onnx'
         self.onnx_path = model_conf.checkpoint.path
-        self.inference_session = ort.InferenceSession(model_conf.checkpoint.path)
+        providers = [
+            ('CUDAExecutionProvider', {
+                'device_id': 0,
+            }),
+            'CPUExecutionProvider',
+        ]
+        self.inference_session = ort.InferenceSession(model_conf.checkpoint.path, providers=providers)
 
     def _get_name(self):
         return f"{self.__class__.__name__}[model={self.name}]"
@@ -154,3 +160,5 @@ class ONNXModel:
     def set_provider(self, device):
         if device.type == 'cuda':
             self.inference_session.set_providers(['CUDAExecutionProvider'])
+        else:
+            self.inference_session.set_providers(['CPUExecutionProvider'])

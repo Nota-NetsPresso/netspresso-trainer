@@ -130,5 +130,6 @@ def build_model(model_conf, num_classes, devices, distributed) -> nn.Module:
     elif model_format == 'onnx':
         assert Path(model_conf.checkpoint.path).exists()
         model = ONNXModel(model_conf)
+        model.set_provider(devices)
 
     return model
