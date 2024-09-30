@@ -24,7 +24,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from loguru import logger
 from omegaconf import OmegaConf
 
-from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
+from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel, ONNXModel
 from .registry import (
     MODEL_BACKBONE_DICT,
     MODEL_FULL_DICT,
@@ -126,5 +126,9 @@ def build_model(model_conf, num_classes, devices, distributed) -> nn.Module:
     elif model_format == 'torch.fx':
         assert Path(model_conf.checkpoint.path).exists()
         model = torch.load(model_conf.checkpoint.path)
+    
+    elif model_format == 'onnx':
+        assert Path(model_conf.checkpoint.path).exists()
+        model = ONNXModel(model_conf)
 
     return model

@@ -119,3 +119,19 @@ class PoseEstimationModel(TaskModel):
             features: BackboneOutput = self.neck(features['intermediate_features'])
         out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
         return out
+
+
+class ONNXModel:
+    '''
+        ONNX Model wrapper class for inferencing.
+    '''
+    def __init__(self, model_conf) -> None:
+        import onnxruntime as ort
+        self.name = model_conf.name + '_onnx'
+        self.inference_session = ort.InferenceSession(model_conf.checkpoint.path)
+
+    def _get_name(self):
+        return f"{self.__class__.__name__}[model={self.name}]"
+
+    def __call__(self, x, label_size=None, targets=None):
+        return self.inference_session.run(None, {self.inference_session.get_inputs()[0].name: x})
