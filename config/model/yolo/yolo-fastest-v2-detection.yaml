@@ -25,8 +25,8 @@ model:
       params:
         anchors:
           &anchors
-          - [12.,10., 11.,28., 24.,17.]  # P2
-          - [45.,21., 24.,60., 92.,73.]  # P3
+          - [12.,18., 37.,49., 52.,132.]  # P2
+          - [115.,73., 119.,199., 242.,238.]  # P3
   postprocessor: 
     params:
       # postprocessor - decode
