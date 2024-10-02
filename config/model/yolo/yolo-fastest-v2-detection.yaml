@@ -4,7 +4,7 @@ model:
   checkpoint:
     use_pretrained: False
     load_head: False
-    path: ~ 
+    path: ~
     fx_model_path: ~
     optimizer_path: ~
   freeze_backbone: False
@@ -24,22 +24,19 @@ model:
       name: yolo_fastest_head_v2
       params:
         anchors:
-          - [12.,18., 37.,49., 52.,132.]  # P2
-          - [115.,73., 119.,199., 242.,238.]  # P3
+          &anchors
+          - [12.,10., 11.,28., 24.,17.]  # P2
+          - [45.,21., 24.,60., 92.,73.]  # P3
   postprocessor: 
     params:
       # postprocessor - decode
       score_thresh: 0.01
       # postprocessor - nms
       nms_thresh: 0.65
-      anchors:
-          - [12.,18., 37.,49., 52.,132.]  # P2
-          - [115.,73., 119.,199., 242.,238.]  # P3
+      anchors: *anchors
       class_agnostic: False
   losses:
     - criterion: yolofastest_loss
-      anchors:
-            - [12.,18., 37.,49., 52.,132.]  # P2
-            - [115.,73., 119.,199., 242.,238.]  # P3
+      anchors: *anchors 
       l1_activate_epoch: ~
       weight: ~
