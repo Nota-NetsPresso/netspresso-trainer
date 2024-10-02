@@ -180,8 +180,8 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
         grids.append(grid)
         shape = grid.shape[:-1]
         strides.append(torch.full((*shape, 1), stride).to(device))
-    
-    preds = list()
+
+    preds = []
     for idx, p in enumerate(pred):
         p = p.permute(0, 1, 3, 4, 2)
         p = torch.cat([
