@@ -14,13 +14,15 @@
 #
 # ----------------------------------------------------------------------------
 
+import math
 from typing import Dict, List
-from .yolox import YOLOXLoss, IOUloss, xyxy2cxcywh
 
 import torch
-import math
 import torch.nn as nn
 import torch.nn.functional as F
+
+from .yolox import IOUloss, YOLOXLoss, xyxy2cxcywh
+
 
 def xyxy2cxcywhn(bboxes, img_size):
     new_bboxes = bboxes.clone() / img_size
@@ -62,7 +64,7 @@ class YOLOFastestLoss(YOLOXLoss):
         self.iou_loss = IOUloss(reduction="none", loss_type="giou")
         self.anchors = [torch.tensor(anchor, dtype=torch.float).view(-1, 2) for anchor in anchors]
         self.num_anchors = self.anchors[0].size(0)
-    
+
     def use_l1_update(self):
         return False
 
@@ -85,7 +87,7 @@ class YOLOFastestLoss(YOLOXLoss):
             batch_size, hsize * wsize * self.num_anchors, -1
         )
         return output, grid.view(1, -1, 2)
-    
+
     def forward(self, out: List, target: Dict) -> torch.Tensor:
         self.use_l1 = self.use_l1_update()
 
