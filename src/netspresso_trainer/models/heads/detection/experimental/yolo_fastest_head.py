@@ -43,7 +43,10 @@ class YOLOFastestHeadV2(nn.Module):
         bbox_regression = self.reg_head(x)
         outputs = list()
         for reg, obj, logits in zip(bbox_regression, objs, cls_logits):
-            output = torch.cat([reg, obj, logits], 1)
+            reg = reg.view(reg.shape[0], self.num_anchors, -1, reg.shape[-2], reg.shape[-1])
+            obj = obj.view(obj.shape[0], self.num_anchors, -1, obj.shape[-2], obj.shape[-1])
+            logits = logits.repeat(1, self.num_anchors, 1, 1).view(logits.shape[0], self.num_anchors, -1, logits.shape[-2], logits.shape[-1])
+            output = torch.cat([reg, obj, logits], 2)
             outputs.append(output)
         return ModelOutput(pred=outputs)
 
@@ -75,7 +78,7 @@ class YOLOFastestClassificationHead(nn.Module):
                     SeparableConvLayer(in_channels, in_channels, 5, padding=2, no_out_act=True),
                 ])
             )
-            self.cls_logits.append(nn.Conv2d(in_channels, num_classes * num_anchors, 1, 1, 0, bias=True))
+            self.cls_logits.append(nn.Conv2d(in_channels, num_classes, 1, 1, 0, bias=True))
             self.obj.append(nn.Conv2d(in_channels, num_anchors, 1, 1, 0, bias=True))
         
         self.initialize_biases(prior_prob=prior_prob)

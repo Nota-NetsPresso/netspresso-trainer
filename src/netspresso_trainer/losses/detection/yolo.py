@@ -70,14 +70,12 @@ class YOLOFastestLoss(YOLOXLoss):
         grid = self.grids[k]
         device = output.device
         batch_size = output.shape[0]
-        n_ch = 5 + self.num_classes
         hsize, wsize = output.shape[-2:]
         if grid.shape[2:4] != output.shape[2:4]:
             yv, xv = torch.meshgrid(torch.arange(hsize), torch.arange(wsize), indexing="ij")
             grid = torch.stack((xv, yv), 2).repeat(self.num_anchors,1,1,1).view(1, self.num_anchors, hsize, wsize, 2).type(dtype)
             self.grids[k] = grid
         anchors = self.anchors[k].view(1, self.num_anchors, 1, 1, 2).to(device)
-        output = output.view(batch_size, self.num_anchors, n_ch, hsize, wsize)
         output = output.permute(0, 1, 3, 4, 2)
         output = torch.cat([
             (output[..., :2].sigmoid() + grid) * stride,

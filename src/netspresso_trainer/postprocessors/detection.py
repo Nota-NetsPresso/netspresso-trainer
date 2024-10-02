@@ -183,7 +183,7 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
     
     preds = list()
     for idx, p in enumerate(pred):
-        p = p.reshape(p.shape[0], num_anchors, -1, p.shape[-2], p.shape[-1]).permute(0, 1, 3, 4, 2)
+        p = p.permute(0, 1, 3, 4, 2)
         p = torch.cat([
             (p[..., 0:2].sigmoid() + grids[idx]) * strides[idx],
             p[..., 2:4].sigmoid() * 3. * anchors[idx].view(1, num_anchors, 1, 1, 2),
