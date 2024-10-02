@@ -39,7 +39,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         optimizer.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
-            out = train_model(images, target=target)
+            out = train_model(images, targets=target)
             loss_factory.calc(out, target, phase='train')
 
         loss_factory.backward(self.grad_scaler)
