@@ -47,7 +47,7 @@ def inference_with_yaml_impl(gpus: Optional[Union[List, int]], data: Union[Path,
                          model=model,
                          logging=logging,
                          environment=environment)
-    config_summary = validate_inference_config(conf)
+    config_summary = validate_inference_config(conf, gpus)
 
     try:
         if isinstance(gpus, int):

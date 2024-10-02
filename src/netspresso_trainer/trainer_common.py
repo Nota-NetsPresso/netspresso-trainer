@@ -20,7 +20,6 @@ from typing import Literal, Optional
 import torch
 import torch.distributed as dist
 from omegaconf import DictConfig
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from .dataloaders import build_dataloader, build_dataset
 from .models import SUPPORTING_TASK_LIST, build_model, is_single_task_model
@@ -69,21 +68,7 @@ def train_common(
     train_dataloader = build_dataloader(conf, task, model_name, dataset=train_dataset, phase='train')
     eval_dataloader = build_dataloader(conf, task, model_name, dataset=valid_dataset, phase='val')
 
-    # Build model
-    if is_graphmodule_training:
-        assert conf.model.checkpoint.fx_model_path is not None
-        assert Path(conf.model.checkpoint.fx_model_path).exists()
-        model = torch.load(conf.model.checkpoint.fx_model_path)
-    else:
-        model = build_model(
-            conf.model, task, train_dataset.num_classes,
-            model_checkpoint=conf.model.checkpoint.path,
-            use_pretrained=conf.model.checkpoint.use_pretrained,
-        )
-
-    model = model.to(device=devices)
-    if conf.distributed:
-        model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
+    model = build_model(conf.model, train_dataset.num_classes, devices=devices, distributed=conf.distributed)
 
     # Build training pipeline
     pipeline_type = 'train'
