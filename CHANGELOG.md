@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add RandomResize2 by `@illian01` in [PR 550](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/550)
 
 ## Bug Fixes:
 
