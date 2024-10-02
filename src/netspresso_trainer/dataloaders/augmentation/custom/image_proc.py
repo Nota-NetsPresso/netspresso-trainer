@@ -793,6 +793,40 @@ class RandomResize:
         )
 
 
+class RandomResize2:
+    visualize = True
+
+    def __init__(
+        self,
+        base_size: List[int],
+        random_range: Union[int, float],
+        interpolation: str,
+    ):
+        self.base_size = base_size
+        self.random_range = random_range
+        # Temporarily assign 0 size to Resize class
+        self.resize = Resize(size=self.base_size, interpolation=interpolation, max_size=None, resize_criteria=None)
+
+    def random_set(self, image):
+        target_h, target_w = self.base_size
+        resize_factor = random.random() * (self.random_range[1] - self.random_range[0]) + self.random_range[0]
+        max_size = (int(target_w * resize_factor), int(target_h * resize_factor))
+        w, h = image.size
+        resize_factor = min(max_size[0] / w, max_size[1] / h)
+        size = [int(h * resize_factor), int(w * resize_factor)]
+        self.resize.size = size
+
+    def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
+        self.random_set(image)
+        image, label, mask, bbox, keypoint = self.resize(image, label, mask, bbox, keypoint, dataset)
+        return image, label, mask, bbox, keypoint
+
+    def __repr__(self):
+        return self.__class__.__name__ + "(max_size={0}, random_range={1})".format(
+            self.max_size, self.random_range
+        )
+
+
 class PoseTopDownAffine:
     """
     Based on the mmpose implementation.
