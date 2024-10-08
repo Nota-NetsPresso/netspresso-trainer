@@ -161,7 +161,7 @@ class PIDNet(nn.Module):
     def device(self):
         return next(self.parameters()).device
 
-    def forward(self, x: FXTensorType, label_size=None):
+    def forward(self, x: FXTensorType, target=None):
 
         # assert H == x.size(2)
         # assert W == x.size(3)

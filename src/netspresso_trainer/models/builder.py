@@ -22,8 +22,9 @@ import torch
 import torch.nn as nn
 from loguru import logger
 from omegaconf import OmegaConf
+from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .base import ClassificationModel, DetectionModel, SegmentationModel, TaskModel
+from .base import ClassificationModel, DetectionModel, ONNXModel, SegmentationModel, TaskModel
 from .registry import (
     MODEL_BACKBONE_DICT,
     MODEL_FULL_DICT,
@@ -32,7 +33,7 @@ from .registry import (
     SUPPORTING_TASK_LIST,
     TASK_MODEL_DICT,
 )
-from .utils import load_from_checkpoint
+from .utils import get_model_format, load_from_checkpoint
 
 
 def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_pretrained):
@@ -44,6 +45,9 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_p
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
+        # TODO: Move to model property
+        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
+        model = model.float() # Train with float32
 
     return model
 
@@ -85,25 +89,53 @@ def load_backbone_and_head_model(
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
+        # TODO: Move to model property
+        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
+        model = model.float() # Train with float32
     return model
 
 
-def build_model(conf_model, task, num_classes, model_checkpoint, use_pretrained) -> nn.Module:
+def build_model(model_conf, num_classes, devices, distributed) -> nn.Module:
 
-    if conf_model.single_task_model:
-        model_name = str(conf_model.architecture.full.name).lower()
-        return load_full_model(
-            conf_model, model_name, num_classes,
-            model_checkpoint=model_checkpoint,
-            use_pretrained=use_pretrained
-        )
+    task = model_conf.task
+    model_checkpoint = model_conf.checkpoint.path
+    use_pretrained = model_conf.checkpoint.use_pretrained
 
-    backbone_name = str(conf_model.architecture.backbone.name).lower()
-    head_name = str(conf_model.architecture.head.name).lower()
-    freeze_backbone = conf_model.freeze_backbone
-    return load_backbone_and_head_model(
-        conf_model, task, backbone_name, head_name, num_classes,
-        model_checkpoint=model_checkpoint,
-        use_pretrained=use_pretrained,
-        freeze_backbone=freeze_backbone,
-    )
+    model_format = get_model_format(model_conf)
+
+    if model_format == 'torch':
+        if model_conf.single_task_model:
+            model_name = str(model_conf.architecture.full.name).lower()
+            model = load_full_model(
+                model_conf, model_name, num_classes,
+                model_checkpoint=model_checkpoint,
+                use_pretrained=use_pretrained
+            )
+        else:
+
+            backbone_name = str(model_conf.architecture.backbone.name).lower()
+            head_name = str(model_conf.architecture.head.name).lower()
+            freeze_backbone = model_conf.freeze_backbone
+            model = load_backbone_and_head_model(
+                model_conf, task, backbone_name, head_name, num_classes,
+                model_checkpoint=model_checkpoint,
+                use_pretrained=use_pretrained,
+                freeze_backbone=freeze_backbone,
+            )
+
+        model = model.to(device=devices)
+        if distributed:
+            model = DDP(model, device_ids=[devices], find_unused_parameters=True)  # TODO: find_unused_parameters should be false (for now, PIDNet has problem)
+
+        return model
+
+    elif model_format == 'torch.fx':
+        assert Path(model_conf.checkpoint.path).exists()
+        model = torch.load(model_conf.checkpoint.path)
+
+    elif model_format == 'onnx':
+        assert Path(model_conf.checkpoint.path).exists()
+        model = ONNXModel(model_conf)
+        model.set_provider(devices)
+
+    return model
