@@ -50,8 +50,9 @@ class YOLOFastestHeadV2(nn.Module):
         self.cls_head = YOLOFastestClassificationHead(in_channel, num_anchors, num_classes)  
         self.reg_head = YOLOFastestRegressionHead(in_channel, num_anchors) 
 
-    def forward(self, x, target=None):
-        cls_logits, objs = self.cls_head(x)
+    def forward(self, x): 
+        anchors = torch.cat(self.anchor_generator(x), dim=0)
+        cls_logits, objs = self.cls_head(x) 
         bbox_regression = self.reg_head(x)
         return AnchorBasedDetectionModelOutput(anchors=anchors, cls_logits=cls_logits, bbox_regression=bbox_regression)
 
