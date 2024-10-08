@@ -107,13 +107,14 @@ class DetectionVisualizer:
                 y1 = int(bbox_label[1])
                 x2 = int(bbox_label[2])
                 y2 = int(bbox_label[3])
+                conf_score = "" if len(bbox_label) <= 4 else " " + str(round(bbox_label[4], 2))
                 color = self.cmap[class_label].tolist()
 
                 image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
-                text_size, _ = cv2.getTextSize(str(class_name), cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
+                text_size, _ = cv2.getTextSize(f"{class_name}{conf_score}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
                 text_w, text_h = text_size
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
-                image = cv2.putText(image, str(class_name), (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                image = cv2.putText(image, f"{class_name}{conf_score}", (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
             return_images.append(image[np.newaxis, ...])
         return_images = np.concatenate(return_images, axis=0)
