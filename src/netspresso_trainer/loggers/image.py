@@ -22,11 +22,12 @@ import PIL.Image as Image
 
 
 class ImageSaver:
-    def __init__(self, model, result_dir) -> None:
+    def __init__(self, model, result_dir, save_only_best: Optional[bool]=None) -> None:
         super(ImageSaver, self).__init__()
         self.model = model
         self.save_dir: Path = Path(result_dir) / "result_image"
         self.save_dir.mkdir(exist_ok=True)
+        self.save_only_best = save_only_best
 
     def save_ndarray_as_image(self, image_array: np.ndarray, filename: Union[str, Path], dataformats: Literal['HWC', 'CHW'] = 'HWC'):
         assert image_array.ndim == 3
@@ -47,6 +48,8 @@ class ImageSaver:
                 assert isinstance(v, np.ndarray)
                 if epoch is None:
                     self.save_ndarray_as_image(v, f"{prefix_dir}/{idx:03d}_{k}.png", dataformats='HWC')
+                elif self.save_only_best:
+                    self.save_ndarray_as_image(v, f"{prefix_dir}/best_{idx:03d}_{k}.png", dataformats='HWC')
                 else:
                     self.save_ndarray_as_image(v, f"{prefix_dir}/{epoch:04d}_{idx:03d}_{k}.png", dataformats='HWC')
 
