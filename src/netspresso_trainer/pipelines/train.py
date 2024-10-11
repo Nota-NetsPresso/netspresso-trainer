@@ -117,7 +117,7 @@ class TrainingPipeline(BasePipeline):
             return # No validation loss recorded
         best_epoch = min(valid_losses, key=valid_losses.get)
         return best_epoch
-    
+
     @property
     def learning_rate(self):
         return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
@@ -248,7 +248,7 @@ class TrainingPipeline(BasePipeline):
             model = self.model.module if hasattr(self.model, 'module') else self.model
         if hasattr(model, 'deploy'):
             model.deploy()
-        
+
         if self.conf.logging.save_best_only:
             best_epoch = self.get_best_epoch()
             if epoch != best_epoch:
