@@ -5,7 +5,7 @@ logging:
   image: true
   stdout: true
   save_optimizer_state: true
-  save_only_best: false
+  save_best_only: false
   sample_input_size: [512, 512] # Used for flops and onnx export
   onnx_export_opset: 13 # Recommend in range [13, 17]
   validation_epoch: &validation_epoch 10
