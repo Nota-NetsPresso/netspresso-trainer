@@ -110,6 +110,14 @@ class TrainingPipeline(BasePipeline):
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
+    def get_best_epoch(self):
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                if 'valid_losses' in record}
+        if not valid_losses:
+            return # No validation loss recorded
+        best_epoch = min(valid_losses, key=valid_losses.get)
+        return best_epoch
+    
     @property
     def learning_rate(self):
         return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
@@ -264,12 +272,9 @@ class TrainingPipeline(BasePipeline):
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
 
     def save_best(self):
-        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                if 'valid_losses' in record}
-        if not valid_losses:
-            return # No validation loss recorded
-        best_epoch = min(valid_losses, key=valid_losses.get)
-
+        best_epoch = self.get_best_epoch()
+        if not best_epoch:
+            return
         logging_dir = self.logger.result_dir
 
         best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
