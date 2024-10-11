@@ -248,13 +248,18 @@ class TrainingPipeline(BasePipeline):
             model = self.model.module if hasattr(self.model, 'module') else self.model
         if hasattr(model, 'deploy'):
             model.deploy()
+        
+        if self.conf.logging.save_only_best:
+            best_epoch = self.get_best_epoch()
+            if epoch != best_epoch:
+                return
         save_dtype = model.save_dtype
 
         if save_dtype == torch.float16:
             model = copy.deepcopy(model).type(save_dtype)
         logging_dir = self.logger.result_dir
-        model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
+        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_only_best else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimzer.pth" if self.conf.logging.save_only_best else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -277,7 +282,7 @@ class TrainingPipeline(BasePipeline):
             return
         logging_dir = self.logger.result_dir
 
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_only_best else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
         best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
