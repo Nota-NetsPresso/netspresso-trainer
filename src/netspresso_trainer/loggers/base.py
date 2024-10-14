@@ -58,7 +58,7 @@ class TrainingLogger():
         self.use_tensorboard: bool = self.conf.logging.tensorboard
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
-        self._save_best_only: bool = self.conf.logging.save_best_only
+        self._save_best_only: bool = self.conf.logging.model_save_options.save_best_only
 
         self.loggers = []
         if self.use_imagesaver:

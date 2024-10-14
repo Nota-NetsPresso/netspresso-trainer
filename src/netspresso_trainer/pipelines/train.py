@@ -96,17 +96,17 @@ class TrainingPipeline(BasePipeline):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         """Append here if you need more assertion checks!"""
-        assert self.conf.logging.save_checkpoint_epoch % self.conf.logging.validation_epoch == 0, \
+        assert self.conf.logging.model_save_options.save_checkpoint_epoch % self.conf.logging.model_save_options.validation_epoch == 0, \
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
         return True
 
     def epoch_with_valid_logging(self, epoch: int):
-        validation_freq = self.conf.logging.validation_epoch
+        validation_freq = self.conf.logging.model_save_options.validation_epoch
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % validation_freq == 1 % validation_freq) or last_epoch
 
     def epoch_with_checkpoint_saving(self, epoch: int):
-        checkpoint_freq = self.conf.logging.save_checkpoint_epoch
+        checkpoint_freq = self.conf.logging.model_save_options.save_checkpoint_epoch
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
@@ -249,7 +249,7 @@ class TrainingPipeline(BasePipeline):
         if hasattr(model, 'deploy'):
             model.deploy()
 
-        if self.conf.logging.save_best_only:
+        if self.conf.logging.model_save_options.save_best_only:
             best_epoch = self.get_best_epoch()
             if epoch != best_epoch:
                 return
@@ -258,8 +258,8 @@ class TrainingPipeline(BasePipeline):
         if save_dtype == torch.float16:
             model = copy.deepcopy(model).type(save_dtype)
         logging_dir = self.logger.result_dir
-        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimizer.pth" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
+        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimizer.pth" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -282,7 +282,7 @@ class TrainingPipeline(BasePipeline):
             return
         logging_dir = self.logger.result_dir
 
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
         best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
@@ -293,7 +293,7 @@ class TrainingPipeline(BasePipeline):
 
         if self.is_graphmodule_training:
             best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.model_save_options.onnx_export_opset)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
             torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
             logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
@@ -305,7 +305,7 @@ class TrainingPipeline(BasePipeline):
         logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
         try:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.model_save_options.onnx_export_opset)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
 
             save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))
