@@ -353,6 +353,34 @@ Since applying random resize to every image arises the difficulty of a batch han
 </details>
 
 
+### RandomResize2
+
+RandomResize2 transforms the input image by resizing it based on a randomly selected scaling factor within a specified range. Note that RandomResize2 preserves the original aspect ratio, result image size might be largely different with `base_size`.
+
+Applying random resize to every image arises the difficulty of a batch handling, and RandomResize2 does not support per-batch target size handling function. We recommend to use RandomResize2 with other trasnform method.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "randomresize" to use `RandomResize` transform. |
+| `base_size` | (list) The base (height, width) of the target image, which is the initial size before applying randomness. |
+| `random_range` | (int) A range [min_factor, max_factor] within which the random scaling factor is selected. The input image will be resized by a combination of base_size and random factors, while maintaining the aspect ratio. |
+| `interpolation` | (str) Desired interpolation type. Supporting interpolations are 'nearest', 'bilinear' and 'bicubic'. |
+
+<details>
+  <summary>RandomResize</summary>
+  
+  ```yaml
+  augmentation:
+    train:
+      - 
+        name: randomresize
+        base_size: [512, 2048]
+        random_range: [0.5, 1.5]
+        interpolation: 'bilinear'
+  ```
+</details>
+
+
 ### RandomResizedCrop
 
 Crop a random portion of image with different aspect of ratio in width and height, and resize it to a given size. This augmentation follows the [RandomResizedCrop](https://pytorch.org/vision/0.15/generated/torchvision.transforms.RandomResizedCrop.html#torchvision.transforms.RandomResizedCrop) in torchvision library.
