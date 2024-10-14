@@ -88,8 +88,6 @@ class TrainingPipeline(BasePipeline):
             Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
         ]] = {}
 
-        # TODO: These will be removed
-        self.save_optimizer_state = True
 
     @final
     def _is_ready(self):
@@ -261,7 +259,7 @@ class TrainingPipeline(BasePipeline):
         model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
         optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimizer.pth" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
 
-        if self.save_optimizer_state:
+        if self.conf.logging.model_save_options.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
             save_dict = {'optimizer': optimizer.state_dict(), 'last_epoch': epoch}
             torch.save(save_dict, optimizer_path)
