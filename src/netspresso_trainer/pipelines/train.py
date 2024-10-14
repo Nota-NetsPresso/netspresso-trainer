@@ -259,7 +259,7 @@ class TrainingPipeline(BasePipeline):
             model = copy.deepcopy(model).type(save_dtype)
         logging_dir = self.logger.result_dir
         model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimzer.pth" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimzer.pth" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer

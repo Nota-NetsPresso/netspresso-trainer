@@ -3,10 +3,12 @@
 ## New Features:
 
 - Add RandomResize2 by `@illian01` in [PR 550](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/550)
+- Add confidence score on detection visualization by `@hglee98` in [PR 552](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/552)
 
 ## Bug Fixes:
 
 - Fix keyword error of segmentation training by `@illian01` in [PR 551](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/551)
+- Fix typo when saving optimizer state_dict by `hglee98` in [PR 553](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/553)
 
 ## Breaking Changes:
 
