@@ -110,6 +110,14 @@ class TrainingPipeline(BasePipeline):
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
+    def get_best_epoch(self):
+        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
+                if 'valid_losses' in record}
+        if not valid_losses:
+            return # No validation loss recorded
+        best_epoch = min(valid_losses, key=valid_losses.get)
+        return best_epoch
+
     @property
     def learning_rate(self):
         return mean([param_group['lr'] for param_group in self.optimizer.param_groups])
@@ -240,13 +248,18 @@ class TrainingPipeline(BasePipeline):
             model = self.model.module if hasattr(self.model, 'module') else self.model
         if hasattr(model, 'deploy'):
             model.deploy()
+
+        if self.conf.logging.save_best_only:
+            best_epoch = self.get_best_epoch()
+            if epoch != best_epoch:
+                return
         save_dtype = model.save_dtype
 
         if save_dtype == torch.float16:
             model = copy.deepcopy(model).type(save_dtype)
         logging_dir = self.logger.result_dir
-        model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
+        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimizer.pth" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
 
         if self.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -264,15 +277,12 @@ class TrainingPipeline(BasePipeline):
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
 
     def save_best(self):
-        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                if 'valid_losses' in record}
-        if not valid_losses:
-            return # No validation loss recorded
-        best_epoch = min(valid_losses, key=valid_losses.get)
-
+        best_epoch = self.get_best_epoch()
+        if not best_epoch:
+            return
         logging_dir = self.logger.result_dir
 
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
         best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
