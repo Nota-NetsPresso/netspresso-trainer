@@ -81,7 +81,7 @@ class YOLOFastestLoss(YOLOXLoss):
         output = output.permute(0, 1, 3, 4, 2)
         output = torch.cat([
             (output[..., :2].sigmoid() + grid) * stride,
-            output[..., 2:4].sigmoid() * 3. * anchors,
+            2. * (torch.tanh(output[..., 2:4]/2 -.549306) + 1.) * anchors,
             output[..., 4:]
         ], dim=-1).reshape(
             batch_size, hsize * wsize * self.num_anchors, -1
