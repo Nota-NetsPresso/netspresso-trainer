@@ -108,6 +108,28 @@ training:
 ```
 </details>
 
+### Multi step
+
+This scheduler follows the [MultiStepLR](https://pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.MultiStepLR.html) in torch library.
+
+| Field <img width=200/> | Description |
+|---|---|
+| `name` | (str) Name must be "multi_step" to use `MultiStepLR` scheduler. |
+| `milestones` | (list) List of epoch indices. Must be increasing. |
+| `gamma` | (float) Multiplicative factor of learning rate decay. |
+
+<details>
+  <summary>Step example</summary>
+```yaml
+training:
+  scheduler:
+    name: multi_step
+    milestones: [30, 80]
+    gamma: 0.1
+```
+</details>
+
+
 ## Gradio demo for simulating the learning rate scheduler
 
 In many training feature repositories, it is recommended to perform the entire training pipeline and check the log to see how the learning rate scheduler works.
