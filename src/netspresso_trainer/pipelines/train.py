@@ -137,15 +137,15 @@ class TrainingPipeline(BasePipeline):
             }
         else:
             raise ValueError("save_criterion should be either 'loss' or 'metric'")
-        
+
     def get_best_epoch(self):
         save_criterion = self.conf.logging.model_save_options.save_criterion.lower()
-    
+
         valid_records = self._get_valid_records(save_criterion)
-        
+
         if not valid_records:
             return
-        
+
         comparison_func = min if save_criterion == 'loss' else max # TODO: It may depends on the specific metric
         return comparison_func(valid_records, key=valid_records.get)
 
