@@ -18,6 +18,7 @@ import os
 from abc import abstractmethod
 from typing import Callable, Optional, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 from loguru import logger
@@ -159,3 +160,70 @@ class ONNXModel:
             self.inference_session.set_providers(['CUDAExecutionProvider'])
         else:
             self.inference_session.set_providers(['CPUExecutionProvider'])
+
+
+class TFLiteModel:
+    '''
+        TensorFlow Lite (tflite) wrapper class for inferencing.
+    '''
+    def __init__(self, model_conf) -> None:
+        try:
+            import tflite_runtime.interpreter as tflite
+        except ImportError:
+            try:
+                import tensorflow.lite as tflite
+            except ImportError as e:
+                raise ImportError("Failed to import tensorflow lite. Please install tflite_runtime or tensorflow") from e
+        self.task = model_conf.task
+        assert self.task == 'detection', f"Task {self.task} is not yet supported in this TensorFlow Lite (tflite) model inference."
+
+        self.name = model_conf.name + '_tflite'
+        self.tflite_path = model_conf.checkpoint.path
+        self.interpreter = tflite.Interpreter(model_path=self.tflite_path, num_threads=4)
+        self.interpreter.allocate_tensors()
+
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+        self.dtype = self.input_details[0]['dtype']
+        self.is_quantized = self.dtype in [np.int8, np.int16]
+        if self.is_quantized:
+            self.scale, self.offset = self.input_details[0]['quantization']
+
+    def _get_name(self):
+        return f"{self.__class__.__name__}[model={self.name}]"
+    
+    def __call__(self, x, label_size=None, targets=None):
+        device = x.device if hasattr(x, 'device') else 'cpu'
+        if not isinstance(x, np.ndarray):
+            x = self._prepare_input(x)
+        
+        if self.is_quantized:
+            x = x * (1./self.scale) + self.offset
+            x = x.astype(self.dtype)
+        self.interpreter.set_tensor(self.input_details[0]['index'], x)
+        self.interpreter.invoke()
+
+        output_info = [details['index'] for details in self.output_details]
+        output = []
+        for details in self.output_details:
+            o = self.interpreter.get_tensor(details["index"])
+            if self.is_quantized:
+                output_quantization_params = details['quantization']
+                o = (o.astype(np.float32) - output_quantization_params[1]) * output_quantization_params[0]
+            output.append(torch.tensor(np.transpose(o, (0, 3, 1, 2))).to(device))
+
+        return ModelOutput(pred=output)
+
+    def eval(self):
+        pass # Do nothing
+
+    def _prepare_input(self, x):
+        """Prepare input tensor for inference."""
+        if hasattr(x, 'detach'):
+            x = x.detach()
+        if hasattr(x, 'cpu'):
+            x = x.cpu()
+        x = x.numpy()
+        if x.shape[1] == 3:
+            x = np.transpose(x, (0, 2, 3, 1))
+        return x
