@@ -273,6 +273,11 @@ class TrainingPipeline(BasePipeline):
         self.training_history.update({epoch: summary_record})
 
     def save_checkpoint(self, epoch: int):
+        save_best_only = self.conf.logging.model_save_options.save_best_only
+
+        if save_best_only and epoch != self.get_best_epoch():
+            return
+
         if self.model_ema:
             model = self.model_ema.ema_model
         else:
@@ -280,17 +285,14 @@ class TrainingPipeline(BasePipeline):
         if hasattr(model, 'deploy'):
             model.deploy()
 
-        if self.conf.logging.model_save_options.save_best_only:
-            best_epoch = self.get_best_epoch()
-            if epoch != best_epoch:
-                return
         save_dtype = model.save_dtype
-
         if save_dtype == torch.float16:
             model = copy.deepcopy(model).type(save_dtype)
+
         logging_dir = self.logger.result_dir
-        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best_optimizer.pth" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimizer.pth"
+        model_name_tag = "best" if save_best_only else f"epoch_{epoch}"
+        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}_optimizer.pth"
 
         if self.conf.logging.model_save_options.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
@@ -308,13 +310,16 @@ class TrainingPipeline(BasePipeline):
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
 
     def save_best(self):
+        opset_version = self.conf.logging.model_save_options.onnx_export_opset
+        logging_dir = self.logger.result_dir
+
         best_epoch = self.get_best_epoch()
         if not best_epoch:
             return
-        logging_dir = self.logger.result_dir
+        model_name_tag = "best" if self.conf.logging.model_save_options.save_best_only else f"epoch_{best_epoch}"
 
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext" if self.conf.logging.model_save_options.save_best_only else Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
-        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         save_dtype = model.save_dtype
@@ -322,21 +327,23 @@ class TrainingPipeline(BasePipeline):
         if hasattr(best_model_to_save, 'deploy'):
             best_model_to_save.deploy()
 
+        model_checkpoint = load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict() if self.is_graphmodule_training else load_checkpoint(best_checkpoint_path.with_suffix('.safetensors'))
+        best_model_to_save.load_state_dict(model_checkpoint)
+
         if self.is_graphmodule_training:
-            best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.model_save_options.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+
             torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
             logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
             return
 
-        best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
         pytorch_best_model_state_dict_path = best_model_save_path.with_suffix(".safetensors")
         save_checkpoint(best_model_to_save.state_dict(), pytorch_best_model_state_dict_path)
         logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
         try:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.model_save_options.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
 
             save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))
