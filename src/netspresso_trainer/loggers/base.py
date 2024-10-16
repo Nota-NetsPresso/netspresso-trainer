@@ -58,10 +58,11 @@ class TrainingLogger():
         self.use_tensorboard: bool = self.conf.logging.tensorboard
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
+        self._save_best_only: bool = self.conf.logging.save_best_only
 
         self.loggers = []
         if self.use_imagesaver:
-            self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir))
+            self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir, save_best_only=self._save_best_only))
         if self.use_tensorboard:
             self.tensorboard_logger = TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                                                         step_per_epoch=step_per_epoch, num_sample_images=num_sample_images)
