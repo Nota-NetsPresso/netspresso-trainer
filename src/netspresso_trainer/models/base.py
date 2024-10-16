@@ -191,19 +191,19 @@ class TFLiteModel:
 
     def _get_name(self):
         return f"{self.__class__.__name__}[model={self.name}]"
-    
+
     def __call__(self, x, label_size=None, targets=None):
         device = x.device if hasattr(x, 'device') else 'cpu'
         if not isinstance(x, np.ndarray):
             x = self._prepare_input(x)
-        
+
         if self.is_quantized:
             x = x * (1./self.scale) + self.offset
             x = x.astype(self.dtype)
         self.interpreter.set_tensor(self.input_details[0]['index'], x)
         self.interpreter.invoke()
 
-        output_info = [details['index'] for details in self.output_details]
+        [details['index'] for details in self.output_details]
         output = []
         for details in self.output_details:
             o = self.interpreter.get_tensor(details["index"])
