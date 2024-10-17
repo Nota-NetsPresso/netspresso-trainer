@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import SegmentationMetric
+from .metric import mIoU

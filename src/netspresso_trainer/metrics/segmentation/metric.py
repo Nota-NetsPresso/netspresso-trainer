@@ -49,15 +49,12 @@ class IoUMeter(object):
         return np.nanmean(self.intersection / self.union)
 
 
-class SegmentationMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['iou', 'pixel_acc']
-
+class mIoU(BaseMetric):
     def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
         # TODO: Select metrics by user
         metric_names = ['iou', 'pixel_acc']
         primary_metric = 'iou'
 
-        assert set(metric_names).issubset(SegmentationMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
         self.K = num_classes

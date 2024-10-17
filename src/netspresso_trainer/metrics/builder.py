@@ -17,28 +17,16 @@
 from typing import Any, Dict
 
 from .base import MetricFactory
-from .registry import TASK_METRIC, PHASE_LIST
-
-TASK_AVAILABLE_METRICS = {
-    'classification': ['accuracy'],
-    'segmentation': ['mIoU', 'accuracy'],
-    'detection': ['mAP50', 'mAP75', 'mAP50_95'],
-}
-TASK_DEFUALT_METRICS = {
-    'classification': ['accuracy'],
-    'segmentation': ['mIoU', 'accuracy'],
-    'detection': ['mAP50', 'mAP75', 'mAP50_95'],
-}
+from .registry import METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS
 
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
-    # if metrics_conf is None:
-    #     metrics_conf = TASK_DEFUALT_METRICS[task]
-    # assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metrics_conf), \
-    #     f"Available metrics for {task} are {TASK_AVAILABLE_METRICS[task]}"
+    if metrics_conf is None:
+        metrics_conf = TASK_DEFUALT_METRICS[task]
+    assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metrics_conf), \
+        f"Available metrics for {task} are {TASK_AVAILABLE_METRICS[task]}"
 
-    assert task in TASK_METRIC
-    metric_cls = TASK_METRIC[task]
+    metric_cls = [METRIC_LIST[m] for m in metrics_conf]
 
     # TODO: This code assumes there is only one loss module. Fix here later.
     if hasattr(model_conf.losses[0], 'ignore_index'):

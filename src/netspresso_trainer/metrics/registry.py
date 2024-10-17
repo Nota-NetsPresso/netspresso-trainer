@@ -17,16 +17,28 @@
 from typing import Callable, Dict, Literal, Type
 
 from .base import BaseMetric
-from .classification import ClassificationMetric
-from .detection import DetectionMetric
+from .classification import Accuracy
+from .detection import mAP
 from .pose_estimation import PoseEstimationMetric
-from .segmentation import SegmentationMetric
+from .segmentation import mIoU
 
-TASK_METRIC: Dict[Literal['classification', 'segmentation', 'detection'], Type[BaseMetric]] = {
-    'classification': ClassificationMetric,
-    'segmentation': SegmentationMetric,
-    'detection': DetectionMetric,
+METRIC_LIST: Dict[str, Type[BaseMetric]] = {
+    'accuracy': Accuracy,
+    'miou': mIoU,
+    'map': mAP,
     'pose_estimation': PoseEstimationMetric,
 }
 
 PHASE_LIST = ['train', 'valid', 'test']
+
+TASK_AVAILABLE_METRICS = {
+    'classification': ['accuracy'],
+    'segmentation': ['miou'],
+    'detection': ['map'],
+}
+
+TASK_DEFUALT_METRICS = {
+    'classification': ['accuracy'],
+    'segmentation': ['miou'],
+    'detection': ['map'],
+}

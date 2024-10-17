@@ -180,14 +180,11 @@ def average_precisions_per_class(
     return average_precisions
 
 
-class DetectionMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['map50', 'map75', 'map50_95']
-
+class mAP(BaseMetric):
     def __init__(self, **kwargs):
         # TODO: Select metrics by user
         metric_names: List[str] = ['map50', 'map75', 'map50_95']
         primary_metric: str = 'map50'
-        assert set(metric_names).issubset(DetectionMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
 
     def calibrate(self, predictions, targets, **kwargs):

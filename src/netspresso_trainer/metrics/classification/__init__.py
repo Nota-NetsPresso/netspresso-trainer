@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import ClassificationMetric
+from .metric import Accuracy

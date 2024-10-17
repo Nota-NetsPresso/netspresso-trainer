@@ -34,15 +34,12 @@ def accuracy_topk(pred, target):
     return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0)
 
 
-class ClassificationMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['Acc@1', 'Acc@5']
-
+class Accuracy(BaseMetric):
     def __init__(self, **kwargs):
         # TODO: Select metrics by user
         metric_names = ['Acc@1', 'Acc@5']
         primary_metric = 'Acc@1'
 
-        assert set(metric_names).issubset(ClassificationMetric.SUPPORT_METRICS)
         super().__init__(metric_names=metric_names, primary_metric=primary_metric)
 
     def calibrate(self, pred, target, **kwargs):
