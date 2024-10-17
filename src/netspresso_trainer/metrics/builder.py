@@ -19,6 +19,6 @@ from typing import Any, Dict
 from .base import MetricFactory
 
 
-def build_metrics(task: str, conf_model, **kwargs) -> MetricFactory:
-    metric_handler = MetricFactory(task, conf_model, **kwargs)
+def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
+    metric_handler = MetricFactory(task, model_conf, metrics_conf, num_classes, **kwargs)
     return metric_handler
