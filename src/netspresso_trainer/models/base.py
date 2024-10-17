@@ -16,7 +16,7 @@
 
 import os
 from abc import abstractmethod
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Tuple, Union, List
 
 import numpy as np
 import torch
@@ -163,10 +163,30 @@ class ONNXModel:
 
 
 class TFLiteModel:
-    '''
-        TensorFlow Lite (tflite) wrapper class for inferencing.
-    '''
+    """
+    TensorFlow Lite (tflite) wrapper class for inferencing.
+    """
+
+    NUM_THREADS = 4
+
     def __init__(self, model_conf) -> None:
+        self.tflite = self._import_tflite()
+        self.task = model_conf.task
+        assert self.task == 'detection', f"Task {self.task} is not yet supported in this TensorFlow Lite (tflite) model inference."
+        self.name = model_conf.name + '_tflite'
+        self.tflite_path = model_conf.checkpoint.path
+        self.interpreter = self.tflite.Interpreter(model_path=self.tflite_path, num_threads=self.NUM_THREADS)
+        self.interpreter.allocate_tensors()
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
+        self.input_dtype = self.input_details[0]['dtype']
+        self.output_dtype = self.output_details[0]['dtype']
+        self.quantized_input = self.input_dtype in [np.int8, np.uint8]
+        self.quantized_output = self.output_dtype in [np.int8, np.uint8]
+        if self.quantized_input:
+            self.input_scale, self.input_zero_point = self.input_details[0]['quantization']
+
+    def _import_tflite(self):
         try:
             import tflite_runtime.interpreter as tflite
         except ImportError:
@@ -174,56 +194,70 @@ class TFLiteModel:
                 import tensorflow.lite as tflite
             except ImportError as e:
                 raise ImportError("Failed to import tensorflow lite. Please install tflite_runtime or tensorflow") from e
-        self.task = model_conf.task
-        assert self.task == 'detection', f"Task {self.task} is not yet supported in this TensorFlow Lite (tflite) model inference."
+        return tflite
 
-        self.name = model_conf.name + '_tflite'
-        self.tflite_path = model_conf.checkpoint.path
-        self.interpreter = tflite.Interpreter(model_path=self.tflite_path, num_threads=4)
-        self.interpreter.allocate_tensors()
-
-        self.input_details = self.interpreter.get_input_details()
-        self.output_details = self.interpreter.get_output_details()
-        self.dtype = self.input_details[0]['dtype']
-        self.is_quantized = self.dtype in [np.int8, np.int16]
-        if self.is_quantized:
-            self.scale, self.offset = self.input_details[0]['quantization']
-
-    def _get_name(self):
+    def get_name(self) -> str:
+        """Get the name of the model."""
         return f"{self.__class__.__name__}[model={self.name}]"
 
-    def __call__(self, x, label_size=None, targets=None):
-        device = x.device if hasattr(x, 'device') else 'cpu'
-        if not isinstance(x, np.ndarray):
+    def __call__(self, x: Union[np.ndarray, torch.Tensor], label_size=None, targets=None):
+        """
+        Perform inference on the input tensor.
+
+        Args:
+            x (Union[np.ndarray, torch.Tensor]): Input tensor
+            label_size: Not used in this implementation
+            targets: Not used in this implementation
+
+        Returns:
+            ModelOutput: Output of the model
+        """
+        try:
+            device = x.device if hasattr(x, 'device') else 'cpu'
             x = self._prepare_input(x)
+            
+            if self.quantized_input:
+                x = x / self.input_scale + self.input_zero_point
+                x = x.astype(self.input_dtype)
+            
+            self.interpreter.set_tensor(self.input_details[0]['index'], x)
+            self.interpreter.invoke()
+            
+            output = self._process_output(device)
+            return ModelOutput(pred=output)
+        except Exception as e:
+            raise RuntimeError(f"Error during inference: {str(e)}") from e
 
-        if self.is_quantized:
-            x = x * (1./self.scale) + self.offset
-            x = x.astype(self.dtype)
-        self.interpreter.set_tensor(self.input_details[0]['index'], x)
-        self.interpreter.invoke()
-
-        [details['index'] for details in self.output_details]
+    def _process_output(self, device: str) -> List[torch.Tensor]:
+        """Process the output of the interpreter."""
         output = []
         for details in self.output_details:
             o = self.interpreter.get_tensor(details["index"])
-            if self.is_quantized:
+            if self.quantized_output:
                 output_quantization_params = details['quantization']
                 o = (o.astype(np.float32) - output_quantization_params[1]) * output_quantization_params[0]
             output.append(torch.tensor(np.transpose(o, (0, 3, 1, 2))).to(device))
-
-        return ModelOutput(pred=output)
+        return output
 
     def eval(self):
-        pass # Do nothing
+        """Set the model to evaluation mode."""
+        pass  # Do nothing for TFLite model
 
-    def _prepare_input(self, x):
-        """Prepare input tensor for inference."""
-        if hasattr(x, 'detach'):
-            x = x.detach()
-        if hasattr(x, 'cpu'):
-            x = x.cpu()
-        x = x.numpy()
+    def _prepare_input(self, x: Union[np.ndarray, torch.Tensor]) -> np.ndarray:
+        """
+        Prepare input tensor for inference.
+
+        Args:
+            x (Union[np.ndarray, torch.Tensor]): Input tensor
+
+        Returns:
+            np.ndarray: Prepared input tensor
+        """
+        if isinstance(x, torch.Tensor):
+            x = x.detach().cpu().numpy()
+        elif not isinstance(x, np.ndarray):
+            raise TypeError(f"Unsupported input type: {type(x)}")
+        
         if x.shape[1] == 3:
             x = np.transpose(x, (0, 2, 3, 1))
         return x
