@@ -319,7 +319,7 @@ class TrainingPipeline(BasePipeline):
         model_name_tag = "best" if self.conf.logging.model_save_options.save_best_only else f"epoch_{best_epoch}"
 
         best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
-        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         save_dtype = model.save_dtype
