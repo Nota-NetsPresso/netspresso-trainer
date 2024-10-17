@@ -5,6 +5,8 @@
 - Add RandomResize2 by `@illian01` in [PR 550](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/550)
 - Add confidence score on detection visualization by `@hglee98` in [PR 552](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/552)
 - Add save_best_only option for saving model by `hglee98` in [PR 555](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/555)
+- Add option to select best model saving criterion by `hglee98` in [PR 557](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/557)
+- Add MultiStepLR scheduler by `hglee98` in [PR 559](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/559)
 
 ## Bug Fixes:
 
