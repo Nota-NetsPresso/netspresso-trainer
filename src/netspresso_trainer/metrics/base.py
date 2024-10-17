@@ -18,19 +18,8 @@ from typing import Dict, List, Any
 
 import torch
 from ..utils.record import MetricMeter
-from .registry import PHASE_LIST, TASK_METRIC
 
-TASK_AVAILABLE_METRICS = {
-    'classification': ['accuracy'],
-    'segmentation': ['mIoU', 'accuracy'],
-    'detection': ['mAP50', 'mAP75', 'mAP50_95'],
-}
-TASK_DEFUALT_METRICS = {
-    'classification': ['accuracy'],
-    'segmentation': ['mIoU', 'accuracy'],
-    'detection': ['mAP50', 'mAP75', 'mAP50_95'],
-}
-
+PHASE_LIST = ['train', 'valid', 'test']
 
 class BaseMetric:
     def __init__(self, metric_names, primary_metric, **kwargs):
@@ -44,21 +33,9 @@ class BaseMetric:
 
 
 class MetricFactory:
-    def __init__(self, task, model_conf, metrics_conf, num_classes, **kwargs) -> None:
-        if metrics_conf is None:
-            metrics_conf = TASK_DEFUALT_METRICS[task]
-        assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metrics_conf), f"Available metrics for {task} are {TASK_AVAILABLE_METRICS[task]}"
-
+    def __init__(self, task, metrics) -> None:
         self.task = task
-        self.model_conf = model_conf
-
-        assert self.task in TASK_METRIC
-        self.metric_cls = TASK_METRIC[self.task]
-
-        # TODO: This code assumes there is only one loss module. Fix here later.
-        if hasattr(model_conf.losses[0], 'ignore_index'):
-            kwargs['ignore_index'] = model_conf.losses[0].ignore_index
-        self.metrics = {phase: self.metric_cls(num_classes=num_classes, **kwargs) for phase in PHASE_LIST}
+        self.metrics = metrics
 
     def reset_values(self):
         for phase in PHASE_LIST:
