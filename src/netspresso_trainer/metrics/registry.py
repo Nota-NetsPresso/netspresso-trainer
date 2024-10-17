@@ -28,3 +28,5 @@ TASK_METRIC: Dict[Literal['classification', 'segmentation', 'detection'], Type[B
     'detection': DetectionMetric,
     'pose_estimation': PoseEstimationMetric,
 }
+
+PHASE_LIST = ['train', 'valid', 'test']

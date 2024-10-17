@@ -17,7 +17,7 @@
 from typing import Any, Dict
 
 from .base import MetricFactory
-from .registry import TASK_METRIC
+from .registry import TASK_METRIC, PHASE_LIST
 
 TASK_AVAILABLE_METRICS = {
     'classification': ['accuracy'],
@@ -43,7 +43,7 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
     # TODO: This code assumes there is only one loss module. Fix here later.
     if hasattr(model_conf.losses[0], 'ignore_index'):
         kwargs['ignore_index'] = model_conf.losses[0].ignore_index
-    metrics = {phase: metric_cls(num_classes=num_classes, **kwargs) for phase in ['train', 'valid', 'test']}
+    metrics = {phase: metric_cls(num_classes=num_classes, **kwargs) for phase in PHASE_LIST}
 
     metric_handler = MetricFactory(task, metrics)
     return metric_handler

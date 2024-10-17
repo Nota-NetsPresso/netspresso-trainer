@@ -19,7 +19,6 @@ from typing import Dict, List, Any
 import torch
 from ..utils.record import MetricMeter
 
-PHASE_LIST = ['train', 'valid', 'test']
 
 class BaseMetric:
     def __init__(self, metric_names, primary_metric, **kwargs):
@@ -38,7 +37,7 @@ class MetricFactory:
         self.metrics = metrics
 
     def reset_values(self):
-        for phase in PHASE_LIST:
+        for phase in self.metrics.keys():
             [meter.reset() for _, meter in self.metrics[phase].metric_meter.items()]
 
     def update(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
