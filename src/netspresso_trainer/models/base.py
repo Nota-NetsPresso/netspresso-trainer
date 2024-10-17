@@ -16,7 +16,7 @@
 
 import os
 from abc import abstractmethod
-from typing import Callable, Optional, Tuple, Union, List
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -215,14 +215,14 @@ class TFLiteModel:
         try:
             device = x.device if hasattr(x, 'device') else 'cpu'
             x = self._prepare_input(x)
-            
+
             if self.quantized_input:
                 x = x / self.input_scale + self.input_zero_point
                 x = x.astype(self.input_dtype)
-            
+
             self.interpreter.set_tensor(self.input_details[0]['index'], x)
             self.interpreter.invoke()
-            
+
             output = self._process_output(device)
             return ModelOutput(pred=output)
         except Exception as e:
@@ -257,7 +257,7 @@ class TFLiteModel:
             x = x.detach().cpu().numpy()
         elif not isinstance(x, np.ndarray):
             raise TypeError(f"Unsupported input type: {type(x)}")
-        
+
         if x.shape[1] == 3:
             x = np.transpose(x, (0, 2, 3, 1))
         return x
