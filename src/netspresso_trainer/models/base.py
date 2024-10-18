@@ -180,6 +180,8 @@ class TFLiteModel:
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
         self.input_dtype = self.input_details[0]['dtype']
+        self.input_shape = tuple(self.input_details[0]['shape'])
+
         self.output_dtype = self.output_details[0]['dtype']
         self.quantized_input = self.input_dtype in [np.int8, np.uint8]
         self.quantized_output = self.output_dtype in [np.int8, np.uint8]
@@ -220,6 +222,7 @@ class TFLiteModel:
                 x = x / self.input_scale + self.input_zero_point
                 x = x.astype(self.input_dtype)
 
+            assert x.shape == self.input_shape, f"Your input shape {x.shape} does not match with the expected input shape {self.input_shape}"
             self.interpreter.set_tensor(self.input_details[0]['index'], x)
             self.interpreter.invoke()
 
