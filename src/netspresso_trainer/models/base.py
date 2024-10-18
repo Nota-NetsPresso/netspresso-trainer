@@ -240,7 +240,7 @@ class TFLiteModel:
                 output_quantization_params = details['quantization']
                 o = (o.astype(np.float32) - output_quantization_params[1]) * output_quantization_params[0]
             output.append(torch.tensor(np.transpose(o, (0, 3, 1, 2))).to(device))
-        
+
         if len(output) > 1:
             output.sort(key=lambda x: sum(x.shape), reverse=True)
         return output
