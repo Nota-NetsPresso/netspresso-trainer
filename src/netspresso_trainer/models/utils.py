@@ -257,5 +257,7 @@ def get_model_format(model_conf: omegaconf.DictConfig):
         return 'torch.fx'
     elif ext == '.onnx':
         return 'onnx'
+    elif ext == '.tflite':
+        return 'tflite'
     else:
         raise ValueError(f"Unsupported model format: {model_conf.checkpoint.path}")
