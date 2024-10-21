@@ -49,7 +49,7 @@ class IoUMeter(object):
         return np.nanmean(self.intersection / self.union)
 
 
-class SegmentationMetricAdapter:
+class SegmentationMetricAdaptor:
     '''
         Adapter to process redundant operations for the metrics.
     '''

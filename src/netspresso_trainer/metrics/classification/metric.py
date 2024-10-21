@@ -34,7 +34,7 @@ def accuracy_topk(pred, target):
     return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0)
 
 
-class ClassificationMetricAdapter:
+class ClassificationMetricAdaptor:
     '''
         Adapter to process redundant operations for the metrics.
     '''

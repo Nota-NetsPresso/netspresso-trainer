@@ -21,7 +21,7 @@ import numpy as np
 from ..base import BaseMetric
 
 
-class PoseEstimationMetricAdapter:
+class PoseEstimationMetricAdaptor:
     '''
         Adapter to process redundant operations for the metrics.
     '''

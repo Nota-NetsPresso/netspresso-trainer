@@ -180,7 +180,7 @@ def average_precisions_per_class(
     return average_precisions
 
 
-class DetectionMetricAdapter:
+class DetectionMetricAdaptor:
     '''
         Adapter to process redundant operations for the metrics.
     '''
