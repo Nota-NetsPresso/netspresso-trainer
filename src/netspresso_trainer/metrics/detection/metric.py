@@ -180,13 +180,14 @@ def average_precisions_per_class(
     return average_precisions
 
 
-# TODO: Unify repeated code
-class mAP50(BaseMetric):
-    def __init__(self, **kwargs):
-        metric_name = 'mAP50' # Name for logging
-        super().__init__(metric_name=metric_name)
+class DetectionMetricAdapter:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self) -> None:
+        pass
 
-    def calibrate(self, predictions, targets, **kwargs):
+    def __call__(self, predictions: List[dict], targets: List[dict]):
         iou_thresholds = np.linspace(0.5, 0.95, 10)
         stats = []
 
@@ -217,6 +218,17 @@ class mAP50(BaseMetric):
                         true_objs[:, 4],
                     )
                 )
+
+        return {'stats': stats}
+        
+
+class mAP50(BaseMetric):
+    def __init__(self, **kwargs):
+        metric_name = 'mAP50' # Name for logging
+        super().__init__(metric_name=metric_name)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
 
         # Compute average precisions if any matches exist
         if stats:
@@ -234,36 +246,7 @@ class mAP75(BaseMetric):
         super().__init__(metric_name=metric_name)
 
     def calibrate(self, predictions, targets, **kwargs):
-        iou_thresholds = np.linspace(0.5, 0.95, 10)
-        stats = []
-
-        # Gather matching stats for predictions and targets
-        for pred, target in zip(predictions, targets):
-            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['post_boxes'], pred['post_labels'], pred['post_scores']
-            true_objs_bbox, true_objs_class = target['boxes'], target['labels']
-
-            true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
-            predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
-
-            if predicted_objs.shape[0] == 0 and true_objs.shape[0]:
-                stats.append(
-                    (
-                        np.zeros((0, iou_thresholds.size), dtype=bool),
-                        *np.zeros((2, 0)),
-                        true_objs[:, 4],
-                    )
-                )
-
-            if true_objs.shape[0]:
-                matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
-                stats.append(
-                    (
-                        matches,
-                        predicted_objs[:, 5],
-                        predicted_objs[:, 4],
-                        true_objs[:, 4],
-                    )
-                )
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
 
         # Compute average precisions if any matches exist
         if stats:
@@ -281,36 +264,7 @@ class mAP50_95(BaseMetric):
         super().__init__(metric_name=metric_name)
 
     def calibrate(self, predictions, targets, **kwargs):
-        iou_thresholds = np.linspace(0.5, 0.95, 10)
-        stats = []
-
-        # Gather matching stats for predictions and targets
-        for pred, target in zip(predictions, targets):
-            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['post_boxes'], pred['post_labels'], pred['post_scores']
-            true_objs_bbox, true_objs_class = target['boxes'], target['labels']
-
-            true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
-            predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
-
-            if predicted_objs.shape[0] == 0 and true_objs.shape[0]:
-                stats.append(
-                    (
-                        np.zeros((0, iou_thresholds.size), dtype=bool),
-                        *np.zeros((2, 0)),
-                        true_objs[:, 4],
-                    )
-                )
-
-            if true_objs.shape[0]:
-                matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
-                stats.append(
-                    (
-                        matches,
-                        predicted_objs[:, 5],
-                        predicted_objs[:, 4],
-                        true_objs[:, 4],
-                    )
-                )
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
 
         # Compute average precisions if any matches exist
         if stats:

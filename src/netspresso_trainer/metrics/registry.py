@@ -18,7 +18,7 @@ from typing import Callable, Dict, Literal, Type
 
 from .base import BaseMetric
 from .classification import Top1Accuracy, Top5Accuracy
-from .detection import mAP50, mAP75, mAP50_95
+from .detection import mAP50, mAP75, mAP50_95, DetectionMetricAdapter
 from .pose_estimation import PoseEstimationMetric
 from .segmentation import mIoU, PixelAccuracy
 
@@ -31,6 +31,10 @@ METRIC_LIST: Dict[str, Type[BaseMetric]] = {
     'map75': mAP75,
     'map50_95': mAP50_95,
     'pose_estimation': PoseEstimationMetric,
+}
+
+METRIC_ADAPTORS = {
+    'detection': DetectionMetricAdapter,
 }
 
 PHASE_LIST = ['train', 'valid', 'test']

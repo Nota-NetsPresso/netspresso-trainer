@@ -17,7 +17,7 @@
 from typing import Any, Dict
 
 from .base import MetricFactory
-from .registry import METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS
+from .registry import METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS, METRIC_ADAPTORS
 
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
@@ -35,5 +35,7 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
     for phase in PHASE_LIST:
         metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, **kwargs) for name in metrics_conf]
 
-    metric_handler = MetricFactory(task, metrics)
+    metric_adaptor = METRIC_ADAPTORS[task]()
+
+    metric_handler = MetricFactory(task, metrics, metric_adaptor)
     return metric_handler

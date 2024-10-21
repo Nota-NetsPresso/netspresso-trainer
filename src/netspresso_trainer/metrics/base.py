@@ -30,9 +30,10 @@ class BaseMetric:
 
 
 class MetricFactory:
-    def __init__(self, task, metrics) -> None:
+    def __init__(self, task, metrics, metric_adaptor) -> None:
         self.task = task
         self.metrics = metrics
+        self.metric_adaptor = metric_adaptor
 
     def reset_values(self):
         for phase in self.metrics.keys():
@@ -41,8 +42,9 @@ class MetricFactory:
     def update(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
         if len(pred) == 0: # Removed dummy batch has 0 len
             return
+        kwargs.update(self.metric_adaptor(pred, target))
         for metric in self.metrics[phase.lower()]:
-            metric.calibrate(pred, target)
+            metric.calibrate(pred, target, **kwargs)
 
     def result(self, phase='train'):
         return {metric.metric_name: metric.metric_meter.avg for metric in self.metrics[phase]}
