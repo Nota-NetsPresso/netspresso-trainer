@@ -220,7 +220,7 @@ class DetectionMetricAdaptor:
                 )
 
         return {'stats': stats}
-        
+
 
 class mAP50(BaseMetric):
     def __init__(self, **kwargs):

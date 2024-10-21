@@ -17,7 +17,7 @@
 from typing import Any, Dict
 
 from .base import MetricFactory
-from .registry import METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS, METRIC_ADAPTORS
+from .registry import METRIC_ADAPTORS, METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS
 
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:

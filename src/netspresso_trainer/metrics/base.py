@@ -14,9 +14,10 @@
 #
 # ----------------------------------------------------------------------------
 
-from typing import Dict, List, Any
+from typing import Any, Dict, List
 
 import torch
+
 from ..utils.record import MetricMeter
 
 
@@ -36,7 +37,7 @@ class MetricFactory:
         self.metric_adaptor = metric_adaptor
 
     def reset_values(self):
-        for phase in self.metrics.keys():
+        for phase in self.metrics:
             [metric.metric_meter.reset() for metric in self.metrics[phase]]
 
     def update(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
