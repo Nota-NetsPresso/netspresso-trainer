@@ -51,7 +51,7 @@ TASK_AVAILABLE_METRICS = {
 
 TASK_DEFUALT_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
-    'segmentation': ['miou'],
+    'segmentation': ['miou', 'pixel_accuracy'],
     'detection': ['map50', 'map75', 'map50_95'],
     'pose_estimation': ['pck'],
 }
