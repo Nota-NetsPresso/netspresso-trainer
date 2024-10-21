@@ -34,13 +34,28 @@ def accuracy_topk(pred, target):
     return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0)
 
 
+class ClassificationMetricAdapter:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
+
+    def __call__(self, predictions: List[dict], targets: List[dict]):
+        ret = {}
+        if 'top1_accuracy' in self.metric_names or 'top5_accuracy' in self.metric_names:
+            topk_callable = accuracy_topk(predictions, targets)
+            ret['topk_callable'] = topk_callable
+
+        return ret
+
 class Top1Accuracy(BaseMetric):
     def __init__(self, **kwargs):
         metric_name = 'Acc@1' # Name for logging
         super().__init__(metric_name=metric_name)
 
     def calibrate(self, pred, target, **kwargs):
-        topk_callable = accuracy_topk(pred, target)
+        topk_callable = kwargs['topk_callable']
 
         Acc1_correct = topk_callable(topk=1)
         self.metric_meter.update(Acc1_correct, n=pred.shape[0])
@@ -52,7 +67,7 @@ class Top5Accuracy(BaseMetric):
         super().__init__(metric_name=metric_name)
 
     def calibrate(self, pred, target, **kwargs):
-        topk_callable = accuracy_topk(pred, target)
+        topk_callable = kwargs['topk_callable']
 
         Acc5_correct = topk_callable(topk=5)
         self.metric_meter.update(Acc5_correct, n=pred.shape[0])

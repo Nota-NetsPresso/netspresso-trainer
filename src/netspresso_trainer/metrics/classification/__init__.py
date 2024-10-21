@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import Top1Accuracy, Top5Accuracy
+from .metric import Top1Accuracy, Top5Accuracy, ClassificationMetricAdapter

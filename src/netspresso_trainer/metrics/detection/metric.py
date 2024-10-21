@@ -184,8 +184,8 @@ class DetectionMetricAdapter:
     '''
         Adapter to process redundant operations for the metrics.
     '''
-    def __init__(self) -> None:
-        pass
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
 
     def __call__(self, predictions: List[dict], targets: List[dict]):
         iou_thresholds = np.linspace(0.5, 0.95, 10)

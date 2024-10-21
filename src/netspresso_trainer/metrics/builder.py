@@ -35,7 +35,7 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
     for phase in PHASE_LIST:
         metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, **kwargs) for name in metrics_conf]
 
-    metric_adaptor = METRIC_ADAPTORS[task]()
+    metric_adaptor = METRIC_ADAPTORS[task](metrics_conf)
 
     metric_handler = MetricFactory(task, metrics, metric_adaptor)
     return metric_handler
