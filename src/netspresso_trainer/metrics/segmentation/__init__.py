@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import mIoU, PixelAccuracy
+from .metric import mIoU, PixelAccuracy, SegmentationMetricAdapter

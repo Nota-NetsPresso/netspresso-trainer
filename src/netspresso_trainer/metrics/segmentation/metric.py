@@ -48,6 +48,18 @@ class IoUMeter(object):
     def avg(self) -> float:
         return np.nanmean(self.intersection / self.union)
 
+
+class SegmentationMetricAdapter:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
+
+    def __call__(self, predictions: List[dict], targets: List[dict]):
+        pass
+
+
 # TODO: Unify repeated code
 class mIoU(BaseMetric):
     def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):

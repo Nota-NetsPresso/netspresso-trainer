@@ -20,7 +20,7 @@ from .base import BaseMetric
 from .classification import Top1Accuracy, Top5Accuracy, ClassificationMetricAdapter
 from .detection import mAP50, mAP75, mAP50_95, DetectionMetricAdapter
 from .pose_estimation import PoseEstimationMetric
-from .segmentation import mIoU, PixelAccuracy
+from .segmentation import mIoU, PixelAccuracy, SegmentationMetricAdapter
 
 METRIC_LIST: Dict[str, Type[BaseMetric]] = {
     'top1_accuracy': Top1Accuracy,
@@ -35,6 +35,7 @@ METRIC_LIST: Dict[str, Type[BaseMetric]] = {
 
 METRIC_ADAPTORS = {
     'classification': ClassificationMetricAdapter,
+    'segmentation': SegmentationMetricAdapter,  
     'detection': DetectionMetricAdapter,
 }
 
