@@ -180,16 +180,13 @@ def average_precisions_per_class(
     return average_precisions
 
 
-class mAP(BaseMetric):
+# TODO: Unify repeated code
+class mAP50(BaseMetric):
     def __init__(self, **kwargs):
-        # TODO: Select metrics by user
-        metric_names: List[str] = ['map50', 'map75', 'map50_95']
-        primary_metric: str = 'map50'
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
+        metric_name = 'mAP50' # Name for logging
+        super().__init__(metric_name=metric_name)
 
     def calibrate(self, predictions, targets, **kwargs):
-        result_dict = {k: 0. for k in self.metric_names}
-
         iou_thresholds = np.linspace(0.5, 0.95, 10)
         stats = []
 
@@ -225,16 +222,100 @@ class mAP(BaseMetric):
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
             average_precisions = average_precisions_per_class(*concatenated_stats)
-            #result_dict['map50'] = average_precisions[:, 0].mean()
-            #result_dict['map75'] = average_precisions[:, 5].mean()
-            #result_dict['map50_95'] = average_precisions.mean()
-            self.metric_meter['map50'].update(average_precisions[:, 0].mean())
-            self.metric_meter['map75'].update(average_precisions[:, 5].mean())
-            self.metric_meter['map50_95'].update(average_precisions.mean())
+            self.metric_meter.update(average_precisions[:, 0].mean())
         else:
-            #result_dict['map50'], result_dict['map75'], result_dict['map50_95'] = 0, 0, 0
-            self.metric_meter['map50'].update(0)
-            self.metric_meter['map75'].update(0)
-            self.metric_meter['map50_95'].update(0)
+            self.metric_meter.update(0)
 
-        return result_dict
+
+class mAP75(BaseMetric):
+    def __init__(self, **kwargs):
+        # TODO: Select metrics by user
+        metric_name = 'mAP75'
+        super().__init__(metric_name=metric_name)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        iou_thresholds = np.linspace(0.5, 0.95, 10)
+        stats = []
+
+        # Gather matching stats for predictions and targets
+        for pred, target in zip(predictions, targets):
+            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['post_boxes'], pred['post_labels'], pred['post_scores']
+            true_objs_bbox, true_objs_class = target['boxes'], target['labels']
+
+            true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
+            predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
+
+            if predicted_objs.shape[0] == 0 and true_objs.shape[0]:
+                stats.append(
+                    (
+                        np.zeros((0, iou_thresholds.size), dtype=bool),
+                        *np.zeros((2, 0)),
+                        true_objs[:, 4],
+                    )
+                )
+
+            if true_objs.shape[0]:
+                matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
+                stats.append(
+                    (
+                        matches,
+                        predicted_objs[:, 5],
+                        predicted_objs[:, 4],
+                        true_objs[:, 4],
+                    )
+                )
+
+        # Compute average precisions if any matches exist
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            average_precisions = average_precisions_per_class(*concatenated_stats)
+            self.metric_meter.update(average_precisions[:, 5].mean())
+        else:
+            self.metric_meter.update(0)
+
+
+class mAP50_95(BaseMetric):
+    def __init__(self, **kwargs):
+        # TODO: Select metrics by user
+        metric_name = 'mAP50_95'
+        super().__init__(metric_name=metric_name)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        iou_thresholds = np.linspace(0.5, 0.95, 10)
+        stats = []
+
+        # Gather matching stats for predictions and targets
+        for pred, target in zip(predictions, targets):
+            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['post_boxes'], pred['post_labels'], pred['post_scores']
+            true_objs_bbox, true_objs_class = target['boxes'], target['labels']
+
+            true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)
+            predicted_objs = np.concatenate((predicted_objs_bbox, predicted_objs_class[..., np.newaxis], predicted_objs_confidence[..., np.newaxis]), axis=-1)
+
+            if predicted_objs.shape[0] == 0 and true_objs.shape[0]:
+                stats.append(
+                    (
+                        np.zeros((0, iou_thresholds.size), dtype=bool),
+                        *np.zeros((2, 0)),
+                        true_objs[:, 4],
+                    )
+                )
+
+            if true_objs.shape[0]:
+                matches = match_detection_batch(predicted_objs, true_objs, iou_thresholds)
+                stats.append(
+                    (
+                        matches,
+                        predicted_objs[:, 5],
+                        predicted_objs[:, 4],
+                        true_objs[:, 4],
+                    )
+                )
+
+        # Compute average precisions if any matches exist
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            average_precisions = average_precisions_per_class(*concatenated_stats)
+            self.metric_meter.update(average_precisions.mean())
+        else:
+            self.metric_meter.update(0)

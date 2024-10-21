@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import mIoU
+from .metric import mIoU, PixelAccuracy

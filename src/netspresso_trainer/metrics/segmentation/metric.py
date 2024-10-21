@@ -48,18 +48,14 @@ class IoUMeter(object):
     def avg(self) -> float:
         return np.nanmean(self.intersection / self.union)
 
-
+# TODO: Unify repeated code
 class mIoU(BaseMetric):
     def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
-        # TODO: Select metrics by user
-        metric_names = ['iou', 'pixel_acc']
-        primary_metric = 'iou'
-
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
+        metric_name = 'mIoU' # Name for logging
+        super().__init__(metric_name=metric_name)
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
         self.K = num_classes
-
-        self.metric_meter['iou'] = IoUMeter(num_classes=self.K, name='iou')
+        self.metric_meter = IoUMeter(num_classes=self.K, name='iou') #TODO: Temporarily added IoUMeter.
 
     def intersection_and_union(self, output, target):
 
@@ -89,8 +85,40 @@ class mIoU(BaseMetric):
         }
 
     def calibrate(self, pred, target, **kwargs):
+        metrics = self.intersection_and_union(pred, target)
+        self.metric_meter.update(metrics['intersection'], metrics['union'])
+
+
+class PixelAccuracy(BaseMetric):
+    def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
+        metric_name = 'Pixel_acc' # Name for logging
+        super().__init__(metric_name=metric_name)
+        self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
+        self.K = num_classes
+
+    def intersection_and_union(self, output, target):
+
+        # 'K' classes, output and target sizes are N or N * L or N * H * W, each value in range 0 to K - 1.
+        assert (len(output.shape) in [1, 2, 3])
+
+        assert output.shape == target.shape
+        output = output.reshape(-1)
+        target = target.reshape(-1)
+        output[target == self.ignore_index] = self.ignore_index
+        intersection = output[output == target]
+
+        area_intersection = np.histogram(intersection, bins=np.linspace(0, self.K, self.K+1))[0]
+        area_target = np.histogram(target, bins=np.linspace(0, self.K, self.K+1))[0]
+
+        intersection, target = area_intersection, area_target
+
+        return {
+            'intersection': intersection,
+            'target': target,
+        }
+
+    def calibrate(self, pred, target, **kwargs):
         B = pred.shape[0]
 
         metrics = self.intersection_and_union(pred, target)
-        self.metric_meter['iou'].update(metrics['intersection'], metrics['union'])
-        self.metric_meter['pixel_acc'].update(sum(metrics['intersection']) / (sum(metrics['target']) + 1e-10), n=B)
+        self.metric_meter.update(sum(metrics['intersection']) / (sum(metrics['target']) + 1e-10), n=B)

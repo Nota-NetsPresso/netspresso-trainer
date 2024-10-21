@@ -18,15 +18,18 @@ from typing import Callable, Dict, Literal, Type
 
 from .base import BaseMetric
 from .classification import Top1Accuracy, Top5Accuracy
-from .detection import mAP
+from .detection import mAP50, mAP75, mAP50_95
 from .pose_estimation import PoseEstimationMetric
-from .segmentation import mIoU
+from .segmentation import mIoU, PixelAccuracy
 
 METRIC_LIST: Dict[str, Type[BaseMetric]] = {
     'top1_accuracy': Top1Accuracy,
     'top5_accuracy': Top5Accuracy,
     'miou': mIoU,
-    'map': mAP,
+    'pixel_accuracy': PixelAccuracy,
+    'map50': mAP50,
+    'map75': mAP75,
+    'map50_95': mAP50_95,
     'pose_estimation': PoseEstimationMetric,
 }
 
@@ -34,12 +37,12 @@ PHASE_LIST = ['train', 'valid', 'test']
 
 TASK_AVAILABLE_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
-    'segmentation': ['miou'],
-    'detection': ['map'],
+    'segmentation': ['miou', 'pixel_accuracy'],
+    'detection': ['map50', 'map75', 'map50_95'],
 }
 
 TASK_DEFUALT_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
     'segmentation': ['miou'],
-    'detection': ['map'],
+    'detection': ['map50', 'map75', 'map50_95'],
 }
