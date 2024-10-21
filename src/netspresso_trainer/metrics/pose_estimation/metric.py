@@ -29,7 +29,7 @@ class PoseEstimationMetricAdaptor:
         self.metric_names = metric_names
 
     def __call__(self, predictions: List[dict], targets: List[dict]):
-        pass
+        return {} # Do nothing
 
 
 class PCK(BaseMetric):
