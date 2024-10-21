@@ -143,7 +143,7 @@ def build_pipeline(
 
         # Build modules for evaluation
         loss_factory = build_losses(conf.model)
-        metric_factory = build_metrics(task, conf.model, conf.logging.metrics, train_dataloader.dataset.num_classes)
+        metric_factory = build_metrics(task, conf.model, conf.logging.metrics, eval_dataloader.dataset.num_classes)
 
         # Build logger
         single_gpu_or_rank_zero = (not conf.distributed) or (conf.distributed and dist.get_rank() == 0)
