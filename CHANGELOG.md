@@ -15,7 +15,7 @@
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Massive refactoring metric modules and add flexible metric selecting option by `@illian01` in [PR 564](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/564)
 
 ## Other Changes:
 
