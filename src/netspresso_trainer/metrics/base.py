@@ -21,14 +21,12 @@ from ..utils.record import MetricMeter
 
 
 class BaseMetric:
-    def __init__(self, metric_names, primary_metric, **kwargs):
-        assert primary_metric in metric_names
-        self.metric_names = metric_names
-        self.primary_metric = primary_metric
-        self.metric_meter = {metric_name: MetricMeter(metric_name, ':6.2f') for metric_name in metric_names}
+    def __init__(self, metric_name, **kwargs):
+        self.metric_name = metric_name
+        self.metric_meter = MetricMeter(metric_name, ':6.2f')
 
     def calibrate(self, pred, target, **kwargs):
-        pass
+        raise NotImplementedError
 
 
 class MetricFactory:
@@ -38,21 +36,21 @@ class MetricFactory:
 
     def reset_values(self):
         for phase in self.metrics.keys():
-            [meter.reset() for _, meter in self.metrics[phase].metric_meter.items()]
+            [metric.metric_meter.reset() for metric in self.metrics[phase]]
 
     def update(self, pred: torch.Tensor, target: torch.Tensor, phase: str, **kwargs: Any) -> None:
         if len(pred) == 0: # Removed dummy batch has 0 len
             return
-        phase = phase.lower()
-        self.metrics[phase].calibrate(pred, target)
+        for metric in self.metrics[phase.lower()]:
+            metric.calibrate(pred, target)
 
     def result(self, phase='train'):
-        return {metric_name: meter.avg for metric_name, meter in self.metrics[phase].metric_meter.items()}
+        return {metric.metric_name: metric.metric_meter.avg for metric in self.metrics[phase]}
 
     @property
     def metric_names(self):
-        return self.metrics[list(self.metrics.keys())[0]].metric_names
+        return [metric.metric_name for metric in self.metrics[list(self.metrics.keys())[0]]]
 
     @property
     def primary_metric(self):
-        return self.metrics[list(self.metrics.keys())[0]].primary_metric
+        return self.metric_names[0]

@@ -34,19 +34,25 @@ def accuracy_topk(pred, target):
     return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0)
 
 
-class Accuracy(BaseMetric):
+class Top1Accuracy(BaseMetric):
     def __init__(self, **kwargs):
-        # TODO: Select metrics by user
-        metric_names = ['Acc@1', 'Acc@5']
-        primary_metric = 'Acc@1'
-
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
+        metric_name = 'Acc@1' # Name for logging
+        super().__init__(metric_name=metric_name)
 
     def calibrate(self, pred, target, **kwargs):
         topk_callable = accuracy_topk(pred, target)
 
         Acc1_correct = topk_callable(topk=1)
-        Acc5_correct = topk_callable(topk=5)
+        self.metric_meter.update(Acc1_correct, n=pred.shape[0])
 
-        self.metric_meter['Acc@1'].update(Acc1_correct, n=pred.shape[0])
-        self.metric_meter['Acc@5'].update(Acc5_correct, n=pred.shape[0])
+
+class Top5Accuracy(BaseMetric):
+    def __init__(self, **kwargs):
+        metric_name = 'Acc@5' # Name for logging
+        super().__init__(metric_name=metric_name)
+
+    def calibrate(self, pred, target, **kwargs):
+        topk_callable = accuracy_topk(pred, target)
+
+        Acc5_correct = topk_callable(topk=5)
+        self.metric_meter.update(Acc5_correct, n=pred.shape[0])

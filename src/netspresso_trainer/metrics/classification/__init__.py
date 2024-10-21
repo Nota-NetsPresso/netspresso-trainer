@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import Accuracy
+from .metric import Top1Accuracy, Top5Accuracy
