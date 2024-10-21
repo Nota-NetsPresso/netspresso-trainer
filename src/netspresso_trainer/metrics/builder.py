@@ -21,10 +21,12 @@ from .registry import METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFU
 
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
-    if metrics_conf is None:
-        metrics_conf = TASK_DEFUALT_METRICS[task]
-    metrics_conf = [m.lower() for m in metrics_conf]
-    assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metrics_conf), \
+    metric_names = metrics_conf.metric_names
+
+    if metric_names is None:
+        metric_names = TASK_DEFUALT_METRICS[task]
+    metric_names = [m.lower() for m in metric_names]
+    assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metric_names), \
         f"Available metrics for {task} are {TASK_AVAILABLE_METRICS[task]}"
 
     # TODO: This code assumes there is only one loss module. Fix here later.
@@ -33,9 +35,9 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
 
     metrics = {}
     for phase in PHASE_LIST:
-        metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, **kwargs) for name in metrics_conf]
+        metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, **kwargs) for name in metric_names]
 
-    metric_adaptor = METRIC_ADAPTORS[task](metrics_conf)
+    metric_adaptor = METRIC_ADAPTORS[task](metric_names)
 
     metric_handler = MetricFactory(task, metrics, metric_adaptor)
     return metric_handler
