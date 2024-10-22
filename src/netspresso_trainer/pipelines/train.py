@@ -273,15 +273,11 @@ class TrainingPipeline(BasePipeline):
         self.training_history.update({epoch: summary_record})
 
     def save_checkpoint(self, epoch: int):
-        save_best_only = self.conf.logging.model_save_options.save_best_only
-
-        if save_best_only and epoch != self.get_best_epoch():
-            return
-
         if self.model_ema:
             model = self.model_ema.ema_model
         else:
             model = self.model.module if hasattr(self.model, 'module') else self.model
+
         if hasattr(model, 'deploy'):
             model.deploy()
 
@@ -290,8 +286,17 @@ class TrainingPipeline(BasePipeline):
             model = copy.deepcopy(model).type(save_dtype)
 
         logging_dir = self.logger.result_dir
-        model_name_tag = "best" if save_best_only else f"epoch_{epoch}"
-        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        save_best_only = self.conf.logging.model_save_options.save_best_only
+
+        if save_best_only:
+            if epoch == self.get_best_epoch():
+                self._save_model(model=model, epoch=epoch, model_name_tag="best", logging_dir=logging_dir)
+            self._save_model(model=model, epoch=epoch, model_name_tag="last", logging_dir=logging_dir)
+        else:
+            self._save_model(model=model, epoch=epoch, model_name_tag=f"epoch_{epoch}", logging_dir=logging_dir)
+
+    def _save_model(self, model, epoch: int, model_name_tag: str, logging_dir: Path):
+        model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
         optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}_optimizer.pth"
 
         if self.conf.logging.model_save_options.save_optimizer_state:
@@ -305,6 +310,7 @@ class TrainingPipeline(BasePipeline):
             torch.save(model, model_path.with_suffix(".pt"))
             logger.debug(f"PyTorch FX model saved at {str(model_path.with_suffix('.pt'))}")
             return
+
         pytorch_model_state_dict_path = model_path.with_suffix(".safetensors")
         save_checkpoint(model.state_dict(), pytorch_model_state_dict_path)
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
