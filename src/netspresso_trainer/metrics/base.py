@@ -53,14 +53,17 @@ class MetricFactory:
             metric.calibrate(pred, target, **kwargs)
 
     def result(self, phase='train'):
-        if phase == 'valid' and self.classwise_analysis:
-            ret = {}
+        ret = {metric.metric_name: {} for metric in self.metrics[phase]} # Initialize with empty dict
+
+        if phase == 'valid' and self.classwise_analysis: # Add classwise results only for valid phase
             for metric in self.metrics[phase]:
                 classwise_result_dict = {i:classwise_meter.avg for i, classwise_meter in enumerate(metric.classwise_metric_meters)}
-                ret[metric.metric_name] = classwise_result_dict
-                ret[metric.metric_name][len(ret[metric.metric_name])] = metric.metric_meter.avg # Add mean at the end
-            return ret
-        return {metric.metric_name: metric.metric_meter.avg for metric in self.metrics[phase]}
+                ret[metric.metric_name] = {'classwise': classwise_result_dict}
+
+        for metric in self.metrics[phase]:
+            ret[metric.metric_name]['mean'] = metric.metric_meter.avg # Add mean score
+
+        return ret
 
     @property
     def metric_names(self):
