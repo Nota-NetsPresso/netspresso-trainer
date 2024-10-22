@@ -318,42 +318,41 @@ class TrainingPipeline(BasePipeline):
     def save_best(self):
         opset_version = self.conf.logging.model_save_options.onnx_export_opset
         logging_dir = self.logger.result_dir
-
         best_epoch = self.get_best_epoch()
+
         if not best_epoch:
             return
-        model_name_tag = "best" if self.conf.logging.model_save_options.save_best_only else f"epoch_{best_epoch}"
-
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
-        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
-        save_dtype = model.save_dtype
-        best_model_to_save = copy.deepcopy(model)
-        if hasattr(best_model_to_save, 'deploy'):
-            best_model_to_save.deploy()
+        best_model = copy.deepcopy(model)
+        if hasattr(best_model, 'deploy'):
+            best_model.deploy()
 
-        model_checkpoint = load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict() if self.is_graphmodule_training else load_checkpoint(best_checkpoint_path.with_suffix('.safetensors'))
-        best_model_to_save.load_state_dict(model_checkpoint)
+        save_dtype = best_model.save_dtype
+        if save_dtype == torch.float16:
+            best_model = best_model.type(save_dtype)
 
-        if self.is_graphmodule_training:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
-            logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+        model_name_tag = "best" if self.conf.logging.model_save_options.save_best_only else f"epoch_{best_epoch}"
+        checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
 
-            torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
-            logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
-            return
+        model_checkpoint = (load_checkpoint(checkpoint_path.with_suffix('.pt')).state_dict() if self.is_graphmodule_training else load_checkpoint(checkpoint_path.with_suffix('.safetensors')))
+        best_model.load_state_dict(model_checkpoint)
 
-        pytorch_best_model_state_dict_path = best_model_save_path.with_suffix(".safetensors")
-        save_checkpoint(best_model_to_save.state_dict(), pytorch_best_model_state_dict_path)
-        logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
+        self._save_model(model=best_model, epoch=best_epoch, model_name_tag="best", logging_dir=logging_dir)
 
         try:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
-            logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+            model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
-            save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))
-            logger.info(f"PyTorch FX model tracing and saved at {str(best_model_save_path.with_suffix('.pt'))}")
+            save_onnx(best_model,
+                    model_save_path.with_suffix(".onnx"),
+                    sample_input=self.sample_input.type(save_dtype),
+                    opset_version=opset_version)
+            logger.info(f"ONNX model converting and saved at {str(model_save_path.with_suffix('.onnx'))}")
+
+            if not self.is_graphmodule_training:
+                save_graphmodule(best_model,
+                            (model_save_path.parent / f"{model_save_path.stem}_fx").with_suffix(".pt"))
+                logger.info(f"PyTorch FX model tracing and saved at {str(model_save_path.with_suffix('.pt'))}")
         except Exception as e:
             logger.error(e)
             pass
