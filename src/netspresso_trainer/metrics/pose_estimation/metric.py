@@ -33,10 +33,12 @@ class PoseEstimationMetricAdaptor:
 
 
 class PCK(BaseMetric):
-    def __init__(self, **kwargs):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
         # TODO: Select metrics by user
         metric_name = 'PCK'
-        super().__init__(metric_name=metric_name)
+        if classwise_analysis: # TODO: Implement classwise analysis
+            raise NotImplementedError('Classwise analysis is not supported for PCK metric')
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
         # TODO: Get from config
         self.thr = 0.05
         self.input_size = (256, 256)

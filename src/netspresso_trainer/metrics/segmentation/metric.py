@@ -62,12 +62,11 @@ class SegmentationMetricAdaptor:
 
 # TODO: Unify repeated code
 class mIoU(BaseMetric):
-    def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
+    def __init__(self, num_classes, classwise_analysis, ignore_index=IGNORE_INDEX_NONE_VALUE, **kwargs):
         metric_name = 'mIoU' # Name for logging
-        super().__init__(metric_name=metric_name)
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
-        self.K = num_classes
-        self.metric_meter = IoUMeter(num_classes=self.K, name='iou') #TODO: Temporarily added IoUMeter.
+        self.metric_meter = IoUMeter(num_classes=self.num_classes, name='iou') #TODO: Temporarily added IoUMeter.
 
     def intersection_and_union(self, output, target):
 
@@ -82,9 +81,9 @@ class mIoU(BaseMetric):
         #area_intersection = torch.histc(intersection, bins=self.K, min=0, max=self.K-1)
         #area_output = torch.histc(output, bins=self.K, min=0, max=self.K-1)
         #area_target = torch.histc(target, bins=self.K, min=0, max=self.K-1)
-        area_intersection = np.histogram(intersection, bins=np.linspace(0, self.K, self.K+1))[0]
-        area_output = np.histogram(output, bins=np.linspace(0, self.K, self.K+1))[0]
-        area_target = np.histogram(target, bins=np.linspace(0, self.K, self.K+1))[0]
+        area_intersection = np.histogram(intersection, bins=np.linspace(0, self.num_classes, self.num_classes+1))[0]
+        area_output = np.histogram(output, bins=np.linspace(0, self.num_classes, self.num_classes+1))[0]
+        area_target = np.histogram(target, bins=np.linspace(0, self.num_classes, self.num_classes+1))[0]
         area_union = area_output + area_target - area_intersection
 
         intersection, union, target, output = area_intersection, area_union, area_target, area_output
@@ -98,15 +97,20 @@ class mIoU(BaseMetric):
 
     def calibrate(self, pred, target, **kwargs):
         metrics = self.intersection_and_union(pred, target)
+
+        if self.classwise_analysis: # TODO: Compute in a better way
+            for cls_meter, cls_intersection, cls_union in zip(self.classwise_metric_meters, metrics['intersection'], metrics['union']):
+                if cls_union != 0:
+                    cls_meter.update(cls_intersection, cls_union)
+
         self.metric_meter.update(metrics['intersection'], metrics['union'])
 
 
 class PixelAccuracy(BaseMetric):
-    def __init__(self, num_classes=None, ignore_index=IGNORE_INDEX_NONE_VALUE):
+    def __init__(self, num_classes, classwise_analysis, ignore_index=IGNORE_INDEX_NONE_VALUE, **kwargs):
         metric_name = 'Pixel_acc' # Name for logging
-        super().__init__(metric_name=metric_name)
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
         self.ignore_index = ignore_index if ignore_index is not None else IGNORE_INDEX_NONE_VALUE
-        self.K = num_classes
 
     def intersection_and_union(self, output, target):
 
@@ -119,8 +123,8 @@ class PixelAccuracy(BaseMetric):
         output[target == self.ignore_index] = self.ignore_index
         intersection = output[output == target]
 
-        area_intersection = np.histogram(intersection, bins=np.linspace(0, self.K, self.K+1))[0]
-        area_target = np.histogram(target, bins=np.linspace(0, self.K, self.K+1))[0]
+        area_intersection = np.histogram(intersection, bins=np.linspace(0, self.num_classes, self.num_classes+1))[0]
+        area_target = np.histogram(target, bins=np.linspace(0, self.num_classes, self.num_classes+1))[0]
 
         intersection, target = area_intersection, area_target
 
@@ -133,4 +137,10 @@ class PixelAccuracy(BaseMetric):
         B = pred.shape[0]
 
         metrics = self.intersection_and_union(pred, target)
+
+        if self.classwise_analysis: # TODO: Compute in a better way
+            for cls_meter, cls_intersection, cls_target in zip(self.classwise_metric_meters, metrics['intersection'], metrics['target']):
+                if cls_target != 0:
+                    cls_meter.update(cls_intersection, cls_target)
+
         self.metric_meter.update(sum(metrics['intersection']) / (sum(metrics['target']) + 1e-10), n=B)
