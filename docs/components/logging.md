@@ -18,6 +18,7 @@ logging:
     validation_epoch: &validation_epoch 10
     save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.
   metrics:
+    classwise_analysis: False
     metric_names: ~ # None for default settings
 ```
 
@@ -48,4 +49,5 @@ The port number `50001` is same with the port forwarded in example docker setup.
 | `logging.model_save_options.onnx_export_opset` | (int) The ONNX opset version to be used for model export |
 | `logging.model_save_options.validation_epoch` | (int) Validation frequency in total training process. |
 | `logging.model_save_options.save_checkpoint_epoch` | (int) Checkpoint saving frequency in total training process. |
+| `logging.metrics.classwise_analysis` | (bool) Whether to perform class-wise analysis of metrics during validation. |
 | `logging.metrics.metric_names` | (list(str), optional) List of metric names to be logged. If not specified, default metrics for the task will be used. |
