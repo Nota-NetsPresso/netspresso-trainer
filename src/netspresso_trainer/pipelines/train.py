@@ -265,6 +265,18 @@ class TrainingPipeline(BasePipeline):
         if valid_logging:
             valid_losses = self.loss_factory.result('valid') if valid_logging else None
             valid_metrics = self.metric_factory.result('valid') if valid_logging else None
+
+            # TODO: Move to logger
+            # If class-wise metrics, convert to class names
+            if 'classwise' in valid_metrics[list(valid_metrics.keys())[0]]:
+                tmp_metrics = {}
+                for metric_name, metric in valid_metrics.items():
+                    tmp_metrics[metric_name] = {'mean': metric['mean'], 'classwise': {}}
+                    for cls_num, score in metric['classwise'].items():
+                        cls_name = self.logger.class_map[cls_num] if cls_num in self.logger.class_map else 'mean'
+                        tmp_metrics[metric_name]['classwise'][cls_name] = score
+                valid_metrics = tmp_metrics
+
             self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}

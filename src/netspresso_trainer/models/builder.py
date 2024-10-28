@@ -24,7 +24,7 @@ from loguru import logger
 from omegaconf import OmegaConf
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from .base import ClassificationModel, DetectionModel, ONNXModel, SegmentationModel, TaskModel
+from .base import ClassificationModel, DetectionModel, ONNXModel, SegmentationModel, TaskModel, TFLiteModel
 from .registry import (
     MODEL_BACKBONE_DICT,
     MODEL_FULL_DICT,
@@ -45,9 +45,8 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_p
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
-        # TODO: Move to model property
-        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
-        model = model.float() # Train with float32
+    model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
+    model = model.float() # Train with float32
 
     return model
 
@@ -89,9 +88,8 @@ def load_backbone_and_head_model(
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
-        # TODO: Move to model property
-        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
-        model = model.float() # Train with float32
+    model.save_dtype = next(model.parameters()).dtype
+    model = model.float() # Train with float32
     return model
 
 
@@ -137,5 +135,9 @@ def build_model(model_conf, num_classes, devices, distributed) -> nn.Module:
         assert Path(model_conf.checkpoint.path).exists()
         model = ONNXModel(model_conf)
         model.set_provider(devices)
+
+    elif model_format == 'tflite':
+        assert Path(model_conf.checkpoint.path).exists()
+        model = TFLiteModel(model_conf)
 
     return model
