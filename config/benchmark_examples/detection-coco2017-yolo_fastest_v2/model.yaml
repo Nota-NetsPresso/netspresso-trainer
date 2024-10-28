@@ -1,0 +1,41 @@
+model:
+  task: detection
+  name: yolofastest
+  checkpoint:
+    use_pretrained: False
+    load_head: False
+    path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: shufflenetv2
+      params: 
+        model_size: 0.5x
+      stage_params: 
+        ~
+    neck:
+      name: lightfpn
+      params:
+        out_channels: 72 
+    head:
+      name: yolo_fastest_head_v2
+      params:
+        anchors:
+          &anchors
+          - [12.,18., 37.,49., 52.,132.]  # P2
+          - [115.,73., 119.,199., 242.,238.]  # P3
+  postprocessor: 
+    params:
+      # postprocessor - decode
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      anchors: *anchors
+      class_agnostic: False
+  losses:
+    - criterion: yolofastest_loss
+      anchors: *anchors 
+      l1_activate_epoch: ~
+      weight: ~
