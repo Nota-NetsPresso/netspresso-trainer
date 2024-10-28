@@ -45,6 +45,7 @@ class TaskModel(nn.Module):
         if freeze_backbone:
             self._freeze_backbone()
             logger.info(f"Freeze! {self.backbone_name} is now freezed. Now only tuning with {self.head_name}.")
+        self.__save_dtype = None
 
     def _freeze_backbone(self):
         for m in self.backbone.parameters():
@@ -57,6 +58,14 @@ class TaskModel(nn.Module):
     @property
     def device(self):
         return next(self.parameters()).device
+
+    @property
+    def save_dtype(self):
+        return self.__save_dtype
+
+    @save_dtype.setter
+    def save_dtype(self, dtype):
+        self.__save_dtype = dtype
 
     def _get_name(self):
         if hasattr(self, 'neck'):

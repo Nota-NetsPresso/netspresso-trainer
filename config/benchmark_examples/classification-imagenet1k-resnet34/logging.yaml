@@ -12,3 +12,6 @@ logging:
     onnx_export_opset: 13 # Recommend in range [13, 17]
     validation_epoch: &validation_epoch 5
     save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.
+  metrics:
+    classwise_analysis: False
+    metric_names: ~ # None for default settings

@@ -131,7 +131,8 @@ class TensorboardLogger:
         if losses is not None:
             self.log_scalars_with_dict(losses, mode=prefix)
         if metrics is not None:
-            self.log_scalars_with_dict(metrics, mode=prefix)
+            for k, v in metrics.items(): # Only mean values
+                self.log_scalar(k, v['mean'], mode=prefix)
         if isinstance(images, dict):  # TODO: array with multiple dicts
             self.log_images_with_dict(images, mode=prefix)
 

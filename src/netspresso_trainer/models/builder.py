@@ -45,9 +45,8 @@ def load_full_model(conf_model, model_name, num_classes, model_checkpoint, use_p
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
-        # TODO: Move to model property
-        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
-        model = model.float() # Train with float32
+    model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
+    model = model.float() # Train with float32
 
     return model
 
@@ -89,9 +88,8 @@ def load_backbone_and_head_model(
             model, model_checkpoint,
             load_checkpoint_head=conf_model.checkpoint.load_head,
         )
-        # TODO: Move to model property
-        model.save_dtype = next(model.parameters()).dtype # If loaded model is float16, save it as float16
-        model = model.float() # Train with float32
+    model.save_dtype = next(model.parameters()).dtype
+    model = model.float() # Train with float32
     return model
 
 

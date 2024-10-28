@@ -101,6 +101,9 @@ class TrainingLogger():
                 v_new = v.avg
                 scalar_dict.update({k: v_new})
                 continue
+            if isinstance(v, dict):
+                pass
+                continue
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
 

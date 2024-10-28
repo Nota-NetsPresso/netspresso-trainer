@@ -49,4 +49,6 @@ class StdOutLogger:
         if losses is not None:
             logger.info(f"{prefix} loss: {losses['total']:.7f}")
         if metrics is not None:
+            if isinstance(metrics[list(metrics.keys())[0]], dict): # TODO: Print classwise metrics in a better way
+                pass
             logger.info(f"{prefix} metric: {[(name, value) for name, value in metrics.items()]}")

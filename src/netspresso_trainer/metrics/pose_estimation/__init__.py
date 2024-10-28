@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import PoseEstimationMetric
+from .metric import PCK, PoseEstimationMetricAdaptor
