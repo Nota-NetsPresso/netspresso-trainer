@@ -59,7 +59,7 @@ class StdOutLogger:
                 rows += [class_info.split('_', 1) for class_info in list(metrics[headers[-1]]['classwise'].keys())]
             rows += [['-', 'Mean', ]]
 
-            for metric_name, score_dict in metrics.items():
+            for _metric_name, score_dict in metrics.items():
                 if 'classwise' in score_dict: # If classwise analysis is activated
                     for cls_num, item in enumerate(score_dict['classwise']):
                         rows[cls_num].append(score_dict['classwise'][item])
