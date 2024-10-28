@@ -22,8 +22,12 @@ from ..utils.record import MetricMeter
 
 
 class BaseMetric:
-    def __init__(self, metric_name, **kwargs):
+    def __init__(self, metric_name, num_classes, classwise_analysis, **kwargs):
         self.metric_name = metric_name
+        self.num_classes = num_classes
+        self.classwise_analysis = classwise_analysis
+        if self.classwise_analysis:
+            self.classwise_metric_meters = [MetricMeter(f'{metric_name}_{i}', ':6.2f') for i in range(num_classes)]
         self.metric_meter = MetricMeter(metric_name, ':6.2f')
 
     def calibrate(self, pred, target, **kwargs):
@@ -31,10 +35,11 @@ class BaseMetric:
 
 
 class MetricFactory:
-    def __init__(self, task, metrics, metric_adaptor) -> None:
+    def __init__(self, task, metrics, metric_adaptor, classwise_analysis) -> None:
         self.task = task
         self.metrics = metrics
         self.metric_adaptor = metric_adaptor
+        self.classwise_analysis = classwise_analysis
 
     def reset_values(self):
         for phase in self.metrics:
@@ -48,7 +53,17 @@ class MetricFactory:
             metric.calibrate(pred, target, **kwargs)
 
     def result(self, phase='train'):
-        return {metric.metric_name: metric.metric_meter.avg for metric in self.metrics[phase]}
+        ret = {metric.metric_name: {} for metric in self.metrics[phase]} # Initialize with empty dict
+
+        if phase == 'valid' and self.classwise_analysis: # Add classwise results only for valid phase
+            for metric in self.metrics[phase]:
+                classwise_result_dict = {i:classwise_meter.avg for i, classwise_meter in enumerate(metric.classwise_metric_meters)}
+                ret[metric.metric_name] = {'classwise': classwise_result_dict}
+
+        for metric in self.metrics[phase]:
+            ret[metric.metric_name]['mean'] = metric.metric_meter.avg # Add mean score
+
+        return ret
 
     @property
     def metric_names(self):

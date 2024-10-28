@@ -223,9 +223,9 @@ class DetectionMetricAdaptor:
 
 
 class mAP50(BaseMetric):
-    def __init__(self, **kwargs):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
         metric_name = 'mAP50' # Name for logging
-        super().__init__(metric_name=metric_name)
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, predictions, targets, **kwargs):
         stats = kwargs['stats'] # Get from DetectionMetricAdapter
@@ -234,16 +234,20 @@ class mAP50(BaseMetric):
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
             average_precisions = average_precisions_per_class(*concatenated_stats)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(average_precisions[i, 0])
             self.metric_meter.update(average_precisions[:, 0].mean())
         else:
             self.metric_meter.update(0)
 
 
 class mAP75(BaseMetric):
-    def __init__(self, **kwargs):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
         # TODO: Select metrics by user
         metric_name = 'mAP75'
-        super().__init__(metric_name=metric_name)
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, predictions, targets, **kwargs):
         stats = kwargs['stats'] # Get from DetectionMetricAdapter
@@ -252,16 +256,20 @@ class mAP75(BaseMetric):
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
             average_precisions = average_precisions_per_class(*concatenated_stats)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(average_precisions[i, 5])
             self.metric_meter.update(average_precisions[:, 5].mean())
         else:
             self.metric_meter.update(0)
 
 
 class mAP50_95(BaseMetric):
-    def __init__(self, **kwargs):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
         # TODO: Select metrics by user
         metric_name = 'mAP50_95'
-        super().__init__(metric_name=metric_name)
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, predictions, targets, **kwargs):
         stats = kwargs['stats'] # Get from DetectionMetricAdapter
@@ -270,6 +278,10 @@ class mAP50_95(BaseMetric):
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
             average_precisions = average_precisions_per_class(*concatenated_stats)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(average_precisions[i, :].mean())
             self.metric_meter.update(average_precisions.mean())
         else:
             self.metric_meter.update(0)
