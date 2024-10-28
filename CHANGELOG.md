@@ -10,6 +10,7 @@
 - Add class-wise metric analysis option by `@illian01` in [PR 568](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/568)
 - Add ReLU6 by `@hglee98` in [PR 566](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/566)
 - Add TFLite model evaluation feature by `@hglee98` in [PR 563](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/563)
+- Add YOLO-Fastest-v2 by `@hglee98` in [PR 548](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/548)
 
 ## Bug Fixes:
 
