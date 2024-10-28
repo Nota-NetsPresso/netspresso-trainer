@@ -58,6 +58,7 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'yolox_x': 'coco',
     'rtdetr_res18': 'coco',
     'rtdetr_res50': 'coco',
+    'yolo_fastest_v2': 'coco',
 }
 
 MODEL_CHECKPOINT_URL_DICT = {
@@ -139,6 +140,9 @@ MODEL_CHECKPOINT_URL_DICT = {
     'rtdetr_res50': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/rtdetr/rtdetr_res50_coco.safetensors?versionId=JHmnjY13BEflpnDCYPFJ1c17UwpqDrLQ",
     },
+    'yolo_fastest_v2': {
+        'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolofastest/yolo_fastest_v2_coco.safetensors?versionId=CGhNjiZygGVjtHm0M586DzQ6.2FqWvl1"
+    }
 }
 
 

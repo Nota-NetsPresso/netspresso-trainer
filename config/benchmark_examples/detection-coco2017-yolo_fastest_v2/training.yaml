@@ -1,0 +1,21 @@
+training:
+  epochs: 300
+  mixed_precision: True
+  max_norm: ~
+  ema:
+    name: exp_decay
+    decay: 0.9999
+    beta: 2000
+  optimizer:
+    name: sgd
+    lr: 0.001
+    momentum: 0.949
+    weight_decay: 0.0005 # No bias and norm decay
+    nesterov: True
+    no_bias_decay: True
+    no_norm_weight_decay: True
+    overwrite: ~
+  scheduler:
+    name: multi_step
+    milestones: [150, 250]
+    gamma: 0.1
