@@ -1,8 +1,8 @@
 model:
   task: detection
-  name: yolofastest
+  name: yolo_fastest_v2
   checkpoint:
-    use_pretrained: False
+    use_pretrained: True
     load_head: False
     path: ~ 
     optimizer_path: ~
