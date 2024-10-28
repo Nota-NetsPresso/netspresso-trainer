@@ -13,6 +13,7 @@
 
 - Fix keyword error of segmentation training by `@illian01` in [PR 551](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/551)
 - Fix typo when saving optimizer state_dict by `@hglee98` in [PR 553](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/553)
+- Fix not initialized save_dtype error by `@hglee98` in [PR 565](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/565)
 
 ## Breaking Changes:
 
