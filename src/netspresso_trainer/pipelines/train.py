@@ -274,7 +274,7 @@ class TrainingPipeline(BasePipeline):
                     tmp_metrics[metric_name] = {'mean': metric['mean'], 'classwise': {}}
                     for cls_num, score in metric['classwise'].items():
                         cls_name = self.logger.class_map[cls_num] if cls_num in self.logger.class_map else 'mean'
-                        tmp_metrics[metric_name]['classwise'][cls_name] = score
+                        tmp_metrics[metric_name]['classwise'][f'{cls_num}_{cls_name}'] = score
                 valid_metrics = tmp_metrics
 
             self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
