@@ -178,7 +178,6 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
 
     #TODO: Temporarily set ``cache_data`` as optional since this is experimental
     cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False
-
     if task == 'classification':
         # TODO: ``phase`` should be removed later.
         transforms = getattr(conf.augmentation, phase, None)
