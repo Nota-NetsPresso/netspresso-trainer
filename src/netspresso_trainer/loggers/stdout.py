@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from loguru import logger
+from tabulate import tabulate
 
 LOG_FILENAME = "result.log"
 
@@ -49,6 +50,20 @@ class StdOutLogger:
         if losses is not None:
             logger.info(f"{prefix} loss: {losses['total']:.7f}")
         if metrics is not None:
-            if isinstance(metrics[list(metrics.keys())[0]], dict): # TODO: Print classwise metrics in a better way
-                pass
-            logger.info(f"{prefix} metric: {[(name, value) for name, value in metrics.items()]}")
+            metric_std_log = f'{prefix} metric:\n'
+
+            headers = ['Class number', 'Class name', *list(metrics.keys())]
+
+            rows = []
+            if 'classwise' in metrics[headers[-1]]: # If classwise analysis is activated
+                rows += [class_info.split('_', 1) for class_info in list(metrics[headers[-1]]['classwise'].keys())]
+            rows += [['-', 'Mean', ]]
+
+            for _metric_name, score_dict in metrics.items():
+                if 'classwise' in score_dict: # If classwise analysis is activated
+                    for cls_num, item in enumerate(score_dict['classwise']):
+                        rows[cls_num].append(score_dict['classwise'][item])
+                rows[-1].append(score_dict['mean'])
+
+            metric_std_log += tabulate(rows, headers=headers, tablefmt='grid', numalign='left', stralign='left')
+            logger.info(metric_std_log) # tabulaate is already contained as pandas dependency
