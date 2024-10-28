@@ -26,6 +26,7 @@ NORM_REGISTRY: Dict[str, Type[nn.Module]] = {
 
 ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
     'relu': nn.ReLU,
+    'relu6': nn.ReLU6,
     'prelu': nn.PReLU,
     'leaky_relu': nn.LeakyReLU,
     'gelu': nn.GELU,

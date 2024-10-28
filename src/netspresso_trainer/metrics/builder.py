@@ -22,6 +22,7 @@ from .registry import METRIC_ADAPTORS, METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_M
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
     metric_names = metrics_conf.metric_names
+    classwise_analysis = metrics_conf.classwise_analysis
 
     if metric_names is None:
         metric_names = TASK_DEFUALT_METRICS[task]
@@ -35,9 +36,12 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
 
     metrics = {}
     for phase in PHASE_LIST:
-        metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, **kwargs) for name in metric_names]
+        if phase == 'valid': # classwise_analysis is only available in valid phase
+            metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, classwise_analysis=classwise_analysis, **kwargs) for name in metric_names]
+        else:
+            metrics[phase] = [METRIC_LIST[name](num_classes=num_classes, classwise_analysis=False, **kwargs) for name in metric_names]
 
     metric_adaptor = METRIC_ADAPTORS[task](metric_names)
 
-    metric_handler = MetricFactory(task, metrics, metric_adaptor)
+    metric_handler = MetricFactory(task, metrics, metric_adaptor, classwise_analysis)
     return metric_handler
