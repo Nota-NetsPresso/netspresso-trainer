@@ -11,6 +11,7 @@
 - Add ReLU6 by `@hglee98` in [PR 566](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/566)
 - Add TFLite model evaluation feature by `@hglee98` in [PR 563](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/563)
 - Add YOLO-Fastest-v2 by `@hglee98` in [PR 548](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/548)
+- Add tabulating step for metric standard outputs by `@illian01` in [PR 570](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/570)
 
 ## Bug Fixes:
 
