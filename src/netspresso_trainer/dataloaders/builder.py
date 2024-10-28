@@ -24,8 +24,6 @@ import torch.utils.data as data
 from loguru import logger
 from omegaconf import DictConfig
 
-from netspresso_trainer.models.utils import get_model_format
-
 from .augmentation.registry import TRANSFORM_DICT
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
 from .utils.collate_fn import classification_mix_collate_fn, classification_onehot_collate_fn, detection_collate_fn
@@ -180,10 +178,6 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
 
     #TODO: Temporarily set ``cache_data`` as optional since this is experimental
     cache_data = conf.environment.cache_data if hasattr(conf.environment, 'cache_data') else False
-    model_format = get_model_format(conf.model)
-    if model_format == 'tflite' and conf.environment.batch_size != 1:
-        logger.info("TensorFlow Lite model is detected, revise the batch_size to be 1.")
-        conf.environment.batch_size = 1
     if task == 'classification':
         # TODO: ``phase`` should be removed later.
         transforms = getattr(conf.augmentation, phase, None)
