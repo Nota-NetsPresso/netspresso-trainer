@@ -21,16 +21,24 @@ import numpy as np
 from ..base import BaseMetric
 
 
-class PoseEstimationMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['pck']
+class PoseEstimationMetricAdaptor:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
 
-    def __init__(self, **kwargs):
+    def __call__(self, predictions: List[dict], targets: List[dict]):
+        return {} # Do nothing
+
+
+class PCK(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
         # TODO: Select metrics by user
-        metric_names: List[str] = ['pck']
-        primary_metric: str = 'pck'
-
-        assert set(metric_names).issubset(PoseEstimationMetric.SUPPORT_METRICS)
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
+        metric_name = 'PCK'
+        if classwise_analysis: # TODO: Implement classwise analysis
+            raise NotImplementedError('Classwise analysis is not supported for PCK metric')
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
         # TODO: Get from config
         self.thr = 0.05
         self.input_size = (256, 256)
@@ -75,4 +83,4 @@ class PoseEstimationMetric(BaseMetric):
         normalize = np.tile(np.array([[self.input_size[0], self.input_size[1]]]), (N, 1))
 
         acc, avg_acc, cnt = self.keypoint_pck_accuracy(pred, target, mask, self.thr, normalize)
-        self.metric_meter['pck'].update(avg_acc)
+        self.metric_meter.update(avg_acc)

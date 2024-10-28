@@ -21,35 +21,64 @@ import torch
 
 from ..base import BaseMetric
 
-TOPK_MAX = 20
-
 
 @torch.no_grad()
 def accuracy_topk(pred, target):
     """Computes the accuracy over the k top predictions for the specified values of k"""
-    maxk = pred.shape[-1]
     pred = pred.T
     class_num = pred.shape[0]
     correct = np.equal(pred, np.tile(target, (class_num, 1)))
-    return lambda topk: correct[:min(topk, maxk)].reshape(-1).astype('float').sum(0)
+    return correct
 
 
-class ClassificationMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['Acc@1', 'Acc@5']
+class ClassificationMetricAdaptor:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
 
-    def __init__(self, **kwargs):
-        # TODO: Select metrics by user
-        metric_names = ['Acc@1', 'Acc@5']
-        primary_metric = 'Acc@1'
+    def __call__(self, predictions: List[dict], targets: List[dict]):
+        ret = {}
+        if 'top1_accuracy' in self.metric_names or 'top5_accuracy' in self.metric_names:
+            correct = accuracy_topk(predictions, targets)
+            ret['correct'] = correct
 
-        assert set(metric_names).issubset(ClassificationMetric.SUPPORT_METRICS)
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
+        return ret
+
+class Top1Accuracy(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Acc@1' # Name for logging
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, pred, target, **kwargs):
-        topk_callable = accuracy_topk(pred, target)
+        topk = 1
+        correct = kwargs['correct']
+        correct = np.logical_or.reduce(correct[:topk])
 
-        Acc1_correct = topk_callable(topk=1)
-        Acc5_correct = topk_callable(topk=5)
+        if self.classwise_analysis: # Classwise analysis
+            for correct_class, c in zip(target, correct):
+                count = 1 if c else 0
+                self.classwise_metric_meters[correct_class].update(count, n=1)
 
-        self.metric_meter['Acc@1'].update(Acc1_correct, n=pred.shape[0])
-        self.metric_meter['Acc@5'].update(Acc5_correct, n=pred.shape[0])
+        Acc1_correct = correct.sum()
+        self.metric_meter.update(Acc1_correct, n=pred.shape[0])
+
+
+class Top5Accuracy(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Acc@5' # Name for logging
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, pred, target, **kwargs):
+        topk = 5
+        correct = kwargs['correct']
+        correct = np.logical_or.reduce(correct[:topk])
+
+        if self.classwise_analysis: # Classwise analysis
+            for correct_class, c in zip(target, correct):
+                count = 1 if c else 0
+                self.classwise_metric_meters[correct_class].update(count, n=1)
+
+        Acc1_correct = correct.sum()
+        self.metric_meter.update(Acc1_correct, n=pred.shape[0])

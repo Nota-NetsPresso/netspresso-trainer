@@ -21,12 +21,14 @@ from torch.optim.lr_scheduler import _LRScheduler
 
 from .cosine_lr import CosineAnnealingLRWithCustomWarmUp
 from .cosine_warm_restart import CosineAnnealingWarmRestartsWithCustomWarmUp
+from .multi_step_lr import MultiStepLR
 from .poly_lr import PolynomialLRWithWarmUp
 from .step_lr import StepLR
 
 SCHEDULER_DICT: Dict[str, Type[_LRScheduler]] = {
     'cosine': CosineAnnealingWarmRestartsWithCustomWarmUp,
     'cosine_no_sgdr': CosineAnnealingLRWithCustomWarmUp,
+    'multi_step': MultiStepLR,
     'poly': PolynomialLRWithWarmUp,
     'step': StepLR
 }

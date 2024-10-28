@@ -88,27 +88,66 @@ class TrainingPipeline(BasePipeline):
             Literal['train_losses', 'valid_losses', 'train_metrics', 'valid_metrics'], Dict[str, float]
         ]] = {}
 
-        # TODO: These will be removed
-        self.save_optimizer_state = True
 
     @final
     def _is_ready(self):
         assert self.model is not None, "`self.model` is not defined!"
         assert self.optimizer is not None, "`self.optimizer` is not defined!"
         """Append here if you need more assertion checks!"""
-        assert self.conf.logging.save_checkpoint_epoch % self.conf.logging.validation_epoch == 0, \
+        assert self.conf.logging.model_save_options.save_checkpoint_epoch % self.conf.logging.model_save_options.validation_epoch == 0, \
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
+        assert self.conf.logging.model_save_options.save_criterion.lower() in ['loss', 'metric'], \
+            "`save_criterion` should be selected from ['loss', 'metric']"
         return True
 
     def epoch_with_valid_logging(self, epoch: int):
-        validation_freq = self.conf.logging.validation_epoch
+        validation_freq = self.conf.logging.model_save_options.validation_epoch
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % validation_freq == 1 % validation_freq) or last_epoch
 
     def epoch_with_checkpoint_saving(self, epoch: int):
-        checkpoint_freq = self.conf.logging.save_checkpoint_epoch
+        checkpoint_freq = self.conf.logging.model_save_options.save_checkpoint_epoch
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
+
+    def _get_metric_key(self):
+        metric_keys = {
+            'classification': 'Acc@1',
+            'detection': 'map50',
+            'pose_estimation': 'pck',
+            'segmentation': 'iou'
+        }
+        if self.task not in metric_keys:
+            raise ValueError(f"Unsupported task: {self.task}. Supported tasks are: {list(metric_keys.keys())}")
+        return metric_keys[self.task]
+
+    def _get_valid_records(self, save_criterion):
+        if save_criterion == 'loss':
+            return {
+                epoch: record['valid_losses'].get('total')
+                for epoch, record in self.training_history.items()
+                if 'valid_losses' in record and 'total' in record['valid_losses']
+            }
+        elif save_criterion == 'metric':
+            metric_key = self._get_metric_key()
+            return {
+                epoch: record['valid_metrics'].get(metric_key)
+                for epoch, record in self.training_history.items()
+                if 'valid_metrics' in record and metric_key in record['valid_metrics']
+            }
+        else:
+            raise ValueError("save_criterion should be either 'loss' or 'metric'")
+
+    def get_best_epoch(self):
+        save_criterion = self.conf.logging.model_save_options.save_criterion.lower()
+
+        valid_records = self._get_valid_records(save_criterion)
+
+        if not valid_records:
+            return
+
+        comparison_func = min if save_criterion == 'loss' else max # TODO: It may depends on the specific metric
+        return comparison_func(valid_records, key=valid_records.get)
 
     @property
     def learning_rate(self):
@@ -226,6 +265,18 @@ class TrainingPipeline(BasePipeline):
         if valid_logging:
             valid_losses = self.loss_factory.result('valid') if valid_logging else None
             valid_metrics = self.metric_factory.result('valid') if valid_logging else None
+
+            # TODO: Move to logger
+            # If class-wise metrics, convert to class names
+            if 'classwise' in valid_metrics[list(valid_metrics.keys())[0]]:
+                tmp_metrics = {}
+                for metric_name, metric in valid_metrics.items():
+                    tmp_metrics[metric_name] = {'mean': metric['mean'], 'classwise': {}}
+                    for cls_num, score in metric['classwise'].items():
+                        cls_name = self.logger.class_map[cls_num] if cls_num in self.logger.class_map else 'mean'
+                        tmp_metrics[metric_name]['classwise'][cls_name] = score
+                valid_metrics = tmp_metrics
+
             self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}
@@ -234,21 +285,28 @@ class TrainingPipeline(BasePipeline):
         self.training_history.update({epoch: summary_record})
 
     def save_checkpoint(self, epoch: int):
+        save_best_only = self.conf.logging.model_save_options.save_best_only
+
+        if save_best_only and epoch != self.get_best_epoch():
+            return
+
         if self.model_ema:
             model = self.model_ema.ema_model
         else:
             model = self.model.module if hasattr(self.model, 'module') else self.model
         if hasattr(model, 'deploy'):
             model.deploy()
-        save_dtype = model.save_dtype
 
+        save_dtype = model.save_dtype
         if save_dtype == torch.float16:
             model = copy.deepcopy(model).type(save_dtype)
-        logging_dir = self.logger.result_dir
-        model_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}.ext"
-        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{epoch}_optimzer.pth"
 
-        if self.save_optimizer_state:
+        logging_dir = self.logger.result_dir
+        model_name_tag = "best" if save_best_only else f"epoch_{epoch}"
+        model_path =  Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        optimizer_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}_optimizer.pth"
+
+        if self.conf.logging.model_save_options.save_optimizer_state:
             optimizer = self.optimizer.module if hasattr(self.optimizer, 'module') else self.optimizer
             save_dict = {'optimizer': optimizer.state_dict(), 'last_epoch': epoch}
             torch.save(save_dict, optimizer_path)
@@ -264,16 +322,16 @@ class TrainingPipeline(BasePipeline):
         logger.debug(f"PyTorch model saved at {str(pytorch_model_state_dict_path)}")
 
     def save_best(self):
-        valid_losses = {epoch: record['valid_losses'].get('total') for epoch, record in self.training_history.items()
-                if 'valid_losses' in record}
-        if not valid_losses:
-            return # No validation loss recorded
-        best_epoch = min(valid_losses, key=valid_losses.get)
-
+        opset_version = self.conf.logging.model_save_options.onnx_export_opset
         logging_dir = self.logger.result_dir
 
-        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_epoch_{best_epoch}.ext"
-        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
+        best_epoch = self.get_best_epoch()
+        if not best_epoch:
+            return
+        model_name_tag = "best" if self.conf.logging.model_save_options.save_best_only else f"epoch_{best_epoch}"
+
+        best_checkpoint_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
+        best_model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_{model_name_tag}.ext"
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         save_dtype = model.save_dtype
@@ -281,21 +339,23 @@ class TrainingPipeline(BasePipeline):
         if hasattr(best_model_to_save, 'deploy'):
             best_model_to_save.deploy()
 
+        model_checkpoint = load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict() if self.is_graphmodule_training else load_checkpoint(best_checkpoint_path.with_suffix('.safetensors'))
+        best_model_to_save.load_state_dict(model_checkpoint)
+
         if self.is_graphmodule_training:
-            best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.pt')).state_dict())
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
+
             torch.save(best_model_to_save, best_model_save_path.with_suffix(".pt"))
             logger.info(f"Best model saved at {str(best_model_save_path.with_suffix('.pt'))}")
             return
 
-        best_model_to_save.load_state_dict(load_checkpoint(best_checkpoint_path.with_suffix('.safetensors')))
         pytorch_best_model_state_dict_path = best_model_save_path.with_suffix(".safetensors")
         save_checkpoint(best_model_to_save.state_dict(), pytorch_best_model_state_dict_path)
         logger.info(f"Best model saved at {str(pytorch_best_model_state_dict_path)}")
 
         try:
-            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=self.conf.logging.onnx_export_opset)
+            save_onnx(best_model_to_save, best_model_save_path.with_suffix(".onnx"), sample_input=self.sample_input.type(save_dtype), opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(best_model_save_path.with_suffix('.onnx'))}")
 
             save_graphmodule(best_model_to_save, (best_model_save_path.parent / f"{best_model_save_path.stem}_fx").with_suffix(".pt"))

@@ -156,7 +156,7 @@ class TrainingSummary:
 @dataclass
 class EvaluationSummary:
     losses: float
-    metrics: float
+    metrics: dict
     metrics_list: List[str]
     primary_metric: str
     flops: Optional[int] = None

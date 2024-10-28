@@ -14,4 +14,4 @@
 #
 # ----------------------------------------------------------------------------
 
-from .metric import DetectionMetric
+from .metric import DetectionMetricAdaptor, mAP50, mAP50_95, mAP75

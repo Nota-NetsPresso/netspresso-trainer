@@ -58,7 +58,7 @@ pip install -e netspresso-trainer
 ### Set-up with docker
 
 Please clone this repository and refer to [`Dockerfile`](./Dockerfile) and [`docker-compose-example.yml`](./docker-compose-example.yml).  
-For docker users, we provide more detailed guide in our [Docs](https://nota-netspresso.github.io/netspresso-trainer).
+For docker users, we provide more detailed guide in our [Docs](https://nota-netspresso.github.io/netspresso-trainer/getting_started/installation/docker_installation).
 
 ## Getting started
 
