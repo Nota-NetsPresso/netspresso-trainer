@@ -16,6 +16,36 @@ No changes to highlight.
 
 No changes to highlight.
 
+# v1.0.3
+
+## New Features:
+
+- Add RandomResize2 by `@illian01` in [PR 550](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/550)
+- Add confidence score on detection visualization by `@hglee98` in [PR 552](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/552)
+- Add save_best_only option for saving model by `@hglee98` in [PR 555](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/555), [PR 567](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/567)
+- Add option to select best model saving criterion by `@hglee98` and `@illian01` in [PR 557](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/557), [PR 573](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/573), [PR 574](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/574)
+- Add MultiStepLR scheduler by `@hglee98` in [PR 559](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/559)
+- Add class-wise metric analysis option by `@illian01` in [PR 568](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/568)
+- Add ReLU6 by `@hglee98` in [PR 566](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/566)
+- Add TFLite model evaluation feature by `@hglee98` in [PR 563](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/563)
+- Add YOLO-Fastest-v2 by `@hglee98` in [PR 548](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/548)
+- Add tabulating step for metric standard outputs by `@illian01` in [PR 570](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/570)
+
+## Bug Fixes:
+
+- Fix keyword error of segmentation training by `@illian01` in [PR 551](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/551)
+- Fix typo when saving optimizer state_dict by `@hglee98` in [PR 553](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/553)
+- Fix not initialized save_dtype error by `@hglee98` in [PR 565](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/565)
+- Fix mAP error in case of certain classes object is not in the dataset `@hglee98` in [PR 571](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/571), [PR 572](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/572)
+
+## Breaking Changes:
+
+- Massive refactoring metric modules and add flexible metric selecting option by `@illian01` in [PR 564](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/564)
+
+## Other Changes:
+
+No changes to highlight.
+
 # v1.0.2
 
 ## New Features:

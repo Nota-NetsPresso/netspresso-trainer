@@ -178,16 +178,17 @@ class LightFPN(nn.Module):
     ) -> None:
         super().__init__()
 
-        self.in_channels = intermediate_features_dim 
+        self.input2_depth = intermediate_features_dim[-2] + intermediate_features_dim[-1]
+        self.input3_depth = intermediate_features_dim[-1]
         self.out_channels = params.out_channels
-        self.num_ins = len(self.in_channels)
+        self.num_ins = len(intermediate_features_dim)
         self._intermediate_features_dim = [self.out_channels for _ in range(self.num_ins)]
         # TODO: Make sure this module can process multi-scale features greater than 2. 
-        self.conv_C2 = ConvLayer(self.in_channels[0]+self.in_channels[1], self.out_channels, 1, 1, padding=0)
-        self.conv_C3 = ConvLayer(self.in_channels[1], self.out_channels, 1, 1, padding=0)   
+        self.conv_C2 = ConvLayer(self.input2_depth, self.out_channels, 1, 1, padding=0)
+        self.conv_C3 = ConvLayer(self.input3_depth, self.out_channels, 1, 1, padding=0)   
     
-    def forward(self, inputs): 
-        C2, C3 = inputs[0], inputs[1] 
+    def forward(self, inputs):
+        C2, C3 = inputs[-2], inputs[-1] 
         S3 = self.conv_C3(C3)
         P2 = F.interpolate(C3, scale_factor=2)
         P2 = torch.cat((P2, C2), dim=1)

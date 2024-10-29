@@ -1,0 +1,5 @@
+environment: 
+  seed: 1
+  num_workers: 8
+  gpus: 0, 1, 2, 3
+  batch_size: 64 # Batch size per gpu

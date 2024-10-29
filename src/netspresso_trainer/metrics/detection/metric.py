@@ -132,6 +132,7 @@ def average_precisions_per_class(
     prediction_confidence: np.ndarray,
     prediction_class_ids: np.ndarray,
     true_class_ids: np.ndarray,
+    num_classes,
     eps: float = 1e-16,
 ) -> np.ndarray:
     """
@@ -143,6 +144,7 @@ def average_precisions_per_class(
         prediction_confidence (np.ndarray): Objectness value from 0-1.
         prediction_class_ids (np.ndarray): Predicted object classes.
         true_class_ids (np.ndarray): True object classes.
+        num_classes (int): The number of classes.
         eps (float, optional): Small value to prevent division by zero.
 
     Returns:
@@ -153,16 +155,22 @@ def average_precisions_per_class(
     prediction_class_ids = prediction_class_ids[sorted_indices]
 
     unique_classes, class_counts = np.unique(true_class_ids, return_counts=True)
-    num_classes = unique_classes.shape[0]
 
-    average_precisions = np.zeros((num_classes, matches.shape[1]))
+    average_precisions = np.full((num_classes, matches.shape[1]), np.nan)
 
     for class_idx, class_id in enumerate(unique_classes):
         is_class = prediction_class_ids == class_id
         total_true = class_counts[class_idx]
-        total_prediction = is_class.sum()
+        total_predictions = is_class.sum()
 
-        if total_prediction == 0 or total_true == 0:
+        if total_true == 0:
+            continue
+
+        if total_predictions == 0:
+            for iou_level_idx in range(matches.shape[1]):
+                average_precisions[
+                    int(class_id), iou_level_idx
+                ] = 0.0
             continue
 
         false_positives = (1 - matches[is_class]).cumsum(0)
@@ -172,7 +180,7 @@ def average_precisions_per_class(
 
         for iou_level_idx in range(matches.shape[1]):
             average_precisions[
-                class_idx, iou_level_idx
+                int(class_id), iou_level_idx
             ] = compute_average_precision(
                 recall[:, iou_level_idx], precision[:, iou_level_idx]
             )
@@ -180,19 +188,14 @@ def average_precisions_per_class(
     return average_precisions
 
 
-class DetectionMetric(BaseMetric):
-    SUPPORT_METRICS: List[str] = ['map50', 'map75', 'map50_95']
+class DetectionMetricAdaptor:
+    '''
+        Adapter to process redundant operations for the metrics.
+    '''
+    def __init__(self, metric_names) -> None:
+        self.metric_names = metric_names
 
-    def __init__(self, **kwargs):
-        # TODO: Select metrics by user
-        metric_names: List[str] = ['map50', 'map75', 'map50_95']
-        primary_metric: str = 'map50'
-        assert set(metric_names).issubset(DetectionMetric.SUPPORT_METRICS)
-        super().__init__(metric_names=metric_names, primary_metric=primary_metric)
-
-    def calibrate(self, predictions, targets, **kwargs):
-        result_dict = {k: 0. for k in self.metric_names}
-
+    def __call__(self, predictions: List[dict], targets: List[dict]):
         iou_thresholds = np.linspace(0.5, 0.95, 10)
         stats = []
 
@@ -224,20 +227,69 @@ class DetectionMetric(BaseMetric):
                     )
                 )
 
+        return {'stats': stats}
+
+
+class mAP50(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'mAP50' # Name for logging
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
+
         # Compute average precisions if any matches exist
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
-            average_precisions = average_precisions_per_class(*concatenated_stats)
-            #result_dict['map50'] = average_precisions[:, 0].mean()
-            #result_dict['map75'] = average_precisions[:, 5].mean()
-            #result_dict['map50_95'] = average_precisions.mean()
-            self.metric_meter['map50'].update(average_precisions[:, 0].mean())
-            self.metric_meter['map75'].update(average_precisions[:, 5].mean())
-            self.metric_meter['map50_95'].update(average_precisions.mean())
-        else:
-            #result_dict['map50'], result_dict['map75'], result_dict['map50_95'] = 0, 0, 0
-            self.metric_meter['map50'].update(0)
-            self.metric_meter['map75'].update(0)
-            self.metric_meter['map50_95'].update(0)
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
 
-        return result_dict
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(average_precisions[i, 0])
+            self.metric_meter.update(np.nanmean(average_precisions[:, 0]))
+        else:
+            self.metric_meter.update(0)
+
+
+class mAP75(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        # TODO: Select metrics by user
+        metric_name = 'mAP75'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
+
+        # Compute average precisions if any matches exist
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(average_precisions[i, 5])
+            self.metric_meter.update(np.nanmean(average_precisions[:, 5]))
+        else:
+            self.metric_meter.update(0)
+
+
+class mAP50_95(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        # TODO: Select metrics by user
+        metric_name = 'mAP50_95'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats'] # Get from DetectionMetricAdapter
+
+        # Compute average precisions if any matches exist
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(np.nanmean(average_precisions[i, :]))
+            self.metric_meter.update(np.nanmean(average_precisions))
+        else:
+            self.metric_meter.update(0)

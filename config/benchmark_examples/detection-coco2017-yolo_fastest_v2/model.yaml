@@ -2,9 +2,9 @@ model:
   task: detection
   name: yolo_fastest_v2
   checkpoint:
-    use_pretrained: True
+    use_pretrained: False
     load_head: False
-    path: ~ 
+    path: ~
     optimizer_path: ~
   freeze_backbone: False
   architecture:

@@ -97,6 +97,18 @@ class EvaluationPipeline(BasePipeline):
     ):
         losses = self.loss_factory.result('valid')
         metrics = self.metric_factory.result('valid')
+
+        # TODO: Move to logger
+        # If class-wise metrics, convert to class names
+        if 'classwise' in metrics[list(metrics.keys())[0]]:
+            tmp_metrics = {}
+            for metric_name, metric in metrics.items():
+                tmp_metrics[metric_name] = {'mean': metric['mean'], 'classwise': {}}
+                for cls_num, score in metric['classwise'].items():
+                    cls_name = self.logger.class_map[cls_num] if cls_num in self.logger.class_map else 'mean'
+                    tmp_metrics[metric_name]['classwise'][f'{cls_num}_{cls_name}'] = score
+            metrics = tmp_metrics
+
         self.log_results(
             prefix='evaluation',
             samples=valid_samples,
