@@ -132,7 +132,7 @@ def average_precisions_per_class(
     prediction_confidence: np.ndarray,
     prediction_class_ids: np.ndarray,
     true_class_ids: np.ndarray,
-    num_classes: int = 80,
+    num_classes,
     eps: float = 1e-16,
 ) -> np.ndarray:
     """
@@ -156,14 +156,13 @@ def average_precisions_per_class(
 
     unique_classes, class_counts = np.unique(true_class_ids, return_counts=True)
 
-    average_precisions = np.zeros((num_classes, matches.shape[1]))
+    average_precisions = np.full((num_classes, matches.shape[1]), np.nan)
 
     for class_idx, class_id in enumerate(unique_classes):
         is_class = prediction_class_ids == class_id
         total_true = class_counts[class_idx]
-        total_prediction = is_class.sum()
 
-        if total_prediction == 0 or total_true == 0:
+        if total_true == 0:
             continue
 
         false_positives = (1 - matches[is_class]).cumsum(0)
@@ -239,7 +238,7 @@ class mAP50(BaseMetric):
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
                     classwise_meter.update(average_precisions[i, 0])
-            self.metric_meter.update(average_precisions[:, 0].mean())
+            self.metric_meter.update(np.nanmean(average_precisions[:, 0]))
         else:
             self.metric_meter.update(0)
 
@@ -261,7 +260,7 @@ class mAP75(BaseMetric):
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
                     classwise_meter.update(average_precisions[i, 5])
-            self.metric_meter.update(average_precisions[:, 5].mean())
+            self.metric_meter.update(np.nanmean(average_precisions[:, 5]))
         else:
             self.metric_meter.update(0)
 
@@ -282,7 +281,7 @@ class mAP50_95(BaseMetric):
 
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
-                    classwise_meter.update(average_precisions[i, :].mean())
-            self.metric_meter.update(average_precisions.mean())
+                    classwise_meter.update(np.nanmean(average_precisions[i, :]))
+            self.metric_meter.update(np.nanmean(average_precisions))
         else:
             self.metric_meter.update(0)
