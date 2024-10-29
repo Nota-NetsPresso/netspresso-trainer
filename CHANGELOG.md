@@ -2,6 +2,24 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v1.0.3
+
+## New Features:
+
 - Add RandomResize2 by `@illian01` in [PR 550](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/550)
 - Add confidence score on detection visualization by `@hglee98` in [PR 552](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/552)
 - Add save_best_only option for saving model by `@hglee98` in [PR 555](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/555), [PR 567](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/567)
