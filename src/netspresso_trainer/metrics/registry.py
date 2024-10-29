@@ -18,7 +18,7 @@ from typing import Callable, Dict, Literal, Type
 
 from .base import BaseMetric
 from .classification import ClassificationMetricAdaptor, Top1Accuracy, Top5Accuracy
-from .detection import DetectionMetricAdaptor, mAP50, mAP50_95, mAP75
+from .detection import DetectionMetricAdaptor, Precision, Recall, mAP50, mAP50_95, mAP75
 from .pose_estimation import PCK, PoseEstimationMetricAdaptor
 from .segmentation import PixelAccuracy, SegmentationMetricAdaptor, mIoU
 
@@ -27,6 +27,8 @@ METRIC_LIST: Dict[str, Type[BaseMetric]] = {
     'top5_accuracy': Top5Accuracy,
     'miou': mIoU,
     'pixel_accuracy': PixelAccuracy,
+    'precision': Precision,
+    'recall': Recall,
     'map50': mAP50,
     'map75': mAP75,
     'map50_95': mAP50_95,
@@ -45,13 +47,13 @@ PHASE_LIST = ['train', 'valid', 'test']
 TASK_AVAILABLE_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
     'segmentation': ['miou', 'pixel_accuracy'],
-    'detection': ['map50', 'map75', 'map50_95'],
+    'detection': ['precision', 'recall', 'map50', 'map75', 'map50_95'],
     'pose_estimation': ['pck'],
 }
 
 TASK_DEFAULT_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
     'segmentation': ['miou', 'pixel_accuracy'],
-    'detection': ['map50', 'map75', 'map50_95'],
+    'detection': ['map50', 'map75', 'map50_95', 'precision', 'recall'],
     'pose_estimation': ['pck'],
 }
