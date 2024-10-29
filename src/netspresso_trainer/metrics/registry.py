@@ -49,7 +49,7 @@ TASK_AVAILABLE_METRICS = {
     'pose_estimation': ['pck'],
 }
 
-TASK_DEFUALT_METRICS = {
+TASK_DEFAULT_METRICS = {
     'classification': ['top1_accuracy', 'top5_accuracy'],
     'segmentation': ['miou', 'pixel_accuracy'],
     'detection': ['map50', 'map75', 'map50_95'],
