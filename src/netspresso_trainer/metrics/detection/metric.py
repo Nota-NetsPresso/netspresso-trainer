@@ -285,3 +285,31 @@ class mAP50_95(BaseMetric):
             self.metric_meter.update(average_precisions.mean())
         else:
             self.metric_meter.update(0)
+
+
+class Precision(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Precision'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats']
+
+        if stats:
+            pass
+        else:
+            self.metric_meter.update(0)
+
+
+class Recall(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Recall'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats']
+
+        if stats:
+            pass
+        else:
+            self.metric_meter.update(0)
