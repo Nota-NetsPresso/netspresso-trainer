@@ -161,8 +161,16 @@ def average_precisions_per_class(
     for class_idx, class_id in enumerate(unique_classes):
         is_class = prediction_class_ids == class_id
         total_true = class_counts[class_idx]
+        total_predictions = is_class.sum()
 
         if total_true == 0:
+            continue
+
+        if total_predictions == 0:
+            for iou_level_idx in range(matches.shape[1]):
+                average_precisions[
+                    int(class_id), iou_level_idx
+                ] = 0.0
             continue
 
         false_positives = (1 - matches[is_class]).cumsum(0)
