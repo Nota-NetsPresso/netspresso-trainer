@@ -132,6 +132,7 @@ def average_precisions_per_class(
     prediction_confidence: np.ndarray,
     prediction_class_ids: np.ndarray,
     true_class_ids: np.ndarray,
+    num_classes: int = 80,
     eps: float = 1e-16,
 ) -> np.ndarray:
     """
@@ -143,6 +144,7 @@ def average_precisions_per_class(
         prediction_confidence (np.ndarray): Objectness value from 0-1.
         prediction_class_ids (np.ndarray): Predicted object classes.
         true_class_ids (np.ndarray): True object classes.
+        num_classes (int): The number of classes.
         eps (float, optional): Small value to prevent division by zero.
 
     Returns:
@@ -153,7 +155,6 @@ def average_precisions_per_class(
     prediction_class_ids = prediction_class_ids[sorted_indices]
 
     unique_classes, class_counts = np.unique(true_class_ids, return_counts=True)
-    num_classes = unique_classes.shape[0]
 
     average_precisions = np.zeros((num_classes, matches.shape[1]))
 
@@ -172,7 +173,7 @@ def average_precisions_per_class(
 
         for iou_level_idx in range(matches.shape[1]):
             average_precisions[
-                class_idx, iou_level_idx
+                int(class_id), iou_level_idx
             ] = compute_average_precision(
                 recall[:, iou_level_idx], precision[:, iou_level_idx]
             )
@@ -233,7 +234,7 @@ class mAP50(BaseMetric):
         # Compute average precisions if any matches exist
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
-            average_precisions = average_precisions_per_class(*concatenated_stats)
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
 
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
@@ -255,7 +256,7 @@ class mAP75(BaseMetric):
         # Compute average precisions if any matches exist
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
-            average_precisions = average_precisions_per_class(*concatenated_stats)
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
 
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
@@ -277,7 +278,7 @@ class mAP50_95(BaseMetric):
         # Compute average precisions if any matches exist
         if stats:
             concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
-            average_precisions = average_precisions_per_class(*concatenated_stats)
+            average_precisions = average_precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
 
             if self.classwise_analysis:
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
