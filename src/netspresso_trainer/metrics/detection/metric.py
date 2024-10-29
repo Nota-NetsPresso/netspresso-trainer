@@ -165,7 +165,7 @@ def average_precisions_per_class(
 
         if total_true == 0:
             continue
-        
+
         if total_predictions == 0:
             for iou_level_idx in range(matches.shape[1]):
                 average_precisions[
