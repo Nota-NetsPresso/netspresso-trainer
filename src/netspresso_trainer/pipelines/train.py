@@ -110,17 +110,6 @@ class TrainingPipeline(BasePipeline):
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
-    def _get_metric_key(self):
-        metric_keys = {
-            'classification': 'Acc@1',
-            'detection': 'map50',
-            'pose_estimation': 'pck',
-            'segmentation': 'iou'
-        }
-        if self.task not in metric_keys:
-            raise ValueError(f"Unsupported task: {self.task}. Supported tasks are: {list(metric_keys.keys())}")
-        return metric_keys[self.task]
-
     def _get_valid_records(self, save_criterion):
         if save_criterion == 'loss':
             return {
@@ -129,9 +118,9 @@ class TrainingPipeline(BasePipeline):
                 if 'valid_losses' in record and 'total' in record['valid_losses']
             }
         elif save_criterion == 'metric':
-            metric_key = self._get_metric_key()
+            metric_key = self.metric_factory.primary_metric
             return {
-                epoch: record['valid_metrics'].get(metric_key)
+                epoch: record['valid_metrics'].get(metric_key)['mean'] # Only mean value is considered
                 for epoch, record in self.training_history.items()
                 if 'valid_metrics' in record and metric_key in record['valid_metrics']
             }
