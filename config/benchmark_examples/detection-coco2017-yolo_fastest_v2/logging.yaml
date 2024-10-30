@@ -7,7 +7,7 @@ logging:
   model_save_options:
     save_optimizer_state: true
     save_best_only: false
-    save_criterion: loss # metric
+    best_model_criterion: loss # metric
     sample_input_size: [640, 640] # Used for flops and onnx export
     onnx_export_opset: 13 # Recommend in range [13, 17]
     validation_epoch: &validation_epoch 10

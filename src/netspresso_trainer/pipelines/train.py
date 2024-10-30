@@ -96,8 +96,8 @@ class TrainingPipeline(BasePipeline):
         """Append here if you need more assertion checks!"""
         assert self.conf.logging.model_save_options.save_checkpoint_epoch % self.conf.logging.model_save_options.validation_epoch == 0, \
             "`save_checkpoint_epoch` should be the multiplier of `validation_epoch`."
-        assert self.conf.logging.model_save_options.save_criterion.lower() in ['loss', 'metric'], \
-            "`save_criterion` should be selected from ['loss', 'metric']"
+        assert self.conf.logging.model_save_options.best_model_criterion.lower() in ['loss', 'metric'], \
+            "`best_model_criterion` should be selected from ['loss', 'metric']"
         return True
 
     def epoch_with_valid_logging(self, epoch: int):
@@ -110,43 +110,32 @@ class TrainingPipeline(BasePipeline):
         last_epoch = epoch == self.conf.training.epochs
         return (epoch % checkpoint_freq == 1 % checkpoint_freq) or last_epoch
 
-    def _get_metric_key(self):
-        metric_keys = {
-            'classification': 'Acc@1',
-            'detection': 'map50',
-            'pose_estimation': 'pck',
-            'segmentation': 'iou'
-        }
-        if self.task not in metric_keys:
-            raise ValueError(f"Unsupported task: {self.task}. Supported tasks are: {list(metric_keys.keys())}")
-        return metric_keys[self.task]
-
-    def _get_valid_records(self, save_criterion):
-        if save_criterion == 'loss':
+    def _get_valid_records(self, best_model_criterion):
+        if best_model_criterion == 'loss':
             return {
                 epoch: record['valid_losses'].get('total')
                 for epoch, record in self.training_history.items()
                 if 'valid_losses' in record and 'total' in record['valid_losses']
             }
-        elif save_criterion == 'metric':
-            metric_key = self._get_metric_key()
+        elif best_model_criterion == 'metric':
+            metric_key = self.metric_factory.primary_metric
             return {
-                epoch: record['valid_metrics'].get(metric_key)
+                epoch: record['valid_metrics'].get(metric_key)['mean'] # Only mean value is considered
                 for epoch, record in self.training_history.items()
                 if 'valid_metrics' in record and metric_key in record['valid_metrics']
             }
         else:
-            raise ValueError("save_criterion should be either 'loss' or 'metric'")
+            raise ValueError("best_model_criterion should be either 'loss' or 'metric'")
 
     def get_best_epoch(self):
-        save_criterion = self.conf.logging.model_save_options.save_criterion.lower()
+        best_model_criterion = self.conf.logging.model_save_options.best_model_criterion.lower()
 
-        valid_records = self._get_valid_records(save_criterion)
+        valid_records = self._get_valid_records(best_model_criterion)
 
         if not valid_records:
             return
 
-        comparison_func = min if save_criterion == 'loss' else max # TODO: It may depends on the specific metric
+        comparison_func = min if best_model_criterion == 'loss' else max # TODO: It may depends on the specific metric
         return comparison_func(valid_records, key=valid_records.get)
 
     @property
