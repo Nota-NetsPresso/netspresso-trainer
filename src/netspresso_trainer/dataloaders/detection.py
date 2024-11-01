@@ -96,6 +96,7 @@ class DetectionSampleLoader(BaseSampleLoader):
 
 
 class DetectionCustomDataset(BaseCustomDataset):
+    __repr_indent = 4
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
                  split, samples, transform=None, **kwargs):
@@ -178,6 +179,26 @@ class DetectionCustomDataset(BaseCustomDataset):
         assert self._split in ['val', 'valid', 'test']
         outputs.update({'org_shape': (h, w)})
         return outputs
+
+    def __repr__(self) -> str:
+        '''
+        This implementation is based on https://pytorch.org/vision/main/_modules/torchvision/datasets/vision.html#VisionDataset.
+        '''
+        head = "Dataset " + self.conf_data.name
+        body = [] if self.root is None else [f"Root location: {self.root}"]
+        body.append(f"Number of datapoints: {self.__len__()}")
+        if self.num_classes is not None:
+            body.append(f"Number of Classes: {self.num_classes}")
+        if self.stats:
+            body.append(f"Total instances: {self.stats['total_instances']}")
+            body.append("Instances per class:")
+            for class_idx, count in self.stats['instances_per_class'].items():
+                percentage = (count / self.stats['total_instances']) * 100
+                body.append(" " * self.__repr_indent + f"{class_idx}_{self._idx_to_class[class_idx]}: {count} ({percentage:.1f}%)")
+        
+        lines = [head] + [" " * self.__repr_indent + line for line in body]
+        return "\n".join(lines)
+
 
     def pull_item(self, index):
         img_path = Path(self.samples[index]['image'])
