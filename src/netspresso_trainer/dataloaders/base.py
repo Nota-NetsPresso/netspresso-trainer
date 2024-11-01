@@ -40,6 +40,7 @@ class BaseCustomDataset(data.Dataset):
         self._idx_to_class = idx_to_class
         self._num_classes = len(self._idx_to_class)
         self._split = split
+        self._instances_stats = None
 
         self.cache = False
 
@@ -58,6 +59,10 @@ class BaseCustomDataset(data.Dataset):
     def num_classes(self):
         return self._num_classes
 
+    @property
+    def instances_stats(self):
+        return self._instances_stats
+    
     @property
     def class_map(self):
         return self._idx_to_class
