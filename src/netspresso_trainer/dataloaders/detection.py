@@ -16,6 +16,7 @@
 
 import json
 import os
+from collections import Counter
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
