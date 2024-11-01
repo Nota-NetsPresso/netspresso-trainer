@@ -196,7 +196,7 @@ class DetectionCustomDataset(BaseCustomDataset):
             for class_idx, count in self.stats['instances_per_class'].items():
                 percentage = (count / self.stats['total_instances']) * 100
                 body.append(" " * self.__repr_indent + f"{class_idx}_{self._idx_to_class[class_idx]}: {count} ({percentage:.1f}%)")
-        
+
         lines = [head] + [" " * self.__repr_indent + line for line in body]
         return "\n".join(lines)
 
@@ -222,7 +222,7 @@ class DetectionCustomDataset(BaseCustomDataset):
                 ann_path = sample.get('label')
                 if not ann_path:
                     return []
-                
+
                 label, _ = get_detection_label(Path(ann_path))
                 label = label.squeeze()
                 if label.ndim == 0:
@@ -245,10 +245,7 @@ class DetectionCustomDataset(BaseCustomDataset):
         stats = {
             'class_distribution': class_counts,
             'total_instances': sum(class_counts.values()),
-            'instances_per_class': {
-                class_idx: count
-                for class_idx, count in sorted_class_counts.items()
-            }
+            'instances_per_class': dict(sorted_class_counts.items())
         }
 
         return stats

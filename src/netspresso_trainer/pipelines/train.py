@@ -270,7 +270,7 @@ class TrainingPipeline(BasePipeline):
                         tmp_metrics[metric_name]['classwise'][f'{cls_num}_{cls_name}'] = score
                 valid_metrics = tmp_metrics
 
-            self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, 
+            self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses,
                              metrics=valid_metrics, data_stats=self.eval_data_stats)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}

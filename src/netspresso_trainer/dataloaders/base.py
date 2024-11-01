@@ -62,7 +62,7 @@ class BaseCustomDataset(data.Dataset):
     @property
     def stats(self):
         return self._stats
-    
+
     @property
     def class_map(self):
         return self._idx_to_class
@@ -118,7 +118,7 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
-    
+
     @property
     def stats(self):
         return self._stats
