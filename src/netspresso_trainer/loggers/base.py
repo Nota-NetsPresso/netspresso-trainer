@@ -157,6 +157,7 @@ class TrainingLogger():
         samples: Optional[List] = None,
         losses : Optional[Dict] = None,
         metrics: Optional[Dict] = None,
+        data_stats: Optional[Dict] = None,
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
     ):
@@ -176,6 +177,7 @@ class TrainingLogger():
                 epoch=epoch,
                 losses=losses,
                 metrics=metrics,
+                data_stats=data_stats,
                 images=samples,
                 learning_rate=learning_rate,
                 elapsed_time=elapsed_time

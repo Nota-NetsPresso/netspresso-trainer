@@ -35,6 +35,7 @@ class StdOutLogger:
         epoch: Optional[int] = None,
         losses : Optional[Dict] = None,
         metrics: Optional[Dict] = None,
+        data_stats: Optional[Dict] = None,
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
         **kwargs
@@ -52,12 +53,18 @@ class StdOutLogger:
         if metrics is not None:
             metric_std_log = f'{prefix} metric:\n'
 
-            headers = ['Class number', 'Class name', *list(metrics.keys())]
+            if data_stats:
+                headers = ['Class number', 'Class name', '# of Instances', *list(metrics.keys())]
+            else:
+                headers = ['Class number', 'Class name', *list(metrics.keys())]
 
             rows = []
             if 'classwise' in metrics[headers[-1]]: # If classwise analysis is activated
-                rows += [class_info.split('_', 1) for class_info in list(metrics[headers[-1]]['classwise'].keys())]
-            rows += [['-', 'Mean', ]]
+                if data_stats:
+                    rows += [class_info.split('_', 1) + [data_stats['instances_per_class'][int(class_info.split('_', 1)[0])]] for class_info in list(metrics[headers[-1]]['classwise'].keys())]
+                else:
+                    rows += [class_info.split('_', 1) for class_info in list(metrics[headers[-1]]['classwise'].keys())]
+            rows += [['-', 'Mean', ]] if not data_stats else [['-', 'Total', data_stats['total_instances']]]
 
             for _metric_name, score_dict in metrics.items():
                 if 'classwise' in score_dict: # If classwise analysis is activated
