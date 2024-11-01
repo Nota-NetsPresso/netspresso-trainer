@@ -86,6 +86,7 @@ class BaseHFDataset(data.Dataset):
         self.transform = transform(conf_augmentation)
         self._root = root
         self._split = split
+        self._instances_stats = None
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
@@ -117,6 +118,10 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
+    
+    @property
+    def instances_stats(self):
+        return self._instances_stats
 
 
 class BaseSampleLoader(ABC):
