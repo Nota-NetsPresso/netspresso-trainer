@@ -279,12 +279,14 @@ class TrainingPipeline(BasePipeline):
         else:
             model = self.model.module if hasattr(self.model, 'module') else self.model
 
+        model = copy.deepcopy(model)
+
         if hasattr(model, 'deploy'):
             model.deploy()
 
         save_dtype = model.save_dtype
         if save_dtype == torch.float16:
-            model = copy.deepcopy(model).type(save_dtype)
+            model = model.type(save_dtype)
 
         logging_dir = self.logger.result_dir
         save_best_only = self.conf.logging.model_save_options.save_best_only
