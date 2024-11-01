@@ -217,7 +217,7 @@ def precisions_per_class(
 
         false_positives = (1 - matches[is_class]).sum(0)
         true_positives = matches[is_class].sum(0)
-        precision = true_positives / (true_positives + false_positives)
+        precision = true_positives / (true_positives + false_positives + eps)
         precisions[int(class_id), 0] = precision[0]
     return precisions
 
