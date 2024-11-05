@@ -20,6 +20,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from ..op.custom import Pool
 
 BatchNorm2d = nn.BatchNorm2d
 bn_mom = 0.1
@@ -135,17 +136,17 @@ class DAPPM(nn.Module):
     def __init__(self, inplanes, branch_planes, outplanes, BatchNorm=nn.BatchNorm2d):
         super(DAPPM, self).__init__()
         bn_mom = 0.1
-        self.scale1 = nn.Sequential(nn.AvgPool2d(kernel_size=5, stride=2, padding=2),
+        self.scale1 = nn.Sequential(Pool(method='avg', kernel_size=5, stride=2, padding=2),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),
                                     )
-        self.scale2 = nn.Sequential(nn.AvgPool2d(kernel_size=9, stride=4, padding=4),
+        self.scale2 = nn.Sequential(Pool(method='avg', kernel_size=9, stride=4, padding=4),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),
                                     )
-        self.scale3 = nn.Sequential(nn.AvgPool2d(kernel_size=17, stride=8, padding=8),
+        self.scale3 = nn.Sequential(Pool(method='avg', kernel_size=17, stride=8, padding=8),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),
@@ -218,17 +219,17 @@ class PAPPM(nn.Module):
     def __init__(self, inplanes, branch_planes, outplanes, BatchNorm=nn.BatchNorm2d):
         super(PAPPM, self).__init__()
         bn_mom = 0.1
-        self.scale1 = nn.Sequential(nn.AvgPool2d(kernel_size=5, stride=2, padding=2),
+        self.scale1 = nn.Sequential(Pool(method='avg', kernel_size=5, stride=2, padding=2),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),
                                     )
-        self.scale2 = nn.Sequential(nn.AvgPool2d(kernel_size=9, stride=4, padding=4),
+        self.scale2 = nn.Sequential(Pool(method='avg', kernel_size=9, stride=4, padding=4),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),
                                     )
-        self.scale3 = nn.Sequential(nn.AvgPool2d(kernel_size=17, stride=8, padding=8),
+        self.scale3 = nn.Sequential(Pool(method='avg', kernel_size=17, stride=8, padding=8),
                                     BatchNorm(inplanes, momentum=bn_mom),
                                     nn.ReLU(inplace=True),
                                     nn.Conv2d(inplanes, branch_planes, kernel_size=1, bias=False),

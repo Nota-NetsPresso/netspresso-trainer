@@ -26,7 +26,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 from torchvision.ops.misc import SqueezeExcitation as SElayer
 
-from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY, POOL_RESGISTRY
 
 
 def make_divisible(
@@ -170,6 +170,19 @@ class SeparableConvLayer(nn.Module):
         x = self.pointwise(x)
         x = self.final_act(x)
         return x
+
+
+class Pool(nn.Module):
+    def __init__(self,
+                 method: str = "max",
+                 kernel_size: int = 2,
+                 **kwargs):
+        super().__init__()
+        assert method.lower() in POOL_RESGISTRY
+        self.pool = POOL_RESGISTRY[method.lower()](kernel_size=kernel_size, **kwargs)
+    
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        return self.pool(x)
 
 
 class BasicBlock(nn.Module):
@@ -737,7 +750,7 @@ class SPPBottleneck(nn.Module):
                                kernel_size=1, stride=1, act_type=act_type)
         self.m = nn.ModuleList(
             [
-                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
+                Pool(method='max', kernel_size=ks, stride=1, padding=ks // 2)
                 for ks in kernel_sizes
             ]
         )
