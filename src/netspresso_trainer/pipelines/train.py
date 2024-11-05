@@ -281,9 +281,6 @@ class TrainingPipeline(BasePipeline):
 
         model = copy.deepcopy(model)
 
-        if hasattr(model, 'deploy'):
-            model.deploy()
-
         save_dtype = model.save_dtype
         if save_dtype == torch.float16:
             model = model.type(save_dtype)
@@ -328,8 +325,6 @@ class TrainingPipeline(BasePipeline):
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         best_model = copy.deepcopy(model)
-        if hasattr(best_model, 'deploy'):
-            best_model.deploy()
 
         save_dtype = best_model.save_dtype
         if save_dtype == torch.float16:
@@ -344,6 +339,8 @@ class TrainingPipeline(BasePipeline):
         self._save_model(model=best_model, epoch=best_epoch, model_name_tag="best", logging_dir=logging_dir)
 
         try:
+            if hasattr(best_model, 'deploy'):
+                best_model.deploy()
             model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
             save_onnx(best_model,
