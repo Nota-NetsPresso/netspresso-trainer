@@ -52,12 +52,12 @@ class ConvNormLayer(nn.Module):
 # TODO: Replace with custom implementation
 class CSPRepLayer(nn.Module):
     def __init__(self,
-                 in_channels,
-                 out_channels,
-                 num_blocks=3,
-                 expansion=1.0,
-                 bias=None,
-                 act="silu"):
+                 in_channels: int,
+                 out_channels: int,
+                 num_blocks: int=3,
+                 expansion: float=1.0,
+                 bias: bool= False,
+                 act: str="silu"):
         super(CSPRepLayer, self).__init__()
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvNormLayer(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
