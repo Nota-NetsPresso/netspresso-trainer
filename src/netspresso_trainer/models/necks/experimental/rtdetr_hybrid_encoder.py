@@ -28,28 +28,9 @@ import torch.nn.functional as F
 
 from ...utils import BackboneOutput
 from ...op.registry import ACTIVATION_REGISTRY
-from ...op.custom import RepConv
+from ...op.custom import RepConv, ConvLayer
 
 
-# TODO: Replace with custom implementation
-class ConvNormLayer(nn.Module):
-    def __init__(self, ch_in, ch_out, kernel_size, stride, padding=None, bias=False, act=None):
-        super().__init__()
-        self.conv = nn.Conv2d(
-            ch_in, 
-            ch_out, 
-            kernel_size, 
-            stride, 
-            padding=(kernel_size-1)//2 if padding is None else padding, 
-            bias=bias)
-        self.norm = nn.BatchNorm2d(ch_out)
-        self.act = nn.Identity() if act is None else ACTIVATION_REGISTRY[act]()
-
-    def forward(self, x):
-        return self.act(self.norm(self.conv(x)))
-
-
-# TODO: Replace with custom implementation
 class CSPRepLayer(nn.Module):
     def __init__(self,
                  in_channels: int,
@@ -60,13 +41,13 @@ class CSPRepLayer(nn.Module):
                  act: str="silu"):
         super(CSPRepLayer, self).__init__()
         hidden_channels = int(out_channels * expansion)
-        self.conv1 = ConvNormLayer(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
-        self.conv2 = ConvNormLayer(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
+        self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
+        self.conv2 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
         self.bottlenecks = nn.Sequential(*[
             RepConv(hidden_channels, hidden_channels, act_type=act) for _ in range(num_blocks)
         ])
         if hidden_channels != out_channels:
-            self.conv3 = ConvNormLayer(hidden_channels, out_channels, 1, 1, bias=bias, act=act)
+            self.conv3 = ConvLayer(hidden_channels, out_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
         else:
             self.conv3 = nn.Identity()
 
@@ -198,7 +179,7 @@ class HybridEncoder(nn.Module):
         self.lateral_convs = nn.ModuleList()
         self.fpn_blocks = nn.ModuleList()
         for _ in range(len(self.in_channels) - 1, 0, -1):
-            self.lateral_convs.append(ConvNormLayer(self.hidden_dim, self.hidden_dim, 1, 1, act=act))
+            self.lateral_convs.append(ConvLayer(self.hidden_dim, self.hidden_dim, kernel_size=1, stride=1, act_type=act))
             self.fpn_blocks.append(
                 CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion)
             )
@@ -208,12 +189,11 @@ class HybridEncoder(nn.Module):
         self.pan_blocks = nn.ModuleList()
         for _ in range(len(self.in_channels) - 1):
             self.downsample_convs.append(
-                ConvNormLayer(self.hidden_dim, self.hidden_dim, 3, 2, act=act)
+                ConvLayer(self.hidden_dim, self.hidden_dim, kernel_size=3, stride=2, act_type=act)
             )
             self.pan_blocks.append(
                 CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion)
             )
-
         self._reset_parameters()
 
     @property
