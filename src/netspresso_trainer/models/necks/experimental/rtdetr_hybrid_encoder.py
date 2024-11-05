@@ -28,34 +28,7 @@ import torch.nn.functional as F
 
 from ...utils import BackboneOutput
 from ...op.registry import ACTIVATION_REGISTRY
-from ...op.custom import RepConv, ConvLayer
-
-
-class CSPRepLayer(nn.Module):
-    def __init__(self,
-                 in_channels: int,
-                 out_channels: int,
-                 num_blocks: int=3,
-                 expansion: float=1.0,
-                 bias: bool= False,
-                 act: str="silu"):
-        super(CSPRepLayer, self).__init__()
-        hidden_channels = int(out_channels * expansion)
-        self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
-        self.conv2 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
-        self.bottlenecks = nn.Sequential(*[
-            RepConv(hidden_channels, hidden_channels, act_type=act) for _ in range(num_blocks)
-        ])
-        if hidden_channels != out_channels:
-            self.conv3 = ConvLayer(hidden_channels, out_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
-        else:
-            self.conv3 = nn.Identity()
-
-    def forward(self, x):
-        x_1 = self.conv1(x)
-        x_1 = self.bottlenecks(x_1)
-        x_2 = self.conv2(x)
-        return self.conv3(x_1 + x_2)
+from ...op.custom import RepConv, ConvLayer, CSPRepLayer
 
 
 # transformer
