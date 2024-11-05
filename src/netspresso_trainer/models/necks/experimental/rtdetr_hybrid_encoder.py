@@ -28,6 +28,7 @@ import torch.nn.functional as F
 
 from ...utils import BackboneOutput
 from ...op.registry import ACTIVATION_REGISTRY
+from ...op.custom import RepConv
 
 
 # TODO: Replace with custom implementation
@@ -49,60 +50,6 @@ class ConvNormLayer(nn.Module):
 
 
 # TODO: Replace with custom implementation
-class RepVggBlock(nn.Module):
-    def __init__(self, ch_in, ch_out, act='relu'):
-        super().__init__()
-        self.ch_in = ch_in
-        self.ch_out = ch_out
-        self.conv1 = ConvNormLayer(ch_in, ch_out, 3, 1, padding=1, act=None)
-        self.conv2 = ConvNormLayer(ch_in, ch_out, 1, 1, padding=0, act=None)
-        self.act = nn.Identity() if act is None else ACTIVATION_REGISTRY[act]()
-
-    def forward(self, x):
-        if hasattr(self, 'conv'):
-            y = self.conv(x)
-        else:
-            y = self.conv1(x) + self.conv2(x)
-
-        return self.act(y)
-
-    def convert_to_deploy(self):
-        if not hasattr(self, 'conv'):
-            self.conv = nn.Conv2d(self.ch_in, self.ch_out, 3, 1, padding=1)
-
-        kernel, bias = self.get_equivalent_kernel_bias()
-        self.conv.weight.data = kernel
-        self.conv.bias.data = bias 
-        # self.__delattr__('conv1')
-        # self.__delattr__('conv2')
-
-    def get_equivalent_kernel_bias(self):
-        kernel3x3, bias3x3 = self._fuse_bn_tensor(self.conv1)
-        kernel1x1, bias1x1 = self._fuse_bn_tensor(self.conv2)
-        
-        return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1), bias3x3 + bias1x1
-
-    def _pad_1x1_to_3x3_tensor(self, kernel1x1):
-        if kernel1x1 is None:
-            return 0
-        else:
-            return F.pad(kernel1x1, [1, 1, 1, 1])
-
-    def _fuse_bn_tensor(self, branch: ConvNormLayer):
-        if branch is None:
-            return 0, 0
-        kernel = branch.conv.weight
-        running_mean = branch.norm.running_mean
-        running_var = branch.norm.running_var
-        gamma = branch.norm.weight
-        beta = branch.norm.bias
-        eps = branch.norm.eps
-        std = (running_var + eps).sqrt()
-        t = (gamma / std).reshape(-1, 1, 1, 1)
-        return kernel * t, beta - running_mean * gamma / std
-
-
-# TODO: Replace with custom implementation
 class CSPRepLayer(nn.Module):
     def __init__(self,
                  in_channels,
@@ -116,7 +63,7 @@ class CSPRepLayer(nn.Module):
         self.conv1 = ConvNormLayer(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
         self.conv2 = ConvNormLayer(in_channels, hidden_channels, 1, 1, bias=bias, act=act)
         self.bottlenecks = nn.Sequential(*[
-            RepVggBlock(hidden_channels, hidden_channels, act=act) for _ in range(num_blocks)
+            RepConv(hidden_channels, hidden_channels, act_type=act) for _ in range(num_blocks)
         ])
         if hidden_channels != out_channels:
             self.conv3 = ConvNormLayer(hidden_channels, out_channels, 1, 1, bias=bias, act=act)
