@@ -186,6 +186,8 @@ class RepConv(nn.Module):
         assert isinstance(in_channels, int)
         assert isinstance(out_channels, int)
         assert isinstance(act_type, str)
+        self.in_channels = in_channels
+        self.out_channels = out_channels
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, use_act=False)
 
@@ -199,7 +201,7 @@ class RepConv(nn.Module):
 
     def convert_to_deploy(self):
         if not hasattr(self, 'conv'):
-            self.conv = nn.Conv2d(self.ch_in, self.ch_out, 3, 1, padding=1)
+            self.conv = nn.Conv2d(self.in_channels, self.out_channels, kernel_size=3, stride=1, padding=1)
 
         kernel, bias = self.get_equivalent_kernel_bias()
         self.conv.weight.data = kernel
