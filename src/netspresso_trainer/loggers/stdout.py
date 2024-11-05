@@ -64,7 +64,7 @@ class StdOutLogger:
                     rows += [class_info.split('_', 1) + [data_stats['instances_per_class'][int(class_info.split('_', 1)[0])]] for class_info in list(metrics[headers[-1]]['classwise'].keys())]
                 else:
                     rows += [class_info.split('_', 1) for class_info in list(metrics[headers[-1]]['classwise'].keys())]
-            rows += [['-', 'Mean', ]] if not data_stats else [['-', 'Total', data_stats['total_instances']]]
+            rows += [['-', 'All', ]] if not data_stats else [['-', 'All', data_stats['total_instances']]]
 
             for _metric_name, score_dict in metrics.items():
                 if 'classwise' in score_dict: # If classwise analysis is activated
