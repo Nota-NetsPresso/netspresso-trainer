@@ -20,6 +20,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 from ..op.custom import Pool
 
 BatchNorm2d = nn.BatchNorm2d

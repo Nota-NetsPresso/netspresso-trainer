@@ -180,7 +180,7 @@ class Pool(nn.Module):
         super().__init__()
         assert method.lower() in POOL_RESGISTRY
         self.pool = POOL_RESGISTRY[method.lower()](kernel_size=kernel_size, **kwargs)
-    
+
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         return self.pool(x)
 
