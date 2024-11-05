@@ -187,9 +187,9 @@ class DetectionCustomDataset(BaseCustomDataset):
         '''
         head = "Dataset " + self.conf_data.name
         body = [] if self.root is None else [f"Root location: {self.root}"]
-        body.append(f"Number of datapoints: {self.__len__()}")
+        body.append(f"Number of images: {self.__len__()}")
         if self.num_classes is not None:
-            body.append(f"Number of Classes: {self.num_classes}")
+            body.append(f"Number of classes: {self.num_classes}")
         if self.stats:
             body.append(f"Total instances: {self.stats['total_instances']}")
             body.append("Instances per class:")
