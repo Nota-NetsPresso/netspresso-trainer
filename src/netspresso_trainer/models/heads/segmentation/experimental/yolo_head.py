@@ -94,4 +94,5 @@ class YOLOSegmentationHead(nn.Module):
                     )
 
     def forward(self, x_in: List[Union[Tensor, Proxy]], targets: Optional[Tensor] = None) -> ModelOutput:
-        pass
+        outputs = [head(x) for head, x in zip(self.heads, x_in)]
+        return ModelOutput(pred=outputs)
