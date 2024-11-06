@@ -69,7 +69,7 @@ class ImplicitDetection(nn.Module):
 
 class Detection(nn.Module):
     """
-    A single detetion head for the anchor-free YOLO models
+    A single detection head for the anchor-free YOLO models
     """
 
     def __init__(self,
