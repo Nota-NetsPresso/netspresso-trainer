@@ -39,7 +39,7 @@ def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
 
 class Detection(nn.Module):
     """
-    A single detetion head for the anchor-free YOLO models (v7, 9)
+    A single detetion head for the anchor-free YOLO models
     """
 
     def __init__(self,
