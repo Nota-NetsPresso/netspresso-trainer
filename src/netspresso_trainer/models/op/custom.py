@@ -868,3 +868,55 @@ class Anchor2Vec(nn.Module):
         anchor_x = x.view(b, r, p, h, w)
         vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
         return anchor_x, vector_x
+
+
+class ImplicitAdd(nn.Module):
+    """
+    Implement YOLOR - implicit knowledge(Add), paper: https://arxiv.org/abs/2105.04206
+    """
+
+    def __init__(self,
+                 num_channels: int,
+                 mean: float=0.0,
+                 std: float=0.02):
+        super().__init__()
+
+        self.implicit = nn.Parameter(torch.empty(1, num_channels, 1, 1))
+        nn.init.normal_(self.implicit, mean=mean, std=std)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        return self.implicit + x
+    
+
+class ImplicitMul(nn.Module):
+    """
+    Implement YOLOR - implicit knowledge(multiply), paper: https://arxiv.org/abs/2105.04206
+    """
+
+    def __init__(self,
+                 num_channels: int,
+                 mean: float=1.0,
+                 std: float=0.02):
+        super().__init__()
+
+        self.implicit = nn.Parameter(torch.empty(1, num_channels, 1, 1))
+        nn.init.normal_(self.implicit, mean=mean, std=std)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        return self.implicit * x
+
+class ImplicitCat(nn.Module):
+    """
+    Implement YOLOR - implicit knowledge(concatenate), paper: https://arxiv.org/abs/2105.04206
+    """
+    def __init__(self,
+                 num_channels: int,
+                 mean: float=0.0,
+                 std: float=0.02):
+        super().__init__()
+
+        self.implicit = nn.Parameter(torch.empty(1, num_channels, 1, 1))
+        nn.init.normal_(self.implicit, mean=mean, std=std)
+
+    def forward(self) -> Union[Tensor, Proxy]:
+        return self.implicit

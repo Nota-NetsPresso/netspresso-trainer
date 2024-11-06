@@ -113,7 +113,8 @@ class YOLODetectionHead(nn.Module):
         act_type = params.act_type
         use_group = params.use_group
         reg_max = params.reg_max
-        
+        version = params.version
+        assert version in ['v9', 'v7'], "The version of head should be either v7 or v9."
         self.num_classes = num_classes
 
         self.heads = nn.ModuleList()
