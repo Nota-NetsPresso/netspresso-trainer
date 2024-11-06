@@ -131,39 +131,62 @@ class YOLODetectionHead(nn.Module):
             num_classes: int,
             intermediate_features_dim: List[int],
             params: DictConfig,
-        ):
+        ) -> None:
         super().__init__()
-        act_type = params.act_type
-        use_group = params.use_group
-        reg_max = params.reg_max
-        version = params.version
-        num_anchors = params.num_anchors
-        assert version in ['v9', 'v7'], "The version of head should be either v7 or v9."
-        self.num_classes = num_classes
-        if version == 'v7':
-            assert isinstance(num_anchors, int)
-        else:
-            num_anchors = None
-
-        self.heads = nn.ModuleList()
-        hidden_dim = int(intermediate_features_dim[0])
-        for i in range(len(intermediate_features_dim)):
-            if version == 'v9':
-                self.heads.append(Detection(int(intermediate_features_dim[i]), 
-                                            hidden_dim, 
-                                            num_classes=self.num_classes, 
-                                            act_type=act_type,
-                                            reg_max=reg_max,
-                                            use_group=use_group))
-            else:
-                self.heads.append(ImplicitDetection(int(intermediate_features_dim[i]),
-                                                    num_classes=num_classes,
-                                                    num_anchors=num_anchors))
-    
-    def forward(self, x_in, targets=None):
-        outputs = []
-        for idx, x in enumerate(x_in):
-            out = self.heads[idx](x)
-            outputs.append(out)
+        self.version = params.version
+        assert self.version in ['v9', 'v7'], "The version of head should be either v7 or v9."
         
+        self._validate_params(params)
+        
+        self.num_classes = num_classes
+        self.num_anchors = params.num_anchors if self.version == 'v7' else None
+        
+        self.hidden_dim = int(intermediate_features_dim[0])
+        
+        self.heads = self._build_heads(
+            intermediate_features_dim,
+            params.act_type,
+            params.reg_max,
+            params.use_group
+        )
+
+    def _validate_params(self, params: DictConfig) -> None:
+        if self.version == 'v7':
+            if not isinstance(params.num_anchors, int):
+                raise ValueError("num_anchors must be integer for v7")
+        
+        required_params = ['act_type', 'use_group', 'reg_max', 'num_anchors']
+        for param in required_params:
+            if not hasattr(params, param):
+                raise ValueError(f"Missing required parameter: {param}")
+
+    def _build_heads(
+            self, 
+            intermediate_features_dim: List[int],
+            act_type: str,
+            reg_max: int,
+            use_group: bool
+        ) -> nn.ModuleList:
+        heads = nn.ModuleList()
+        for feat_dim in intermediate_features_dim:
+            if self.version == 'v9':
+                head = Detection(
+                    int(feat_dim),
+                    self.hidden_dim,
+                    num_classes=self.num_classes,
+                    act_type=act_type,
+                    reg_max=reg_max,
+                    use_group=use_group
+                )
+            else:
+                head = ImplicitDetection(
+                    int(feat_dim),
+                    num_classes=self.num_classes,
+                    num_anchors=self.num_anchors
+                )
+            heads.append(head)
+        return heads
+
+    def forward(self, x_in: List[Tensor], targets: Optional[Tensor] = None) -> ModelOutput:
+        outputs = [head(x) for head, x in zip(self.heads, x_in)]
         return ModelOutput(pred=outputs)
