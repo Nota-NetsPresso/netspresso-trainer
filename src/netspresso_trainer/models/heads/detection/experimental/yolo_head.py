@@ -27,7 +27,7 @@ from omegaconf import DictConfig
 from torch import Tensor
 from torch.fx.proxy import Proxy
 from typing import List, Union, Optional, Tuple
-from ....op.custom import ConvLayer, Anchor2Vec
+from ....op.custom import ConvLayer, Anchor2Vec, ImplicitAdd, ImplicitMul
 from ....utils import ModelOutput
 
 def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
@@ -41,8 +41,31 @@ class ImplicitDetection(nn.Module):
     """
     A single detection head for the yolov7
     """
-    def __init__(self):
+    def __init__(
+            self,
+            in_channels: int,
+            num_classes: int,
+            num_anchors: int = 3,
+            **kwargs
+    ):
         super().__init__()
+        out_channel = num_classes + 5
+        out_channels = out_channel * num_anchors
+        self.out_conv = nn.Conv2d(in_channels=in_channels, 
+                                  out_channels=out_channels, 
+                                  kernel_size=1, 
+                                  **kwargs)
+        self.implicit_add = ImplicitAdd(in_channels)
+        self.implicit_mul = ImplicitMul(out_channels)
+
+    def forward(self, x: Union[Tensor, Proxy]):
+        x = self.implicit_add(x)
+        x = self.out_conv(x)
+        x = self.implicit_mul(x)
+
+        return x
+
+
 
 class Detection(nn.Module):
     """
