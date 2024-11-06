@@ -848,3 +848,23 @@ class LayerScale2d(nn.Module):
     def forward(self, x):
         gamma = self.gamma.view(1, -1, 1, 1)
         return x.mul_(gamma) if self.inplace else x * gamma
+
+
+class Anchor2Vec(nn.Module):
+    """
+    This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
+    """
+    def __init__(self,
+                 reg_max: int = 16):
+        super().__init__()
+        reverse_reg = torch.arange(reg_max, dtype=torch.float32).view(1, reg_max, 1, 1, 1)
+        self.anchor2vec = nn.Conv3d(in_channels=reg_max, out_channels=1, kernel_size=1, bias=False)
+        self.anchor2vec.weight = nn.Parameter(reverse_reg, requires_grad=False)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        b, c, h, w = x.shape
+        r = c // 4
+        p = 4
+        anchor_x = x.view(b, r, p, h, w)
+        vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
+        return anchor_x, vector_x
