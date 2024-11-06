@@ -37,6 +37,13 @@ def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
     return x + (-x % div)
 
 
+class ImplicitDetection(nn.Module):
+    """
+    A single detection head for the yolov7
+    """
+    def __init__(self):
+        super().__init__()
+
 class Detection(nn.Module):
     """
     A single detetion head for the anchor-free YOLO models
