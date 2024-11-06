@@ -21,6 +21,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 from typing import List, Union, Optional, Tuple
 from ....op.custom import ConvLayer
+from ....utils import ModelOutput
 
 
 class Segmentation(nn.Module):
@@ -46,3 +47,51 @@ class Segmentation(nn.Module):
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         x = self.mask_convs(x)
         return x
+
+
+class YOLOSegmentationHead(nn.Module):
+    def __init__(
+            self,
+            num_classes: int,
+            intermediate_features_dim: List[int],
+            params: DictConfig,
+        ):
+        super().__init__()
+        self._validate_params(params)
+        self.num_classes = num_classes
+        self.hidden_dim = int(intermediate_features_dim[0])
+
+        self.heads = self._build_heads(
+            intermediate_features_dim,
+            params.act_type
+        )
+    
+    def _validate_params(self, params: DictConfig) -> None:
+        required_params = ['act_type']
+        for param in required_params:
+            if not hasattr(params, param):
+                raise ValueError(f"Missing required parameter: {param}")
+        
+    def _build_heads(
+            self,
+            intermediate_features_dim: List[int],
+            act_type: str,
+        ):
+        heads = nn.ModuleList()
+        for feat_dim in intermediate_features_dim[:-1]:
+            head = Segmentation(
+                int(feat_dim),
+                self.hidden_dim,
+                self.num_classes,
+                act_type=act_type
+            )
+            heads.append(head)
+        heads.append(ConvLayer(
+                        int(intermediate_features_dim[-1]), 
+                        self.num_classes, 
+                        kernel_size=1, 
+                        act_type=act_type)
+                    )
+
+    def forward(self, x_in: List[Union[Tensor, Proxy]], targets: Optional[Tensor] = None) -> ModelOutput:
+        pass
