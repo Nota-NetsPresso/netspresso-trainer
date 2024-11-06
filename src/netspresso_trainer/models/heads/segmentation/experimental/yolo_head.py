@@ -13,3 +13,36 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
+import torch
+import torch.nn as nn
+
+from omegaconf import DictConfig
+from torch import Tensor
+from torch.fx.proxy import Proxy
+from typing import List, Union, Optional, Tuple
+from ....op.custom import ConvLayer
+
+
+class Segmentation(nn.Module):
+    """
+    A single segmentation head for the YOLO models
+    """
+    def __init__(
+            self,
+            in_channels: int,
+            hidden_channels: int,
+            num_mask: int,
+            act_type: Optional[str] = None
+                 ):
+        super().__init__()
+        mask_neck = max(hidden_channels // 4, num_mask)
+
+        self.mask_convs = nn.Sequential(
+            ConvLayer(in_channels, mask_neck, kernel_size=3, act_type=act_type),
+            ConvLayer(mask_neck, mask_neck, kernel_size=3, act_type=act_type),
+            nn.Conv2d(mask_neck, num_mask, kernel_size=1)
+        )
+    
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x = self.mask_convs(x)
+        return x
