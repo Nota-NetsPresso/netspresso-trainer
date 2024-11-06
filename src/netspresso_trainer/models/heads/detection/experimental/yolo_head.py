@@ -137,23 +137,33 @@ class YOLODetectionHead(nn.Module):
         use_group = params.use_group
         reg_max = params.reg_max
         version = params.version
+        num_anchors = params.num_anchors
         assert version in ['v9', 'v7'], "The version of head should be either v7 or v9."
         self.num_classes = num_classes
+        if version == 'v7':
+            assert isinstance(num_anchors, int)
+        else:
+            num_anchors = None
 
         self.heads = nn.ModuleList()
         hidden_dim = int(intermediate_features_dim[0])
         for i in range(len(intermediate_features_dim)):
-            self.heads.append(Detection(int(intermediate_features_dim[i]), 
-                                        hidden_dim, 
-                                        num_classes=self.num_classes, 
-                                        act_type=act_type,
-                                        reg_max=reg_max,
-                                        use_group=use_group))
+            if version == 'v9':
+                self.heads.append(Detection(int(intermediate_features_dim[i]), 
+                                            hidden_dim, 
+                                            num_classes=self.num_classes, 
+                                            act_type=act_type,
+                                            reg_max=reg_max,
+                                            use_group=use_group))
+            else:
+                self.heads.append(ImplicitDetection(int(intermediate_features_dim[i]),
+                                                    num_classes=num_classes,
+                                                    num_anchors=num_anchors))
     
     def forward(self, x_in, targets=None):
         outputs = []
         for idx, x in enumerate(x_in):
-            vector_x, anchor_x, cls_logits = self.heads[idx](x)
-            outputs.append([vector_x, anchor_x, cls_logits])
+            out = self.heads[idx](x)
+            outputs.append(out)
         
         return ModelOutput(pred=outputs)
