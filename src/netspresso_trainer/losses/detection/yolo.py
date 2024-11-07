@@ -21,7 +21,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .yolox import IOUloss, YOLOXLoss, xyxy2cxcywh
+from .utils import xyxy2cxcywh
+from .yolox import IOUloss, YOLOXLoss
 
 
 class YOLOFastestLoss(YOLOXLoss):

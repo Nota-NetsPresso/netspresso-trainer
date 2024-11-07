@@ -20,6 +20,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .utils import xyxy2cxcywh
+
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
@@ -45,14 +47,6 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     en = (tl < br).type(tl.type()).prod(dim=2)
     area_i = torch.prod(br - tl, 2) * en  # * ((tl < br).all())
     return area_i / (area_a[:, None] + area_b - area_i)
-
-
-def xyxy2cxcywh(bboxes):
-    bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
-    bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
-    bboxes[:, 0] = bboxes[:, 0] + bboxes[:, 2] * 0.5
-    bboxes[:, 1] = bboxes[:, 1] + bboxes[:, 3] * 0.5
-    return bboxes
 
 
 class YOLOXLoss(nn.Module):

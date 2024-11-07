@@ -21,3 +21,10 @@ def xyxy2cxcywhn(bboxes: Union[Tensor, Proxy], img_size: Union[int, Tuple[int, i
     new_bboxes[:, 1] = new_bboxes[:, 1] + new_bboxes[:, 3] * 0.5
 
     return new_bboxes
+
+def xyxy2cxcywh(bboxes: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+    bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
+    bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
+    bboxes[:, 0] = bboxes[:, 0] + bboxes[:, 2] * 0.5
+    bboxes[:, 1] = bboxes[:, 1] + bboxes[:, 3] * 0.5
+    return bboxes
