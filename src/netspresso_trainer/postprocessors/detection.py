@@ -22,8 +22,9 @@ import torchvision
 from torchvision.models.detection._utils import BoxCoder, _topk_min
 from torchvision.ops import boxes as box_ops
 
-from ..models.utils import ModelOutput
 from netspresso_trainer.utils.bbox_utils import transform_bbox
+
+from ..models.utils import ModelOutput
 
 
 def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):

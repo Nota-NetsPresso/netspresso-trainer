@@ -1,5 +1,5 @@
 import math
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -8,12 +8,12 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 
-def transform_bbox(bboxes: Union[Tensor, Proxy], 
-                   indicator="xywh -> xyxy", 
+def transform_bbox(bboxes: Union[Tensor, Proxy],
+                   indicator="xywh -> xyxy",
                    img_size: Optional[Union[int, Tuple[int, int]]]=None):
     def is_normalized(fmt: str) -> bool:
         return fmt.endswith('n')
-    
+
     VALID_IN_TYPE = VALID_OUT_TYPE = ["xyxy", "xyxyn", "xywh", "xywhn", "cxcywh", "cxcywhn"]
     dtype = bboxes.dtype
     in_type, out_type = indicator.replace(" ", "").split("->")
@@ -63,7 +63,7 @@ def transform_bbox(bboxes: Union[Tensor, Proxy],
         out_type = out_type[:-1]
     else:
         img_width = img_height = 1.0
-    
+
     x_min /= img_width
     y_min /= img_height
     x_max /= img_width
