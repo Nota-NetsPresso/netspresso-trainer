@@ -1,3 +1,4 @@
+import math
 from typing import Dict, List, Tuple, Union
 
 import torch
@@ -56,8 +57,10 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
 
 
 def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
-    VALID_METRICS = {"iou", "giou", "diou"}
-    assert metric in VALID_METRICS, f"Invalid IoU metric: '{metric}'. Must be one of {VALID_METRICS}"
+    VALID_METRICS = {"iou", "giou", "diou", "ciou"}
+    assert metric.lower() in VALID_METRICS, f"Invalid IoU metric: '{metric}'. Must be one of {VALID_METRICS}"
+    metric = metric.lower()
+    
     tl = torch.max(
         (bbox1[:, :2] - bbox1[:, 2:] / 2), (bbox2[:, :2] - bbox2[:, 2:] / 2)
     )
@@ -85,7 +88,7 @@ def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
         area_c = torch.prod(c_br - c_tl, 1)
         giou = iou - (area_c - area_u) / area_c.clamp(EPS)
         return giou
-    elif metric == "diou":
+    elif metric == "diou" or metric == "ciou":
         cent1 = bbox1[..., :2]  # (cx1, cy1)
         cent2 = bbox2[..., :2]  # (cx2, cy2)
 
@@ -103,6 +106,11 @@ def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
         diag_dist = torch.sum((c_br - c_tl) ** 2, dim=-1) + EPS
 
         diou = iou - (cent_dist / diag_dist)
-        return diou
-    elif metric == "ciou":
-        pass
+        if metric == "diou":
+            return diou
+        arctan = torch.atan(bbox1[..., 2] / (bbox1[..., 3] + EPS)) - torch.atan(bbox2[..., 2] / (bbox2[..., 3] + EPS))
+        v = (4 / (math.pi ** 2)) * (arctan ** 2)
+        with torch.no_grad():
+            alpha = v / (v - iou + 1 + EPS)
+        ciou = diou - alpha * v
+        return ciou
