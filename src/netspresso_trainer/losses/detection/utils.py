@@ -53,3 +53,34 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     en = (tl < br).type(tl.type()).prod(dim=2)
     area_i = torch.prod(br - tl, 2) * en  # * ((tl < br).all())
     return area_i / (area_a[:, None] + area_b - area_i)
+
+
+def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
+    assert metric in ["iou", "giou"]
+    tl = torch.max(
+        (bbox1[:, :2] - bbox1[:, 2:] / 2), (bbox2[:, :2] - bbox2[:, 2:] / 2)
+    )
+    br = torch.min(
+        (bbox1[:, :2] + bbox1[:, 2:] / 2), (bbox2[:, :2] + bbox2[:, 2:] / 2)
+    )
+
+    area_p = torch.prod(bbox1[:, 2:], 1)
+    area_g = torch.prod(bbox2[:, 2:], 1)
+
+    en = (tl < br).type(tl.type()).prod(dim=1)
+    area_i = torch.prod(br - tl, 1) * en
+    area_u = area_p + area_g - area_i
+    iou = (area_i) / (area_u + EPS)
+
+    if metric == "iou":
+        return iou
+    elif metric == "giou":
+        c_tl = torch.min(
+            (bbox1[:, :2] - bbox1[:, 2:] / 2), (bbox2[:, :2] - bbox2[:, 2:] / 2)
+        )
+        c_br = torch.max(
+            (bbox1[:, :2] + bbox1[:, 2:] / 2), (bbox2[:, :2] + bbox2[:, 2:] / 2)
+        )
+        area_c = torch.prod(c_br - c_tl, 1)
+        giou = iou - (area_c - area_u) / area_c.clamp(EPS)
+        return giou
