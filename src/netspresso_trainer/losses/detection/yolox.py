@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .utils import xyxy2cxcywh, bboxes_iou
+from .utils import bboxes_iou, xyxy2cxcywh
 
 
 class YOLOXLoss(nn.Module):
