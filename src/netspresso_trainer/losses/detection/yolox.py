@@ -20,7 +20,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .utils import bboxes_iou, calculate_iou, xyxy2cxcywh
+from netspresso_trainer.utils.bbox_utils import bboxes_iou, calculate_iou, transform_bbox
 
 
 class YOLOXLoss(nn.Module):
@@ -75,7 +75,7 @@ class YOLOXLoss(nn.Module):
         # YOLOX model learns box cxcywh format directly,
         # but our detection dataloader gives xyxy format.
         for i in range(len(target)):
-            target[i]['boxes'] = xyxy2cxcywh(target[i]['boxes'])
+            target[i]['boxes'] = transform_bbox(target[i]['boxes'], "xyxy -> cxcywh")
 
         # Ready for l1 loss
         origin_preds = []

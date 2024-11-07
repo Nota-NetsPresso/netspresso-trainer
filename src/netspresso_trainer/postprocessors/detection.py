@@ -23,6 +23,7 @@ from torchvision.models.detection._utils import BoxCoder, _topk_min
 from torchvision.ops import boxes as box_ops
 
 from ..models.utils import ModelOutput
+from netspresso_trainer.utils.bbox_utils import transform_bbox
 
 
 def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):
@@ -30,12 +31,8 @@ def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):
     boxes, logits = pred[..., :4], pred[..., 4:]
 
     num_classes = logits.shape[-1]
-
-    boxes = torchvision.ops.box_convert(boxes, in_fmt='cxcywh', out_fmt='xyxy')
-
     h, w = original_shape[1], original_shape[2]
-    boxes[..., ::2] *= w
-    boxes[..., 1::2] *= h
+    boxes = transform_bbox(boxes, "cxcywhn -> xyxy", img_size=(w, h))
 
     scores = torch.sigmoid(logits)
     scores, index = torch.topk(scores.flatten(1), num_top_queries, axis=-1)
@@ -141,10 +138,7 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
     ], dim=-1)
 
     box_corner = pred.new(pred.shape)
-    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
-    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
-    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
-    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    box_corner[:, :, :4] = transform_bbox(pred[:, :, :4], "cxcywh -> xyxy")
     pred[:, :, :4] = box_corner[:, :, :4]
 
     # Discard boxes with low score
@@ -193,10 +187,7 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
     pred = torch.cat(preds, dim=1)
 
     box_corner = pred.new(pred.shape)
-    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
-    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
-    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
-    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    box_corner[:, :, :4] = transform_bbox(pred[:, :, :4], "cxcywh -> xyxy")
     pred[:, :, :4] = box_corner[:, :, :4]
 
     # Discard boxes with low score

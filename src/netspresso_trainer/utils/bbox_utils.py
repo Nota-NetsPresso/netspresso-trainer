@@ -1,5 +1,5 @@
 import math
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 import torch
 import torch.nn as nn
@@ -8,38 +8,74 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 
-def xyxy2cxcywhn(bboxes: Union[Tensor, Proxy], img_size: Union[int, Tuple[int, int]]) -> Union[Tensor, Proxy]:
-    if isinstance(img_size, int):
-        width = height = img_size
+def transform_bbox(bboxes: Union[Tensor, Proxy], 
+                   indicator="xywh -> xyxy", 
+                   img_size: Optional[Union[int, Tuple[int, int]]]=None):
+    def is_normalized(fmt: str) -> bool:
+        return fmt.endswith('n')
+    
+    VALID_IN_TYPE = VALID_OUT_TYPE = ["xyxy", "xyxyn", "xywh", "xywhn", "cxcywh", "cxcywhn"]
+    dtype = bboxes.dtype
+    in_type, out_type = indicator.replace(" ", "").split("->")
+    assert in_type in VALID_IN_TYPE, f"Invalid in_type: '{in_type}'. Must be one of {VALID_IN_TYPE}."
+    assert out_type in VALID_OUT_TYPE, f"Invalid out_type: '{out_type}'. Must be one of {VALID_OUT_TYPE}."
+
+    if is_normalized(in_type):
+        assert img_size is not None, f"img_size is required for normalized conversion: {indicator}"
+        if isinstance(img_size, int):
+            img_width = img_height = img_size
+        else:
+            img_width, img_height = img_size
+            assert isinstance(img_width, int) and isinstance(img_height, int), \
+                f"Invalid type: (width: {type(img_width)}, height: {type(img_height)}. Must be (int, int))"
+        in_type = in_type[:-1]
     else:
-        width, height = img_size
-        assert isinstance(width, int) and isinstance(height, int), f"Invalid type: (width: {type(width)}, height: {type(height)}. Must be (int, int))"
+        img_width = img_height = 1.0
 
+    if in_type == "xyxy":
+        x_min, y_min, x_max, y_max = bboxes.unbind(-1)
+    elif in_type == "xywh":
+        x_min, y_min, w, h = bboxes.unbind(-1)
+        x_max = x_min + w
+        y_max = y_min + h
+    elif in_type == "cxcywh":
+        cx, cy, w, h = bboxes.unbind(-1)
+        x_min = cx - w / 2
+        y_min = cy - h / 2
+        x_max = cx + w / 2
+        y_max = cy + h / 2
 
-    boxes = bboxes.clone()
+    x_min *= img_width
+    y_min *= img_height
+    x_max *= img_width
+    y_max *= img_height
+    assert (x_max >= x_min).all(), "Invalid box: x_max < x_min"
+    assert (y_max >= y_min).all(), "Invalid box: y_max < y_min"
 
-    boxes[:, [0, 2]] /= width
-    boxes[:, [1, 3]] /= height
+    if is_normalized(out_type):
+        assert img_size is not None, f"img_size is required for normalized conversion: {indicator}"
+        if isinstance(img_size, int):
+            img_width = img_height = img_size
+        else:
+            img_width, img_height = img_size
+            assert isinstance(img_width, int) and isinstance(img_height, int), \
+                f"Invalid type: (width: {type(img_width)}, height: {type(img_height)}. Must be (int, int))"
+        out_type = out_type[:-1]
+    else:
+        img_width = img_height = 1.0
+    
+    x_min /= img_width
+    y_min /= img_height
+    x_max /= img_width
+    y_max /= img_height
+    if out_type == "xywh":
+        bbox = torch.stack([x_min, y_min, x_max - x_min, y_max - y_min], dim=-1)
+    elif out_type == "xyxy":
+        bbox = torch.stack([x_min, y_min, x_max, y_max], dim=-1)
+    elif out_type == "cxcywh":
+        bbox = torch.stack([(x_min + x_max) / 2, (y_min + y_max) / 2, x_max - x_min, y_max - y_min], dim=-1)
 
-    x1, y1, x2, y2 = boxes.unbind(-1)
-    cx = (x1 + x2) / 2
-    cy = (y1 + y2) / 2
-    w = x2 - x1
-    h = y2 - y1
-
-    return torch.stack([cx, cy, w, h], dim=-1)
-
-def xyxy2cxcywh(bboxes: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
-    x0, y0, x1, y1 = bboxes.unbind(-1)
-    b = [(x0 + x1) / 2, (y0 + y1) / 2,
-         (x1 - x0), (y1 - y0)]
-    return torch.stack(b, dim=-1)
-
-def cxcywh2xyxy(bboxes: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
-    cx, cy, w, h = bboxes.unbind(-1)
-    b = [(cx - 0.5 * w), (cy - 0.5 * h),
-         (cx + 0.5 * w), (cy + 0.5 * h)]
-    return torch.stack(b, dim=-1)
+    return bbox.to(dtype=dtype)
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:

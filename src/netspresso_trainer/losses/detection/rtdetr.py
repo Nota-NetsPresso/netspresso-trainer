@@ -26,7 +26,7 @@ import torchvision
 from scipy.optimize import linear_sum_assignment
 from torchvision.ops.boxes import box_area
 
-from .utils import cxcywh2xyxy, xyxy2cxcywh
+from netspresso_trainer.utils.bbox_utils import transform_bbox
 
 
 def box_iou(boxes1, boxes2):
@@ -113,10 +113,10 @@ class HungarianMatcher(nn.Module):
             cost_class = -out_prob[:, tgt_ids]
 
         # Compute the L1 cost between boxes
-        cost_bbox = torch.cdist(out_bbox, xyxy2cxcywh(tgt_bbox), p=1)
+        cost_bbox = torch.cdist(out_bbox, transform_bbox(tgt_bbox, "xyxy -> cxcywh"), p=1)
 
         # Compute the giou cost betwen boxes
-        cost_giou = -generalized_box_iou(cxcywh2xyxy(out_bbox), tgt_bbox)
+        cost_giou = -generalized_box_iou(transform_bbox(out_bbox, "cxcywh -> xyxy"), tgt_bbox)
 
         # Final cost matrix
         C = self.cost_bbox * cost_bbox + self.cost_class * cost_class + self.cost_giou * cost_giou
@@ -195,7 +195,7 @@ class DETRLoss(nn.Module):
 
         src_boxes = outputs['pred_boxes'][idx]
         target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
-        ious, _ = box_iou(cxcywh2xyxy(src_boxes), target_boxes)
+        ious, _ = box_iou(transform_bbox(src_boxes, "cxcywh -> xyxy"), target_boxes)
         ious = torch.diag(ious).detach()
 
         src_logits = outputs['pred_logits']
@@ -241,11 +241,11 @@ class DETRLoss(nn.Module):
         target_boxes = torch.cat([t['boxes'][i] for t, (_, i) in zip(targets, indices)], dim=0)
         losses = {}
 
-        loss_bbox = F.l1_loss(src_boxes, xyxy2cxcywh(target_boxes), reduction='none')
+        loss_bbox = F.l1_loss(src_boxes, transform_bbox(target_boxes, "xyxy -> cxcywh"), reduction='none')
         losses['loss_bbox'] = loss_bbox.sum() / num_boxes
 
         loss_giou = 1 - torch.diag(generalized_box_iou(
-                cxcywh2xyxy(src_boxes),
+                transform_bbox(src_boxes, "cxcywh -> xyxy"),
                 target_boxes))
         losses['loss_giou'] = loss_giou.sum() / num_boxes
         return losses
