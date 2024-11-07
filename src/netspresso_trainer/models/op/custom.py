@@ -861,3 +861,41 @@ class LayerScale2d(nn.Module):
     def forward(self, x):
         gamma = self.gamma.view(1, -1, 1, 1)
         return x.mul_(gamma) if self.inplace else x * gamma
+
+
+class SPPCSPLayer(nn.Module):
+    """
+        Based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_sizes: Tuple[int] = (5, 9, 13),
+        expansion: float = 0.5,
+        act_type: str = "silu",
+
+    ):
+        super().__init__()
+        hidden_channels = int(2 * out_channels * expansion)
+        self.pre_conv = nn.Sequential(
+            ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type),
+            ConvLayer(hidden_channels, hidden_channels, kernel_size=3, act_type=act_type),
+            ConvLayer(hidden_channels, hidden_channels, kernel_size=1, act_type=act_type),
+        )
+        self.short_conv = ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type)
+        self.paddings = [auto_pad(kernel_size) for kernel_size in kernel_sizes]
+        self.pools = nn.ModuleList([nn.MaxPool2d(kernel_size=kernel_size, stride=1, padding=padding) for kernel_size, padding in zip(kernel_sizes, self.paddings)])
+        self.post_conv = nn.Sequential(*[ConvLayer(4 * hidden_channels, hidden_channels, kernel_size=1, act_type=act_type),
+                                         ConvLayer(hidden_channels, hidden_channels, kernel_size=3, act_type=act_type)])
+        self.merge_conv = ConvLayer(2 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
+    
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        features = [self.pre_conv(x)]
+        for pool in self.pools:
+            features.append(pool(features[-1]))
+        features = torch.cat(features, dim=1)
+        y1 = self.post_conv(features)
+        y2 = self.short_conv(x)
+        y = torch.cat((y1, y2), dim=1)
+        return self.merge_conv(y)
