@@ -1,8 +1,8 @@
+from typing import Dict, List, Tuple, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from typing import Union, Dict, List, Tuple
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
