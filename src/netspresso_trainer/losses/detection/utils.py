@@ -84,3 +84,22 @@ def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
         area_c = torch.prod(c_br - c_tl, 1)
         giou = iou - (area_c - area_u) / area_c.clamp(EPS)
         return giou
+    elif metric == "diou":
+        cent1 = bbox1[..., :2]  # (cx1, cy1)
+        cent2 = bbox2[..., :2]  # (cx2, cy2)
+
+        cent_dist = torch.sum((cent1 - cent2) * (cent1 - cent2), dim=-1)
+
+        c_tl = torch.min(
+            bbox1[..., :2] - bbox1[..., 2:] / 2,
+            bbox2[..., :2] - bbox2[..., 2:] / 2
+        )
+        c_br = torch.max(
+            bbox1[..., :2] + bbox1[..., 2:] / 2,
+            bbox2[..., :2] + bbox2[..., 2:] / 2
+        )
+
+        diag_dist = torch.sum((c_br - c_tl) ** 2, dim=-1) + EPS
+
+        diou = iou - (cent_dist / diag_dist)
+        return diou
