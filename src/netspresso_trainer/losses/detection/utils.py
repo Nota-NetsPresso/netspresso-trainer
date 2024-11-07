@@ -10,25 +10,36 @@ from torch.fx.proxy import Proxy
 
 def xyxy2cxcywhn(bboxes: Union[Tensor, Proxy], img_size: Union[int, Tuple[int, int]]) -> Union[Tensor, Proxy]:
     if isinstance(img_size, int):
-        img_size = (img_size, img_size) # [w, h]
-    assert isinstance(img_size, Tuple)
+        width = height = img_size
+    else:
+        width, height = img_size
+        assert isinstance(width, int) and isinstance(height, int), f"Invalid type: (width: {type(width)}, height: {type(height)}. Must be (int, int))"
 
-    new_bboxes = bboxes.clone()
-    new_bboxes[:, ::2] /= img_size[0]
-    new_bboxes[:, 1::2] /= img_size[1]
-    new_bboxes[:, 2] = new_bboxes[:, 2] - new_bboxes[:, 0]
-    new_bboxes[:, 3] = new_bboxes[:, 3] - new_bboxes[:, 1]
-    new_bboxes[:, 0] = new_bboxes[:, 0] + new_bboxes[:, 2] * 0.5
-    new_bboxes[:, 1] = new_bboxes[:, 1] + new_bboxes[:, 3] * 0.5
 
-    return new_bboxes
+    boxes = bboxes.clone()
+
+    boxes[:, [0, 2]] /= width
+    boxes[:, [1, 3]] /= height
+
+    x1, y1, x2, y2 = boxes.unbind(-1)
+    cx = (x1 + x2) / 2
+    cy = (y1 + y2) / 2
+    w = x2 - x1
+    h = y2 - y1
+
+    return torch.stack([cx, cy, w, h], dim=-1)
 
 def xyxy2cxcywh(bboxes: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
-    bboxes[:, 2] = bboxes[:, 2] - bboxes[:, 0]
-    bboxes[:, 3] = bboxes[:, 3] - bboxes[:, 1]
-    bboxes[:, 0] = bboxes[:, 0] + bboxes[:, 2] * 0.5
-    bboxes[:, 1] = bboxes[:, 1] + bboxes[:, 3] * 0.5
-    return bboxes
+    x0, y0, x1, y1 = bboxes.unbind(-1)
+    b = [(x0 + x1) / 2, (y0 + y1) / 2,
+         (x1 - x0), (y1 - y0)]
+    return torch.stack(b, dim=-1)
+
+def cxcywh2xyxy(bboxes: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+    cx, cy, w, h = bboxes.unbind(-1)
+    b = [(cx - 0.5 * w), (cy - 0.5 * h),
+         (cx + 0.5 * w), (cy + 0.5 * h)]
+    return torch.stack(b, dim=-1)
 
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
