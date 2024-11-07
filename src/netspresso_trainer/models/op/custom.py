@@ -52,6 +52,19 @@ def make_divisible(
         new_v += divisor
     return new_v
 
+def auto_pad(kernel_size: Union[int, Tuple[int, int]], dilation: int = 1, **kwargs) -> Tuple[int, int]:
+    """
+    Auto Padding for the convolution blocks
+    """
+    if isinstance(kernel_size, int):
+        kernel_size = (kernel_size, kernel_size)
+    if isinstance(dilation, int):
+        dilation = (dilation, dilation)
+
+    pad_h = ((kernel_size[0] - 1) * dilation[0]) // 2
+    pad_w = ((kernel_size[1] - 1) * dilation[1]) // 2
+    return (pad_h, pad_w)
+
 
 class ConvLayer(nn.Module):
 
