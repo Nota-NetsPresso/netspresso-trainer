@@ -477,7 +477,7 @@ class IOUloss(nn.Module):
 
         if self.loss_type == "iou":
             loss = 1 - iou ** 2
-        elif self.loss_type == "giou":
+        elif self.loss_type == "giou" or self.loss_type == "diou" or self.loss_type == "ciou":
             loss = 1 - iou.clamp(min=-1.0, max=1.0)
 
         if self.reduction == "mean":
