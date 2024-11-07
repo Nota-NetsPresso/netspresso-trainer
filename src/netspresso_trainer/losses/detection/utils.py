@@ -56,7 +56,8 @@ def bboxes_iou(bboxes_a, bboxes_b, xyxy=True):
 
 
 def calculate_iou(bbox1, bbox2, metric="iou", EPS=1e-7) -> Tensor:
-    assert metric in ["iou", "giou"]
+    VALID_METRICS = {"iou", "giou", "diou"}
+    assert metric in VALID_METRICS, f"Invalid IoU metric: '{metric}'. Must be one of {VALID_METRICS}"
     tl = torch.max(
         (bbox1[:, :2] - bbox1[:, 2:] / 2), (bbox2[:, :2] - bbox2[:, 2:] / 2)
     )
