@@ -16,3 +16,4 @@
 
 # from .experimental.all_mlp_decoder import segformer_decode_head, efficientformer_decode_head
 from .experimental.all_mlp_decoder import all_mlp_decoder
+from .experimental.yolo_head import yolo_segmentation_head

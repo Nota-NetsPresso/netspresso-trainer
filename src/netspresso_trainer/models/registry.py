@@ -42,7 +42,7 @@ from .heads.detection import (
     yolo_fastest_head_v2,
 )
 from .heads.pose_estimation import rtmcc
-from .heads.segmentation import all_mlp_decoder
+from .heads.segmentation import all_mlp_decoder, yolo_segmentation_head
 from .necks import fpn, lightfpn, rtdetr_hybrid_encoder, yolopafpn
 
 MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
@@ -72,6 +72,7 @@ MODEL_HEAD_DICT: Dict[str, Callable[..., nn.Module]] = {
     },
     'segmentation': {
         'all_mlp_decoder': all_mlp_decoder,
+        'yolo_segmentation_head': yolo_segmentation_head,
     },
     'detection': {
         'anchor_free_decoupled_head': anchor_free_decoupled_head,

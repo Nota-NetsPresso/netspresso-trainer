@@ -96,3 +96,9 @@ class YOLOSegmentationHead(nn.Module):
     def forward(self, x_in: List[Union[Tensor, Proxy]], targets: Optional[Tensor] = None) -> ModelOutput:
         outputs = [head(x) for head, x in zip(self.heads, x_in)]
         return ModelOutput(pred=outputs)
+
+
+def yolo_segmentation_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs):
+    return YOLOSegmentationHead(num_classes,
+                                intermediate_features_dim,
+                                params=conf_model_head.params)
