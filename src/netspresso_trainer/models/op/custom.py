@@ -918,7 +918,7 @@ class SPPELAN(nn.Module):
         self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type)
         self.pools = nn.ModuleList([nn.MaxPool2d(kernel_size=5, stride=1, padding=auto_pad(kernel_size=5)) for _ in range(3)])
         self.conv5 = ConvLayer(4 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
-    
+
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         features = [self.conv1(x)]
         for pool in self.pools:
