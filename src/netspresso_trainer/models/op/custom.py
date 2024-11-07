@@ -899,3 +899,28 @@ class SPPCSPLayer(nn.Module):
         y2 = self.short_conv(x)
         y = torch.cat((y1, y2), dim=1)
         return self.merge_conv(y)
+
+
+class SPPELAN(nn.Module):
+    """
+    SPPELAN module cpmprising multiple pooling and convolution layers.
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: Optional[int] = None,
+        act_type: Optional[str] = "silu"
+    ):
+        super(SPPELAN, self).__init__()
+        hidden_channels = hidden_channels or out_channels // 2
+
+        self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type)
+        self.pools = nn.ModuleList([nn.MaxPool2d(kernel_size=5, stride=1, padding=auto_pad(kernel_size=5)) for _ in range(3)])
+        self.conv5 = ConvLayer(4 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
+    
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        features = [self.conv1(x)]
+        for pool in self.pools:
+            features.append(pool(features[-1]))
+        return self.conv5(torch.cat(features, dim=1))
