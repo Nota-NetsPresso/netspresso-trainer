@@ -24,14 +24,6 @@ import torch.nn.functional as F
 from .yolox import IOUloss, YOLOXLoss, xyxy2cxcywh
 
 
-def xyxy2cxcywhn(bboxes, img_size):
-    new_bboxes = bboxes.clone() / img_size
-    new_bboxes[:, 2] = new_bboxes[:, 2] - new_bboxes[:, 0]
-    new_bboxes[:, 3] = new_bboxes[:, 3] - new_bboxes[:, 1]
-    new_bboxes[:, 0] = new_bboxes[:, 0] + new_bboxes[:, 2] * 0.5
-    new_bboxes[:, 1] = new_bboxes[:, 1] + new_bboxes[:, 3] * 0.5
-    return new_bboxes
-
 def bboxes_iou(bboxes_a, bboxes_b, xyxy=False):
     if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
         raise IndexError
