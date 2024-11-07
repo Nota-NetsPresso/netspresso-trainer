@@ -889,7 +889,7 @@ class SPPCSPLayer(nn.Module):
         self.post_conv = nn.Sequential(*[ConvLayer(4 * hidden_channels, hidden_channels, kernel_size=1, act_type=act_type),
                                          ConvLayer(hidden_channels, hidden_channels, kernel_size=3, act_type=act_type)])
         self.merge_conv = ConvLayer(2 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
-    
+
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         features = [self.pre_conv(x)]
         for pool in self.pools:
