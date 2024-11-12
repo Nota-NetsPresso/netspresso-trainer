@@ -40,6 +40,7 @@ class BaseCustomDataset(data.Dataset):
         self._idx_to_class = idx_to_class
         self._num_classes = len(self._idx_to_class)
         self._split = split
+        self._stats = None
 
         self.cache = False
 
@@ -57,6 +58,10 @@ class BaseCustomDataset(data.Dataset):
     @property
     def num_classes(self):
         return self._num_classes
+
+    @property
+    def stats(self):
+        return self._stats
 
     @property
     def class_map(self):
@@ -81,6 +86,7 @@ class BaseHFDataset(data.Dataset):
         self.transform = transform(conf_augmentation)
         self._root = root
         self._split = split
+        self._stats = None
 
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
@@ -112,6 +118,10 @@ class BaseHFDataset(data.Dataset):
     @property
     def mode(self):
         return self._split
+
+    @property
+    def stats(self):
+        return self._stats
 
 
 class BaseSampleLoader(ABC):

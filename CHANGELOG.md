@@ -2,11 +2,11 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577#pullrequestreview-2428587809)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580/files)
 
 ## Breaking Changes:
 
