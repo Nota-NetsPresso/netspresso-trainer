@@ -77,7 +77,8 @@ def evaluation_common(
                               class_map=test_dataset.class_map,
                               logging_dir=logging_dir,
                               is_graphmodule_training=None, # TODO: Remove is_graphmodule_training ...
-                              dataloaders={'test': eval_dataloader})
+                              dataloaders={'test': eval_dataloader},
+                              data_stats={'test': test_dataset.stats})
 
     try:
         # Start evaluation

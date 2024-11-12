@@ -81,7 +81,8 @@ def train_common(
                               class_map=train_dataset.class_map,
                               logging_dir=logging_dir,
                               is_graphmodule_training=is_graphmodule_training,
-                              dataloaders={'train': train_dataloader, 'valid': eval_dataloader},)
+                              dataloaders={'train': train_dataloader, 'valid': eval_dataloader},
+                              data_stats={'train': train_dataset.stats, 'valid': valid_dataset.stats})
 
     try:
         # Start train
