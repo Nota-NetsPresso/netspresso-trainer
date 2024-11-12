@@ -853,6 +853,7 @@ class LayerScale2d(nn.Module):
 class ELAN(nn.Module):
     """
     basic ELAN structure.
+    This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
     """
     def __init__(self,
                  in_channels: int,
