@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580/files)
 
 ## Breaking Changes:
 
