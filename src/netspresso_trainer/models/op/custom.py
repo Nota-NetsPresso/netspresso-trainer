@@ -186,16 +186,24 @@ class RepConv(nn.Module):
         assert isinstance(in_channels, int)
         assert isinstance(out_channels, int)
         assert isinstance(act_type, str)
+        assert kernel_size == 3
+
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, use_act=False)
+        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels else None
 
         assert act_type in ACTIVATION_REGISTRY
         self.act = ACTIVATION_REGISTRY[act_type]()
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
-        y = self.conv(x) if hasattr(self, 'conv') else self.conv1(x) + self.conv2(x)
+        if hasattr(self, 'conv'):
+            y = self.conv(x)
+            return y
+
+        id_out = 0 if self.rbr_identity is None else self.rbr_identity(x)
+        y = self.conv1(x) + self.conv2(x) + id_out
 
         return self.act(y)
 
@@ -212,8 +220,9 @@ class RepConv(nn.Module):
     def get_equivalent_kernel_bias(self):
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.conv1)
         kernel1x1, bias1x1 = self._fuse_bn_tensor(self.conv2)
+        kernelid, biasid = self._fuse_bn_tensor(self.rbr_identity)
 
-        return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1), bias3x3 + bias1x1
+        return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1) + kernelid, bias3x3 + bias1x1 + biasid
 
     def _pad_1x1_to_3x3_tensor(self, kernel1x1):
         if kernel1x1 is None:
@@ -221,17 +230,34 @@ class RepConv(nn.Module):
         else:
             return nn.functional.pad(kernel1x1, [1, 1, 1, 1])
 
-    def _fuse_bn_tensor(self, branch: ConvLayer):
+    def _fuse_bn_tensor(self, branch: Union[ConvLayer, nn.BatchNorm2d, None]):
         if branch is None:
             return 0, 0
-        kernel = branch.block.conv.weight
-        running_mean = branch.block.norm.running_mean
-        running_var = branch.block.norm.running_var
-        gamma = branch.block.norm.weight
-        beta = branch.block.norm.bias
-        eps = branch.block.norm.eps
-        std = (running_var + eps).sqrt()
-        t = (gamma / std).reshape(-1, 1, 1, 1)
+        if isinstance(branch, nn.BatchNorm2d):
+            if not hasattr(self, 'id_tensor'):
+                input_dim = self.in_channels // self.groups
+                kernel_value = np.zeros((self.in_channels, input_dim, 3, 3), dtype=np.float32)
+                for i in range(self.in_channels):
+                    kernel_value[i, i % input_dim, 1, 1] = 1
+                self.id_tensor = torch.from_numpy(kernel_value).to(branch.weight.device)
+            kernel = self.id_tensor
+            running_mean = branch.running_mean
+            running_var = branch.running_var
+            gamma = branch.weight
+            beta = branch.bias
+            eps = branch.eps
+            std = (running_var + eps).sqrt()
+            t = (gamma / std).reshape(-1, 1, 1, 1)
+        else:
+            assert isinstance(branch, ConvLayer)
+            kernel = branch.block.conv.weight
+            running_mean = branch.block.norm.running_mean
+            running_var = branch.block.norm.running_var
+            gamma = branch.block.norm.weight
+            beta = branch.block.norm.bias
+            eps = branch.block.norm.eps
+            std = (running_var + eps).sqrt()
+            t = (gamma / std).reshape(-1, 1, 1, 1)
         return kernel * t, beta - running_mean * gamma / std
 
 
