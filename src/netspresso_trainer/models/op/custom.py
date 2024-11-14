@@ -20,6 +20,7 @@ import warnings
 from functools import partial
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
 import torch.nn as nn
 from torch import Tensor
@@ -171,7 +172,7 @@ class SeparableConvLayer(nn.Module):
         x = self.final_act(x)
         return x
 
-class RepConv(nn.Module):
+class RepVGGBlock(nn.Module):
     """
     A convolutional block that combines two convolution layers (kernel and point-wise conv).
     """
