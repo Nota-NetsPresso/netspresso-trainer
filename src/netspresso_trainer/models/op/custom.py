@@ -181,6 +181,7 @@ class RepVGGBlock(nn.Module):
                  in_channels: int,
                  out_channels: int,
                  kernel_size: Union[int, Tuple[int, int]] = 3,
+                 groups: int = 1,
                  act_type: Optional[str] = None,):
         if act_type is None:
             act_type = 'silu'
@@ -192,8 +193,9 @@ class RepVGGBlock(nn.Module):
 
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, use_act=False)
-        self.conv2 = ConvLayer(in_channels, out_channels, 1, use_act=False)
+        self.groups = groups
+        self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, groups=groups, use_act=False)
+        self.conv2 = ConvLayer(in_channels, out_channels, 1, groups=groups, use_act=False)
         self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels else None
 
         assert act_type in ACTIVATION_REGISTRY
