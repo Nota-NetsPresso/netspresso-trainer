@@ -28,7 +28,7 @@ import torch.nn.functional as F
 
 from ...utils import BackboneOutput
 from ...op.registry import ACTIVATION_REGISTRY
-from ...op.custom import RepConv, ConvLayer, CSPRepLayer
+from ...op.custom import RepVGGBlock, ConvLayer, CSPRepLayer
 
 
 # transformer
