@@ -57,6 +57,7 @@ class BasePipeline(ABC):
         samples: Optional[List] = None,
         losses : Optional[Dict] = None,
         metrics: Optional[Dict] = None,
+        data_stats: Optional[Dict] = None,
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
     ):
@@ -66,6 +67,7 @@ class BasePipeline(ABC):
             samples=samples,
             losses=losses,
             metrics=metrics,
+            data_stats=data_stats,
             learning_rate=learning_rate,
             elapsed_time=elapsed_time
         )

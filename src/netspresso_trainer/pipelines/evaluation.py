@@ -51,12 +51,14 @@ class EvaluationPipeline(BasePipeline):
         loss_factory: LossFactory,
         metric_factory: MetricFactory,
         eval_dataloader: DataLoader,
+        eval_data_stats: Dict,
         single_gpu_or_rank_zero: bool,
     ):
         super(EvaluationPipeline, self).__init__(conf, task, task_processor, model_name, model, logger, timer)
         self.loss_factory = loss_factory
         self.metric_factory = metric_factory
         self.eval_dataloader = eval_dataloader
+        self.eval_data_stats = eval_data_stats
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
 
     @final
@@ -114,6 +116,7 @@ class EvaluationPipeline(BasePipeline):
             samples=valid_samples,
             losses=losses,
             metrics=metrics,
+            data_stats=self.eval_data_stats,
             elapsed_time=time_for_evaluation,
         )
         self.save_summary(losses, metrics, time_for_evaluation)
