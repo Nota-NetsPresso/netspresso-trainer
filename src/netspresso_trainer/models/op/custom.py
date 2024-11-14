@@ -175,6 +175,7 @@ class SeparableConvLayer(nn.Module):
 class RepVGGBlock(nn.Module):
     """
     A convolutional block that combines two convolution layers (kernel and point-wise conv).
+    This implementation is based on https://github.com/lyuwenyu/RT-DETR/blob/b444daf79cf25f95b740ae71e80fd165e892739a/rtdetr_pytorch/src/zoo/rtdetr/hybrid_encoder.py#L35.
     """
     def __init__(self,
                  in_channels: int,
