@@ -861,3 +861,33 @@ class LayerScale2d(nn.Module):
     def forward(self, x):
         gamma = self.gamma.view(1, -1, 1, 1)
         return x.mul_(gamma) if self.inplace else x * gamma
+
+
+class ELAN(nn.Module):
+    """
+    basic ELAN structure.
+    This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
+    """
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 part_channels: int,
+                 process_channels: Optional[int] = None,
+                 act_type: Optional[str] = None,
+                 ):
+        super().__init__()
+
+        if process_channels is None:
+            process_channels = part_channels // 2
+
+        self.conv1 = ConvLayer(in_channels, part_channels, kernel_size=1, act_type=act_type)
+        self.conv2 = ConvLayer(part_channels // 2, process_channels, kernel_size=3, act_type=act_type)
+        self.conv3 = ConvLayer(process_channels, process_channels, kernel_size=3, act_type=act_type)
+        self.conv4 = ConvLayer(part_channels + 2 * process_channels, out_channels, kernel_size=1, act_type=act_type)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x1, x2 = self.conv1(x).chunk(2, 1)
+        x3 = self.conv2(x2)
+        x4 = self.conv3(x3)
+        x5 = self.conv4(torch.cat([x1, x2, x3, x4], dim=1))
+        return x5

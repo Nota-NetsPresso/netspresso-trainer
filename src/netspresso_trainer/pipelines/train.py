@@ -63,6 +63,8 @@ class TrainingPipeline(BasePipeline):
         metric_factory: MetricFactory,
         train_dataloader: DataLoader,
         eval_dataloader: DataLoader,
+        train_data_stats: Dict,
+        eval_data_stats: Dict,
         single_gpu_or_rank_zero: bool,
         is_graphmodule_training: bool,
         model_ema: Optional[ModelEMA],
@@ -77,6 +79,8 @@ class TrainingPipeline(BasePipeline):
         self.metric_factory = metric_factory
         self.train_dataloader = train_dataloader
         self.eval_dataloader = eval_dataloader
+        self.train_data_stats = train_data_stats
+        self.eval_data_stats = eval_data_stats
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
         self.is_graphmodule_training = is_graphmodule_training
         self.model_ema = model_ema
@@ -249,7 +253,7 @@ class TrainingPipeline(BasePipeline):
         train_losses = self.loss_factory.result('train')
         train_metrics = self.metric_factory.result('train')
         self.log_results(prefix='training', epoch=epoch, losses=train_losses, metrics=train_metrics,
-                         learning_rate=self.learning_rate, elapsed_time=time_for_epoch)
+                         data_stats=self.train_data_stats, learning_rate=self.learning_rate, elapsed_time=time_for_epoch)
 
         if valid_logging:
             valid_losses = self.loss_factory.result('valid') if valid_logging else None
@@ -266,7 +270,8 @@ class TrainingPipeline(BasePipeline):
                         tmp_metrics[metric_name]['classwise'][f'{cls_num}_{cls_name}'] = score
                 valid_metrics = tmp_metrics
 
-            self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses, metrics=valid_metrics)
+            self.log_results(prefix='validation', epoch=epoch, samples=valid_samples, losses=valid_losses,
+                             metrics=valid_metrics, data_stats=self.eval_data_stats)
 
         summary_record = {'train_losses': train_losses, 'train_metrics': train_metrics}
         if valid_logging:
@@ -279,12 +284,11 @@ class TrainingPipeline(BasePipeline):
         else:
             model = self.model.module if hasattr(self.model, 'module') else self.model
 
-        if hasattr(model, 'deploy'):
-            model.deploy()
+        model = copy.deepcopy(model)
 
         save_dtype = model.save_dtype
         if save_dtype == torch.float16:
-            model = copy.deepcopy(model).type(save_dtype)
+            model = model.type(save_dtype)
 
         logging_dir = self.logger.result_dir
         save_best_only = self.conf.logging.model_save_options.save_best_only
@@ -326,8 +330,6 @@ class TrainingPipeline(BasePipeline):
 
         model = self.model.module if hasattr(self.model, 'module') else self.model
         best_model = copy.deepcopy(model)
-        if hasattr(best_model, 'deploy'):
-            best_model.deploy()
 
         save_dtype = best_model.save_dtype
         if save_dtype == torch.float16:
@@ -342,6 +344,8 @@ class TrainingPipeline(BasePipeline):
         self._save_model(model=best_model, epoch=best_epoch, model_name_tag="best", logging_dir=logging_dir)
 
         try:
+            if hasattr(best_model, 'deploy'):
+                best_model.deploy()
             model_save_path = Path(logging_dir) / f"{self.task}_{self.model_name}_best.ext"
 
             save_onnx(best_model,
