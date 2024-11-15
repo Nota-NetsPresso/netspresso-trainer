@@ -196,7 +196,7 @@ class RepVGGBlock(nn.Module):
         self.groups = groups
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, groups=groups, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, groups=groups, use_act=False)
-        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels else None
+        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels else nn.Identity()
 
         assert act_type in ACTIVATION_REGISTRY
         self.act = ACTIVATION_REGISTRY[act_type]()
@@ -205,9 +205,7 @@ class RepVGGBlock(nn.Module):
         if hasattr(self, 'conv'):
             y = self.conv(x)
             return y
-
-        id_out = 0 if self.rbr_identity is None else self.rbr_identity(x)
-        y = self.conv1(x) + self.conv2(x) + id_out
+        y = self.conv1(x) + self.conv2(x) + self.rbr_identity(x)
 
         return self.act(y)
 
@@ -234,8 +232,8 @@ class RepVGGBlock(nn.Module):
         else:
             return nn.functional.pad(kernel1x1, [1, 1, 1, 1])
 
-    def _fuse_bn_tensor(self, branch: Union[ConvLayer, nn.BatchNorm2d, None]):
-        if branch is None:
+    def _fuse_bn_tensor(self, branch: Union[ConvLayer, nn.BatchNorm2d, nn.Identity]):
+        if isinstance(branch, nn.Identity):
             return 0, 0
         if isinstance(branch, nn.BatchNorm2d):
             if not hasattr(self, 'id_tensor'):
