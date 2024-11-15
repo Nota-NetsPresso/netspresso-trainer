@@ -176,10 +176,12 @@ class Pool2d(nn.Module):
     def __init__(self,
                  method: str = "max",
                  kernel_size: int = 2,
+                 stride: Optional[int] = None,
+                 padding: int = 0,
                  **kwargs):
         super().__init__()
         assert method.lower() in POOL2D_RESGISTRY
-        self.pool = POOL2D_RESGISTRY[method.lower()](kernel_size=kernel_size, **kwargs)
+        self.pool = POOL2D_RESGISTRY[method.lower()](kernel_size=kernel_size, stride=stride, padding=padding, **kwargs)
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
         return self.pool(x)
