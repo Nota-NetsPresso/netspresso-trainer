@@ -33,7 +33,7 @@ def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):
 
     num_classes = logits.shape[-1]
     h, w = original_shape[1], original_shape[2]
-    boxes = transform_bbox(boxes, "cxcywhn -> xyxy", img_size=(w, h))
+    boxes = transform_bbox(boxes, "cxcywhn -> xyxy", image_shape=(h, w))
 
     scores = torch.sigmoid(logits)
     scores, index = torch.topk(scores.flatten(1), num_top_queries, axis=-1)
