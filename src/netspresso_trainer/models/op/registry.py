@@ -35,7 +35,7 @@ ACTIVATION_REGISTRY: Dict[str, Type[nn.Module]] = {
     'hard_swish': nn.Hardswish,
 }
 
-POOL_RESGISTRY: Dict[str, Type[nn.Module]] = {
+POOL2D_RESGISTRY: Dict[str, Type[nn.Module]] = {
     'max': nn.MaxPool2d,
     'avg': nn.AvgPool2d,
 }
