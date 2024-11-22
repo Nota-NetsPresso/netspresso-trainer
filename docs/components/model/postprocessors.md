@@ -10,7 +10,7 @@ The current postprocessor is automatically determined based on the task name and
 
 ### Classification
 
-For classification, we don't any postprocessor settings yet.
+For classification, we don't have any postprocessor settings yet.
 
 ```yaml
 postprocessor: ~
@@ -18,7 +18,7 @@ postprocessor: ~
 
 ### Segmentation
 
-For segmentation, we don't any postprocessor settings yet.
+For segmentation, we don't have any postprocessor settings yet.
 
 ```yaml
 postprocessor: ~
