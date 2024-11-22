@@ -39,3 +39,14 @@ postprocessor:
     nms_thresh: 0.65
     class_agnostic: False
 ```
+
+#### RT-DETR
+
+RT-DETR exclusively performs box decoding operations on its output predictions, distinguishing itself through its NMS-free design. Meanwhile, bipartite matching during training ensures one-to-one predictions, eliminating the need for non-maximum suppression (NMS) in the postprocessing stage. The necessary hyperparameters for the process are set as follows:
+
+```yaml
+postprocessor:
+  params:
+    num_top_queries: 300
+    score_thresh: 0.01
+```
