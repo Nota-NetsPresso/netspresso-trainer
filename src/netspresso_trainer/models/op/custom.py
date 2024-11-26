@@ -27,7 +27,7 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 from torchvision.ops.misc import SqueezeExcitation as SElayer
 
-from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
+from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY, POOL2D_RESGISTRY
 
 
 def make_divisible(
@@ -261,6 +261,21 @@ class RepVGGBlock(nn.Module):
             std = (running_var + eps).sqrt()
             t = (gamma / std).reshape(-1, 1, 1, 1)
         return kernel * t, beta - running_mean * gamma / std
+
+
+class Pool2d(nn.Module):
+    def __init__(self,
+                 method: str = "max",
+                 kernel_size: int = 2,
+                 stride: Optional[int] = None,
+                 padding: int = 0,
+                 **kwargs):
+        super().__init__()
+        assert method.lower() in POOL2D_RESGISTRY
+        self.pool = POOL2D_RESGISTRY[method.lower()](kernel_size=kernel_size, stride=stride, padding=padding, **kwargs)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        return self.pool(x)
 
 
 class BasicBlock(nn.Module):
@@ -854,7 +869,7 @@ class SPPBottleneck(nn.Module):
                                kernel_size=1, stride=1, act_type=act_type)
         self.m = nn.ModuleList(
             [
-                nn.MaxPool2d(kernel_size=ks, stride=1, padding=ks // 2)
+                Pool2d(method='max', kernel_size=ks, stride=1, padding=ks // 2)
                 for ks in kernel_sizes
             ]
         )
