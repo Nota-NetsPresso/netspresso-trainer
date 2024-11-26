@@ -2,11 +2,13 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
+- Add ELAN (Efficient Layer Aggregation Networks) module by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585)
+- Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580/files)
 
 ## Breaking Changes:
 
@@ -14,7 +16,8 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581)
+- Generalize 2d pooling layers and define as custom layer by `@hglee98` in [PR 583](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/583)
 
 # v1.0.3
 

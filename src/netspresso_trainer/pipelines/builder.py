@@ -72,6 +72,7 @@ def build_pipeline(
     logging_dir: Union[str, Path],
     is_graphmodule_training: bool,
     dataloaders: Dict[str, DataLoader],
+    data_stats: Dict[str, Dict],
     profile: bool = False
 ):
     assert task in SUPPORTING_TASK_LIST, f"No such task! (task: {task})"
@@ -87,6 +88,8 @@ def build_pipeline(
         train_dataloader: DataLoader = dataloaders['train']
         eval_dataloader: DataLoader = dataloaders['valid']
 
+        train_data_stats: Dict = data_stats['train']
+        eval_data_stats: Dict = data_stats['valid']
         # Build optimizer and scheduler
         optimizer = build_optimizer(model, single_task_model=conf.model.single_task_model, optimizer_conf=conf.training.optimizer)
         scheduler, _ = build_scheduler(optimizer, conf.training)
@@ -131,6 +134,8 @@ def build_pipeline(
                                             metric_factory=metric_factory,
                                             train_dataloader=train_dataloader,
                                             eval_dataloader=eval_dataloader,
+                                            train_data_stats=train_data_stats,
+                                            eval_data_stats=eval_data_stats,
                                             single_gpu_or_rank_zero=single_gpu_or_rank_zero,
                                             is_graphmodule_training=is_graphmodule_training,
                                             model_ema=model_ema,
@@ -140,6 +145,7 @@ def build_pipeline(
 
     elif pipeline_type == 'evaluation':
         eval_dataloader: DataLoader = dataloaders['test']
+        eval_data_stats: Dict = data_stats['test']
 
         # Build modules for evaluation
         loss_factory = build_losses(conf.model)
@@ -165,6 +171,7 @@ def build_pipeline(
                                             loss_factory=loss_factory,
                                             metric_factory=metric_factory,
                                             eval_dataloader=eval_dataloader,
+                                            eval_data_stats=eval_data_stats,
                                             single_gpu_or_rank_zero=single_gpu_or_rank_zero,)
 
     elif pipeline_type == 'inference':
