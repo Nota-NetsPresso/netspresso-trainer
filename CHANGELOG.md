@@ -16,7 +16,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581)
 
 # v1.0.3
 
