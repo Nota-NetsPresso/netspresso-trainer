@@ -17,7 +17,7 @@
 from typing import Any, Dict
 
 from .base import MetricFactory
-from .registry import METRIC_ADAPTORS, METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFUALT_METRICS
+from .registry import METRIC_ADAPTORS, METRIC_LIST, PHASE_LIST, TASK_AVAILABLE_METRICS, TASK_DEFAULT_METRICS
 
 
 def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) -> MetricFactory:
@@ -25,7 +25,7 @@ def build_metrics(task: str, model_conf, metrics_conf, num_classes, **kwargs) ->
     classwise_analysis = metrics_conf.classwise_analysis
 
     if metric_names is None:
-        metric_names = TASK_DEFUALT_METRICS[task]
+        metric_names = TASK_DEFAULT_METRICS[task]
     metric_names = [m.lower() for m in metric_names]
     assert all(metric in TASK_AVAILABLE_METRICS[task] for metric in metric_names), \
         f"Available metrics for {task} are {TASK_AVAILABLE_METRICS[task]}"
