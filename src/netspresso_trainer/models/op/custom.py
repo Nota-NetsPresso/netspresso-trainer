@@ -53,6 +53,19 @@ def make_divisible(
         new_v += divisor
     return new_v
 
+def auto_pad(kernel_size: Union[int, Tuple[int, int]], dilation: int = 1, **kwargs) -> Tuple[int, int]:
+    """
+    Auto Padding for the convolution blocks
+    """
+    if isinstance(kernel_size, int):
+        kernel_size = (kernel_size, kernel_size)
+    if isinstance(dilation, int):
+        dilation = (dilation, dilation)
+
+    pad_h = ((kernel_size[0] - 1) * dilation[0]) // 2
+    pad_w = ((kernel_size[1] - 1) * dilation[1]) // 2
+    return (pad_h, pad_w)
+
 
 class ConvLayer(nn.Module):
 
@@ -1010,3 +1023,66 @@ class ELAN(nn.Module):
         x4 = self.conv3(x3)
         x5 = self.conv4(torch.cat([x1, x2, x3, x4], dim=1))
         return x5
+
+
+class SPPCSPLayer(nn.Module):
+    """
+        Based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_sizes: Tuple[int] = (5, 9, 13),
+        expansion: float = 0.5,
+        act_type: str = "silu",
+
+    ):
+        super().__init__()
+        hidden_channels = int(2 * out_channels * expansion)
+        self.pre_conv = nn.Sequential(
+            ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type),
+            ConvLayer(hidden_channels, hidden_channels, kernel_size=3, act_type=act_type),
+            ConvLayer(hidden_channels, hidden_channels, kernel_size=1, act_type=act_type),
+        )
+        self.short_conv = ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type)
+        self.paddings = [auto_pad(kernel_size) for kernel_size in kernel_sizes]
+        self.pools = nn.ModuleList([nn.MaxPool2d(kernel_size=kernel_size, stride=1, padding=padding) for kernel_size, padding in zip(kernel_sizes, self.paddings)])
+        self.post_conv = nn.Sequential(*[ConvLayer(4 * hidden_channels, hidden_channels, kernel_size=1, act_type=act_type),
+                                         ConvLayer(hidden_channels, hidden_channels, kernel_size=3, act_type=act_type)])
+        self.merge_conv = ConvLayer(2 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        features = [self.pre_conv(x)]
+        for pool in self.pools:
+            features.append(pool(features[-1]))
+        features = torch.cat(features, dim=1)
+        y1 = self.post_conv(features)
+        y2 = self.short_conv(x)
+        y = torch.cat((y1, y2), dim=1)
+        return self.merge_conv(y)
+
+
+class SPPELAN(nn.Module):
+    """
+    SPPELAN module cpmprising multiple pooling and convolution layers.
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_channels: Optional[int] = None,
+        act_type: Optional[str] = "silu"
+    ):
+        super(SPPELAN, self).__init__()
+        hidden_channels = hidden_channels or out_channels // 2
+
+        self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, act_type=act_type)
+        self.pools = nn.ModuleList([nn.MaxPool2d(kernel_size=5, stride=1, padding=auto_pad(kernel_size=5)) for _ in range(3)])
+        self.conv5 = ConvLayer(4 * hidden_channels, out_channels, kernel_size=1, act_type=act_type)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        features = [self.conv1(x)]
+        for pool in self.pools:
+            features.append(pool(features[-1]))
+        return self.conv5(torch.cat(features, dim=1))

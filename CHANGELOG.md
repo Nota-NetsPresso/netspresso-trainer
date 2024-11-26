@@ -5,6 +5,7 @@
 - Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
 - Add ELAN (Efficient Layer Aggregation Networks) module by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585)
 - Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
+- Add SPPCSPLayer and SPPELAN module by `@hglee98` in [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586)
 
 ## Bug Fixes:
 
