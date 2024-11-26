@@ -19,7 +19,7 @@ from omegaconf import DictConfig
 import torch
 import torch.nn as nn 
 
-from ...op.custom import ConvLayer, ShuffleV2Block
+from ...op.custom import ConvLayer, ShuffleV2Block, Pool
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -84,7 +84,7 @@ class ShuffleNetV2(nn.Module):
     def _build_network(self):
         in_channels = self.stage_out_channels[1]
         self.conv1 = ConvLayer(3, in_channels, kernel_size=3, stride=2, padding=1)
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = Pool(method='max', kernel_size=3, stride=2, padding=1)
         
         for i, num_layers in enumerate(self.stage_repeats):
             stage_name = f"stage{i+2}"
