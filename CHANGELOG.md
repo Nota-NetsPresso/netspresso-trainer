@@ -4,6 +4,7 @@
 
 - Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
 - Add ELAN (Efficient Layer Aggregation Networks) module by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585)
+- Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
 
 ## Bug Fixes:
 
@@ -15,7 +16,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581)
 
 # v1.0.3
 
