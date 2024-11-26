@@ -19,6 +19,7 @@ No changes to highlight.
 
 - Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581)
 - Generalize 2d pooling layers and define as custom layer by `@hglee98` in [PR 583](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/583)
+- Unify bbox transformation and IoU computing methods by `@hglee98` in [PR 587](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/587)
 
 # v1.0.3
 
