@@ -24,7 +24,7 @@ import torch.nn as nn
 from torch import Tensor
 from torch.fx.proxy import Proxy
 
-from ..op.custom import LayerScale2d, Pool
+from ..op.custom import LayerScale2d, Pool2d
 from ..op.depth import DropPath
 from ..op.registry import ACTIVATION_REGISTRY, NORM_REGISTRY
 from ..utils import BackboneOutput, FXTensorType
@@ -36,7 +36,7 @@ class Pooling(nn.Module):
     """
     def __init__(self, pool_size=3):
         super().__init__()
-        self.pool = Pool(method='avg', kernel_size=pool_size, stride=1, padding=pool_size // 2, count_include_pad=False)
+        self.pool = Pool2d(method='avg', kernel_size=pool_size, stride=1, padding=pool_size // 2, count_include_pad=False)
 
     def forward(self, x):
         return self.pool(x) - x
@@ -267,7 +267,7 @@ class MultiQueryAttention2D(nn.Module):
 
         self.query = []
         if query_pooling_stride:
-            self.query.append(Pool(method='avg', kernel_size=query_pooling_stride))
+            self.query.append(Pool2d(method='avg', kernel_size=query_pooling_stride))
             self.query.append(norm_layer(hidden_size))
         self.query.append(nn.Conv2d(hidden_size, self.attention_hidden_size,
                                     kernel_size=1, bias=use_qkv_bias))
