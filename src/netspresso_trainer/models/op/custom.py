@@ -1024,6 +1024,61 @@ class ELAN(nn.Module):
         x5 = self.conv4(torch.cat([x1, x2, x3, x4], dim=1))
         return x5
 
+class AConv(nn.Module):
+    """
+        Based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
+
+        A module that combines average pooling and convolution operations.
+        Performs average pooling followed by convolution with optional activation.
+
+        Args:
+            in_channels (int): Number of input channels
+            out_channels (int): Number of output channels
+            kernel_size (int, optional): Kernel size for convolution. Default: 3
+            stride (int, optional): Stride for convolution. Default: 2
+            pool_kernel_size (int, optional): Kernel size for average pooling. Default: 2
+            pool_stride (int, optional): Stride for average pooling. Default: 1
+            act_type (str, optional): Activation function type. Default: None
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int = 3,
+        stride: int = 2,
+        pool_kernel_size: int = 2,
+        pool_stride: int = 1,
+        act_type: Optional[str] = None,
+    ) -> None:
+        """
+        Args:
+            x (Union[Tensor, Proxy]): Input tensor
+
+        Returns:
+            Union[Tensor, Proxy]: Output tensor after pooling and convolution
+        """
+        super().__init__()
+
+        self.layers = nn.Sequential(
+            nn.AvgPool2d(
+                kernel_size=pool_kernel_size,
+                stride=pool_stride
+            ),
+            ConvLayer(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=kernel_size,
+                stride=stride,
+                act_type=act_type
+            )
+        )
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        return self.layers(x)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}{self.layers}"
+
 
 class SPPCSPLayer(nn.Module):
     """
