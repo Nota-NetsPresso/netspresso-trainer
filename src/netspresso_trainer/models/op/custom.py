@@ -997,7 +997,8 @@ class LayerScale2d(nn.Module):
 
 class ELAN(nn.Module):
     """
-    basic ELAN structure.
+    unified ELAN structure.
+    It supports ['basic', 'repncsp'] ELAN structure.
     This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
     """
     def __init__(self,
@@ -1006,15 +1007,36 @@ class ELAN(nn.Module):
                  part_channels: int,
                  process_channels: Optional[int] = None,
                  act_type: Optional[str] = None,
+                 layer_type: Optional[str] = None,
+                 n: Optional[int] = 1,
+                 **kwargs
                  ):
         super().__init__()
+        VALID_LAYER_TYPE = ["basic", "repncsp"]
+        if layer_type is None:
+            layer_type = "basic"
+        assert layer_type.lower() in VALID_LAYER_TYPE, f"Invalid layer_type: '{layer_type}'. Must be one of {VALID_LAYER_TYPE}"
+
 
         if process_channels is None:
             process_channels = part_channels // 2
 
         self.conv1 = ConvLayer(in_channels, part_channels, kernel_size=1, act_type=act_type)
-        self.conv2 = ConvLayer(part_channels // 2, process_channels, kernel_size=3, act_type=act_type)
-        self.conv3 = ConvLayer(process_channels, process_channels, kernel_size=3, act_type=act_type)
+        if layer_type.lower() == "basic":
+            self.conv2 = ConvLayer(part_channels // 2, process_channels, kernel_size=3, act_type=act_type)
+        elif layer_type.lower() == "repncsp":
+            self.conv2 = nn.Sequential(
+                CSPLayer(part_channels // 2, process_channels, layer_type="repncsp", act_type=act_type, n=n, **kwargs),
+                ConvLayer(process_channels, process_channels, kernel_size=3, padding=1, act_type=act_type)
+            )
+
+        if layer_type.lower() == "basic":
+            self.conv3 = ConvLayer(process_channels, process_channels, kernel_size=3, act_type=act_type)
+        elif layer_type.lower() == "repncsp":
+            self.conv3 = nn.Sequential(
+                CSPLayer(process_channels, process_channels, layer_type="repncsp", act_type=act_type, n=n, **kwargs),
+                ConvLayer(process_channels, process_channels, kernel_size=3, padding=1, act_type=act_type)
+            )
         self.conv4 = ConvLayer(part_channels + 2 * process_channels, out_channels, kernel_size=1, act_type=act_type)
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
