@@ -25,7 +25,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ...op.custom import BasicBlock, Bottleneck, ConvLayer
+from ...op.custom import BasicBlock, Bottleneck, ConvLayer, Pool2d
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -96,7 +96,7 @@ class ResNet(nn.Module):
             self.conv1 = ConvLayer(in_channels=3, out_channels=self.inplanes,
                                 kernel_size=7, stride=2, padding=3,
                                 bias=False, norm_type='batch_norm', act_type='relu')
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = Pool2d(method='max', kernel_size=3, stride=2, padding=1)
 
         stages: List[nn.Module] = []
 
@@ -148,7 +148,7 @@ class ResNet(nn.Module):
         if stride != 1 or self.inplanes != planes * expansion or downsample_flag:
             if downsample_pooling:
                 downsample = nn.Sequential(
-                    nn.AvgPool2d(kernel_size=stride, stride=stride, ceil_mode=True, count_include_pad=False),
+                    Pool2d(method='avg', kernel_size=stride, stride=stride, ceil_mode=True, count_include_pad=False),
                     ConvLayer(
                         in_channels=self.inplanes, out_channels=planes * expansion,
                         kernel_size=1, stride=1, bias=False,
