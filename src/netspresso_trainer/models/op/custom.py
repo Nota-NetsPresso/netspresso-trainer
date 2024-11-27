@@ -883,7 +883,7 @@ class CSPRepLayer(nn.Module):
                  act: str="silu"):
         super(CSPRepLayer, self).__init__()
         warnings.warn(
-            f"CSPRepLayer is deprecated and will be removed in a future version. "
+            "CSPRepLayer is deprecated and will be removed in a future version. "
             "Please use CSPLayer with appropriate configuration instead.",
             DeprecationWarning,
             stacklevel=2
@@ -904,6 +904,7 @@ class CSPRepLayer(nn.Module):
         x_1 = self.bottlenecks(x_1)
         x_2 = self.conv2(x)
         return self.conv3(x_1 + x_2)
+
 
 class SPPBottleneck(nn.Module):
     """Spatial pyramid pooling layer used in YOLOv3-SPP"""
