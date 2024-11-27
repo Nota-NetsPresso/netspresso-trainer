@@ -16,6 +16,7 @@ RT-DETR Hybrid Encoder based on [RT-DETR: DETRs Beat YOLOs on Real-time Object D
     <td>
       ResNet<br />
       MobileNetV3<br />
+      MobileNetV4<br />
       MixNet<br />
       CSPDarkNet<br />
       MobileViT<br />
