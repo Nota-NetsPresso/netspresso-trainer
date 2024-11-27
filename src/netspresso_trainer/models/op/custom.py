@@ -882,6 +882,12 @@ class CSPRepLayer(nn.Module):
                  bias: bool= False,
                  act: str="silu"):
         super(CSPRepLayer, self).__init__()
+        warnings.warn(
+            f"CSPRepLayer is deprecated and will be removed in a future version. "
+            "Please use CSPLayer with appropriate configuration instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
         hidden_channels = int(out_channels * expansion)
         self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
         self.conv2 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
