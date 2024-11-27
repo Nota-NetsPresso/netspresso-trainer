@@ -1,0 +1,30 @@
+model:
+  task: classification
+  name: gelan_s
+  checkpoint:
+    use_pretrained: False
+    load_head: False
+    path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~
+    backbone:
+      name: gelan
+      params:
+        dep_mul: &dep_mul 0.33
+        wid_mul: 0.5
+        act_type: &act_type "silu"
+      stage_params: ~
+    head:
+      name: fc
+      params:
+        num_layers: 1
+        intermediate_channels: ~
+        act_type: ~
+        dropout_prob: 0.
+  postprocessor: ~
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~
