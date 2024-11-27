@@ -405,6 +405,38 @@ class Bottleneck(nn.Module):
         return out
 
 
+class RepNBottleneck(nn.Module):
+    def __init__(self,
+                 in_channels: int,
+                 out_channels: int,
+                 shortcut: bool = True,
+                 expansion: float = 1.0,
+                 depthwise: bool = False,
+                 act_type: Optional[str] = None):
+        super().__init__()
+        hidden_channels = int(out_channels * expansion)
+        self.conv1 = RepVGGBlock(in_channels, hidden_channels, 3, act_type=act_type)
+        if depthwise:
+            self.conv2 = SeparableConvLayer(hidden_channels,
+                                            out_channels,
+                                            kernel_size=3, stride=1,
+                                            act_type=act_type)
+        else:
+            self.conv2 = ConvLayer(hidden_channels,
+                                   out_channels,
+                                   kernel_size=3, stride=1,
+                                   act_type=act_type)
+        self.shortcut = shortcut
+
+        if shortcut and (in_channels != out_channels):
+            self.shortcut = False
+            warnings.warn(f"Residual connection disabled: in_channels ({in_channels}) != out_channels ({out_channels})", stacklevel=2)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        y = self.conv2(self.conv1(x))
+        return x + y if self.shortcut else y
+
+
 class InvertedResidual(nn.Module):
     # Implemented as described at section 5 of MobileNetV3 paper
     def __init__(
@@ -787,7 +819,20 @@ class Focus(nn.Module):
 
 
 class CSPLayer(nn.Module):
-    """C3 in yolov5, CSP Bottleneck with 3 convolutions"""
+    """
+    C3 in yolov5, CSP Bottleneck with 3 convolutions
+
+    Args:
+        in_channels (int): Number of input channels
+        out_channels (int): Number of output channels
+        n (int): Number of Bottlenecks. Default: 1
+        shortcut (bool): Whether to use shortcut connections. Default: True
+        expansion (float): Channel expansion factor. Default: 0.5
+        depthwise (bool): Whether to use depthwise separable convolutions. Default: False
+        act_type (str): Activation function type. Default: "silu"
+        layer_type (str): Type of CSP layer ("csp", "csprep", or "repncsp"). Default: "csp"
+    """
+
 
     def __init__(
         self,
@@ -798,6 +843,7 @@ class CSPLayer(nn.Module):
         expansion=0.5,
         depthwise=False,
         act_type="silu",
+        layer_type: Optional[str] = "csp",
     ):
         """
         Args:
@@ -807,6 +853,8 @@ class CSPLayer(nn.Module):
         """
         # ch_in, ch_out, number, shortcut, groups, expansion
         super().__init__()
+        VALID_LAYER_TYPE = ["csp", "csprep", "repncsp"]
+        assert layer_type.lower() in VALID_LAYER_TYPE, f"Invalid layer_type: '{layer_type}'. Must be one of {VALID_LAYER_TYPE}"
         hidden_channels = int(out_channels * expansion)  # hidden channels
         self.conv1 = ConvLayer(in_channels=in_channels,
                                out_channels=hidden_channels,
@@ -816,12 +864,25 @@ class CSPLayer(nn.Module):
                               out_channels=hidden_channels,
                               kernel_size=1,
                               stride=1, act_type=act_type)
-        self.conv3 = ConvLayer(in_channels=2 * hidden_channels,
+
+        block_mapping = {
+            "csp": (DarknetBlock, True),
+            "csprep": (RepVGGBlock, False),
+            "repncsp": (RepNBottleneck, True)
+        }
+
+        block, self.concat = block_mapping[layer_type.lower()]
+
+        if self.concat:
+            self.conv3 = ConvLayer(in_channels=2 * hidden_channels,
                                out_channels=out_channels,
                                kernel_size=1,
                                stride=1, act_type=act_type)
-
-        block = DarknetBlock
+        else:
+            self.conv3 = ConvLayer(in_channels=hidden_channels,
+                               out_channels=out_channels,
+                               kernel_size=1,
+                               stride=1, act_type=act_type)
 
         module_list = [
             block(
@@ -840,7 +901,7 @@ class CSPLayer(nn.Module):
         x_1 = self.conv1(x)
         x_2 = self.conv2(x)
         x_1 = self.m(x_1)
-        x = torch.cat((x_1, x_2), dim=1)
+        x = torch.cat((x_1, x_2), dim=1) if self.concat else x_1 + x_2
         return self.conv3(x)
 
 
@@ -869,6 +930,15 @@ class CSPRepLayer(nn.Module):
         x_1 = self.bottlenecks(x_1)
         x_2 = self.conv2(x)
         return self.conv3(x_1 + x_2)
+
+    def __init_subclass__(cls) -> None:
+        """Warn about deprecation when subclassing"""
+        warnings.warn(
+            f"{cls.__name__} is deprecated and will be removed in a future version. "
+            "Please use CSPLayer with appropriate configuration instead.",
+            DeprecationWarning,
+            stacklevel=2
+        )
 
 class SPPBottleneck(nn.Module):
     """Spatial pyramid pooling layer used in YOLOv3-SPP"""
@@ -997,7 +1067,8 @@ class LayerScale2d(nn.Module):
 
 class ELAN(nn.Module):
     """
-    basic ELAN structure.
+    unified ELAN structure.
+    It supports ['basic', 'repncsp'] ELAN structure.
     This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
     """
     def __init__(self,
@@ -1006,15 +1077,36 @@ class ELAN(nn.Module):
                  part_channels: int,
                  process_channels: Optional[int] = None,
                  act_type: Optional[str] = None,
+                 layer_type: Optional[str] = None,
+                 n: Optional[int] = 1,
+                 **kwargs
                  ):
         super().__init__()
+        VALID_LAYER_TYPE = ["basic", "repncsp"]
+        if layer_type is None:
+            layer_type = "basic"
+        assert layer_type.lower() in VALID_LAYER_TYPE, f"Invalid layer_type: '{layer_type}'. Must be one of {VALID_LAYER_TYPE}"
+
 
         if process_channels is None:
             process_channels = part_channels // 2
 
         self.conv1 = ConvLayer(in_channels, part_channels, kernel_size=1, act_type=act_type)
-        self.conv2 = ConvLayer(part_channels // 2, process_channels, kernel_size=3, act_type=act_type)
-        self.conv3 = ConvLayer(process_channels, process_channels, kernel_size=3, act_type=act_type)
+        if layer_type.lower() == "basic":
+            self.conv2 = ConvLayer(part_channels // 2, process_channels, kernel_size=3, act_type=act_type)
+        elif layer_type.lower() == "repncsp":
+            self.conv2 = nn.Sequential(
+                CSPLayer(part_channels // 2, process_channels, layer_type="repncsp", act_type=act_type, n=n, **kwargs),
+                ConvLayer(process_channels, process_channels, kernel_size=3, padding=1, act_type=act_type)
+            )
+
+        if layer_type.lower() == "basic":
+            self.conv3 = ConvLayer(process_channels, process_channels, kernel_size=3, act_type=act_type)
+        elif layer_type.lower() == "repncsp":
+            self.conv3 = nn.Sequential(
+                CSPLayer(process_channels, process_channels, layer_type="repncsp", act_type=act_type, n=n, **kwargs),
+                ConvLayer(process_channels, process_channels, kernel_size=3, padding=1, act_type=act_type)
+            )
         self.conv4 = ConvLayer(part_channels + 2 * process_channels, out_channels, kernel_size=1, act_type=act_type)
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
