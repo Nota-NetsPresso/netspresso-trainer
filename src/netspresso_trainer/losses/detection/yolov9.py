@@ -29,6 +29,7 @@ from .yolox import IOUloss
 
 
 def calculate_iou(bbox1, bbox2, metrics="iou") -> Tensor:
+    #TODO: It should be consolidated into bbox_utils 
     metrics = metrics.lower()
     EPS = 1e-7
     dtype = bbox1.dtype
