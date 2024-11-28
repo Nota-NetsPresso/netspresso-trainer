@@ -1089,6 +1089,9 @@ class SPPELAN(nn.Module):
 
 
 class Anchor2Vec(nn.Module):
+    """
+        This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
+    """
     def __init__(self,
                  reg_max: int=16):
         super().__init__()
