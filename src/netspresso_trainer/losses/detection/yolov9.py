@@ -104,8 +104,8 @@ class BoxMatcher:
         self.class_num = class_num
         self.anchors = anchors
         self.iou = "ciou"
-        self.topk = 10
-        self.factor = {"iou": 6.0, "cls": 0.5}
+        self.topk = 10 # TODO: It should be parameterized.
+        self.factor = {"iou": 6.0, "cls": 0.5} # TODO: It should be parameterized.
 
     def get_valid_matrix(self, target_bbox: Tensor):
         """
