@@ -1086,3 +1086,12 @@ class SPPELAN(nn.Module):
         for pool in self.pools:
             features.append(pool(features[-1]))
         return self.conv5(torch.cat(features, dim=1))
+
+
+class Anchor2Vec(nn.Module):
+    def __init__(self,
+                 reg_max: int=16):
+        super().__init__()
+        reverse_reg = torch.arange(reg_max, dtype=torch.float32).view(1, reg_max, 1, 1, 1)
+        self.anchor2vec = nn.Conv3d(in_channels=reg_max, out_channels=1, kernel_size=1, bias=False)
+        self.anchor2vec.weight = nn.Parameter(reverse_reg, requires_grad=False)
