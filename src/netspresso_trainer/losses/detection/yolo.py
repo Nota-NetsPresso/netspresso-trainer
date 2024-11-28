@@ -21,41 +21,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .yolox import IOUloss, YOLOXLoss, xyxy2cxcywh
+from netspresso_trainer.utils.bbox_utils import transform_bbox
 
-
-def xyxy2cxcywhn(bboxes, img_size):
-    new_bboxes = bboxes.clone() / img_size
-    new_bboxes[:, 2] = new_bboxes[:, 2] - new_bboxes[:, 0]
-    new_bboxes[:, 3] = new_bboxes[:, 3] - new_bboxes[:, 1]
-    new_bboxes[:, 0] = new_bboxes[:, 0] + new_bboxes[:, 2] * 0.5
-    new_bboxes[:, 1] = new_bboxes[:, 1] + new_bboxes[:, 3] * 0.5
-    return new_bboxes
-
-def bboxes_iou(bboxes_a, bboxes_b, xyxy=False):
-    if bboxes_a.shape[1] != 4 or bboxes_b.shape[1] != 4:
-        raise IndexError
-
-    if xyxy:
-        tl = torch.max(bboxes_a[:, None, :2], bboxes_b[:, :2])
-        br = torch.min(bboxes_a[:, None, 2:], bboxes_b[:, 2:])
-        area_a = torch.prod(bboxes_a[:, 2:] - bboxes_a[:, :2], 1)
-        area_b = torch.prod(bboxes_b[:, 2:] - bboxes_b[:, :2], 1)
-    else:
-        tl = torch.max(
-            (bboxes_a[:, None, :2] - bboxes_a[:, None, 2:] / 2),
-            (bboxes_b[:, :2] - bboxes_b[:, 2:] / 2),
-        )
-        br = torch.min(
-            (bboxes_a[:, None, :2] + bboxes_a[:, None, 2:] / 2),
-            (bboxes_b[:, :2] + bboxes_b[:, 2:] / 2),
-        )
-
-        area_a = torch.prod(bboxes_a[:, 2:], 1)
-        area_b = torch.prod(bboxes_b[:, 2:], 1)
-    en = (tl < br).type(tl.type()).prod(dim=2)
-    area_i = torch.prod(br - tl, 2) * en  # * ((tl < br).all())
-    return area_i / (area_a[:, None] + area_b - area_i)
+from .yolox import IOUloss, YOLOXLoss
 
 
 class YOLOFastestLoss(YOLOXLoss):
@@ -121,7 +89,7 @@ class YOLOFastestLoss(YOLOXLoss):
         # YOLOX model learns box cxcywh format directly,
         # but our detection dataloader gives xyxy format.
         for i in range(len(target)):
-            target[i]['boxes'] = xyxy2cxcywh(target[i]['boxes'])
+            target[i]['boxes'] = transform_bbox(target[i]['boxes'], "xyxy -> cxcywh")
 
         # Ready for l1 loss
         origin_preds = []

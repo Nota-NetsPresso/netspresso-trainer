@@ -132,7 +132,7 @@ def average_precisions_per_class(
     prediction_confidence: np.ndarray,
     prediction_class_ids: np.ndarray,
     true_class_ids: np.ndarray,
-    num_classes,
+    num_classes: int,
     eps: float = 1e-16,
 ) -> np.ndarray:
     """
@@ -187,6 +187,78 @@ def average_precisions_per_class(
 
     return average_precisions
 
+
+def precisions_per_class(
+    matches: np.ndarray,
+    prediction_confidence: np.ndarray,
+    prediction_class_ids: np.ndarray,
+    true_class_ids: np.ndarray,
+    num_classes: int,
+    eps: float = 1e-16,
+) -> np.ndarray:
+    sorted_indices = np.argsort(-prediction_confidence)
+    matches = matches[sorted_indices]
+    prediction_class_ids = prediction_class_ids[sorted_indices]
+
+    unique_classes, class_counts = np.unique(true_class_ids, return_counts=True)
+
+    precisions = np.full((num_classes, matches.shape[1]), np.nan)
+
+    for class_idx, class_id in enumerate(unique_classes):
+        is_class = prediction_class_ids == class_id
+        total_true = class_counts[class_idx]
+        total_predictions = is_class.sum()
+
+        if total_true == 0:
+            continue
+        if total_predictions == 0:
+            for iou_level_idx in range(matches.shape[1]):
+                precisions[int(class_id), iou_level_idx] = 0.
+            continue
+
+        false_positives = (1 - matches[is_class]).sum(0)
+        true_positives = matches[is_class].sum(0)
+        precision = true_positives / (true_positives + false_positives + eps)
+        for iou_level_idx in range(matches.shape[1]):
+            precisions[int(class_id), iou_level_idx] = precision[iou_level_idx]
+    return precisions
+
+def recall_per_class(
+    matches: np.ndarray,
+    prediction_confidence: np.ndarray,
+    prediction_class_ids: np.ndarray,
+    true_class_ids: np.ndarray,
+    num_classes: int,
+    eps: float = 1e-16,
+) -> np.ndarray:
+    sorted_indices = np.argsort(-prediction_confidence)
+    matches = matches[sorted_indices]
+    prediction_class_ids = prediction_class_ids[sorted_indices]
+
+    unique_classes, class_counts = np.unique(true_class_ids, return_counts=True)
+
+    recalls = np.full((num_classes, matches.shape[1]), np.nan)
+
+    for class_idx, class_id in enumerate(unique_classes):
+        is_class = prediction_class_ids == class_id
+        total_true = class_counts[class_idx]
+        total_predictions = is_class.sum()
+
+        if total_true == 0:
+            continue
+        if total_predictions == 0:
+            for iou_level_idx in range(matches.shape[1]):
+                recalls[
+                    int(class_id), iou_level_idx
+                ] = 0.
+            continue
+
+        true_positives = matches[is_class].sum(0)
+        recall = true_positives / (total_true + eps)
+        for iou_level_idx in range(matches.shape[1]):
+            recalls[int(class_id), iou_level_idx] = recall[iou_level_idx]
+
+    return recalls
 
 class DetectionMetricAdaptor:
     '''
@@ -291,5 +363,45 @@ class mAP50_95(BaseMetric):
                 for i, classwise_meter in enumerate(self.classwise_metric_meters):
                     classwise_meter.update(np.nanmean(average_precisions[i, :]))
             self.metric_meter.update(np.nanmean(average_precisions))
+        else:
+            self.metric_meter.update(0)
+
+
+class Precision50(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Precision50'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats']
+
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            precisions = precisions_per_class(*concatenated_stats, num_classes=self.num_classes)
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(np.nanmean(precisions[i, :]))
+            self.metric_meter.update(np.nanmean(precisions))
+        else:
+            self.metric_meter.update(0)
+
+
+class Recall50(BaseMetric):
+    def __init__(self, num_classes, classwise_analysis, **kwargs):
+        metric_name = 'Recall50'
+        super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
+
+    def calibrate(self, predictions, targets, **kwargs):
+        stats = kwargs['stats']
+
+        if stats:
+            concatenated_stats = [np.concatenate(items, 0) for items in zip(*stats)]
+            recalls = recall_per_class(*concatenated_stats, num_classes=self.num_classes)[:, 0:1]
+
+            if self.classwise_analysis:
+                for i, classwise_meter in enumerate(self.classwise_metric_meters):
+                    classwise_meter.update(np.nanmean(recalls[i, :]))
+            self.metric_meter.update(np.nanmean(recalls))
         else:
             self.metric_meter.update(0)

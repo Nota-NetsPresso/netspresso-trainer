@@ -16,6 +16,7 @@
 
 import json
 import os
+from collections import Counter
 from functools import partial
 from itertools import chain
 from multiprocessing.pool import ThreadPool
@@ -96,6 +97,7 @@ class DetectionSampleLoader(BaseSampleLoader):
 
 
 class DetectionCustomDataset(BaseCustomDataset):
+    __repr_indent = 4
 
     def __init__(self, conf_data, conf_augmentation, model_name, idx_to_class,
                  split, samples, transform=None, **kwargs):
@@ -103,6 +105,7 @@ class DetectionCustomDataset(BaseCustomDataset):
             conf_data, conf_augmentation, model_name, idx_to_class,
             split, samples, transform, **kwargs,
         )
+        self._stats = self.get_stats()
 
     @staticmethod
     def xywhn2xyxy(original: np.ndarray, w: int, h: int, padw=0, padh=0):
@@ -178,6 +181,26 @@ class DetectionCustomDataset(BaseCustomDataset):
         outputs.update({'org_shape': (h, w)})
         return outputs
 
+    def __repr__(self) -> str:
+        '''
+        This implementation is based on https://pytorch.org/vision/main/_modules/torchvision/datasets/vision.html#VisionDataset.
+        '''
+        head = "Dataset " + self.conf_data.name
+        body = [] if self.root is None else [f"Root location: {self.root}"]
+        body.append(f"Number of images: {self.__len__()}")
+        if self.num_classes is not None:
+            body.append(f"Number of classes: {self.num_classes}")
+        if self.stats:
+            body.append(f"Total instances: {self.stats['total_instances']}")
+            body.append("Instances per class:")
+            for class_idx, count in self.stats['instances_per_class'].items():
+                percentage = (count / self.stats['total_instances']) * 100
+                body.append(" " * self.__repr_indent + f"{class_idx}_{self._idx_to_class[class_idx]}: {count} ({percentage:.1f}%)")
+
+        lines = [head] + [" " * self.__repr_indent + line for line in body]
+        return "\n".join(lines)
+
+
     def pull_item(self, index):
         img_path = Path(self.samples[index]['image'])
         ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
@@ -192,3 +215,37 @@ class DetectionCustomDataset(BaseCustomDataset):
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         return org_img, label, boxes
+
+    def get_stats(self):
+        def process_annotation(sample):
+            try:
+                ann_path = sample.get('label')
+                if not ann_path:
+                    return []
+
+                label, _ = get_detection_label(Path(ann_path))
+                label = label.squeeze()
+                if label.ndim == 0:
+                    return [int(label)]
+                return label.astype(int).tolist()
+            except Exception as e:
+                logger.warning(f"Error processing annotation {ann_path}: {str(e)}")
+                return []
+        num_threads = min(8, len(self.samples))
+        with ThreadPool(num_threads) as pool:
+            all_labels = pool.map(process_annotation, self.samples)
+        flat_labels = [label for sublist in all_labels for label in sublist]
+        class_counts = dict(Counter(flat_labels))
+        if not class_counts:
+            return
+        for i in range(len(self._idx_to_class)):
+            if i not in class_counts:
+                class_counts[i] = 0
+        sorted_class_counts = dict(sorted(class_counts.items()))
+        stats = {
+            'class_distribution': class_counts,
+            'total_instances': sum(class_counts.values()),
+            'instances_per_class': dict(sorted_class_counts.items())
+        }
+
+        return stats
