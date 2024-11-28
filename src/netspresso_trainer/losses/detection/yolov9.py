@@ -95,6 +95,7 @@ def calculate_iou(bbox1, bbox2, metrics="iou") -> Tensor:
 
 
 class BoxMatcher:
+    # TODO: It should be consolidated into bbox_utils 
     def __init__(self,
                  class_num: int,
                  anchors: Tensor,
