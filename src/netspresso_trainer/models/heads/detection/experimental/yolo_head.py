@@ -158,3 +158,8 @@ class YOLODetectionHead(nn.Module):
             aux_outputs = [head(x) for head, x in zip(self.aux_heads, aux_in)]
             outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
         return ModelOutput(pred=outputs)
+
+def yolo_detection_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs):
+    return YOLODetectionHead(num_classes=num_classes,
+                             intermediate_features_dim=intermediate_features_dim,
+                             params=conf_model_head.params)
