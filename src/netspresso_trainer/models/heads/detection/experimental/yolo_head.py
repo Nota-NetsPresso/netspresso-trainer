@@ -18,6 +18,8 @@
 Based on the YOLO implementation of WongKinYiu
 https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
 """
+import torch
+import torch.nn as nn
 
 from typing import Union
 from torch import Tensor
@@ -27,3 +29,8 @@ def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
         Round up `x` to the biggest-nearest multiple of `div`
     """
     return x + (-x % div)
+
+
+class Detection(nn.Module):
+    def __init__(self):
+        super().__init__()
