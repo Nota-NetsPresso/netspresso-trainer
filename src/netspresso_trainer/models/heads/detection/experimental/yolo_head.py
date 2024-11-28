@@ -22,8 +22,9 @@ import math
 import torch
 import torch.nn as nn
 
-from typing import Optional, Union
+from typing import Optional, Tuple, Union
 from torch import Tensor
+from torch.fx.proxy import Proxy
 from ....op.custom import Anchor2Vec, ConvLayer
 
 def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
@@ -81,3 +82,10 @@ class Detection(nn.Module):
         bias_cls = self.cls_convs[-1].bias.view(1, -1)
         bias_cls.data.fill_(-math.log((1 - prior_prob) / prior_prob))
         self.cls_convs[-1].bias = torch.nn.Parameter(bias_cls.view(-1), requires_grad=True)
+    
+    def forward(self, x: Union[Tensor, Proxy]) -> Tuple[Union[Tensor, Proxy]]:
+        reg = self.reg_convs(x)
+        cls_logits = self.cls_convs(x)
+        anchor_x, vector_x = self.anchor2vec(reg)
+
+        return vector_x, anchor_x, cls_logits
