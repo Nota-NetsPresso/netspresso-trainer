@@ -18,11 +18,13 @@
 Based on the YOLO implementation of WongKinYiu
 https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
 """
+import math
 import torch
 import torch.nn as nn
 
-from typing import Union
+from typing import Optional, Union
 from torch import Tensor
+from ....op.custom import Anchor2Vec, ConvLayer
 
 def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
     """
@@ -35,5 +37,47 @@ class Detection(nn.Module):
     """
         A single detection head.
     """
-    def __init__(self):
+    def __init__(self,
+                 in_channels: int,
+                 hidden_channels: int,
+                 num_classes: int,
+                 act_type: Optional[str] = None,
+                 reg_max: Optional[int] = 16,
+                 use_group: bool = True,
+                 prior_prob: Optional[float] = 1e-2
+        ):
         super().__init__()
+        groups = 4 if use_group else 1
+        reg_channels = 4 * reg_max
+        reg_hidden_channels = max(round_up(hidden_channels // 4, groups), reg_channels, reg_max)
+        cls_hidden_channels = max(hidden_channels, min(num_classes * 2, 128))
+
+        self.reg_convs = nn.Sequential(
+            ConvLayer(in_channels, reg_hidden_channels, kernel_size=3, act_type=act_type),
+            ConvLayer(reg_hidden_channels, reg_hidden_channels, kernel_size=3, groups=groups, act_type=act_type),
+            nn.Conv2d(reg_hidden_channels, reg_channels, kernel_size=1, groups=groups)
+        )
+
+        self.cls_convs = nn.Sequential(
+            ConvLayer(in_channels, cls_hidden_channels, kernel_size=3, act_type=act_type),
+            ConvLayer(cls_hidden_channels, cls_hidden_channels, kernel_size=3, act_type=act_type),
+            nn.Conv2d(cls_hidden_channels, num_classes, kernel_size=1)
+        )
+
+        self.anchor2vec = Anchor2Vec(reg_max=reg_max)
+
+        # Initialize
+        def init_bn(M):
+            for m in M.modules():
+                if isinstance(m, nn.BatchNorm2d):
+                    m.eps = 1e-3
+                    m.momentum = 0.03
+        self.apply(init_bn)
+
+        bias_reg = self.reg_convs[-1].bias.view(1, -1)
+        bias_reg.data.fill_(-math.log((1 - prior_prob) / prior_prob))
+        self.reg_convs[-1].bias = torch.nn.Parameter(bias_reg.view(-1), requires_grad=True)
+
+        bias_cls = self.cls_convs[-1].bias.view(1, -1)
+        bias_cls.data.fill_(-math.log((1 - prior_prob) / prior_prob))
+        self.cls_convs[-1].bias = torch.nn.Parameter(bias_cls.view(-1), requires_grad=True)
