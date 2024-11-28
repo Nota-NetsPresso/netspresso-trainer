@@ -27,6 +27,10 @@ from netspresso_trainer.utils.bbox_utils import BoxMatcher, generate_anchors
 
 from .yolox import IOUloss
 
+"""
+    This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/tools/loss_functions.py.
+"""
+
 
 def calculate_iou(bbox1, bbox2, metrics="iou") -> Tensor:
     #TODO: It should be consolidated into bbox_utils 
