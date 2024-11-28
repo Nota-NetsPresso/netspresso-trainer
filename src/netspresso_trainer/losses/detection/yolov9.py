@@ -15,7 +15,7 @@
 # ----------------------------------------------------------------------------
 
 import math
-from typing import Any, Dict, List, Union, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -23,7 +23,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import BCEWithLogitsLoss
 
-from netspresso_trainer.utils.bbox_utils import BoxMatcher, generate_anchors
+from netspresso_trainer.utils.bbox_utils import generate_anchors
 
 from .yolox import IOUloss
 
@@ -33,7 +33,7 @@ from .yolox import IOUloss
 
 
 def calculate_iou(bbox1, bbox2, metrics="iou") -> Tensor:
-    #TODO: It should be consolidated into bbox_utils 
+    #TODO: It should be consolidated into bbox_utils
     metrics = metrics.lower()
     EPS = 1e-7
     dtype = bbox1.dtype
@@ -99,7 +99,7 @@ def calculate_iou(bbox1, bbox2, metrics="iou") -> Tensor:
 
 
 class BoxMatcher:
-    # TODO: It should be consolidated into bbox_utils 
+    # TODO: It should be consolidated into bbox_utils
     def __init__(self,
                  class_num: int,
                  anchors: Tensor,
@@ -256,3 +256,178 @@ class BoxMatcher:
         align_cls = align_cls * normalize_term * valid_mask[:, :, None]
         anchor_matched_targets = torch.cat([align_cls, align_bbox], dim=-1)
         return anchor_matched_targets, valid_mask.bool()
+
+
+
+
+class BCELoss(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+        # TODO: Refactor the device, should be assign by config
+        # TODO: origin v9 using pos_weight == 1?
+        self.bce = BCEWithLogitsLoss(reduction="none")
+
+    def forward(self, predicts_cls: Tensor, targets_cls: Tensor, cls_norm: Tensor) -> Any:
+        return self.bce(predicts_cls, targets_cls).sum() / cls_norm
+
+
+class BoxLoss(nn.Module):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def forward(
+        self, predicts_bbox: Tensor, targets_bbox: Tensor, valid_masks: Tensor, box_norm: Tensor, cls_norm: Tensor
+    ) -> Any:
+        valid_bbox = valid_masks[..., None].expand(-1, -1, 4)
+        picked_predict = predicts_bbox[valid_bbox].view(-1, 4)
+        picked_targets = targets_bbox[valid_bbox].view(-1, 4)
+
+        iou = calculate_iou(picked_predict, picked_targets, "ciou").diag()
+        loss_iou = 1.0 - iou
+        loss_iou = (loss_iou * box_norm).sum() / cls_norm
+        return loss_iou
+
+
+class DFLoss(nn.Module):
+    def __init__(self, anchor_grid, scaler, reg_max: int) -> None:
+        super().__init__()
+        self.anchors_norm = (anchor_grid / scaler[:, None])[None]
+        self.reg_max = reg_max
+
+    def forward(
+        self, predicts_anc: Tensor, targets_bbox: Tensor, valid_masks: Tensor, box_norm: Tensor, cls_norm: Tensor
+    ) -> Any:
+        valid_bbox = valid_masks[..., None].expand(-1, -1, 4)
+        bbox_lt, bbox_rb = targets_bbox.chunk(2, -1)
+        targets_dist = torch.cat(((self.anchors_norm - bbox_lt), (bbox_rb - self.anchors_norm)), -1).clamp(
+            0, self.reg_max - 1.01
+        )
+        picked_targets = targets_dist[valid_bbox].view(-1)
+        picked_predict = predicts_anc[valid_bbox].view(-1, self.reg_max)
+
+        label_left, label_right = picked_targets.floor(), picked_targets.floor() + 1
+        weight_left, weight_right = label_right - picked_targets, picked_targets - label_left
+
+        loss_left = F.cross_entropy(picked_predict, label_left.to(torch.long), reduction="none")
+        loss_right = F.cross_entropy(picked_predict, label_right.to(torch.long), reduction="none")
+        loss_dfl = loss_left * weight_left + loss_right * weight_right
+        loss_dfl = loss_dfl.view(-1, 4).mean(-1)
+        loss_dfl = (loss_dfl * box_norm).sum() / cls_norm
+        return loss_dfl
+
+
+class YOLOv9Loss(nn.Module):
+    def __init__(self, l1_activate_epoch, cur_epoch=None, **kwargs):
+        super().__init__()
+        self.iou_loss = IOUloss(reduction="none", loss_type="ciou")
+        self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
+        self.anchor_grid = None
+        self.scaler = None
+        self.cls = BCELoss()
+        self.iou = BoxLoss()
+        self.reg_max = 16 # TODO: should be controlled by config
+        self.aux_rate = 0.25 # TODO: should be controlled by config
+
+    def get_output(self, output, anchor_grid, scaler):
+        pred_bbox_reg, pred_bbox_anchor, pred_class_logits = [], [], []
+        for layer_output in output:
+            bbox_reg, bbox_anchor, class_logits = layer_output
+            b, c, _, _ = bbox_reg.shape
+            reg = bbox_reg.view(b, c, -1).permute(0, 2, 1)
+            pred_bbox_reg.append(reg)
+
+            b, a, r, _, _ = bbox_anchor.shape
+            anchor = bbox_anchor.view(b, a, r, -1).permute(0, 3, 2, 1)
+            pred_bbox_anchor.append(anchor)
+
+            b, c, _, _ = class_logits.shape
+            logits = class_logits.view(b, c, -1).permute(0, 2, 1)
+            pred_class_logits.append(logits)
+
+        pred_bbox_reg = torch.concat(pred_bbox_reg, dim=1)
+        pred_bbox_anchor = torch.concat(pred_bbox_anchor, dim=1)
+        pred_class_logits = torch.concat(pred_class_logits, dim=1)
+
+        pred_xyxy = pred_bbox_reg * scaler.view(1, -1, 1)
+        lt, rb = pred_xyxy.chunk(2, dim=-1)
+        pred_bbox_reg = torch.cat([anchor_grid - lt, anchor_grid + rb], dim=-1)
+        return pred_class_logits, pred_bbox_anchor, pred_bbox_reg
+
+    def forward(self, out: Union[List, Dict], target: Dict) -> Tensor:
+        if isinstance(out['pred'], Dict):
+            aux_out = out['pred']['aux_outputs']
+            out = out['pred']['outputs']
+        else:
+            out = out['pred']
+            aux_out = None
+        device = out[0][0].device
+        self.num_classes = target['num_classes']
+        img_size = target['img_size']
+        if isinstance(img_size, int):
+            img_size = (img_size, img_size)
+
+        target = target['gt']
+
+        strides = []
+        for _k, o in enumerate(out):
+            bbox_reg, _, _ = o
+            stride_this_level = img_size[-1] // bbox_reg.size(-1)
+            strides.append(stride_this_level)
+        anchor_grid, scaler = generate_anchors(img_size, strides)
+        anchor_grid = anchor_grid.to(device)
+        scaler = scaler.to(device)
+
+        dfl = DFLoss(anchor_grid, scaler, self.reg_max)
+        preds_cls, preds_anc, preds_box = self.get_output(out, anchor_grid=anchor_grid, scaler=scaler)
+        if aux_out:
+            aux_preds_cls, aux_preds_anc, aux_preds_box = self.get_output(aux_out, anchor_grid=anchor_grid, scaler=scaler)
+
+        matcher = BoxMatcher(self.num_classes, anchor_grid)
+        max_samples = max([len(t['labels']) for t in target])
+        labels = torch.zeros(len(target), max_samples, 5).to(device)
+        labels[:, :, 0] = -1
+        for batch_idx, t in enumerate(target):
+            batch_boxes = t['boxes']
+            batch_labels = t['labels']
+            sample_num = len(batch_labels)
+            labels[batch_idx, :sample_num, 1:5] = batch_boxes
+            labels[batch_idx, :sample_num, 0] = batch_labels
+
+        align_targets, valid_masks = matcher(labels, (preds_cls.detach(), preds_box.detach()))
+        targets_cls, targets_bbox = self.separate_anchor(align_targets, scaler)
+        cls_norm = max(targets_cls.sum(), 1)
+        box_norm = targets_cls.sum(-1)[valid_masks]
+        if aux_out:
+            aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
+            aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
+            aux_cls_norm = max(aux_targets_cls.sum(), 1)
+            aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
+            ## -- CLS -- ##
+            aux_loss_cls = self.cls(aux_preds_cls, aux_targets_cls, aux_cls_norm)
+            ## -- IOU -- ##
+            aux_loss_iou = self.iou(aux_preds_box, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+            ## -- DFL -- ##
+            aux_loss_dfl = dfl(aux_preds_anc, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+
+
+        ## -- CLS -- ##
+        loss_cls = self.cls(preds_cls, targets_cls, cls_norm)
+        ## -- IOU -- ##
+        loss_iou = self.iou(preds_box, targets_bbox, valid_masks, box_norm, cls_norm)
+        ## -- DFL -- ##
+        loss_dfl = dfl(preds_anc, targets_bbox, valid_masks, box_norm, cls_norm)
+
+        # TODO: loss weights should be controlled by config
+        if aux_out:
+            total_loss = 0.5 * (self.aux_rate * aux_loss_cls + loss_cls) + 1.5 * (self.aux_rate * aux_loss_dfl + loss_dfl) + 7.5 * (self.aux_rate * aux_loss_iou + loss_iou)
+        else:
+            total_loss = 0.5 * loss_cls + 1.5 * loss_dfl + 7.5 * loss_iou
+        return total_loss
+
+    def separate_anchor(self, anchors, scaler):
+        """
+        separate anchor and bbouding box
+        """
+        anchors_cls, anchors_box = torch.split(anchors, (self.num_classes, 4), dim=-1)
+        anchors_box = anchors_box / scaler[None, :, None]
+        return anchors_cls, anchors_box
