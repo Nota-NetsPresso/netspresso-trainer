@@ -15,7 +15,7 @@
 # ----------------------------------------------------------------------------
 
 import math
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Tuple
 
 import torch
 import torch.nn as nn
