@@ -1098,3 +1098,20 @@ class Anchor2Vec(nn.Module):
         reverse_reg = torch.arange(reg_max, dtype=torch.float32).view(1, reg_max, 1, 1, 1)
         self.anchor2vec = nn.Conv3d(in_channels=reg_max, out_channels=1, kernel_size=1, bias=False)
         self.anchor2vec.weight = nn.Parameter(reverse_reg, requires_grad=False)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        """
+        Args:
+            x (Tensor): Input tensor of shape (batch_size, channels, height, width)
+
+        Returns:
+            Tuple[Tensor, Tensor]: Tuple of (anchor_tensor, vector_tensor)
+            where anchor_tensor has shape (batch_size, r, 4, height, width)
+            and vector_tensor has shape (batch_size, height, width)
+        """
+        batch_size, channel_size, height, width = x.shape
+        reg_channel = channel_size // 4
+        predictions = 4 # Number of predictions per anchor
+        anchor_x = x.view(batch_size, reg_channel, predictions, height, width)
+        vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
+        return anchor_x, vector_x
