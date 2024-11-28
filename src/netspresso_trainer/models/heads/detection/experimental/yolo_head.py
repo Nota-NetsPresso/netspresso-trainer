@@ -32,5 +32,8 @@ def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
 
 
 class Detection(nn.Module):
+    """
+        A single detection head.
+    """
     def __init__(self):
         super().__init__()
