@@ -13,3 +13,8 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
+
+"""
+Based on the YOLO implementation of WongKinYiu
+https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
+"""
