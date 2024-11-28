@@ -22,10 +22,12 @@ import math
 import torch
 import torch.nn as nn
 
-from typing import Optional, Tuple, Union
+from omegaconf import DictConfig
 from torch import Tensor
 from torch.fx.proxy import Proxy
+from typing import Dict, List, Optional, Tuple, Union
 from ....op.custom import Anchor2Vec, ConvLayer
+from ....utils import ModelOutput
 
 def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
     """
@@ -89,3 +91,70 @@ class Detection(nn.Module):
         anchor_x, vector_x = self.anchor2vec(reg)
 
         return vector_x, anchor_x, cls_logits
+
+
+class YOLODetectionHead(nn.Module):
+    def __init__(self,
+                 num_classes: int,
+                 intermediate_features_dim: List[int],
+                 params: DictConfig):
+        super().__init__()
+        self._validate_params(params)
+        self.num_classes = num_classes
+        self.num_anchors = params.num_anchors
+        self.hidden_dim = int(intermediate_features_dim[0])
+        self.heads = self._build_heads(
+            intermediate_features_dim,
+            params.act_type,
+            params.reg_max,
+            params.use_group,
+        )
+
+        if params.use_aux_loss:
+            self.aux_heads = self._build_heads(
+                intermediate_features_dim,
+                params.act_type,
+                params.reg_max,
+                params.use_group,
+            )
+        else:
+            self.aux_heads = None
+
+    def _validate_params(self, params: DictConfig) -> None:
+        required_params = ['act_type', 'use_group', 'reg_max', 'num_anchors', 'use_aux_loss']
+        for param in required_params:
+            if not hasattr(params, param):
+                raise ValueError(f"Missing required parameter: {param}")
+    
+    def _build_heads(
+            self,
+            intermediate_features_dim: List[int],
+            act_type: str,
+            reg_max: int,
+            use_group: bool,
+    ) -> nn.ModuleList:
+        heads = nn.ModuleList()
+        for feature_dim in intermediate_features_dim:
+            head = Detection(
+                int(feature_dim),
+                self.hidden_dim,
+                num_classes=self.num_classes,
+                act_type=act_type,
+                reg_max=reg_max,
+                use_group=use_group,
+            )
+            heads.append(head)
+        return heads
+
+    def forward(self, x_in: Union[List[Tensor], Dict], targets: Optional[Tensor] = None) -> ModelOutput:
+        if isinstance(x_in, Dict):
+            assert self.aux_heads
+            aux_in = x_in["aux_outputs"]
+            x_in = x_in["outputs"]
+        else:
+            aux_in = None
+        outputs = [head(x) for head, x in zip(self.heads, x_in)]
+        if self.training and self.aux_heads:
+            aux_outputs = [head(x) for head, x in zip(self.aux_heads, aux_in)]
+            outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
+        return ModelOutput(pred=outputs)
