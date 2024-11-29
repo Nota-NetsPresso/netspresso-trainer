@@ -79,7 +79,7 @@ python train.py\
   --data config/data/huggingface/beans.yaml\
   --augmentation config/augmentation/classification.yaml\
   --model config/model/resnet/resnet50-classification.yaml\
-  --training config/training/classification.yaml\
+  --training config/training.yaml\
   --logging config/logging.yaml\
   --environment config/environment.yaml
 ```
@@ -91,7 +91,7 @@ netspresso-train\
   --data config/data/huggingface/beans.yaml\
   --augmentation config/augmentation/classification.yaml\
   --model config/model/resnet/resnet50-classification.yaml\
-  --training config/training/classification.yaml\
+  --training config/training.yaml\
   --logging config/logging.yaml\
   --environment config/environment.yaml
 ```
