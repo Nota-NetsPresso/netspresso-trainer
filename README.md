@@ -76,7 +76,7 @@ Then, train your model with your own configuraiton:
 
 ```bash
 python train.py\
-  --data config/data/beans.yaml\
+  --data config/data/huggingface/beans.yaml\
   --augmentation config/augmentation/classification.yaml\
   --model config/model/resnet/resnet50-classification.yaml\
   --training config/training/classification.yaml\
@@ -88,7 +88,7 @@ Or you can start NetsPresso Trainer by just executing console script which has s
 
 ```bash
 netspresso-train\
-  --data config/data/beans.yaml\
+  --data config/data/huggingface/beans.yaml\
   --augmentation config/augmentation/classification.yaml\
   --model config/model/resnet/resnet50-classification.yaml\
   --training config/training/classification.yaml\
