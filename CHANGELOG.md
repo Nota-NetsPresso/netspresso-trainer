@@ -8,7 +8,8 @@
 
 ## Bug Fixes:
 
-- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580/files)
+- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580)
+- Fix example scripts by `@hglee98` in [PR 596](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/596)
 
 ## Breaking Changes:
 
