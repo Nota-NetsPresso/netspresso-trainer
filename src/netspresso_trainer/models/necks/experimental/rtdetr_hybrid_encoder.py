@@ -154,7 +154,7 @@ class HybridEncoder(nn.Module):
         for _ in range(len(self.in_channels) - 1, 0, -1):
             self.lateral_convs.append(ConvLayer(self.hidden_dim, self.hidden_dim, kernel_size=1, stride=1, act_type=act))
             self.fpn_blocks.append(
-                CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion)
+                CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, use_identity=False)
             )
 
         # bottom-up pan
@@ -165,7 +165,7 @@ class HybridEncoder(nn.Module):
                 ConvLayer(self.hidden_dim, self.hidden_dim, kernel_size=3, stride=2, act_type=act)
             )
             self.pan_blocks.append(
-                CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion)
+                CSPRepLayer(self.hidden_dim * 2, self.hidden_dim, round(3 * depth_mult), act=act, expansion=expansion, use_identity=False)
             )
         self._reset_parameters()
 
