@@ -3,34 +3,6 @@
 RT-DETR Hybrid Encoder based on [RT-DETR: DETRs Beat YOLOs on Real-time Object Detection](https://arxiv.org/abs/2304.08069)
 
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting backbones</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      ResNet<br />
-      MobileNetV3<br />
-      MobileNetV4<br />
-      MixNet<br />
-      CSPDarkNet<br />
-      MobileViT<br />
-      MixTransformer<br />
-      EfficientFormer
-    </td>
-    <td>
-      RT-DETR head 
-    </td>
-    <td>Supported</td>
-    <td>Not Supported</td>
-  </tr>
-</table>
-
 
 ## Field lists
 | Field <img width=200/> | Description |
