@@ -195,7 +195,9 @@ class RepVGGBlock(nn.Module):
                  out_channels: int,
                  kernel_size: Union[int, Tuple[int, int]] = 3,
                  groups: int = 1,
-                 act_type: Optional[str] = None,):
+                 act_type: Optional[str] = None,
+                 use_identity: Optional[bool]=True,
+                 ):
         if act_type is None:
             act_type = 'silu'
         super().__init__()
@@ -209,7 +211,7 @@ class RepVGGBlock(nn.Module):
         self.groups = groups
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, groups=groups, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, groups=groups, use_act=False)
-        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if out_channels == in_channels else nn.Identity()
+        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if use_identity and out_channels == in_channels else None
 
         assert act_type in ACTIVATION_REGISTRY
         self.act = ACTIVATION_REGISTRY[act_type]()
@@ -218,7 +220,8 @@ class RepVGGBlock(nn.Module):
         if hasattr(self, 'conv'):
             y = self.conv(x)
             return y
-        y = self.conv1(x) + self.conv2(x) + self.rbr_identity(x)
+
+        y = self.conv1(x) + self.conv2(x) + self.rbr_identity(x) if self.rbr_identity else self.conv1(x) + self.conv2(x)
 
         return self.act(y)
 
@@ -412,10 +415,11 @@ class RepNBottleneck(nn.Module):
                  shortcut: bool = True,
                  expansion: float = 1.0,
                  depthwise: bool = False,
-                 act_type: Optional[str] = None):
+                 act_type: Optional[str] = None,
+                 **kwargs):
         super().__init__()
         hidden_channels = int(out_channels * expansion)
-        self.conv1 = RepVGGBlock(in_channels, hidden_channels, 3, act_type=act_type)
+        self.conv1 = RepVGGBlock(in_channels, hidden_channels, 3, act_type=act_type, **kwargs)
         if depthwise:
             self.conv2 = SeparableConvLayer(hidden_channels,
                                             out_channels,
@@ -844,6 +848,7 @@ class CSPLayer(nn.Module):
         depthwise=False,
         act_type="silu",
         layer_type: Optional[str] = "csp",
+        **kwargs
     ):
         """
         Args:
@@ -891,7 +896,8 @@ class CSPLayer(nn.Module):
                 shortcut=shortcut,
                 expansion=1.0,
                 depthwise=depthwise,
-                act_type=act_type
+                act_type=act_type,
+                **kwargs
             )
             for _ in range(n)
         ]
@@ -912,6 +918,7 @@ class CSPRepLayer(nn.Module):
                  num_blocks: int=3,
                  expansion: float=1.0,
                  bias: bool= False,
+                 use_identity: Optional[bool]=True,
                  act: str="silu"):
         super(CSPRepLayer, self).__init__()
         warnings.warn(
@@ -924,7 +931,7 @@ class CSPRepLayer(nn.Module):
         self.conv1 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
         self.conv2 = ConvLayer(in_channels, hidden_channels, kernel_size=1, stride=1, bias=bias, act_type=act)
         self.bottlenecks = nn.Sequential(*[
-            RepVGGBlock(hidden_channels, hidden_channels, act_type=act) for _ in range(num_blocks)
+            RepVGGBlock(hidden_channels, hidden_channels, act_type=act, use_identity=use_identity) for _ in range(num_blocks)
         ])
         if hidden_channels != out_channels:
             self.conv3 = ConvLayer(hidden_channels, out_channels, kernel_size=1, stride=1, bias=bias, act_type=act)

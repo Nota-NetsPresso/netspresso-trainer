@@ -63,6 +63,7 @@ class GELAN(nn.Module):
                  out_channels=base_channels*2,
                  part_channels=base_channels*2,
                  act_type=act_type,
+                 use_identity=False,
                  layer_type="basic"
                  )
         )
@@ -76,6 +77,7 @@ class GELAN(nn.Module):
                  part_channels=base_channels*4,
                  act_type=act_type,
                  layer_type="repncsp",
+                 use_identity=False,
                  n=base_depth * 3)
         )
 
@@ -88,6 +90,7 @@ class GELAN(nn.Module):
                  part_channels=base_channels*6,
                  act_type=act_type,
                  layer_type="repncsp",
+                 use_identity=False,
                  n=base_depth * 3)
         )
 
@@ -100,6 +103,7 @@ class GELAN(nn.Module):
                  part_channels=base_channels*8,
                  act_type=act_type,
                  layer_type="repncsp",
+                 use_identity=False,
                  n=base_depth * 3)    
         )
 
