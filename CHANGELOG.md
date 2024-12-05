@@ -3,13 +3,13 @@
 ## New Features:
 
 - Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
-- Add ELAN (Efficient Layer Aggregation Networks) module by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585)
 - Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
-- Add SPPCSPLayer and SPPELAN module by `@hglee98` in [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586)
+- Add YOLOv9 by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585), [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586), [PR 592](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/592), [PR 593](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/593), [PR 595](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/595)
 
 ## Bug Fixes:
 
-- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580/files)
+- Fix error of checkpoint saving by `@hglee98` in [PR 580](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/580)
+- Fix example scripts by `@hglee98` in [PR 596](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/596)
 
 ## Breaking Changes:
 
@@ -17,7 +17,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-- Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581)
+- Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581), [PR 594](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/594)
 - Generalize 2d pooling layers and define as custom layer by `@hglee98` in [PR 583](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/583)
 - Unify bbox transformation and IoU computing methods by `@hglee98` in [PR 587](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/587)
 

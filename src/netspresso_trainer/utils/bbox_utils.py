@@ -8,6 +8,32 @@ from torch import Tensor
 from torch.fx.proxy import Proxy
 
 
+def generate_anchors(image_shape: Union[int, Tuple[int, int]], strides: List[int]):
+    """
+        This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/utils/bounding_box_utils.py.
+    """
+    image_height, image_width = image_shape
+    anchors = []
+    scaler = []
+
+    for stride in strides:
+        anchor_num = image_width // stride * image_height // stride
+        scaler.append(torch.full((anchor_num,), stride))
+        offset = stride // 2
+        h = torch.arange(0, image_height, stride) + offset
+        w = torch.arange(0, image_width, stride) + offset
+
+        if torch.__version__ >= "2.3.0":
+            anchor_h, anchor_w = torch.meshgrid(h, w, indexing="ij")
+        else:
+            anchor_h, anchor_w = torch.meshgrid(h, w)
+
+        anchor = torch.stack([anchor_w.flatten(), anchor_h.flatten()], dim=-1)
+        anchors.append(anchor)
+    all_anchors = torch.cat(anchors, dim=0)
+    all_scalers = torch.cat(scaler, dim=0)
+    return all_anchors, all_scalers
+
 def transform_bbox(bboxes: Union[Tensor, Proxy],
                    indicator="xywh -> xyxy",
                    image_shape: Optional[Union[int, Tuple[int, int]]]=None):

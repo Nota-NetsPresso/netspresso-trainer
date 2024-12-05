@@ -211,7 +211,7 @@ class RepVGGBlock(nn.Module):
         self.groups = groups
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, groups=groups, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, groups=groups, use_act=False)
-        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if use_identity and out_channels == in_channels else None
+        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if use_identity and out_channels == in_channels else nn.Identity()
 
         assert act_type in ACTIVATION_REGISTRY
         self.act = ACTIVATION_REGISTRY[act_type]()
@@ -1238,3 +1238,32 @@ class SPPELAN(nn.Module):
         for pool in self.pools:
             features.append(pool(features[-1]))
         return self.conv5(torch.cat(features, dim=1))
+
+
+class Anchor2Vec(nn.Module):
+    """
+        This implementation is based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py.
+    """
+    def __init__(self,
+                 reg_max: int=16):
+        super().__init__()
+        reverse_reg = torch.arange(reg_max, dtype=torch.float32).view(1, reg_max, 1, 1, 1)
+        self.anchor2vec = nn.Conv3d(in_channels=reg_max, out_channels=1, kernel_size=1, bias=False)
+        self.anchor2vec.weight = nn.Parameter(reverse_reg, requires_grad=False)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        """
+        Args:
+            x (Tensor): Input tensor of shape (batch_size, channels, height, width)
+
+        Returns:
+            Tuple[Tensor, Tensor]: Tuple of (anchor_tensor, vector_tensor)
+            where anchor_tensor has shape (batch_size, r, 4, height, width)
+            and vector_tensor has shape (batch_size, height, width)
+        """
+        batch_size, channel_size, height, width = x.shape
+        reg_channel = channel_size // 4
+        predictions = 4 # Number of predictions per anchor
+        anchor_x = x.view(batch_size, reg_channel, predictions, height, width)
+        vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
+        return anchor_x, vector_x
