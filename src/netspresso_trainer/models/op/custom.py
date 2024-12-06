@@ -1202,7 +1202,7 @@ class ADown(nn.Module):
         mid_layer = {"kernel_size": 3, "stride": 2}
         self.avg_pool = Pool2d(method="avg", kernel_size=2, stride=1)
         self.conv1 = ConvLayer(half_in_channels, half_out_channels, act_type=act_type, **mid_layer)
-        self.max_pool = Pool2d(method="max", **mid_layer)
+        self.max_pool = Pool2d(method="max", **mid_layer, padding=(1, 1))
         self.conv2 = ConvLayer(half_in_channels, half_out_channels, kernel_size=1, act_type=act_type)
 
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
