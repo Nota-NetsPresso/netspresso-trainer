@@ -211,7 +211,7 @@ class RepVGGBlock(nn.Module):
         self.groups = groups
         self.conv1 = ConvLayer(in_channels, out_channels, kernel_size, groups=groups, use_act=False)
         self.conv2 = ConvLayer(in_channels, out_channels, 1, groups=groups, use_act=False)
-        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if use_identity and out_channels == in_channels else nn.Identity()
+        self.rbr_identity = nn.BatchNorm2d(num_features=in_channels) if use_identity and out_channels == in_channels else None
 
         assert act_type in ACTIVATION_REGISTRY
         self.act = ACTIVATION_REGISTRY[act_type]()
