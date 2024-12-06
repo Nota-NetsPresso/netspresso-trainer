@@ -1177,6 +1177,39 @@ class AConv(nn.Module):
         return f"{self.__class__.__name__}{self.layers}"
 
 
+class ADown(nn.Module):
+    """
+        Based on https://github.com/WongKinYiu/YOLO/blob/b96c8eaec16cfcabbf79947d98d2c575f0a114ad/yolo/model/module.py.
+        A module that combines average and max pooling with convolution operations for feature rediction.
+
+        Args:
+            in_channels (int): Number of input channels
+            out_channels (int): NUmber of output channels
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        act_type: Optional[str]= 'silu',
+        ) -> None:
+        super().__init__()
+        half_in_channels = in_channels // 2
+        half_out_channels = out_channels // 2
+        mid_layer = {"kernel_size": 3, "stride": 2}
+        self.avg_pool = Pool2d(method="avg", kernel_size=2, stride=1)
+        self.conv1 = ConvLayer(half_in_channels, half_out_channels, act_type=act_type, **mid_layer)
+        self.max_pool = Pool2d(method="max", **mid_layer)
+        self.conv2 = ConvLayer(half_in_channels, half_out_channels, kernel_size=1, act_type=act_type)
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        x = self.avg_pool(x)
+        x1, x2 = x.chunk(2, dim=1)
+        x1 = self.conv1(x1)
+        x2 = self.max_pool(x2)
+        x2 = self.conv2(x2)
+        return torch.cat((x1, x2), dim=1)
+
+
 class SPPCSPLayer(nn.Module):
     """
         Based on https://github.com/WongKinYiu/YOLO/blob/main/yolo/model/module.py
