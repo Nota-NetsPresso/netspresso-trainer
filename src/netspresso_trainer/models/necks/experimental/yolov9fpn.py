@@ -64,7 +64,8 @@ class YOLOv9FPN(nn.Module):
             part_channels=int(self.in_channels[1]),
             n=round(3 * base_depth),
             layer_type="repncsp",
-            act_type=act_type
+            act_type=act_type,
+            use_identity=False
         )
 
         if self.use_aux_loss:
@@ -74,7 +75,8 @@ class YOLOv9FPN(nn.Module):
                 part_channels=int(self.in_channels[1]),
                 n=round(3 * base_depth),
                 layer_type="repncsp",
-                act_type=act_type
+                act_type=act_type,
+                use_identity=False
             )
         else:
             self.aux_td_fusion_block_1 = None
@@ -85,7 +87,8 @@ class YOLOv9FPN(nn.Module):
             part_channels=int(self.in_channels[0]),
             n=round(3 * base_depth),
             layer_type="repncsp",
-            act_type=act_type
+            act_type=act_type,
+            use_identity=False
         )
 
         if self.use_aux_loss:
@@ -95,7 +98,8 @@ class YOLOv9FPN(nn.Module):
                 part_channels=int(self.in_channels[0]),
                 n=round(3 * base_depth),
                 layer_type="repncsp",
-                act_type=act_type
+                act_type=act_type,
+                use_identity=False
             )
         else:
             self.aux_td_fusion_block_2 = None
@@ -114,6 +118,7 @@ class YOLOv9FPN(nn.Module):
             n=round(3 * base_depth),
             layer_type="repncsp",
             act_type=act_type,
+            use_identity=False
         )
         
         self.bu_conv_p4_to_p5 = AConv(
@@ -128,7 +133,8 @@ class YOLOv9FPN(nn.Module):
             part_channels=int(self.in_channels[2]),
             n=round(3 * base_depth),
             layer_type="repncsp",
-            act_type=act_type
+            act_type=act_type,
+            use_identity=False
         )
         
         self._intermediate_features_dim = self.in_channels
