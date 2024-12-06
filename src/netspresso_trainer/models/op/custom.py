@@ -238,7 +238,11 @@ class RepVGGBlock(nn.Module):
     def get_equivalent_kernel_bias(self):
         kernel3x3, bias3x3 = self._fuse_bn_tensor(self.conv1)
         kernel1x1, bias1x1 = self._fuse_bn_tensor(self.conv2)
-        kernelid, biasid = self._fuse_bn_tensor(self.rbr_identity)
+        if self.rbr_identity:
+            kernelid, biasid = self._fuse_bn_tensor(self.rbr_identity)
+        else:
+            kernelid = 0
+            biasid = 0
 
         return kernel3x3 + self._pad_1x1_to_3x3_tensor(kernel1x1) + kernelid, bias3x3 + bias1x1 + biasid
 
