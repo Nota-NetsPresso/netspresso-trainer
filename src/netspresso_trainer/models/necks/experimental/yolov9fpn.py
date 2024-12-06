@@ -147,7 +147,7 @@ class YOLOv9FPN(nn.Module):
             use_identity=False
         )
         
-        self._intermediate_features_dim = self.in_channels
+        self._intermediate_features_dim = (p3_channels, p4_channels, p5_channels)
         
         # Initialize BatchNorm layers
         def init_bn(M):
