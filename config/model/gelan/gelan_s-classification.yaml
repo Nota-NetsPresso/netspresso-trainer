@@ -12,10 +12,29 @@ model:
     backbone:
       name: gelan
       params:
-        dep_mul: &dep_mul 0.33
-        wid_mul: 0.5
-        act_type: &act_type "silu"
-      stage_params: ~
+        stem_out_channels: 32
+        stem_kernel_size: 3
+        stem_stride: 2
+        return_stage_idx: ~
+        act_type: &act_type silu
+      stage_params:
+        # Conv2D: ['conv', out_channels, kernel_size, stride]
+        # ELAN: ['elan', out_channels, part_channels, use_identity]
+        # RepNCSPELAN: ['repncspelan', out_channels, part_channels, use_identity, depth]
+        # AConv: ['aconv', out_channels]
+        # ADown: ['adown', out_channels]
+        -
+          - ['conv', 64, 3, 2]
+          - ['elan', 64, 64, false]
+        -
+          - ['aconv', 128]
+          - ['repncspelan', 128, 128, false, 3]
+        -
+          - ['aconv', 192]
+          - ['repncspelan', 192, 192, false, 3]
+        - 
+          - ['aconv', 256]
+          - ['repncspelan', 256, 256, false, 3]
     head:
       name: fc
       params:

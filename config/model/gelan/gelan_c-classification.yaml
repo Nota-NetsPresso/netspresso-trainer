@@ -1,6 +1,6 @@
 model:
   task: classification
-  name: gelan_tiny
+  name: gelan_c
   checkpoint:
     use_pretrained: False
     load_head: False
@@ -12,7 +12,7 @@ model:
     backbone:
       name: gelan
       params:
-        stem_out_channels: 16
+        stem_out_channels: 64
         stem_kernel_size: 3
         stem_stride: 2
         return_stage_idx: ~
@@ -24,17 +24,17 @@ model:
         # AConv: ['aconv', out_channels]
         # ADown: ['adown', out_channels]
         -
-          - ['conv', 32, 3, 2]
-          - ['elan', 32, 32, false]
+          - ['conv', 128, 3, 2]
+          - ['repncspelan', 256, 128, false, 1]
         -
-          - ['aconv', 64]
-          - ['repncspelan', 64, 64, false, 3]
+          - ['adown', 256]
+          - ['repncspelan', 512, 256, false, 1]
         -
-          - ['aconv', 96]
-          - ['repncspelan', 96, 96, false, 3]
+          - ['adown', 512]
+          - ['repncspelan', 512, 512, false, 1]
         - 
-          - ['aconv', 128]
-          - ['repncspelan', 128, 128, false, 3]
+          - ['aconv', 512]
+          - ['repncspelan', 512, 512, false, 1]
     head:
       name: fc
       params:
