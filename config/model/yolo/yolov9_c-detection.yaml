@@ -66,6 +66,6 @@ model:
       nms_thresh: 0.65
       class_agnostic: false
   losses:
-    - criterion: yolox_loss
+    - criterion: yolov9_loss
       weight: ~
-      l1_activate_epoch: 285
+      l1_activate_epoch: ~
