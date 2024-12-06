@@ -20,7 +20,7 @@ from omegaconf import DictConfig
 import torch
 import torch.nn as nn
 
-from ...op.custom import SPPELAN, ELAN, AConv
+from ...op.custom import SPPELAN, ELAN, AConv, ADown
 from ...utils import BackboneOutput
 
 
@@ -36,22 +36,32 @@ class YOLOv9FPN(nn.Module):
     ):
         super().__init__()
         self.in_channels = intermediate_features_dim
-        depth = params.dep_mul
+        repeat_num = params.repeat_num
         act_type = params.act_type
+        bu_type = params.bu_type # bottom-up type
+        assert bu_type.lower() in ['aconv', 'adown']
+        bu_block = AConv if bu_type == 'aconv' else ADown
+        spp_channels = params.spp_channels
+        n4_channels = params.n4_channels
+        p3_channels = params.p3_channels
+        p4_channels = params.p4_channels
+        p5_channels = params.p5_channels
+        p3_to_p4_channels = params.p3_to_p4_channels
+        p4_to_p5_channels = params.p4_to_p5_channels
+        
         self.use_aux_loss = params.use_aux_loss
-        base_depth = max(round(depth * 3), 1)
         
         # Top-down pathway (upsampling)
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
         self.spp_block = SPPELAN(
             in_channels=int(self.in_channels[2]),
-            out_channels=int(self.in_channels[2]),
+            out_channels=spp_channels,
             act_type=act_type,
         )
         if self.use_aux_loss:
             self.aux_spp_block = SPPELAN(
                 in_channels=int(self.in_channels[2]),
-                out_channels=int(self.in_channels[2]),
+                out_channels=spp_channels,
                 act_type=act_type
             )
         else:
@@ -59,10 +69,10 @@ class YOLOv9FPN(nn.Module):
         
         # Top-down fusion blocks
         self.td_fusion_block_1 = ELAN(
-            in_channels=int(self.in_channels[1] + self.in_channels[2]),
-            out_channels=int(self.in_channels[1]),
-            part_channels=int(self.in_channels[1]),
-            n=round(3 * base_depth),
+            in_channels=int(self.in_channels[1] + spp_channels),
+            out_channels=n4_channels,
+            part_channels=n4_channels,
+            n=repeat_num,
             layer_type="repncsp",
             act_type=act_type,
             use_identity=False
@@ -70,10 +80,10 @@ class YOLOv9FPN(nn.Module):
 
         if self.use_aux_loss:
             self.aux_td_fusion_block_1 = ELAN(
-                in_channels=int(self.in_channels[1] + self.in_channels[2]),
-                out_channels=int(self.in_channels[1]),
-                part_channels=int(self.in_channels[1]),
-                n=round(3 * base_depth),
+                in_channels=int(self.in_channels[1] + spp_channels),
+                out_channels=n4_channels,
+                part_channels=n4_channels,
+                n=repeat_num,
                 layer_type="repncsp",
                 act_type=act_type,
                 use_identity=False
@@ -82,10 +92,10 @@ class YOLOv9FPN(nn.Module):
             self.aux_td_fusion_block_1 = None
         
         self.td_fusion_block_2 = ELAN(
-            in_channels=int(self.in_channels[0] + self.in_channels[1]),
-            out_channels=int(self.in_channels[0]),
-            part_channels=int(self.in_channels[0]),
-            n=round(3 * base_depth),
+            in_channels=int(self.in_channels[0] + n4_channels),
+            out_channels=p3_channels,
+            part_channels=p3_channels,
+            n=repeat_num,
             layer_type="repncsp",
             act_type=act_type,
             use_identity=False
@@ -93,10 +103,10 @@ class YOLOv9FPN(nn.Module):
 
         if self.use_aux_loss:
             self.aux_td_fusion_block_2 = ELAN(
-                in_channels=int(self.in_channels[0] + self.in_channels[1]),
-                out_channels=int(self.in_channels[0]),
-                part_channels=int(self.in_channels[0]),
-                n=round(3 * base_depth),
+                in_channels=int(self.in_channels[0] + n4_channels),
+                out_channels=p3_channels,
+                part_channels=p3_channels,
+                n=repeat_num,
                 layer_type="repncsp",
                 act_type=act_type,
                 use_identity=False
@@ -105,33 +115,33 @@ class YOLOv9FPN(nn.Module):
             self.aux_td_fusion_block_2 = None
         
         # Bottom-up pathway (downsampling)
-        self.bu_conv_p3_to_p4 = AConv(
-            in_channels=int(self.in_channels[0]),
-            out_channels=int(self.in_channels[1] // 2),
+        self.bu_conv_p3_to_p4 = bu_block(
+            in_channels=p3_channels,
+            out_channels=p3_to_p4_channels,
             act_type=act_type
         )
         
         self.bu_fusion_block_1 = ELAN(
-            in_channels=int(self.in_channels[1] // 2 + self.in_channels[1]),
-            out_channels=int(self.in_channels[1]),
-            part_channels=int(self.in_channels[1]),
-            n=round(3 * base_depth),
+            in_channels=int(p3_to_p4_channels + n4_channels),
+            out_channels=p4_channels,
+            part_channels=p4_channels,
+            n=repeat_num,
             layer_type="repncsp",
             act_type=act_type,
             use_identity=False
         )
         
-        self.bu_conv_p4_to_p5 = AConv(
-            in_channels=int(self.in_channels[1]), 
-            out_channels=int(self.in_channels[0]),
+        self.bu_conv_p4_to_p5 = bu_block(
+            in_channels=p4_channels, 
+            out_channels=p4_to_p5_channels,
             act_type=act_type
         )
         
         self.bu_fusion_block_2 = ELAN(
-            in_channels=int(self.in_channels[0] + self.in_channels[2]),
-            out_channels=int(self.in_channels[2]),
-            part_channels=int(self.in_channels[2]),
-            n=round(3 * base_depth),
+            in_channels=int(p4_to_p5_channels + spp_channels),
+            out_channels=p5_channels,
+            part_channels=p5_channels,
+            n=repeat_num,
             layer_type="repncsp",
             act_type=act_type,
             use_identity=False
@@ -160,7 +170,7 @@ class YOLOv9FPN(nn.Module):
         spp_feat = self.spp_block(feat_p5)  # P5 processing
         td_p4 = self.upsample(spp_feat)  # P5 -> P4
         td_p4_concat = torch.cat([td_p4, feat_p4], 1)
-        td_p4_processed = self.td_fusion_block_1(td_p4_concat)
+        td_p4_processed = self.td_fusion_block_1(td_p4_concat) # N4
         
         td_p3 = self.upsample(td_p4_processed)  # P4 -> P3
         td_p3_concat = torch.cat([td_p3, feat_p3], 1)
