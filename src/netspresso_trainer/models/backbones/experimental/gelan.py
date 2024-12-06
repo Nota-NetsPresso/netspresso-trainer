@@ -21,7 +21,7 @@ from torch import Tensor
 import torch.nn as nn
 from torch.fx.proxy import Proxy
 
-from ...op.custom import ConvLayer, ELAN, AConv
+from ...op.custom import ConvLayer, ELAN, AConv, ADown, SPPELAN
 from ...utils import BackboneOutput
 from ..registry import USE_INTERMEDIATE_FEATURES_TASK_LIST
 
@@ -41,79 +41,63 @@ class GELAN(nn.Module):
         self.use_intermediate_features = self.task in USE_INTERMEDIATE_FEATURES_TASK_LIST
         super().__init__()
 
-        out_features=("stage3", "stage4", "stage5")
-        assert out_features, "please provide output features of RepNCSP-ELAN"
-        self.out_features = out_features
-        dep_mul = params.dep_mul
-        wid_mul = params.wid_mul
-        act_type = params.act_type
+        # Parameters
+        stem_out_channels = params.stem_out_channels
+        stem_kernel_size = params.stem_kernel_size
+        stem_stride = params.stem_stride
+        self.return_stage_idx = params.return_stage_idx if params.return_stage_idx else [len(stage_params) - 1]
+        act_type = params.act_type.lower()
+        stages = []
 
-        base_channels = int(wid_mul * 64) # t: 0.25, s: 0.5
-        base_depth = max(round(dep_mul * 3), 1) # t: 0.33, s: 0.33
+        self.conv_stem = ConvLayer(3, stem_out_channels, kernel_size=stem_kernel_size, stride=stem_stride,
+                                   act_type=act_type)
+        stages = []
+        prev_channels = stem_out_channels
 
-        self.stem = ConvLayer(3, base_channels, kernel_size=3, stride=2, act_type=act_type)
-
-        self.stage2 = nn.Sequential(
-            ConvLayer(in_channels=base_channels,
-                      out_channels=base_channels * 2,
-                      kernel_size=3,
-                      stride=2,
-                      act_type=act_type),
-            ELAN(in_channels=base_channels*2,
-                 out_channels=base_channels*2,
-                 part_channels=base_channels*2,
-                 act_type=act_type,
-                 use_identity=False,
-                 layer_type="basic"
-                 )
-        )
-
-        self.stage3 = nn.Sequential(
-            AConv(in_channels=base_channels*2,
-                  out_channels=base_channels*4,
-                  act_type=act_type),
-            ELAN(in_channels=base_channels*4,
-                 out_channels=base_channels*4,
-                 part_channels=base_channels*4,
-                 act_type=act_type,
-                 layer_type="repncsp",
-                 use_identity=False,
-                 n=base_depth * 3)
-        )
-
-        self.stage4 = nn.Sequential(
-            AConv(in_channels=base_channels*4,
-                  out_channels=base_channels*6,
-                  act_type=act_type),
-            ELAN(in_channels=base_channels*6,
-                 out_channels=base_channels*6,
-                 part_channels=base_channels*6,
-                 act_type=act_type,
-                 layer_type="repncsp",
-                 use_identity=False,
-                 n=base_depth * 3)
-        )
-
-        self.stage5 = nn.Sequential(
-            AConv(in_channels=base_channels*6,
-                  out_channels=base_channels*8,
-                  act_type=act_type),
-            ELAN(in_channels=base_channels*8,
-                 out_channels=base_channels*8,
-                 part_channels=base_channels*8,
-                 act_type=act_type,
-                 layer_type="repncsp",
-                 use_identity=False,
-                 n=base_depth * 3)    
-        )
-
+        for stage_param in stage_params:
+            stage = []
+            for idx, block_info in enumerate(stage_param):
+                block_type = block_info[0].lower()
+                in_channels = prev_channels
+                out_channels = block_info[1]
+                if block_type == "conv":
+                    kernel_size = block_info[2]
+                    stride = block_info[3]
+                    block = ConvLayer(in_channels=in_channels, out_channels=out_channels,
+                                           kernel_size=kernel_size, stride=stride, act_type=act_type)
+                elif block_type == "elan":
+                    part_channels = block_info[2]
+                    use_identity = block_info[3]
+                    block = ELAN(in_channels=in_channels, out_channels=out_channels, part_channels=part_channels,
+                                 use_identity=use_identity, act_type=act_type, layer_type="basic")
+                elif block_type == "sppelan":
+                    hidden_channels = block_info[2]
+                    block = SPPELAN(in_channels=in_channels, out_channels=out_channels, hidden_channels=hidden_channels,
+                                    act_type=act_type)
+                elif block_type == "repncspelan":
+                    part_channels = block_info[2]
+                    use_identity = block_info[3]
+                    depth = block_info[4]
+                    block = ELAN(in_channels=in_channels, out_channels=out_channels, part_channels=part_channels,
+                                 use_identity=use_identity, act_type=act_type, layer_type="repncsp", n=depth)
+                elif block_type == "aconv":
+                    block = AConv(in_channels=in_channels, out_channels=out_channels, act_type=act_type)
+                elif block_type == "adown":
+                    block = ADown(in_channels=in_channels, out_channels=out_channels, act_type=act_type)
+                else:
+                    raise ValueError(f'Unknown block type: {block_type}')
+                prev_channels = out_channels
+                stage.append(block)
+                assert len(stage) == idx + 1
+            
+            stages.append(stage)
+        
+        stages = [nn.Sequential(*stage) for stage in stages]
+        self.stages = nn.ModuleList(stages)
         self.avgpool = nn.AdaptiveAvgPool2d(1)
-
-        predefined_out_features = {'stage2': base_channels * 2, 'stage3': base_channels * 4,
-                                   'stage4': base_channels * 6, 'stage5': base_channels * 8}
-        self._feature_dim = predefined_out_features['stage5']
-        self._intermediate_features_dim = [predefined_out_features[out_feature] for out_feature in out_features]
-
+        stage_out_channels = [stage_param[-1][1] for stage_param in stage_params]
+        self._intermediate_features_dim = [stage_out_channels[i] for i in self.return_stage_idx]
+        self._feature_dim = stage_out_channels[-1]
         # Initialize
         def init_bn(M):
             for m in M.modules():
@@ -124,22 +108,17 @@ class GELAN(nn.Module):
 
     
     def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
-        outputs_dict = {}
-        x = self.stem(x)
-        outputs_dict["stem"] = x
-        x = self.stage2(x)
-        outputs_dict["stage2"] = x
-        x = self.stage3(x)
-        outputs_dict["stage3"] = x
-        x = self.stage4(x)
-        outputs_dict["stage4"] = x
-        x = self.stage5(x)
-        outputs_dict["stage5"] = x
+        x = self.conv_stem(x)
+
+        all_hidden_states = () if self.use_intermediate_features else None
+        for stage_idx, stage in enumerate(self.stages):
+            x = stage(x)
+            if self.use_intermediate_features and stage_idx in self.return_stage_idx:
+                all_hidden_states = all_hidden_states + (x, )
 
         if self.use_intermediate_features:
-            all_hidden_states = [outputs_dict[out_name] for out_name in self.out_features]
             return BackboneOutput(intermediate_features=all_hidden_states)
-    
+        
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
 
