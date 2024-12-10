@@ -33,7 +33,7 @@ model:
           - ['adown', 512]
           - ['repncspelan', 512, 512, false, 1]
         - 
-          - ['aconv', 512]
+          - ['adown', 512]
           - ['repncspelan', 512, 512, false, 1]
     head:
       name: fc
