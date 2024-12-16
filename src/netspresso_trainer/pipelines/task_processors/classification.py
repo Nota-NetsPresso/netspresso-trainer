@@ -130,3 +130,6 @@ class ClassificationProcessor(BaseTaskProcessor):
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
+
+    def get_predictions(self, results, class_map):
+        pass

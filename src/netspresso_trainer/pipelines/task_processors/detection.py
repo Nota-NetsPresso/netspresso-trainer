@@ -186,3 +186,6 @@ class DetectionProcessor(BaseTaskProcessor):
                     pred_on_image['post_labels'] = class_idx
                     pred.append(pred_on_image)
             metric_factory.update(pred, target=targets, phase=phase)
+
+    def get_predictions(self, results, class_map):
+        pass
