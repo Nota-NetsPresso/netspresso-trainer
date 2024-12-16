@@ -49,7 +49,7 @@ class YOLOv9FPN(nn.Module):
         p3_to_p4_channels = params.p3_to_p4_channels
         p4_to_p5_channels = params.p4_to_p5_channels
         
-        self.use_aux_loss = params.use_aux_loss
+        # self.use_aux_loss = params.use_aux_loss
         
         # Top-down pathway (upsampling)
         self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
@@ -58,14 +58,14 @@ class YOLOv9FPN(nn.Module):
             out_channels=spp_channels,
             act_type=act_type,
         )
-        if self.use_aux_loss:
-            self.aux_spp_block = SPPELAN(
-                in_channels=int(self.in_channels[2]),
-                out_channels=spp_channels,
-                act_type=act_type
-            )
-        else:
-            self.aux_spp_block = None
+        # if self.use_aux_loss:
+        #     self.aux_spp_block = SPPELAN(
+        #         in_channels=int(self.in_channels[2]),
+        #         out_channels=spp_channels,
+        #         act_type=act_type
+        #     )
+        # else:
+        #     self.aux_spp_block = None
         
         # Top-down fusion blocks
         self.td_fusion_block_1 = ELAN(
@@ -78,18 +78,18 @@ class YOLOv9FPN(nn.Module):
             use_identity=False
         )
 
-        if self.use_aux_loss:
-            self.aux_td_fusion_block_1 = ELAN(
-                in_channels=int(self.in_channels[1] + spp_channels),
-                out_channels=n4_channels,
-                part_channels=n4_channels,
-                n=repeat_num,
-                layer_type="repncsp",
-                act_type=act_type,
-                use_identity=False
-            )
-        else:
-            self.aux_td_fusion_block_1 = None
+        # if self.use_aux_loss:
+        #     self.aux_td_fusion_block_1 = ELAN(
+        #         in_channels=int(self.in_channels[1] + spp_channels),
+        #         out_channels=n4_channels,
+        #         part_channels=n4_channels,
+        #         n=repeat_num,
+        #         layer_type="repncsp",
+        #         act_type=act_type,
+        #         use_identity=False
+        #     )
+        # else:
+        #     self.aux_td_fusion_block_1 = None
         
         self.td_fusion_block_2 = ELAN(
             in_channels=int(self.in_channels[0] + n4_channels),
@@ -101,18 +101,18 @@ class YOLOv9FPN(nn.Module):
             use_identity=False
         )
 
-        if self.use_aux_loss:
-            self.aux_td_fusion_block_2 = ELAN(
-                in_channels=int(self.in_channels[0] + n4_channels),
-                out_channels=p3_channels,
-                part_channels=p3_channels,
-                n=repeat_num,
-                layer_type="repncsp",
-                act_type=act_type,
-                use_identity=False
-            )
-        else:
-            self.aux_td_fusion_block_2 = None
+        # if self.use_aux_loss:
+        #     self.aux_td_fusion_block_2 = ELAN(
+        #         in_channels=int(self.in_channels[0] + n4_channels),
+        #         out_channels=p3_channels,
+        #         part_channels=p3_channels,
+        #         n=repeat_num,
+        #         layer_type="repncsp",
+        #         act_type=act_type,
+        #         use_identity=False
+        #     )
+        # else:
+        #     self.aux_td_fusion_block_2 = None
         
         # Bottom-up pathway (downsampling)
         self.bu_conv_p3_to_p4 = bu_block(
@@ -187,18 +187,18 @@ class YOLOv9FPN(nn.Module):
         
         outputs = (p3_out, p4_out, p5_out)
 
-        if self.training and self.use_aux_loss:
-            spp_a5 = self.aux_spp_block(feat_p5) # A5
-            aux_td_p4 = self.upsample(spp_a5)
-            aux_td_p4_concat = torch.cat([aux_td_p4, feat_p4], 1)
-            td_a4 = self.aux_td_fusion_block_1(aux_td_p4_concat) # A4
-            aux_td_p3 = self.upsample(td_a4)
-            aux_td_p3_concat = torch.cat([aux_td_p3, feat_p3], 1)
-            td_a3 = self.aux_td_fusion_block_2(aux_td_p3_concat) # A3
-            aux_outputs = (td_a3, td_a4, spp_a5)
-            outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
-        else:
-            aux_outputs = None
+        # if self.training and self.use_aux_loss:
+        #     spp_a5 = self.aux_spp_block(feat_p5) # A5
+        #     aux_td_p4 = self.upsample(spp_a5)
+        #     aux_td_p4_concat = torch.cat([aux_td_p4, feat_p4], 1)
+        #     td_a4 = self.aux_td_fusion_block_1(aux_td_p4_concat) # A4
+        #     aux_td_p3 = self.upsample(td_a4)
+        #     aux_td_p3_concat = torch.cat([aux_td_p3, feat_p3], 1)
+        #     td_a3 = self.aux_td_fusion_block_2(aux_td_p3_concat) # A3
+        #     aux_outputs = (td_a3, td_a4, spp_a5)
+        #     outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
+        # else:
+        #     aux_outputs = None
         return BackboneOutput(intermediate_features=outputs)
     
     @property
