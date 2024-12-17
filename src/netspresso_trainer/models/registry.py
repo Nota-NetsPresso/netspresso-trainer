@@ -22,6 +22,7 @@ import torch.nn as nn
 from .backbones import (
     cspdarknet,
     efficientformer,
+    gelan,
     mixnet,
     mixtransformer,
     mobilenetv3,
@@ -56,6 +57,7 @@ MODEL_BACKBONE_DICT: Dict[str, Callable[..., nn.Module]] = {
     'cspdarknet': cspdarknet,
     'shufflenetv2': shufflenetv2,
     'mixnet': mixnet,
+    'gelan': gelan,
 }
 
 MODEL_NECK_DICT: Dict[str, Callable[..., nn.Module]] = {
