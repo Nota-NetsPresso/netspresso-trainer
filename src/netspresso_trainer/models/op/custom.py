@@ -1301,6 +1301,7 @@ class Anchor2Vec(nn.Module):
         batch_size, channel_size, height, width = x.shape
         reg_channel = channel_size // 4
         predictions = 4 # Number of predictions per anchor
-        anchor_x = x.view(batch_size, reg_channel, predictions, height, width)
+        anchor_x = x.view(batch_size, predictions, reg_channel, height, width)
+        anchor_x = anchor_x.permute(0, 2, 1, 3, 4)
         vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
         return anchor_x, vector_x
