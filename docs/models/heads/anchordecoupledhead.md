@@ -13,10 +13,6 @@ We have named the detection head of RetinaNet as AnchorDecoupledHead to represen
 | `params.aspect_ratios` | (list[float]) List of aspect ratio for each anchor. |
 | `params.num_layers` | (int) The number of convolution layers of regression and classification head. |
 | `params.norm_layer` | (str) Normalization type for the head. |
-| `params.topk_candidates` | (int) The number of boxes to retain based on score during the decoding step. |
-| `params.score_thresh` | (float) Score thresholding value applied during the decoding step. |
-| `params.nms_thresh` | (float) IoU threshold for non-maximum suppression. |
-| `params.class_agnostic` | (bool) Whether to process class-agnostic non-maximum suppression. |
 
 ## Model configuration example
 
@@ -32,13 +28,7 @@ We have named the detection head of RetinaNet as AnchorDecoupledHead to represen
           anchor_sizes: [[32,], [64,], [128,], [256,]]
           aspect_ratios: [0.5, 1.0, 2.0]
           num_layers: 1
-          norm_type: batch_norm
-          # postprocessor - decode
-          topk_candidates: 1000
-          score_thresh: 0.05
-          # postprocessor - nms
-          nms_thresh: 0.45
-          class_agnostic: False
+          norm_type: batch_norm 
   ```
 </details>
 

@@ -4,35 +4,6 @@ YOLOPAFPN based on [YOLOX: Exceeding YOLO Series in 2021](https://arxiv.org/abs/
 
 YOLOPAFPN is a modified PAFPN for YOLOX model. Therefore, although YOLOPAFP is compatible with various backbones, we recommend to use it when constructing YOLOX models. The size is determined by `dep_mul` value, which defines the repetition of CSPLayers.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting backbones</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      ResNet<br />
-      MobileNetV3<br />
-      MixNet<br />
-      CSPDarkNet<br />
-      MobileViT<br />
-      MixTransformer<br />
-      EfficientFormer
-    </td>
-    <td>
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
