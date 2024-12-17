@@ -4,7 +4,7 @@
 
 - Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
 - Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
-- Add YOLOv9 by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585), [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586), [PR 592](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/592), [PR 593](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/593), [PR 595](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/595)
+- Add YOLOv9 by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585), [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586), [PR 592](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/592), [PR 593](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/593), [PR 595](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/595), [PR 589](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/589), [PR 590](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/590), [PR 597](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/597)
 
 ## Bug Fixes:
 
@@ -20,6 +20,7 @@ No changes to highlight.
 - Refactor RT-DETR and generalize CSPRepLayer and RepVGG block by `@hglee98` in [PR 581](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/581), [PR 594](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/594)
 - Generalize 2d pooling layers and define as custom layer by `@hglee98` in [PR 583](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/583)
 - Unify bbox transformation and IoU computing methods by `@hglee98` in [PR 587](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/587)
+- Update documents by `@hglee98` in [PR 591](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/591)
 
 # v1.0.3
 

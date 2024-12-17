@@ -209,7 +209,6 @@ def yolo_head_decode(pred, original_shape, score_thresh=0.7):
     pred = pred['pred']
     if isinstance(pred, dict):
         pred = pred['outputs']
-    pred[0][0].type()
     h, w = original_shape[1], original_shape[2]
     device = pred[0][0].device
     stage_strides= [original_shape[-1] // bbox_reg.shape[-1] for bbox_reg, _, _  in pred]
@@ -221,11 +220,11 @@ def yolo_head_decode(pred, original_shape, score_thresh=0.7):
     for layer_output in pred:
         bbox_reg, _, class_logits = layer_output
         b, c, h, w = bbox_reg.shape
-        reg = bbox_reg.view(b, c, -1).permute(0, 2, 1)
+        reg = bbox_reg.permute(0, 2, 3, 1).view(b, h*w, c)
         pred_bbox_reg.append(reg)
 
         b, c, h, w = class_logits.shape
-        logits = class_logits.view(b, c, -1).permute(0, 2, 1)
+        logits = class_logits.permute(0, 2, 3, 1).view(b, h*w, c)
         pred_class_logits.append(logits)
 
     pred_bbox_reg = torch.concat(pred_bbox_reg, dim=1)

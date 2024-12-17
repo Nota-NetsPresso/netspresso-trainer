@@ -4,35 +4,6 @@ FPN based on [Feature Pyramid Networks for Object Detection](https://openaccess.
 
 The Feature Pyramid Network (FPN) is designed to enhance feature maps given from the backbone, typically used for detection models. Therefore, we also recommend to use it in detection task as well. FPN can create more pyramid deeply than the input feature pyramid from backbone, and in such cases, additional convolution or pooling layers are added.
 
-## Compatibility matrix
-
-<table>
-  <tr>
-    <th>Supporting backbones</th>
-    <th>Supporting heads</th>
-    <th>torch.fx</th>
-    <th>NetsPresso</th>
-  </tr>
-  <tr>
-    <td>
-      ResNet<br />
-      MobileNetV3<br />
-      MixNet<br />
-      CSPDarkNet<br />
-      MobileViT<br />
-      MixTransformer<br />
-      EfficientFormer
-    </td>
-    <td>
-      ALLMLPDecoder<br />
-      AnchorDecoupledHead<br />
-      AnchorFreeDecoupledHead
-    </td>
-    <td>Supported</td>
-    <td>Supported</td>
-  </tr>
-</table>
-
 ## Field list
 
 | Field <img width=200/> | Description |
