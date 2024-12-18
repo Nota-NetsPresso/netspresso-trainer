@@ -131,5 +131,31 @@ class ClassificationProcessor(BaseTaskProcessor):
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
 
+    def _convert_result(self, result, class_map):
+        assert "pred" in result and "images" in result
+        return_preds = []
+        for idx in range(len(result['pred'])):
+            image = result['images'][idx:idx+1]
+            height, width = image.shape[-2:]
+            pred = result['pred'][idx]
+            return_preds.append(
+                {
+                    "class": int(pred[0]),
+                    "name": class_map[int(pred[0])],
+                    "shape": {
+                        "width": width,
+                        "height": height
+                    }
+                }
+            )
+        return return_preds
+
     def get_predictions(self, results, class_map):
-        pass
+        predictions = []
+        if isinstance(results, list):
+            for minibatch in results:
+                predictions.extend(self._convert_result(minibatch, class_map))
+        elif isinstance(results, dict):
+            predictions.extend(self._convert_result(results, class_map))
+
+        return predictions
