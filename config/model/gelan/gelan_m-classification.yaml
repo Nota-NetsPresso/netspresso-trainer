@@ -1,0 +1,49 @@
+model:
+  task: classification
+  name: gelan_m
+  checkpoint:
+    use_pretrained: False
+    load_head: False
+    path: ~
+    optimizer_path: ~
+  freeze_backbone: False
+  architecture:
+    full: ~
+    backbone:
+      name: gelan
+      params:
+        stem_out_channels: 32
+        stem_kernel_size: 3
+        stem_stride: 2
+        return_stage_idx: ~
+        act_type: &act_type silu
+      stage_params:
+        # Conv2D: ['conv', out_channels, kernel_size, stride]
+        # ELAN: ['elan', out_channels, part_channels, use_identity]
+        # RepNCSPELAN: ['repncspelan', out_channels, part_channels, use_identity, depth]
+        # AConv: ['aconv', out_channels]
+        # ADown: ['adown', out_channels]
+        -
+          - ['conv', 64, 3, 2]
+          - ['repncspelan', 128, 128, false, 1]
+        -
+          - ['aconv', 240]
+          - ['repncspelan', 240, 240, false, 1]
+        -
+          - ['aconv', 360]
+          - ['repncspelan', 360, 360, false, 1]
+        - 
+          - ['aconv', 480]
+          - ['repncspelan', 480, 480, false, 1]
+    head:
+      name: fc
+      params:
+        num_layers: 1
+        intermediate_channels: ~
+        act_type: ~
+        dropout_prob: 0.
+  postprocessor: ~
+  losses:
+    - criterion: cross_entropy
+      label_smoothing: 0.1
+      weight: ~
