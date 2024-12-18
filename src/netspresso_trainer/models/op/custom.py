@@ -1284,6 +1284,8 @@ class Anchor2Vec(nn.Module):
     def __init__(self,
                  reg_max: int=16):
         super().__init__()
+        self.reg_max = reg_max
+        self.num_predictions = 4 # Number of predictions per anchor
         reverse_reg = torch.arange(reg_max, dtype=torch.float32).view(1, reg_max, 1, 1, 1)
         self.anchor2vec = nn.Conv3d(in_channels=reg_max, out_channels=1, kernel_size=1, bias=False)
         self.anchor2vec.weight = nn.Parameter(reverse_reg, requires_grad=False)
@@ -1298,10 +1300,9 @@ class Anchor2Vec(nn.Module):
             where anchor_tensor has shape (batch_size, r, 4, height, width)
             and vector_tensor has shape (batch_size, height, width)
         """
-        batch_size, channel_size, height, width = x.shape
-        reg_channel = channel_size // 4
-        predictions = 4 # Number of predictions per anchor
-        anchor_x = x.view(batch_size, predictions, reg_channel, height, width)
+        batch_size, _, height, width = x.shape
+        anchor_x = x.view(batch_size, self.num_predictions, self.reg_max, height, width)
         anchor_x = anchor_x.permute(0, 2, 1, 3, 4)
+        self.anchor2vec = self.anchor2vec.to(x.device)
         vector_x = self.anchor2vec(anchor_x.softmax(dim=1))[:, 0]
         return anchor_x, vector_x
