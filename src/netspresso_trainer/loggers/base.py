@@ -14,6 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
@@ -169,7 +170,7 @@ class TrainingLogger():
         if metrics is not None:
             metrics = self._convert_scalar_as_readable(metrics)
         if samples is not None:
-            samples = self._convert_images_as_readable(samples)
+            samples = self._convert_images_as_readable(deepcopy(samples))
 
         for logger in self.loggers:
             logger(
