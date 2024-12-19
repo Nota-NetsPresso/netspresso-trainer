@@ -325,7 +325,7 @@ class YOLOv9Loss(nn.Module):
         self.scaler = None
         self.cls = BCELoss()
         self.iou = BoxLoss()
-        self.reg_max = 16 # TODO: should be controlled by config
+        self.reg_max = kwargs.get("reg_max", 16)
         self.aux_rate = 0.25 # TODO: should be controlled by config
 
     def get_output(self, output, anchor_grid, scaler):
