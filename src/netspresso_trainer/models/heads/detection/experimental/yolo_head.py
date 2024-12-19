@@ -88,9 +88,8 @@ class Detection(nn.Module):
     def forward(self, x: Union[Tensor, Proxy]) -> Tuple[Union[Tensor, Proxy]]:
         reg = self.reg_convs(x)
         cls_logits = self.cls_convs(x)
-        anchor_x, vector_x = self.anchor2vec(reg)
-
-        return vector_x, anchor_x, cls_logits
+        output = torch.cat([reg, cls_logits], dim=1)
+        return output
 
 
 class YOLODetectionHead(nn.Module):
