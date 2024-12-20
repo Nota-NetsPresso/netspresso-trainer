@@ -395,10 +395,12 @@ class YOLOv9Loss(nn.Module):
 
         align_targets, valid_masks = matcher(labels, (preds_cls.detach(), preds_box.detach()))
         targets_cls, targets_bbox = self.separate_anchor(align_targets, scaler)
+        preds_box = preds_box / scaler[None, :, None]
         cls_norm = max(targets_cls.sum(), 1)
         box_norm = targets_cls.sum(-1)[valid_masks]
         if aux_out:
             aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
+            aux_preds_box = aux_preds_box / scaler[None, :, None]
             aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
             aux_cls_norm = max(aux_targets_cls.sum(), 1)
             aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
