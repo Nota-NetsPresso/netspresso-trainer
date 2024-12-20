@@ -120,14 +120,13 @@ class EvaluationPipeline(BasePipeline):
             elapsed_time=time_for_evaluation,
         )
         predictions = self.task_processor.get_predictions(valid_samples, self.logger.class_map)
-        self.save_summary(losses, metrics, predictions, time_for_evaluation)
+        self.save_summary(losses, metrics, time_for_evaluation)
 
-    def save_summary(self, losses, metrics, predictions, time_for_evaluation):
+    def save_summary(self, losses, metrics, time_for_evaluation):
         flops, params = get_params_and_flops(self.model, self.sample_input.float())
         evaluation_summary = EvaluationSummary(
             losses=losses,
             metrics=metrics,
-            predictions=predictions,
             metrics_list=self.metric_factory.metric_names,
             primary_metric=self.metric_factory.primary_metric,
             flops=flops,

@@ -161,7 +161,6 @@ class EvaluationSummary:
     primary_metric: str
     flops: Optional[int] = None
     params: Optional[int] = None
-    predictions: Optional[dict] = None
     total_evaluation_time: Optional[float] = None
     success: bool = False
 
