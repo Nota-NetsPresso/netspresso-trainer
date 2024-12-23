@@ -354,12 +354,8 @@ class YOLOv9Loss(nn.Module):
         return pred_class_logits, pred_bbox_anchor, pred_bbox_reg
 
     def forward(self, out: Union[List, Dict], target: Dict) -> Tensor:
-        if isinstance(out['pred'], Dict):
-            aux_out = out['pred']['aux_outputs']
-            out = out['pred']['outputs']
-        else:
-            out = out['pred']
-            aux_out = None
+        # aux_out = out['pred']['aux_outputs'] if isinstance(out['pred'], Dict) else None
+        out = out['pred']['outputs'] if isinstance(out['pred'], Dict) else out['pred']
         device = out[0][0].device
         self.num_classes = target['num_classes']
         img_size = target['img_size']
@@ -379,8 +375,10 @@ class YOLOv9Loss(nn.Module):
 
         dfl = DFLoss(anchor_grid, scaler, self.reg_max)
         preds_cls, preds_anc, preds_box = self.get_output(out, anchor_grid=anchor_grid, scaler=scaler)
-        if aux_out:
-            aux_preds_cls, aux_preds_anc, aux_preds_box = self.get_output(aux_out, anchor_grid=anchor_grid, scaler=scaler)
+        # if aux_out:
+        #     aux_preds_cls, aux_preds_anc, aux_preds_box = self.get_output(aux_out, anchor_grid=anchor_grid, scaler=scaler)
+        # else:
+        #     aux_preds_cls, aux_preds_anc, aux_preds_box = None, None, None
 
         matcher = BoxMatcher(self.num_classes, anchor_grid)
         max_samples = max([len(t['labels']) for t in target])
@@ -398,18 +396,18 @@ class YOLOv9Loss(nn.Module):
         preds_box = preds_box / scaler[None, :, None]
         cls_norm = max(targets_cls.sum(), 1)
         box_norm = targets_cls.sum(-1)[valid_masks]
-        if aux_out:
-            aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
-            aux_preds_box = aux_preds_box / scaler[None, :, None]
-            aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
-            aux_cls_norm = max(aux_targets_cls.sum(), 1)
-            aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
-            ## -- CLS -- ##
-            aux_loss_cls = self.cls(aux_preds_cls, aux_targets_cls, aux_cls_norm)
-            ## -- IOU -- ##
-            aux_loss_iou = self.iou(aux_preds_box, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
-            ## -- DFL -- ##
-            aux_loss_dfl = dfl(aux_preds_anc, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+        # if aux_out:
+        #     aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
+        #     aux_preds_box = aux_preds_box / scaler[None, :, None]
+        #     aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
+        #     aux_cls_norm = max(aux_targets_cls.sum(), 1)
+        #     aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
+        #     ## -- CLS -- ##
+        #     aux_loss_cls = self.cls(aux_preds_cls, aux_targets_cls, aux_cls_norm)
+        #     ## -- IOU -- ##
+        #     aux_loss_iou = self.iou(aux_preds_box, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+        #     ## -- DFL -- ##
+        #     aux_loss_dfl = dfl(aux_preds_anc, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
 
 
         ## -- CLS -- ##
@@ -420,10 +418,10 @@ class YOLOv9Loss(nn.Module):
         loss_dfl = dfl(preds_anc, targets_bbox, valid_masks, box_norm, cls_norm)
 
         # TODO: loss weights should be controlled by config
-        if aux_out:
-            total_loss = 0.5 * (self.aux_rate * aux_loss_cls + loss_cls) + 1.5 * (self.aux_rate * aux_loss_dfl + loss_dfl) + 7.5 * (self.aux_rate * aux_loss_iou + loss_iou)
-        else:
-            total_loss = 0.5 * loss_cls + 1.5 * loss_dfl + 7.5 * loss_iou
+        # if aux_out:
+        #     total_loss = 0.5 * (self.aux_rate * aux_loss_cls + loss_cls) + 1.5 * (self.aux_rate * aux_loss_dfl + loss_dfl) + 7.5 * (self.aux_rate * aux_loss_iou + loss_iou)
+        # else:
+        total_loss = 0.5 * loss_cls + 1.5 * loss_dfl + 7.5 * loss_iou
         return total_loss
 
     def separate_anchor(self, anchors, scaler):
