@@ -23,6 +23,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import BCEWithLogitsLoss
 
+from netspresso_trainer.models.op.custom import Anchor2Vec
 from netspresso_trainer.utils.bbox_utils import generate_anchors
 
 from .yolox import IOUloss
@@ -325,13 +326,15 @@ class YOLOv9Loss(nn.Module):
         self.scaler = None
         self.cls = BCELoss()
         self.iou = BoxLoss()
-        self.reg_max = 16 # TODO: should be controlled by config
+        self.reg_max = kwargs.get("reg_max", 16)
+        self.anc2vec = Anchor2Vec(self.reg_max)
         self.aux_rate = 0.25 # TODO: should be controlled by config
 
     def get_output(self, output, anchor_grid, scaler):
         pred_bbox_reg, pred_bbox_anchor, pred_class_logits = [], [], []
         for layer_output in output:
-            bbox_reg, bbox_anchor, class_logits = layer_output
+            reg, class_logits = torch.split(layer_output, [layer_output.shape[1] - self.num_classes, self.num_classes], dim=1)
+            bbox_anchor, bbox_reg = self.anc2vec(reg)
             b, c, _, _ = bbox_reg.shape
             reg = bbox_reg.view(b, c, -1).permute(0, 2, 1)
             pred_bbox_reg.append(reg)
@@ -370,8 +373,7 @@ class YOLOv9Loss(nn.Module):
 
         strides = []
         for _k, o in enumerate(out):
-            bbox_reg, _, _ = o
-            stride_this_level = img_size[-1] // bbox_reg.size(-1)
+            stride_this_level = img_size[-1] // o.size(-1)
             strides.append(stride_this_level)
         anchor_grid, scaler = generate_anchors(img_size, strides)
         anchor_grid = anchor_grid.to(device)
