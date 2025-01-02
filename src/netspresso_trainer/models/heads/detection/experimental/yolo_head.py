@@ -88,9 +88,8 @@ class Detection(nn.Module):
     def forward(self, x: Union[Tensor, Proxy]) -> Tuple[Union[Tensor, Proxy]]:
         reg = self.reg_convs(x)
         cls_logits = self.cls_convs(x)
-        anchor_x, vector_x = self.anchor2vec(reg)
-
-        return vector_x, anchor_x, cls_logits
+        output = torch.cat([reg, cls_logits], dim=1)
+        return output
 
 
 class YOLODetectionHead(nn.Module):
@@ -110,15 +109,15 @@ class YOLODetectionHead(nn.Module):
             params.use_group,
         )
 
-        if params.use_aux_loss:
-            self.aux_heads = self._build_heads(
-                intermediate_features_dim,
-                params.act_type,
-                params.reg_max,
-                params.use_group,
-            )
-        else:
-            self.aux_heads = None
+        # if params.use_aux_loss:
+        #     self.aux_heads = self._build_heads(
+        #         intermediate_features_dim,
+        #         params.act_type,
+        #         params.reg_max,
+        #         params.use_group,
+        #     )
+        # else:
+        #     self.aux_heads = None
 
     def _validate_params(self, params: DictConfig) -> None:
         required_params = ['act_type', 'use_group', 'reg_max', 'num_anchors', 'use_aux_loss']
@@ -154,9 +153,9 @@ class YOLODetectionHead(nn.Module):
         else:
             aux_in = None
         outputs = [head(x) for head, x in zip(self.heads, x_in)]
-        if self.training and self.aux_heads:
-            aux_outputs = [head(x) for head, x in zip(self.aux_heads, aux_in)]
-            outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
+        # if self.training and self.aux_heads:
+        #     aux_outputs = [head(x) for head, x in zip(self.aux_heads, aux_in)]
+        #     outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
         return ModelOutput(pred=outputs)
 
 def yolo_detection_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs):
