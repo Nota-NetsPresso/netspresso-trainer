@@ -24,6 +24,7 @@ from torchvision.ops import boxes as box_ops
 
 from netspresso_trainer.utils.bbox_utils import generate_anchors, transform_bbox
 
+from ..models.op.custom import Anchor2Vec
 from ..models.utils import ModelOutput
 
 
@@ -205,20 +206,22 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
 
     return detections
 
-def yolo_head_decode(pred, original_shape, score_thresh=0.7):
+def yolo_head_decode(pred, original_shape, score_thresh=0.7, anc2vec=None, reg_max=16):
     pred = pred['pred']
     if isinstance(pred, dict):
         pred = pred['outputs']
     h, w = original_shape[1], original_shape[2]
     device = pred[0][0].device
-    stage_strides= [original_shape[-1] // bbox_reg.shape[-1] for bbox_reg, _, _  in pred]
+    stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
     offset, scaler = generate_anchors((h, w), stage_strides)
     offset = offset.to(device)
     scaler = scaler.to(device)
 
     pred_bbox_reg, pred_class_logits = [], []
     for layer_output in pred:
-        bbox_reg, _, class_logits = layer_output
+        layer_output = layer_output.float()
+        reg, class_logits = torch.split(layer_output, [4 * reg_max, layer_output.shape[1] - 4 * reg_max], dim=1)
+        _, bbox_reg = anc2vec(reg)
         b, c, h, w = bbox_reg.shape
         reg = bbox_reg.permute(0, 2, 3, 1).view(b, h*w, c)
         pred_bbox_reg.append(reg)
@@ -286,7 +289,8 @@ class DetectionPostprocessor:
             self.decode_outputs = partial(yolo_fastest_head_decode, score_thresh=params.score_thresh, anchors=params.anchors)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'yolo_detection_head':
-            self.decode_outputs = partial(yolo_head_decode, score_thresh=params.score_thresh)
+            self.anc2vec = Anchor2Vec(params.reg_max)
+            self.decode_outputs = partial(yolo_head_decode, score_thresh=params.score_thresh, anc2vec=self.anc2vec, reg_max=params.reg_max)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'rtdetr_head':
             self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries, score_thresh=params.score_thresh)

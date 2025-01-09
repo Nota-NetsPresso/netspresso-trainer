@@ -23,6 +23,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torch.nn import BCEWithLogitsLoss
 
+from netspresso_trainer.models.op.custom import Anchor2Vec
 from netspresso_trainer.utils.bbox_utils import generate_anchors
 
 from .yolox import IOUloss
@@ -325,13 +326,15 @@ class YOLOv9Loss(nn.Module):
         self.scaler = None
         self.cls = BCELoss()
         self.iou = BoxLoss()
-        self.reg_max = 16 # TODO: should be controlled by config
+        self.reg_max = kwargs.get("reg_max", 16)
+        self.anc2vec = Anchor2Vec(self.reg_max)
         self.aux_rate = 0.25 # TODO: should be controlled by config
 
     def get_output(self, output, anchor_grid, scaler):
         pred_bbox_reg, pred_bbox_anchor, pred_class_logits = [], [], []
         for layer_output in output:
-            bbox_reg, bbox_anchor, class_logits = layer_output
+            reg, class_logits = torch.split(layer_output, [layer_output.shape[1] - self.num_classes, self.num_classes], dim=1)
+            bbox_anchor, bbox_reg = self.anc2vec(reg)
             b, c, _, _ = bbox_reg.shape
             reg = bbox_reg.view(b, c, -1).permute(0, 2, 1)
             pred_bbox_reg.append(reg)
@@ -354,12 +357,8 @@ class YOLOv9Loss(nn.Module):
         return pred_class_logits, pred_bbox_anchor, pred_bbox_reg
 
     def forward(self, out: Union[List, Dict], target: Dict) -> Tensor:
-        if isinstance(out['pred'], Dict):
-            aux_out = out['pred']['aux_outputs']
-            out = out['pred']['outputs']
-        else:
-            out = out['pred']
-            aux_out = None
+        # aux_out = out['pred']['aux_outputs'] if isinstance(out['pred'], Dict) else None
+        out = out['pred']['outputs'] if isinstance(out['pred'], Dict) else out['pred']
         device = out[0][0].device
         self.num_classes = target['num_classes']
         img_size = target['img_size']
@@ -370,8 +369,7 @@ class YOLOv9Loss(nn.Module):
 
         strides = []
         for _k, o in enumerate(out):
-            bbox_reg, _, _ = o
-            stride_this_level = img_size[-1] // bbox_reg.size(-1)
+            stride_this_level = img_size[-1] // o.size(-1)
             strides.append(stride_this_level)
         anchor_grid, scaler = generate_anchors(img_size, strides)
         anchor_grid = anchor_grid.to(device)
@@ -379,8 +377,10 @@ class YOLOv9Loss(nn.Module):
 
         dfl = DFLoss(anchor_grid, scaler, self.reg_max)
         preds_cls, preds_anc, preds_box = self.get_output(out, anchor_grid=anchor_grid, scaler=scaler)
-        if aux_out:
-            aux_preds_cls, aux_preds_anc, aux_preds_box = self.get_output(aux_out, anchor_grid=anchor_grid, scaler=scaler)
+        # if aux_out:
+        #     aux_preds_cls, aux_preds_anc, aux_preds_box = self.get_output(aux_out, anchor_grid=anchor_grid, scaler=scaler)
+        # else:
+        #     aux_preds_cls, aux_preds_anc, aux_preds_box = None, None, None
 
         matcher = BoxMatcher(self.num_classes, anchor_grid)
         max_samples = max([len(t['labels']) for t in target])
@@ -395,19 +395,21 @@ class YOLOv9Loss(nn.Module):
 
         align_targets, valid_masks = matcher(labels, (preds_cls.detach(), preds_box.detach()))
         targets_cls, targets_bbox = self.separate_anchor(align_targets, scaler)
+        preds_box = preds_box / scaler[None, :, None]
         cls_norm = max(targets_cls.sum(), 1)
         box_norm = targets_cls.sum(-1)[valid_masks]
-        if aux_out:
-            aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
-            aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
-            aux_cls_norm = max(aux_targets_cls.sum(), 1)
-            aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
-            ## -- CLS -- ##
-            aux_loss_cls = self.cls(aux_preds_cls, aux_targets_cls, aux_cls_norm)
-            ## -- IOU -- ##
-            aux_loss_iou = self.iou(aux_preds_box, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
-            ## -- DFL -- ##
-            aux_loss_dfl = dfl(aux_preds_anc, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+        # if aux_out:
+        #     aux_align_targets, aux_valid_masks = matcher(labels, (aux_preds_cls.detach(), aux_preds_box.detach()))
+        #     aux_preds_box = aux_preds_box / scaler[None, :, None]
+        #     aux_targets_cls, aux_targets_bbox = self.separate_anchor(aux_align_targets, scaler)
+        #     aux_cls_norm = max(aux_targets_cls.sum(), 1)
+        #     aux_box_norm = aux_targets_cls.sum(-1)[aux_valid_masks]
+        #     ## -- CLS -- ##
+        #     aux_loss_cls = self.cls(aux_preds_cls, aux_targets_cls, aux_cls_norm)
+        #     ## -- IOU -- ##
+        #     aux_loss_iou = self.iou(aux_preds_box, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
+        #     ## -- DFL -- ##
+        #     aux_loss_dfl = dfl(aux_preds_anc, aux_targets_bbox, aux_valid_masks, aux_box_norm, aux_cls_norm)
 
 
         ## -- CLS -- ##
@@ -418,10 +420,10 @@ class YOLOv9Loss(nn.Module):
         loss_dfl = dfl(preds_anc, targets_bbox, valid_masks, box_norm, cls_norm)
 
         # TODO: loss weights should be controlled by config
-        if aux_out:
-            total_loss = 0.5 * (self.aux_rate * aux_loss_cls + loss_cls) + 1.5 * (self.aux_rate * aux_loss_dfl + loss_dfl) + 7.5 * (self.aux_rate * aux_loss_iou + loss_iou)
-        else:
-            total_loss = 0.5 * loss_cls + 1.5 * loss_dfl + 7.5 * loss_iou
+        # if aux_out:
+        #     total_loss = 0.5 * (self.aux_rate * aux_loss_cls + loss_cls) + 1.5 * (self.aux_rate * aux_loss_dfl + loss_dfl) + 7.5 * (self.aux_rate * aux_loss_iou + loss_iou)
+        # else:
+        total_loss = 0.5 * loss_cls + 1.5 * loss_dfl + 7.5 * loss_iou
         return total_loss
 
     def separate_anchor(self, anchors, scaler):

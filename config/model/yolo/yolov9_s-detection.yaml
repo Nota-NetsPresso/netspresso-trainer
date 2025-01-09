@@ -55,17 +55,19 @@ model:
         version: v9
         num_anchors: ~
         use_group: true
-        reg_max: 16
+        reg_max: &reg_max 16
         act_type: *act_type
         use_aux_loss: *use_aux_loss
   postprocessor: 
     params: 
       # postprocessor - decode
+      reg_max: *reg_max
       score_thresh: 0.01
       # postprocessor - nms
       nms_thresh: 0.65
       class_agnostic: false
   losses:
     - criterion: yolov9_loss
+      reg_max: *reg_max
       weight: ~
       l1_activate_epoch: ~
