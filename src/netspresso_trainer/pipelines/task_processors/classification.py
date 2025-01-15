@@ -40,7 +40,7 @@ class ClassificationProcessor(BaseTaskProcessor):
             loss_factory.calc(out, target, phase='train')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
-        _, pred = self.postprocessor(out)
+        pred, _ = self.postprocessor(out)
 
         loss_factory.backward(self.grad_scaler)
         if self.max_norm:
@@ -75,7 +75,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         loss_factory.calc(out, target, phase='valid')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
-        _, pred = self.postprocessor(out)
+        pred, conf_score = self.postprocessor(out)
 
         indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
@@ -97,7 +97,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             results = {
                 'images': images.detach().cpu().numpy(),
-                'pred': pred
+                'pred': {"label": pred, "conf_score": conf_score}
             }
             return results
 
@@ -107,7 +107,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         images = images.to(self.devices)
 
         out = test_model(images)
-        _, pred = self.postprocessor(out, k=1)
+        pred, conf_score = self.postprocessor(out, k=1)
 
         indices = indices.numpy()
         if self.conf.distributed:
@@ -124,7 +124,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             results = {
                 'images': images.detach().cpu().numpy(),
-                'pred': pred
+                'pred': {"label": pred, "conf_score": conf_score}
             }
             return results
 

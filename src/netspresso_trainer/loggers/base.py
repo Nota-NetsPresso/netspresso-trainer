@@ -118,7 +118,11 @@ class TrainingLogger():
                 continue
 
             # target, pred, bg_gt
-            v = v[:self.num_sample_images]
+            if isinstance(v, dict):
+                for key in v:
+                    v[key] = v[key][:self.num_sample_images]
+            else:
+                v = v[:self.num_sample_images]
             v_new: np.ndarray = magic_image_handler(
                 self.label_converter(v, images=images_dict['images']))
             v_new = v_new.astype(np.uint8)
