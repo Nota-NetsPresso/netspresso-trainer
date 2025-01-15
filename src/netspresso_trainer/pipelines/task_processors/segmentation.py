@@ -16,6 +16,8 @@
 
 from typing import Literal, Optional
 
+import cv2
+import numpy as np
 import torch
 
 from .base import BaseTaskProcessor
@@ -141,3 +143,52 @@ class SegmentationProcessor(BaseTaskProcessor):
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
+
+    def get_predictions(self, results, class_map):
+        predictions = []
+        if isinstance(results, list):
+            for minibatch in results:
+                predictions.extend(self._convert_result(minibatch, class_map))
+        elif isinstance(results, dict):
+            predictions.extend(self._convert_result(results, class_map))
+
+        return predictions
+
+    def _convert_result(self, result, class_map):
+        assert "pred" in result and "images" in result
+        return_preds = []
+        class_keys = class_map.keys()
+        for idx in range(len(result['pred'])):
+            image = result['images'][idx:idx+1]
+            height, width = image.shape[-2:]
+            preds = []
+            for class_idx in class_keys:
+                binary_mask = np.where(result['pred'][idx] == class_idx, 1, 0)
+                contours, _ = cv2.findContours(binary_mask.astype(np.uint8),
+                                                       mode=cv2.RETR_EXTERNAL,
+                                                       method=cv2.CHAIN_APPROX_SIMPLE)
+                segmentation = []
+                name = class_map[class_idx]
+                for contour in contours:
+                    contour = contour.flatten().tolist()
+                    if len(contour) > 4:
+                        segmentation.append(contour)
+                if len(segmentation) == 0:
+                    continue
+                preds.append(
+                    {
+                        "class": class_idx,
+                        "name": name,
+                        "polygon": segmentation
+                    }
+                )
+            return_preds.append(
+                {
+                    "segmentation": preds,
+                    "shape": {
+                        "width": width,
+                        "height": height
+                    }
+                }
+            )
+        return return_preds

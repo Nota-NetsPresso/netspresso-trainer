@@ -28,7 +28,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..loggers.base import TrainingLogger
-from ..utils.record import InferenceSummary, Timer
+from ..utils.record import InferenceSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
@@ -89,9 +89,10 @@ class InferencePipeline(BasePipeline):
             samples=valid_samples,
             elapsed_time=time_for_inference,
         )
-        self.save_summary(time_for_inference)
+        predictions = self.task_processor.get_predictions(valid_samples, self.logger.class_map)
+        self.save_summary(time_for_inference, predictions)
 
-    def save_summary(self, time_for_inference):
+    def save_summary(self, time_for_inference, predictions):
         flops, params = get_params_and_flops(self.model, self.sample_input.float())
         inference_summary = InferenceSummary(
             flops=flops,
@@ -100,10 +101,20 @@ class InferencePipeline(BasePipeline):
             success=True,
         )
 
+        predictions_summary = PredictionSummary(
+            predictions=predictions,
+            misc=None
+        )
+
         logger.info(f"[Model stats] | Sample input: {tuple(self.sample_input.shape)} | Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "inference_summary.json"
+        prediction_path = Path(logging_dir) / "predictions.json"
 
         with open(summary_path, 'w') as f:
             json.dump(asdict(inference_summary), f, indent=4)
         logger.info(f"Model inference summary saved at {str(summary_path)}")
+
+        with open(prediction_path, 'w') as f:
+            json.dump(asdict(predictions_summary), f, indent=4)
+        logger.info(f"Model predictions are saved at {str(prediction_path)}")

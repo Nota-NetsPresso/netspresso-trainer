@@ -14,6 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple, Union
 
@@ -117,7 +118,11 @@ class TrainingLogger():
                 continue
 
             # target, pred, bg_gt
-            v = v[:self.num_sample_images]
+            if isinstance(v, dict):
+                for key in v:
+                    v[key] = v[key][:self.num_sample_images]
+            else:
+                v = v[:self.num_sample_images]
             v_new: np.ndarray = magic_image_handler(
                 self.label_converter(v, images=images_dict['images']))
             v_new = v_new.astype(np.uint8)
@@ -169,7 +174,7 @@ class TrainingLogger():
         if metrics is not None:
             metrics = self._convert_scalar_as_readable(metrics)
         if samples is not None:
-            samples = self._convert_images_as_readable(samples)
+            samples = self._convert_images_as_readable(deepcopy(samples))
 
         for logger in self.loggers:
             logger(
