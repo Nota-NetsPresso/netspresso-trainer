@@ -30,5 +30,5 @@ class ClassificationPostprocessor():
         maxk = min(TOPK_MAX, pred.size()[1])
         if k:
             maxk = min(k, maxk)
-        _, pred = pred.topk(maxk, 1, True, True)
-        return pred.detach().cpu().numpy()
+        logits, pred = pred.topk(maxk, 1, True, True)
+        return logits.detach().cpu().numpy(), pred.detach().cpu().numpy()
