@@ -134,14 +134,16 @@ class ClassificationProcessor(BaseTaskProcessor):
     def _convert_result(self, result, class_map):
         assert "pred" in result and "images" in result
         return_preds = []
-        for idx in range(len(result['pred'])):
+        for idx in range(len(result['images'])):
             image = result['images'][idx:idx+1]
             height, width = image.shape[-2:]
-            pred = result['pred'][idx]
+            label = result['pred']['label'][idx]
+            conf_score = result['pred']['conf_score'][idx]
             return_preds.append(
                 {
-                    "class": int(pred[0]),
-                    "name": class_map[int(pred[0])],
+                    "class": int(label[0]),
+                    "name": class_map[int(label[0])],
+                    "conf_score": float(conf_score[0]),
                     "shape": {
                         "width": width,
                         "height": height
