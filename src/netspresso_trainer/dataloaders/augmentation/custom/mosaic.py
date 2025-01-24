@@ -172,7 +172,7 @@ class MosaicDetection:
         mosaic_prob: float,
         mixup_prob: float,
         fill: int,
-        mosaic_off_epoch: int,
+        mosaic_off_duration: int,
     ):
         self.size = size
         self.affine_scale = affine_scale
@@ -184,11 +184,11 @@ class MosaicDetection:
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
         self.fill = fill
-        self.mosaic_off_epoch = mosaic_off_epoch
+        self.mosaic_off_duration = mosaic_off_duration
 
     def __call__(self, image, label=None, mask=None, bbox=None, keypoint=None, dataset=None):
-        # Turn off mosaic augmentation when cur_epoch >= mosaic_off_epoch
-        if (self.mosaic_off_epoch > dataset.cur_epoch.value) and (random.random() < self.mosaic_prob):
+        # Turn off mosaic augmentation when end_epoch - cur_epoch <= mosaic_off_duration
+        if (self.mosaic_off_duration < (dataset.end_epoch - dataset.cur_epoch.value)) and (random.random() < self.mosaic_prob):
             mosaic_labels = []
             input_dim = self.size
             input_h, input_w = input_dim[0], input_dim[1]
