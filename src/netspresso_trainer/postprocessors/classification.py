@@ -13,8 +13,9 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
-
 from typing import Optional
+
+import torch
 
 from ..models.utils import ModelOutput
 
@@ -30,5 +31,6 @@ class ClassificationPostprocessor():
         maxk = min(TOPK_MAX, pred.size()[1])
         if k:
             maxk = min(k, maxk)
-        _, pred = pred.topk(maxk, 1, True, True)
-        return pred.detach().cpu().numpy()
+        logits, pred = pred.topk(maxk, 1, True, True)
+        conf_score = torch.softmax(logits, dim=-1)
+        return pred.detach().cpu().numpy(), conf_score.detach().cpu().numpy()
