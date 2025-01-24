@@ -21,6 +21,7 @@ No changes to highlight.
 - Generalize 2d pooling layers and define as custom layer by `@hglee98` in [PR 583](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/583)
 - Unify bbox transformation and IoU computing methods by `@hglee98` in [PR 587](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/587)
 - Update documents by `@hglee98` in [PR 591](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/591)
+- Update mosaic augmentation epoch specification by `@hglee98` in [PR 604](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/604)
 
 # v1.0.3
 

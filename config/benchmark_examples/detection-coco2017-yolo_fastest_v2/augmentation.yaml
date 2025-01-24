@@ -12,7 +12,7 @@ augmentation:
       mixup_prob: 1.0
       mixup_scale: [0.1, 2.0]
       fill: 0
-      mosaic_off_epoch: 285
+      mosaic_off_duration: 15
     -
       name: hsvjitter
       h_mag: 5
