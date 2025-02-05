@@ -69,6 +69,7 @@ if __name__ == '__main__':
             config = config.model
             config.single_task_model = is_single_task_model(config)
             torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES, devices=torch.device("cpu"), distributed=False)
+            torch_model.eval()
             print(torch_model)
             save_onnx(torch_model, f=Path(args.output_dir) / f"{model_config_path.stem}.onnx",
                       sample_input=torch.randn(1, 3, *args.sample_size), opset_version=17)
