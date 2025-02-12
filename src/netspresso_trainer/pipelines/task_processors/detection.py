@@ -186,3 +186,53 @@ class DetectionProcessor(BaseTaskProcessor):
                     pred_on_image['post_labels'] = class_idx
                     pred.append(pred_on_image)
             metric_factory.update(pred, target=targets, phase=phase)
+
+    def get_predictions(self, results, class_map):
+        predictions = []
+        if isinstance(results, list):
+            for minibatch in results:
+                predictions.extend(self._convert_result(minibatch, class_map))
+        elif isinstance(results, dict):
+            predictions.extend(self._convert_result(results, class_map))
+
+        return predictions
+
+    def _convert_result(self, result, class_map):
+        assert "pred" in result and "images" in result
+        return_preds = []
+        for idx in range(len(result['pred'])):
+            image = result['images'][idx:idx+1]
+            height, width = image.shape[-2:]
+            preds = []
+            for bbox, label in zip(result['pred'][idx][0], result['pred'][idx][1]):
+                x1 = int(bbox[0])
+                y1 = int(bbox[1])
+                x2 = int(bbox[2])
+                y2 = int(bbox[3])
+                confidence_score = float(bbox[4])
+                class_idx = int(label)
+                name = class_map[class_idx]
+                preds.append(
+                    {
+                        "class": class_idx,
+                        "name": name,
+                        "confidence_score": confidence_score,
+                        "coords": {
+                            "x1": x1,
+                            "y1": y1,
+                            "x2": x2,
+                            "y2": y2
+                        }
+                    }
+                )
+            return_preds.append(
+                {
+                    "bboxes": preds,
+                    "shape": {
+                        "width": width,
+                        "height": height
+                    }
+                }
+            )
+
+        return return_preds

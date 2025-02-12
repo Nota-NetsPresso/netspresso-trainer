@@ -16,7 +16,7 @@
 
 import time
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 __all__ = ['AverageMeter', 'Timer', 'TrainingSummary']
 
@@ -171,3 +171,9 @@ class InferenceSummary:
     params: Optional[int] = None
     total_inference_time: Optional[float] = None
     success: bool = False
+
+
+@dataclass
+class PredictionSummary:
+    predictions: List = field(default_factory=list)
+    misc: Optional[Dict[str, Any]] = field(default_factory=dict)
