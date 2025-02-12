@@ -30,7 +30,7 @@ from tqdm import tqdm
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
-from ..utils.record import EvaluationSummary, Timer
+from ..utils.record import EvaluationSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
@@ -51,12 +51,14 @@ class EvaluationPipeline(BasePipeline):
         loss_factory: LossFactory,
         metric_factory: MetricFactory,
         eval_dataloader: DataLoader,
+        eval_data_stats: Dict,
         single_gpu_or_rank_zero: bool,
     ):
         super(EvaluationPipeline, self).__init__(conf, task, task_processor, model_name, model, logger, timer)
         self.loss_factory = loss_factory
         self.metric_factory = metric_factory
         self.eval_dataloader = eval_dataloader
+        self.eval_data_stats = eval_data_stats
         self.single_gpu_or_rank_zero = single_gpu_or_rank_zero
 
     @final
@@ -114,11 +116,13 @@ class EvaluationPipeline(BasePipeline):
             samples=valid_samples,
             losses=losses,
             metrics=metrics,
+            data_stats=self.eval_data_stats,
             elapsed_time=time_for_evaluation,
         )
-        self.save_summary(losses, metrics, time_for_evaluation)
+        predictions = self.task_processor.get_predictions(valid_samples, self.logger.class_map)
+        self.save_summary(losses, metrics, predictions, time_for_evaluation)
 
-    def save_summary(self, losses, metrics, time_for_evaluation):
+    def save_summary(self, losses, metrics, predictions, time_for_evaluation):
         flops, params = get_params_and_flops(self.model, self.sample_input.float())
         evaluation_summary = EvaluationSummary(
             losses=losses,
@@ -131,10 +135,20 @@ class EvaluationPipeline(BasePipeline):
             success=True,
         )
 
+        predictions_summary = PredictionSummary(
+            predictions=predictions,
+            misc=None
+        )
+
         logger.info(f"[Model stats] | Sample input: {tuple(self.sample_input.shape)} | Params: {(params/1e6):.2f}M | FLOPs: {(flops/1e9):.2f}G")
         logging_dir = self.logger.result_dir
         summary_path = Path(logging_dir) / "evaluation_summary.json"
+        prediction_path = Path(logging_dir) / "predictions.json"
 
         with open(summary_path, 'w') as f:
             json.dump(asdict(evaluation_summary), f, indent=4)
         logger.info(f"Model evaluation summary saved at {str(summary_path)}")
+
+        with open(prediction_path, 'w') as f:
+            json.dump(asdict(predictions_summary), f, indent=4)
+        logger.info(f"Model predictions are saved at {str(prediction_path)}")

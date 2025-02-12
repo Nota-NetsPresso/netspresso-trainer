@@ -40,7 +40,7 @@ class ClassificationProcessor(BaseTaskProcessor):
             loss_factory.calc(out, target, phase='train')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
-        pred = self.postprocessor(out)
+        pred, _ = self.postprocessor(out)
 
         loss_factory.backward(self.grad_scaler)
         if self.max_norm:
@@ -75,7 +75,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         loss_factory.calc(out, target, phase='valid')
         if labels.dim() > 1: # Soft label to label number
             labels = torch.argmax(labels, dim=-1)
-        pred = self.postprocessor(out)
+        pred, conf_score = self.postprocessor(out)
 
         indices = indices.numpy()
         labels = labels.detach().cpu().numpy() # Change it to numpy before compute metric
@@ -97,7 +97,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             results = {
                 'images': images.detach().cpu().numpy(),
-                'pred': pred
+                'pred': {"label": pred, "conf_score": conf_score}
             }
             return results
 
@@ -107,7 +107,7 @@ class ClassificationProcessor(BaseTaskProcessor):
         images = images.to(self.devices)
 
         out = test_model(images)
-        pred = self.postprocessor(out, k=1)
+        pred, conf_score = self.postprocessor(out, k=1)
 
         indices = indices.numpy()
         if self.conf.distributed:
@@ -124,9 +124,40 @@ class ClassificationProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             results = {
                 'images': images.detach().cpu().numpy(),
-                'pred': pred
+                'pred': {"label": pred, "conf_score": conf_score}
             }
             return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
+
+    def _convert_result(self, result, class_map):
+        assert "pred" in result and "images" in result
+        return_preds = []
+        for idx in range(len(result['images'])):
+            image = result['images'][idx:idx+1]
+            height, width = image.shape[-2:]
+            label = result['pred']['label'][idx]
+            conf_score = result['pred']['conf_score'][idx]
+            return_preds.append(
+                {
+                    "class": int(label[0]),
+                    "name": class_map[int(label[0])],
+                    "conf_score": float(conf_score[0]),
+                    "shape": {
+                        "width": width,
+                        "height": height
+                    }
+                }
+            )
+        return return_preds
+
+    def get_predictions(self, results, class_map):
+        predictions = []
+        if isinstance(results, list):
+            for minibatch in results:
+                predictions.extend(self._convert_result(minibatch, class_map))
+        elif isinstance(results, dict):
+            predictions.extend(self._convert_result(results, class_map))
+
+        return predictions

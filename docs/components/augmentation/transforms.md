@@ -136,7 +136,7 @@ This MosaicDetection augmentation is based on [YOLOX repository](https://github.
 | `mixup_prob` | (float) The probability of applying the mixup. If set to 1.0, it is always applied. |
 | `mixup_scale` | (list) Resize scale range for mixup image.  |
 | `fill` | (int)  This is used to fill pixels with constant value. |
-| `mosaic_off_epoch` | (int) Turn off the `MosaicDetection` at `mosaic_off_epoch` epoch. |
+| `mosaic_off_duration` | (int) Number of epochs for which the `MosaicDetection` transform is disabled at the end of training. |
 
 <details>
   <summary>MosaicDetection example</summary>
@@ -156,7 +156,7 @@ This MosaicDetection augmentation is based on [YOLOX repository](https://github.
         mixup_prob: 1.0
         mixup_scale: [0.5, 1.5]
         fill: 114
-        mosaic_off_epoch: 10
+        mosaic_off_duration: 10
   ```
 </details>
 

@@ -22,6 +22,9 @@ import torchvision
 from torchvision.models.detection._utils import BoxCoder, _topk_min
 from torchvision.ops import boxes as box_ops
 
+from netspresso_trainer.utils.bbox_utils import generate_anchors, transform_bbox
+
+from ..models.op.custom import Anchor2Vec
 from ..models.utils import ModelOutput
 
 
@@ -30,12 +33,8 @@ def rtdetr_decode(pred, original_shape, num_top_queries=300, score_thresh=0.0):
     boxes, logits = pred[..., :4], pred[..., 4:]
 
     num_classes = logits.shape[-1]
-
-    boxes = torchvision.ops.box_convert(boxes, in_fmt='cxcywh', out_fmt='xyxy')
-
     h, w = original_shape[1], original_shape[2]
-    boxes[..., ::2] *= w
-    boxes[..., 1::2] *= h
+    boxes = transform_bbox(boxes, "cxcywhn -> xyxy", image_shape=(h, w))
 
     scores = torch.sigmoid(logits)
     scores, index = torch.topk(scores.flatten(1), num_top_queries, axis=-1)
@@ -141,10 +140,7 @@ def anchor_free_decoupled_head_decode(pred, original_shape, score_thresh=0.7):
     ], dim=-1)
 
     box_corner = pred.new(pred.shape)
-    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
-    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
-    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
-    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    box_corner[:, :, :4] = transform_bbox(pred[:, :, :4], "cxcywh -> xyxy")
     pred[:, :, :4] = box_corner[:, :, :4]
 
     # Discard boxes with low score
@@ -193,10 +189,7 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
     pred = torch.cat(preds, dim=1)
 
     box_corner = pred.new(pred.shape)
-    box_corner[:, :, 0] = pred[:, :, 0] - pred[:, :, 2] / 2
-    box_corner[:, :, 1] = pred[:, :, 1] - pred[:, :, 3] / 2
-    box_corner[:, :, 2] = pred[:, :, 0] + pred[:, :, 2] / 2
-    box_corner[:, :, 3] = pred[:, :, 1] + pred[:, :, 3] / 2
+    box_corner[:, :, :4] = transform_bbox(pred[:, :, :4], "cxcywh -> xyxy")
     pred[:, :, :4] = box_corner[:, :, :4]
 
     # Discard boxes with low score
@@ -213,6 +206,46 @@ def yolo_fastest_head_decode(pred, original_shape, score_thresh=0.7, anchors=Non
 
     return detections
 
+def yolo_head_decode(pred, original_shape, score_thresh=0.7, anc2vec=None, reg_max=16):
+    pred = pred['pred']
+    if isinstance(pred, dict):
+        pred = pred['outputs']
+    h, w = original_shape[1], original_shape[2]
+    device = pred[0][0].device
+    stage_strides= [original_shape[-1] // o.shape[-1] for o in pred]
+    offset, scaler = generate_anchors((h, w), stage_strides)
+    offset = offset.to(device)
+    scaler = scaler.to(device)
+
+    pred_bbox_reg, pred_class_logits = [], []
+    for layer_output in pred:
+        layer_output = layer_output.float()
+        reg, class_logits = torch.split(layer_output, [4 * reg_max, layer_output.shape[1] - 4 * reg_max], dim=1)
+        _, bbox_reg = anc2vec(reg)
+        b, c, h, w = bbox_reg.shape
+        reg = bbox_reg.permute(0, 2, 3, 1).view(b, h*w, c)
+        pred_bbox_reg.append(reg)
+
+        b, c, h, w = class_logits.shape
+        logits = class_logits.permute(0, 2, 3, 1).view(b, h*w, c)
+        pred_class_logits.append(logits)
+
+    pred_bbox_reg = torch.concat(pred_bbox_reg, dim=1)
+    pred_class_logits = torch.concat(pred_class_logits, dim=1).sigmoid()
+
+    pred_xyxy = pred_bbox_reg * scaler.view(1, -1, 1)
+    lt, rb = pred_xyxy.chunk(2, dim=-1)
+    pred_bbox_reg = torch.cat([offset - lt, offset + rb], dim=-1)
+
+    detections = []
+    for bbox, cls_logits in zip(pred_bbox_reg, pred_class_logits):
+        class_conf, class_pred = torch.max(cls_logits, 1, keepdim=True)
+        conf_mask = (class_conf.squeeze() >= score_thresh).squeeze()
+
+        detections.append(
+            torch.cat((bbox, torch.ones_like(class_pred), class_conf, class_pred.float()), 1)[conf_mask]
+        )
+    return detections
 
 def nms(prediction, nms_thresh=0.45, class_agnostic=False):
     output = [torch.zeros(0, 7).to(prediction[0].device) for i in range(len(prediction))]
@@ -254,6 +287,10 @@ class DetectionPostprocessor:
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'yolo_fastest_head_v2':
             self.decode_outputs = partial(yolo_fastest_head_decode, score_thresh=params.score_thresh, anchors=params.anchors)
+            self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
+        elif head_name == 'yolo_detection_head':
+            self.anc2vec = Anchor2Vec(params.reg_max)
+            self.decode_outputs = partial(yolo_head_decode, score_thresh=params.score_thresh, anc2vec=self.anc2vec, reg_max=params.reg_max)
             self.postprocess = partial(nms, nms_thresh=params.nms_thresh, class_agnostic=params.class_agnostic)
         elif head_name == 'rtdetr_head':
             self.decode_outputs = partial(rtdetr_decode, num_top_queries=params.num_top_queries, score_thresh=params.score_thresh)

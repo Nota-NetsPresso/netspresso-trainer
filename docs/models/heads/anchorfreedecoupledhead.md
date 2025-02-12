@@ -11,8 +11,6 @@ We provide the head of YOLOX as AnchorFreeDecoupledHead. There are no differnece
 | `name` | (str) Name must be "yolox_head" to use `YOLOX` head. |
 | `params.act_type` | (float) Activation function for the head. |
 | `params.depthwise`| (bool) Whether to enable depthwise convolution for the head. |
-| `params.score_thresh` | (float) Score thresholding value applied during the decoding step. |
-| `params.class_agnostic` | (bool) Whether to process class-agnostic non-maximum suppression. |
 
 ## Model configuration example
 
@@ -26,12 +24,7 @@ We provide the head of YOLOX as AnchorFreeDecoupledHead. There are no differnece
         name: anchor_free_decoupled_head
         params:
           depthwise: False
-          act_type: "silu"
-          # postprocessor - decode
-          score_thresh: 0.7
-          # postprocessor - nms
-          nms_thresh: 0.45
-          class_agnostic: False
+          act_type: "silu" 
   ```
 </details>
 

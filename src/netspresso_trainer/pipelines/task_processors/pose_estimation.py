@@ -133,3 +133,6 @@ class PoseEstimationProcessor(BaseTaskProcessor):
             pred = np.concatenate([output['pred']for output in outputs], axis=0)
             keypoints = np.concatenate([output['target']for output in outputs], axis=0)
             metric_factory.update(pred, keypoints, phase=phase)
+
+    def get_predictions(self, results, class_map):
+        pass
