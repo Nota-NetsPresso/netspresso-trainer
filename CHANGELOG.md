@@ -2,10 +2,28 @@
 
 ## New Features:
 
+No changes to highlight.
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
+# v0.1.0
+
+## New Features:
+
 - Add instance number logging feature for detection task by `@hglee98` in [PR 577](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/577)
 - Add Precision and Recall metric for detection task by `@hglee98` in [PR 579](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/579)
 - Add YOLOv9 by `@hglee98` in [PR 585](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/585), [PR 586](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/586), [PR 592](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/592), [PR 593](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/593), [PR 595](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/595), [PR 589](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/589), [PR 590](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/590), [PR 597](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/597), [PR 598](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/598), [PR 601](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/601), [PR 602](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/602)
-- Add prediction values to evaluation summary by `@hglee98` in [Pr 600](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/600)
+- Add prediction values to evaluation summary by `@hglee98` in [PR 600](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/600)
 
 ## Bug Fixes:
 
