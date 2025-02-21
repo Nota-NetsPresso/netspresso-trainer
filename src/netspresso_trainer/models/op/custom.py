@@ -1337,3 +1337,46 @@ def scaled_dot_product_attention(
     attn_weight = torch.softmax(attn_weight, dim=-1)
     attn_weight = torch.dropout(attn_weight, dropout_p, train=True)
     return attn_weight @ value
+
+class AreaAttention(nn.Module):
+    def __init__(self, in_channels: int, num_heads: int, num_areas: int = 4):
+        super().__init__()
+        self.num_areas = num_areas
+        self.num_heads = num_heads
+        self.in_channels = in_channels
+        self.head_channels = in_channels // num_heads
+        assert in_channels % num_heads == 0, "in_channels must be divisible by num_heads"
+        assert num_areas > 0, "num_areas must be greater than 0"
+
+        self.qkv = ConvLayer(in_channels, in_channels * 3, kernel_size=1, use_act=False)
+        self.proj = ConvLayer(in_channels, in_channels, kernel_size=1, use_act=False)
+        self.positional_encoding = ConvLayer(
+            in_channels, in_channels, kernel_size=7, groups=in_channels, padding=3, stride=1, use_act=False
+        )
+
+    def forward(self, x: Union[Tensor, Proxy]) -> Union[Tensor, Proxy]:
+        batch_size, num_channels, height, width = x.shape
+        spatial_size = height * width
+
+        qkv = self.qkv(x).flatten(2).transpose(1, 2)
+
+        if self.num_areas > 1:
+            assert spatial_size % self.num_areas == 0, "spatial size must be divisible by num_areas"
+            area_size = spatial_size // self.num_areas
+            qkv = qkv.reshape(batch_size * self.num_areas, area_size, num_channels * 3)
+
+        query, key, value = self._split_qkv(qkv, batch_size, spatial_size)
+        attention_output = (
+            scaled_dot_product_attention(query, key, value)
+            .permute(0, 2, 1, 3)
+            .reshape(batch_size, num_channels, height, width)
+        )
+        value_reshaped = value.reshape(batch_size, height, width, num_channels).permute(0, 3, 1, 2)
+        positional_output = self.positional_encoding(value_reshaped)
+        x = attention_output + positional_output
+        return self.proj(x)
+
+    def _split_qkv(self, qkv: Tensor, batch_size: int, spatial_size: int) -> Tuple[Tensor, Tensor, Tensor]:
+        qkv = qkv.view(batch_size, spatial_size, self.num_heads, self.head_channels * 3)
+        query, key, value = qkv.split(self.head_channels, dim=3)
+        return query, key, value
