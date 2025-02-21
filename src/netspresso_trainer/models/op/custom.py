@@ -1338,6 +1338,7 @@ def scaled_dot_product_attention(
     attn_weight = torch.dropout(attn_weight, dropout_p, train=True)
     return attn_weight @ value
 
+
 class AreaAttention(nn.Module):
     def __init__(self, in_channels: int, num_heads: int, num_areas: int = 4):
         super().__init__()
