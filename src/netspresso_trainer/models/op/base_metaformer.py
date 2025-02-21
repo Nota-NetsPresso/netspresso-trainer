@@ -480,6 +480,7 @@ class MetaFormer(nn.Module):
 
 
 # Efficient implementation equivalent to the following:
+# This implementation is from https://pytorch.org/docs/2.6/generated/torch.nn.functional.scaled_dot_product_attention.html#torch.nn.functional.scaled_dot_product_attention
 def scaled_dot_product_attention(query, key, value, attn_mask=None, dropout_p=0.0,
         is_causal=False, scale=None, enable_gqa=False) -> torch.Tensor:
     L, S = query.size(-2), key.size(-2)
