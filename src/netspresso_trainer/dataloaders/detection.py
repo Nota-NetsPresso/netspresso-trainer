@@ -203,28 +203,28 @@ class DetectionCustomDataset(BaseCustomDataset):
 
 
     def pull_item(self, index):
+        sample = self.samples[index]
+        has_label = 'label' in sample
+
         if self.cache:
-            img = self.samples[index]['image']
-            ann = self.samples[index]['label'] if 'label' in self.samples[index] else None
-
-            if ann is None:
-                return img.copy(), np.zeros(0, 1), np.zeros(0, 5)
-
-            label, boxes_yolo = ann
-            w, h = img.size
-            boxes = self.xywhn2xyxy(boxes_yolo, w, h)
-            return img.copy(), label, boxes
-
-        img_path = Path(self.samples[index]['image'])
-        ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
-        img = Image.open(str(img_path)).convert('RGB')
+            img = sample['image']
+            ann = sample['label'] if has_label else None
+        else:
+            img_path = Path(sample['image'])
+            img = Image.open(str(img_path)).convert('RGB')
+            if has_label:
+                ann_path = Path(sample['label'])
+                ann = get_detection_label(ann_path)
+            else:
+                ann = None
 
         org_img = img.copy()
         w, h = img.size
-        if ann_path is None:
-            return org_img, np.zeros(0, 1), np.zeros(0, 5)
 
-        label, boxes_yolo = get_detection_label(Path(ann_path))
+        if ann is None:
+            return org_img, np.zeros((0, 1)), np.zeros((0, 5))
+
+        label, boxes_yolo = ann
         boxes = self.xywhn2xyxy(boxes_yolo, w, h)
 
         return org_img, label, boxes
