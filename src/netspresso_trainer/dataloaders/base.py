@@ -94,7 +94,7 @@ class BaseHFDataset(data.Dataset):
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
         return total_dataset
-    
+
     def cache_dataset(self):
         pass
 
