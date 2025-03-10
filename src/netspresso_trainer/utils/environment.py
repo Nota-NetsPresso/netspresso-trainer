@@ -16,7 +16,7 @@
 
 import os
 import random
-from pathlib import Path
+from contextlib import contextmanager
 from typing import Union
 
 import numpy as np
@@ -64,3 +64,12 @@ def get_device(x: Union[torch.Tensor, nn.Module]):
     if isinstance(x, nn.Module):
         return next(x.parameters()).device
     raise RuntimeError(f'{type(x)} do not have `device`')
+
+
+@contextmanager
+def torch_distributed_barrier(local_rank: int):
+    if local_rank not in [-1, 0]:
+        dist.barrier()
+    yield
+    if local_rank == 0:
+        dist.barrier()

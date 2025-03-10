@@ -155,9 +155,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
         self.label_image_mode: Literal['RGB', 'L', 'P'] = str(conf_data.label_image_mode).upper() \
             if conf_data.label_image_mode is not None else 'L'
 
-    def cache_dataset(self, sampler, distributed):
-        if (not distributed) or (distributed and dist.get_rank() == 0):
-            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+    def cache_dataset(self):
+        logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
 
         def _load(i, samples):
             image = Image.open(Path(samples[i]['image'])).convert('RGB')
@@ -167,9 +166,10 @@ class SegmentationCustomDataset(BaseCustomDataset):
             return i, image, label
 
         num_threads = 8 # TODO: Compute appropriate num_threads
+        all_indices = list(range(len(self.samples)))
         load_imgs = ThreadPool(num_threads).imap(
             partial(_load, samples=self.samples),
-            sampler
+            all_indices
         )
         for i, image, label in load_imgs:
             self.samples[i]['image'] = image

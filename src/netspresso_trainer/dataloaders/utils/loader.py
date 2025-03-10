@@ -22,6 +22,8 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
+from netspresso_trainer.utils.environment import torch_distributed_barrier
+
 from .constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from .misc import expand_to_chs
 from .sampler import DistributedEvalSampler
@@ -102,13 +104,14 @@ def create_loader(
         cache_data=False,
         kwargs=None
 ):
+    if cache_data:
+        with torch_distributed_barrier(rank):
+            dataset.cache_dataset()
     if is_training:
         sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank, drop_last=True)
     else:
         sampler = DistributedEvalSampler(dataset, num_replicas=world_size, rank=rank)
 
-    if cache_data:
-        dataset.cache_dataset(sampler, distributed)
 
     loader_args = {
         'batch_size': batch_size,

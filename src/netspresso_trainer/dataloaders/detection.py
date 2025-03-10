@@ -122,9 +122,8 @@ class DetectionCustomDataset(BaseCustomDataset):
         np.clip(converted[..., 1::2], a_min=0, a_max=h, out=converted[..., 1::2])
         return converted
 
-    def cache_dataset(self, sampler, distributed):
-        if (not distributed) or (distributed and dist.get_rank() == 0):
-            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+    def cache_dataset(self):
+        logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
 
         def _load(i, samples):
             image = Image.open(Path(samples[i]['image'])).convert('RGB')
@@ -133,10 +132,12 @@ class DetectionCustomDataset(BaseCustomDataset):
                 label = get_detection_label(Path(label))
             return i, image, label
 
+        all_indices = list(range(len(self.samples)))
+
         num_threads = 8 # TODO: Compute appropriate num_threads
         load_imgs = ThreadPool(num_threads).imap(
             partial(_load, samples=self.samples),
-            sampler
+            all_indices
         )
         for i, image, label in load_imgs:
             self.samples[i]['image'] = image
@@ -202,6 +203,18 @@ class DetectionCustomDataset(BaseCustomDataset):
 
 
     def pull_item(self, index):
+        if self.cache:
+            img = self.samples[index]['image']
+            ann = self.samples[index]['label'] if 'label' in self.samples[index] else None
+
+            if ann is None:
+                return img.copy(), np.zeros(0, 1), np.zeros(0, 5)
+
+            label, boxes_yolo = ann
+            w, h = img.size
+            boxes = self.xywhn2xyxy(boxes_yolo, w, h)
+            return img.copy(), label, boxes
+
         img_path = Path(self.samples[index]['image'])
         ann_path = Path(self.samples[index]['label']) if 'label' in self.samples[index] else None
         img = Image.open(str(img_path)).convert('RGB')
