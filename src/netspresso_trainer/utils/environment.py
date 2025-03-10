@@ -67,7 +67,10 @@ def get_device(x: Union[torch.Tensor, nn.Module]):
 
 
 @contextmanager
-def torch_distributed_barrier(local_rank: int):
+def torch_distributed_barrier(local_rank: int, distributed: bool):
+    if not distributed:
+        yield
+        return
     if local_rank not in [-1, 0]:
         dist.barrier()
     yield

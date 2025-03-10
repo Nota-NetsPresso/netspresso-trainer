@@ -105,7 +105,7 @@ def create_loader(
         kwargs=None
 ):
     if cache_data:
-        with torch_distributed_barrier(rank):
+        with torch_distributed_barrier(rank, distributed):
             dataset.cache_dataset()
     if is_training:
         sampler = torch.utils.data.distributed.DistributedSampler(dataset, num_replicas=world_size, rank=rank, drop_last=True)
