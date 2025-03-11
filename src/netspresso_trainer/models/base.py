@@ -74,7 +74,7 @@ class TaskModel(nn.Module):
             return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
 
     @abstractmethod
-    def forward(self, x, targets=None):
+    def forward(self, x):
         raise NotImplementedError
 
     def deploy(self, ):
@@ -89,7 +89,7 @@ class ClassificationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, targets=None):
+    def forward(self, x):
         features: BackboneOutput = self.backbone(x)
         out: ModelOutput = self.head(features['last_feature'])
         return out
@@ -99,11 +99,11 @@ class SegmentationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, targets=None):
+    def forward(self, x):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: ModelOutput = self.head(features['intermediate_features'], targets)
+        out: ModelOutput = self.head(features['intermediate_features'])
         return out
 
 
@@ -111,11 +111,11 @@ class DetectionModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, targets=None):
+    def forward(self, x):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
+        out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out
 
 
@@ -123,11 +123,11 @@ class PoseEstimationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, targets=None):
+    def forward(self, x):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
-        out: DetectionModelOutput = self.head(features['intermediate_features'], targets)
+        out: DetectionModelOutput = self.head(features['intermediate_features'])
         return out
 
 
