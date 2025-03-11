@@ -74,7 +74,7 @@ class TaskModel(nn.Module):
             return f"{self.__class__.__name__}[task={self.task}, backbone={self.backbone_name}, head={self.head_name}]"
 
     @abstractmethod
-    def forward(self, x, label_size=None, targets=None):
+    def forward(self, x, targets=None):
         raise NotImplementedError
 
     def deploy(self, ):
@@ -89,7 +89,7 @@ class ClassificationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, label_size=None, targets=None):
+    def forward(self, x, targets=None):
         features: BackboneOutput = self.backbone(x)
         out: ModelOutput = self.head(features['last_feature'])
         return out
@@ -99,7 +99,7 @@ class SegmentationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, label_size=None, targets=None):
+    def forward(self, x, targets=None):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
@@ -111,7 +111,7 @@ class DetectionModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, label_size=None, targets=None):
+    def forward(self, x, targets=None):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
@@ -123,7 +123,7 @@ class PoseEstimationModel(TaskModel):
     def __init__(self, conf_model, backbone, neck, head, freeze_backbone=False) -> None:
         super().__init__(conf_model, backbone, neck, head, freeze_backbone)
 
-    def forward(self, x, label_size=None, targets=None):
+    def forward(self, x, targets=None):
         features: BackboneOutput = self.backbone(x)
         if hasattr(self, 'neck'):
             features: BackboneOutput = self.neck(features['intermediate_features'])
@@ -150,7 +150,7 @@ class ONNXModel:
     def _get_name(self):
         return f"{self.__class__.__name__}[model={self.name}]"
 
-    def __call__(self, x, label_size=None, targets=None):
+    def __call__(self, x, targets=None):
         device = x.device
         x = x.detach().cpu().numpy()
         out = self.inference_session.run(None, {self.inference_session.get_inputs()[0].name: x})
@@ -211,13 +211,12 @@ class TFLiteModel:
         """Get the name of the model."""
         return f"{self.__class__.__name__}[model={self.name}]"
 
-    def __call__(self, x: Union[np.ndarray, torch.Tensor], label_size=None, targets=None):
+    def __call__(self, x: Union[np.ndarray, torch.Tensor], targets=None):
         """
         Perform inference on the input tensor.
 
         Args:
             x (Union[np.ndarray, torch.Tensor]): Input tensor
-            label_size: Not used in this implementation
             targets: Not used in this implementation
 
         Returns:
