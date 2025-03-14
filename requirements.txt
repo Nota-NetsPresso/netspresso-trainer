@@ -1,5 +1,6 @@
-torch==1.13.0
-torchvision==0.14.0
+torch==2.0.1
+torchvision==0.15.2
+onnx
 numpy
 pillow
 tqdm

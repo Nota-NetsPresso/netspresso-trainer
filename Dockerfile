@@ -1,7 +1,7 @@
 FROM python:3.8.16
 
-ARG TORCH_VERSION="1.13.0"
-ARG TORCHVISION_VERSION="0.14.0"
+ARG TORCH_VERSION="2.1.0"
+ARG TORCHVISION_VERSION="0.15.2"
 
 RUN apt-get update && \
     apt-get install -y \
