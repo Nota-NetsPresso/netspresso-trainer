@@ -95,6 +95,7 @@ class BaseHFDataset(data.Dataset):
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
         return total_dataset
 
+    @abstractmethod
     def cache_dataset(self):
         pass
 
