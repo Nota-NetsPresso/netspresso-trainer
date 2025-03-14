@@ -88,6 +88,8 @@ class BaseHFDataset(data.Dataset):
         self._split = split
         self._stats = None
 
+        self.cache = False
+
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
         if cache_dir is not None:
