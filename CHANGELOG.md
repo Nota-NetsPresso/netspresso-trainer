@@ -10,13 +10,13 @@
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Upgrade torch to 2.0.1 by `@illian01` in [PR 613](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/613)
 
 ## Other Changes:
 
 - Delete label_size, targets parameters from forward method across models by `@hglee98` in [PR 611](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/611)
 
-# v0.1.0
+# v1.1.0
 
 ## New Features:
 
