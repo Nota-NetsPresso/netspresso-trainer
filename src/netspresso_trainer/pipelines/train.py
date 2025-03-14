@@ -220,6 +220,7 @@ class TrainingPipeline(BasePipeline):
 
     def train_one_epoch(self, epoch):
         outputs = []
+        self.train_dataloader.sampler.set_epoch(epoch)
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory)
             if self.model_ema:

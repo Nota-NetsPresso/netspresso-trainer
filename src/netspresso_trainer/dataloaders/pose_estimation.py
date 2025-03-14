@@ -119,18 +119,18 @@ class PoseEstimationCustomDataset(BaseCustomDataset):
                     assert idx_swap is not None, "To apply flip transform, keypoint swap info must be filled."
                     self.flip_indices[idx] = class_to_idx[idx_swap] if idx_swap else -1
 
-    def cache_dataset(self, sampler, distributed):
-        if (not distributed) or (distributed and dist.get_rank() == 0):
-            logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
+    def cache_dataset(self):
+        logger.info(f'Caching | Loading samples of {self.mode} to memory... This can take minutes.')
 
         def _load(i, samples):
             image = Image.open(Path(samples[i]['image'])).convert('RGB')
             return i, image
 
         num_threads = 8 # TODO: Compute appropriate num_threads
+        all_indices = list(range(len(self.samples)))
         load_imgs = ThreadPool(num_threads).imap(
             partial(_load, samples=self.samples),
-            sampler
+            all_indices
         )
         for i, image in load_imgs:
             self.samples[i]['image'] = image

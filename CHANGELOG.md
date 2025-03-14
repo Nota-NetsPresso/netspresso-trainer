@@ -1,22 +1,22 @@
-# Upcoming Release
+# v1.2.0
 
 ## New Features:
 
-No changes to highlight.
+- Add cache_data option by `@hglee98` in [PR 608](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/608)
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix augmentation config of yolox training example by `@hglee98` in [PR 610](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/610)
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Upgrade torch to 2.0.1 by `@illian01` in [PR 613](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/613)
 
 ## Other Changes:
 
-No changes to highlight.
+- Delete label_size, targets parameters from forward method across models by `@hglee98` in [PR 611](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/611)
 
-# v0.1.0
+# v1.1.0
 
 ## New Features:
 

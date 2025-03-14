@@ -145,7 +145,7 @@ class YOLODetectionHead(nn.Module):
             heads.append(head)
         return heads
 
-    def forward(self, x_in: Union[List[Tensor], Dict], targets: Optional[Tensor] = None) -> ModelOutput:
+    def forward(self, x_in: Union[List[Tensor], Dict]) -> ModelOutput:
         if isinstance(x_in, Dict):
             assert self.aux_heads
             aux_in = x_in["aux_outputs"]
