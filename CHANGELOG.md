@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add cache_data option by `@hglee98` in [PR 608](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/608)
 
 ## Bug Fixes:
 
