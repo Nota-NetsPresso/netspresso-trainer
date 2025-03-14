@@ -401,6 +401,7 @@ class RTDETRTransformer(nn.Module):
         self.box_noise_scale = box_noise_scale
         # denoising part
         if num_denoising > 0: 
+            self._training_targets = None
             # self.denoising_class_embed = nn.Embedding(num_classes, hidden_dim, padding_idx=num_classes-1) # TODO for load paddle weights
             self.denoising_class_embed = nn.Embedding(self.num_classes+1, self.hidden_dim, padding_idx=self.num_classes)
             init.normal_(self.denoising_class_embed.weight[:-1])
@@ -582,13 +583,14 @@ class RTDETRTransformer(nn.Module):
         return target, reference_points_unact.detach(), enc_topk_bboxes, enc_topk_logits
 
 
-    def forward(self, feats, targets=None):
+    def forward(self, feats):
 
         # input projection and embedding
         (memory, spatial_shapes, level_start_index) = self._get_encoder_input(feats)
 
         # prepare denoising training
         if self.training and self.num_denoising > 0:
+            targets = self._training_targets
             assert targets is not None
             img_size = targets['img_size']
             targets = targets['gt']
@@ -628,6 +630,7 @@ class RTDETRTransformer(nn.Module):
         if self.training and dn_meta is not None:
             dn_out_bboxes, out_bboxes = torch.split(out_bboxes, dn_meta['dn_num_split'], dim=2)
             dn_out_logits, out_logits = torch.split(out_logits, dn_meta['dn_num_split'], dim=2)
+            self.clear_training_targets()
 
         out = torch.cat([out_bboxes[-1], out_logits[-1]], dim=-1)
 
@@ -657,6 +660,13 @@ class RTDETRTransformer(nn.Module):
         scale = torch.tensor([w, h, w, h], dtype=bboxes.dtype, device=bboxes.device)
         return bboxes / scale.unsqueeze(0)
 
+    def set_training_targets(self, targets):
+        """Set internal training targets before training step"""
+        self._training_targets = targets
+
+    def clear_training_targets(self):
+        """Clear internal training targets after training step"""
+        self._training_targets = None
 
 def rtdetr_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs) -> RTDETRTransformer:
     return RTDETRTransformer(num_classes=num_classes,
