@@ -6,7 +6,7 @@ No changes to highlight.
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix augmentation config of yolox training example by `@hglee98` in [PR 610](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/610)
 
 ## Breaking Changes:
 
@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Delete label_size, targets parameters from forward method across models by `@hglee98` in [PR 611](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/611)
 
 # v0.1.0
 
