@@ -49,7 +49,7 @@ class BaseCustomDataset(data.Dataset):
         pass
 
     @abstractmethod
-    def cache_dataset(self, sampler, distributed):
+    def cache_dataset(self):
         pass
 
     def __len__(self):
@@ -88,12 +88,18 @@ class BaseHFDataset(data.Dataset):
         self._split = split
         self._stats = None
 
+        self.cache = False
+
     def _load_dataset(self, root, subset_name=None, cache_dir=None):
         from datasets import load_dataset
         if cache_dir is not None:
             Path(cache_dir).mkdir(exist_ok=True, parents=True)
         total_dataset = load_dataset(root, name=subset_name, cache_dir=cache_dir)
         return total_dataset
+
+    @abstractmethod
+    def cache_dataset(self):
+        pass
 
     @abstractmethod
     def __getitem__(self, index):
