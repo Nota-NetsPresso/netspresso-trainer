@@ -35,7 +35,13 @@ class PoseEstimationProcessor(BaseTaskProcessor):
         optimizer.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
-            out = train_model(images, target=target)
+            if isinstance(train_model, torch.nn.parallel.DistributedDataParallel):
+                if hasattr(train_model.module.head, "_training_targets"): # for RT-DETR
+                    train_model.module.head.set_training_targets(target)
+            else:
+                if hasattr(train_model.head, "_training_targets"):
+                    train_model.head.set_training_targets(target)
+            out = train_model(images)
             loss_factory.calc(out, target, phase='train')
 
         loss_factory.backward(self.grad_scaler)

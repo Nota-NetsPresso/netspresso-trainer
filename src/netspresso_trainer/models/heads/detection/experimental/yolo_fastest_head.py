@@ -38,7 +38,7 @@ class YOLOFastestHeadV2(nn.Module):
         self.cls_head = YOLOFastestClassificationHead(hidden_dim, self.num_anchors, num_classes)  
         self.reg_head = YOLOFastestRegressionHead(hidden_dim, self.num_anchors) 
 
-    def forward(self, x, target=None):
+    def forward(self, x):
         cls_logits, objs = self.cls_head(x)
         bbox_regression = self.reg_head(x)
         outputs = list()

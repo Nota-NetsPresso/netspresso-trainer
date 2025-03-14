@@ -378,7 +378,7 @@ class RTMCC(nn.Module):
         self.cls_x = nn.Linear(attention_channels, W, bias=False)
         self.cls_y = nn.Linear(attention_channels, H, bias=False)
 
-    def forward(self, encoder_hidden_states: FXTensorListType, targets=None):
+    def forward(self, encoder_hidden_states: FXTensorListType):
         out = encoder_hidden_states[-1]
 
         out = self.final_layer(out)  # -> B, K, H, W
