@@ -11,7 +11,7 @@ augmentation:
       enable_mixup: True
       mixup_prob: 1.0
       mixup_scale: [0.1, 2.0]
-      fill: 144
+      fill: 114
       mosaic_off_duration: 15
     -
       name: hsvjitter
@@ -54,7 +54,7 @@ augmentation:
     - 
       name: pad
       size: 640
-      fill: 144
+      fill: 114
     -
       name: totensor
       pixel_range: 1.0
