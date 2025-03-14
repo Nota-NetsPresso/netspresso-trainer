@@ -222,3 +222,6 @@ class ClassificationHFDataset(BaseHFDataset):
         if target is None:
             target = -1
         return index, out['image'], target
+
+    def cache_dataset(self):
+        raise NotImplementedError("Caching is not implemented for HuggingFace datasets.")

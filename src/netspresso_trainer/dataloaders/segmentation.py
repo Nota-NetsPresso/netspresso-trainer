@@ -311,3 +311,6 @@ class SegmentationHFDataset(BaseHFDataset):
         # outputs.update({'org_img': org_img, 'org_shape': (h, w)})  # TODO: return org_img with batch_size > 1
         outputs.update({'org_shape': (h, w)})
         return outputs
+
+    def cache_dataset(self):
+        raise NotImplementedError("Caching is not implemented for Hugging Face datasets yet.")
