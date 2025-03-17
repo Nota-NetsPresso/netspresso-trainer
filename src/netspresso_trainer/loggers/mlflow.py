@@ -14,7 +14,9 @@
 #
 # ----------------------------------------------------------------------------
 import os
-from typing import Dict, List, Literal, Optional
+import numpy as np
+import torch
+from typing import Dict, List, Literal, Optional, Union
 
 from loguru import logger
 
@@ -29,7 +31,7 @@ except ImportError:
 
 
 class MLFlowLogger:
-    def __init__(self, result_dir: str):
+    def __init__(self, result_dir: str, step_per_epoch: int):
         uri = os.environ.get("MLFLOW_TRACKING_URI")
         if uri is None:
             raise ValueError("MLFLOW_TRACKING_URI environment variable is not set.")
@@ -47,8 +49,36 @@ class MLFlowLogger:
             logger.info(f"MLFlow run name: {run_name}")
         except Exception as e:
             logger.error(f"Failed to start MLFlow run: {e}")
+        
+        self.step_per_epoch = step_per_epoch
 
-        mlflow.end_run()
+
+    def _as_numpy(self, value: Union[np.ndarray, torch.Tensor, list]) -> np.ndarray:
+        if isinstance(value, np.ndarray):
+            return value
+        if isinstance(value, torch.Tensor):
+            value = value.detach()
+            value = value.cpu() if value.is_cuda else value
+            value = value.numpy()
+            return value
+        if isinstance(value, list): # Pad images for tensorboard
+            pad_shape = np.array([[v.shape[0], v.shape[1]] for v in value])
+            pad_shape = pad_shape.max(0)
+            ret_value = np.zeros((len(value), *pad_shape, 3), dtype=value[0].dtype)
+            for i, v in enumerate(value):
+                ret_value[i, :v.shape[0], :v.shape[1]] = v
+            return ret_value
+
+        raise TypeError(f"Unsupported type! {type(value)}")
+
+    def log_metrics_with_dict(self, scalar_dict, mode='train'):
+        for k, v in scalar_dict.items():
+            self._log_metric(k, v, mode)
+
+    def _log_metric(self, key: str, value, mode):
+        step = self._epoch * self.step_per_epoch
+        meta_string = f"{mode}/" if mode is not None else ""
+        mlflow.log_metric(f"{meta_string}{key}", value, step=step)
 
     def __call__(
         self,
@@ -61,4 +91,16 @@ class MLFlowLogger:
         elapsed_time: Optional[float] = None,
         **kwargs
     ):
+        self._epoch = 0 if epoch is None else epoch
+
+        if losses is not None:
+            self.log_metrics_with_dict(losses, mode=prefix)
+        if metrics is not None:
+            for k, v in metrics.items(): # Only mean values
+                self._log_metric(k, v['mean'], mode=prefix)
+        
+        if learning_rate is not None:
+            mlflow.log_metric("learning_rate", learning_rate) 
+        if elapsed_time is not None:
+            mlflow.log_metric("elapsed_time", elapsed_time)
         pass

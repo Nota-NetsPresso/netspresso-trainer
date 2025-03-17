@@ -71,7 +71,7 @@ class TrainingLogger():
             self.loggers.append(self.tensorboard_logger)
         if self.use_mlflow:
             from .mlflow import MLFlowLogger
-            self.mlflow_logger = MLFlowLogger(result_dir=self._result_dir)
+            self.mlflow_logger = MLFlowLogger(result_dir=self._result_dir, step_per_epoch=step_per_epoch)
             self.loggers.append(self.mlflow_logger)
         if self.use_stdout:
             total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
@@ -198,3 +198,9 @@ class TrainingLogger():
             final_metrics = {}
         if self.use_tensorboard:
             self.tensorboard_logger.log_hparams(self.conf, final_metrics=final_metrics)
+    
+    def log_start_of_training(self, hparams=None):
+        if hparams is None:
+            hparams = {}
+        if self.use_mlflow:
+            self.mlflow_logger.log_hparams(hparams)
