@@ -1,4 +1,4 @@
-# Upcoming Release
+# v1.0.2+post1
 
 ## New Features:
 
@@ -10,7 +10,7 @@ No changes to highlight.
 
 ## Breaking Changes:
 
-No changes to highlight.
+- Upgrade torch to 2.0.1 by `@illian01` (No PR since it's not the main version)
 
 ## Other Changes:
 
