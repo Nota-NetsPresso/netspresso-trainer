@@ -56,6 +56,7 @@ class TrainingLogger():
         self._result_dir = result_dir
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
+        self.use_mlflow: bool = getattr(self.conf.logging, "mlflow", False)
         self.use_tensorboard: bool = self.conf.logging.tensorboard
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
@@ -68,6 +69,10 @@ class TrainingLogger():
             self.tensorboard_logger = TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
                                                         step_per_epoch=step_per_epoch, num_sample_images=num_sample_images)
             self.loggers.append(self.tensorboard_logger)
+        if self.use_mlflow:
+            from .mlflow import MLFlowLogger
+            self.mlflow_logger = MLFlowLogger(result_dir=self._result_dir)
+            self.loggers.append(self.mlflow_logger)
         if self.use_stdout:
             total_epochs = conf.training.epochs if hasattr(conf, 'training') else None
             self.loggers.append(StdOutLogger(task=task, model=model, total_epochs=total_epochs, result_dir=self._result_dir))
