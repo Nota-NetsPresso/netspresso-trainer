@@ -24,10 +24,9 @@ try:
     import mlflow
     if not hasattr(mlflow, "__version__"):
         raise ImportError("MLFlow is not installed. Please install it with `pip install mlflow`.")
-except ImportError:
-    raise ImportError(
-        "MLFlow is not installed. Please install it with `pip install mlflow`."
-        )
+except Exception as e:
+    logger.error(f"MLFlow is not installed. Please install it with `pip install mlflow`. Error: {e}")
+    raise
 
 
 class MLFlowLogger:
