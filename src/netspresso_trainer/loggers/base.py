@@ -198,7 +198,7 @@ class TrainingLogger():
             final_metrics = {}
         if self.use_tensorboard:
             self.tensorboard_logger.log_hparams(self.conf, final_metrics=final_metrics)
-    
+
     def log_start_of_training(self, hparams=None):
         if hparams is None:
             hparams = {}

@@ -14,10 +14,10 @@
 #
 # ----------------------------------------------------------------------------
 import os
-import numpy as np
-import torch
 from typing import Dict, List, Literal, Optional, Union
 
+import numpy as np
+import torch
 from loguru import logger
 
 try:
@@ -49,7 +49,7 @@ class MLFlowLogger:
             logger.info(f"MLFlow run name: {run_name}")
         except Exception as e:
             logger.error(f"Failed to start MLFlow run: {e}")
-        
+
         self.step_per_epoch = step_per_epoch
 
 
@@ -98,9 +98,9 @@ class MLFlowLogger:
         if metrics is not None:
             for k, v in metrics.items(): # Only mean values
                 self._log_metric(k, v['mean'], mode=prefix)
-        
+
         if learning_rate is not None:
-            mlflow.log_metric("learning_rate", learning_rate) 
+            mlflow.log_metric("learning_rate", learning_rate)
         if elapsed_time is not None:
             mlflow.log_metric("elapsed_time", elapsed_time)
         pass
