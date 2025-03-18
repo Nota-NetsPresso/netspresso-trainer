@@ -41,11 +41,9 @@ class MLFlowLogger:
         mlflow.set_experiment(experiment_name)
         logger.info(f"MLFlow experiment name: {experiment_name}")
 
-        run_name = os.environ.get("MLFLOW_RUN_NAME") or result_dir
 
         try:
             mlflow.start_run()
-            logger.info(f"MLFlow run name: {run_name}")
         except Exception as e:
             logger.error(f"Failed to start MLFlow run: {e}")
 
