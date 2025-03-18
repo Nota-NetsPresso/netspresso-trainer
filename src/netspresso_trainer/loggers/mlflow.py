@@ -124,6 +124,8 @@ class MLFlowLogger:
             self.log_metrics_with_dict(losses, mode=prefix)
         if metrics is not None:
             for k, v in metrics.items(): # Only mean values
+                if "total" in k:
+                    continue
                 self._log_metric(k, v['mean'], mode=prefix)
 
         if learning_rate is not None:
