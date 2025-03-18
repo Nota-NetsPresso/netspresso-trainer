@@ -31,6 +31,10 @@ except Exception as e:
 
 class MLFlowLogger:
     def __init__(self, result_dir: str, step_per_epoch: int):
+        self.step_per_epoch = step_per_epoch
+        self.result_dir = result_dir
+
+    def _setup_mlflow(self):
         uri = os.environ.get("MLFLOW_TRACKING_URI")
         if uri is None:
             raise ValueError("MLFLOW_TRACKING_URI environment variable is not set.")
@@ -41,15 +45,10 @@ class MLFlowLogger:
         mlflow.set_experiment(experiment_name)
         logger.info(f"MLFlow experiment name: {experiment_name}")
 
-
         try:
             mlflow.start_run()
         except Exception as e:
             logger.error(f"Failed to start MLFlow run: {e}")
-
-        self.step_per_epoch = step_per_epoch
-        self.result_dir = result_dir
-
 
     def _as_numpy(self, value: Union[np.ndarray, torch.Tensor, list]) -> np.ndarray:
         if isinstance(value, np.ndarray):
