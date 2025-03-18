@@ -198,9 +198,9 @@ class TrainingPipeline(BasePipeline):
             logger.info(f"Total time: {total_train_time:.2f} s")
 
             if self.single_gpu_or_rank_zero:
-                self.logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
                 self.save_best()
                 self.save_summary(end_training=True, status="success")
+                self.logger.log_end_of_traning(final_metrics={'time_for_last_epoch': time_for_epoch})
         except KeyboardInterrupt as e:
             # TODO: add independent procedure for KeyboardInterupt
             logger.error("Keyboard interrupt detected! Try saving the current checkpoint...")
