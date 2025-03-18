@@ -134,3 +134,5 @@ class MLFlowLogger:
             self._log_metric("learning_rate", learning_rate)
         if elapsed_time is not None:
             self._log_metric("elapsed_time", elapsed_time)
+        if images is not None:
+            pass
