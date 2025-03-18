@@ -33,6 +33,7 @@ class MLFlowLogger:
     def __init__(self, result_dir: str, step_per_epoch: int):
         self.step_per_epoch = step_per_epoch
         self.result_dir = result_dir
+        self._setup_mlflow()
 
     def _setup_mlflow(self):
         uri = os.environ.get("MLFLOW_TRACKING_URI")
