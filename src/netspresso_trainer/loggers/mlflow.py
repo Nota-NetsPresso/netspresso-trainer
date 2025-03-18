@@ -48,6 +48,7 @@ class MLFlowLogger:
             logger.error(f"Failed to start MLFlow run: {e}")
 
         self.step_per_epoch = step_per_epoch
+        self.result_dir = result_dir
 
 
     def _as_numpy(self, value: Union[np.ndarray, torch.Tensor, list]) -> np.ndarray:
