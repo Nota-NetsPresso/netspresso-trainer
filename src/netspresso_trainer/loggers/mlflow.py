@@ -24,6 +24,7 @@ from omegaconf import OmegaConf
 
 try:
     import mlflow
+
     if not hasattr(mlflow, "__version__"):
         raise ImportError("MLFlow is not installed. Please install it with `pip install mlflow`.")
 except Exception as e:
@@ -61,17 +62,17 @@ class MLFlowLogger:
             value = value.cpu() if value.is_cuda else value
             value = value.numpy()
             return value
-        if isinstance(value, list): # Pad images for tensorboard
+        if isinstance(value, list):  # Pad images for tensorboard
             pad_shape = np.array([[v.shape[0], v.shape[1]] for v in value])
             pad_shape = pad_shape.max(0)
             ret_value = np.zeros((len(value), *pad_shape, 3), dtype=value[0].dtype)
             for i, v in enumerate(value):
-                ret_value[i, :v.shape[0], :v.shape[1]] = v
+                ret_value[i, : v.shape[0], : v.shape[1]] = v
             return ret_value
 
         raise TypeError(f"Unsupported type! {type(value)}")
 
-    def log_metrics_with_dict(self, scalar_dict, mode='train'):
+    def log_metrics_with_dict(self, scalar_dict, mode="train"):
         for k, v in scalar_dict.items():
             self._log_metric(k, v, mode)
 
@@ -96,7 +97,7 @@ class MLFlowLogger:
                 "tensorboard" in file,
                 "mlruns" in file,
                 (file.endswith(".safetensors") and "best" not in file),
-                (file.endswith(".pth") and "best" not in file)
+                (file.endswith(".pth") and "best" not in file),
             ]
 
             if any(skip_conditions):
@@ -111,24 +112,24 @@ class MLFlowLogger:
 
     def __call__(
         self,
-        prefix: Literal['training', 'validation', 'evaluation', 'inference'],
+        prefix: Literal["training", "validation", "evaluation", "inference"],
         epoch: Optional[int] = None,
         images: Optional[List] = None,
-        losses : Optional[Dict] = None,
+        losses: Optional[Dict] = None,
         metrics: Optional[Dict] = None,
         learning_rate: Optional[float] = None,
         elapsed_time: Optional[float] = None,
-        **kwargs
+        **kwargs,
     ):
         self._epoch = 0 if epoch is None else epoch
 
         if losses is not None:
             self.log_metrics_with_dict(losses, mode=prefix)
         if metrics is not None:
-            for k, v in metrics.items(): # Only mean values
+            for k, v in metrics.items():  # Only mean values
                 if "total" in k:
                     continue
-                self._log_metric(k, v['mean'], mode=prefix)
+                self._log_metric(k, v["mean"], mode=prefix)
 
         if learning_rate is not None:
             self._log_metric("learning_rate", learning_rate)
