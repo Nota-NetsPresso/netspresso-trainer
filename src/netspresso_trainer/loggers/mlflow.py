@@ -75,7 +75,9 @@ class MLFlowLogger:
         for k, v in scalar_dict.items():
             self._log_metric(k, v, mode)
 
-    def _log_metric(self, key: str, value, mode):
+    def _log_metric(self, key: str, value, mode: Optional[str] = None):
+        if "total" in key:
+            return
         step = self._epoch * self.step_per_epoch
         meta_string = f"{mode}/" if mode is not None else ""
         mlflow.log_metric(f"{meta_string}{key}", value, step=step)
