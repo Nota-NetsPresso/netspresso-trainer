@@ -158,6 +158,7 @@ class TrainingPipeline(BasePipeline):
         if self.single_gpu_or_rank_zero:
             logger.debug(f"Training configuration:\n{yaml_for_logging(self.conf)}")
             logger.info("-" * 40)
+            self.logger.log_start_of_training(hparams=self.conf)
 
         self.timer.start_record(name='train_all')
         self._is_ready()
