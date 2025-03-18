@@ -13,12 +13,14 @@
 # limitations under the License.
 #
 # ----------------------------------------------------------------------------
+import glob
 import os
 from typing import Dict, List, Literal, Optional, Union
 
 import numpy as np
 import torch
 from loguru import logger
+from omegaconf import OmegaConf
 
 try:
     import mlflow
@@ -77,6 +79,33 @@ class MLFlowLogger:
         step = self._epoch * self.step_per_epoch
         meta_string = f"{mode}/" if mode is not None else ""
         mlflow.log_metric(f"{meta_string}{key}", value, step=step)
+
+    def log_artifact(self):
+        if not os.path.exists(self.result_dir):
+            logger.warning(f"Artifact path {self.result_dir} does not exist.")
+            return
+
+        files = glob.glob(os.path.join(self.result_dir, "**"), recursive=True)
+        for file in files:
+            if os.path.isdir(file):
+                continue
+
+            skip_conditions = [
+                "tensorboard" in file,
+                "mlruns" in file,
+                (file.endswith(".safetensors") and "best" not in file),
+                (file.endswith(".pth") and "best" not in file)
+            ]
+
+            if any(skip_conditions):
+                continue
+
+            try:
+                relative_path = os.path.relpath(file, self.result_dir)
+                relative_dir = os.path.dirname(relative_path)
+                mlflow.log_artifact(file, artifact_path=relative_dir)
+            except Exception as e:
+                logger.error(f"Failed to log artifact {file}: {e}")
 
     def __call__(
         self,
