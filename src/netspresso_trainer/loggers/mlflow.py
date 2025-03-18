@@ -127,7 +127,7 @@ class MLFlowLogger:
                 self._log_metric(k, v['mean'], mode=prefix)
 
         if learning_rate is not None:
-            mlflow.log_metric("learning_rate", learning_rate)
+            self._log_metric("learning_rate", learning_rate)
         if elapsed_time is not None:
             mlflow.log_metric("elapsed_time", elapsed_time)
         pass
