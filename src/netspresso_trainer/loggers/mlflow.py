@@ -137,3 +137,61 @@ class MLFlowLogger:
             self._log_metric("elapsed_time", elapsed_time)
         if images is not None:
             pass
+
+    def log_hparams(self, hp_omegaconf: OmegaConf):
+        config_sections = {
+            "training": self.flatten_dict,
+            "environment": self.flatten_dict,
+            "model": self.flatten_dict,
+            "augmentation": self.flatten_augmentation_config,
+        }
+
+        for section_name, flatten_func in config_sections.items():
+            section_conf = hp_omegaconf.get(section_name, None)
+            if section_conf is not None:
+                section_conf = OmegaConf.to_container(section_conf, resolve=True)
+                flattened_conf = flatten_func(section_conf)
+                mlflow.log_params(flattened_conf)
+
+    def flatten_dict(self, nested_dict, parent_key="", sep="."):
+        items = []
+        for k, v in nested_dict.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+
+            if isinstance(v, dict):
+                items.extend(self.flatten_dict(v, new_key, sep=sep).items())
+            elif isinstance(v, list):
+                items.extend(self._process_list_items(v, new_key, sep))
+            else:
+                items.append((new_key, v))
+
+        return dict(items)
+
+    def _process_list_items(self, list_items, parent_key, sep="."):
+        result = []
+        for i, item in enumerate(list_items):
+            if isinstance(item, dict):
+                result.extend(self.flatten_dict(item, f"{parent_key}{sep}{i}", sep=sep).items())
+            else:
+                result.append((f"{parent_key}{sep}{i}", item))
+        return result
+
+    def flatten_augmentation_config(self, aug_config):
+        flat_dict = {}
+
+        for phase in ["train", "inference"]:
+            if phase not in aug_config:
+                continue
+
+            transforms = aug_config[phase]
+            for transform in transforms:
+                if "name" not in transform:
+                    continue
+
+                transform_name = transform["name"]
+                for key, value in transform.items():
+                    if key != "name":
+                        flat_key = f"{phase}.{transform_name}.{key}"
+                        flat_dict[flat_key] = value
+
+        return flat_dict
