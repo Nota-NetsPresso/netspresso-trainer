@@ -56,7 +56,7 @@ class TrainingLogger():
         self._result_dir = result_dir
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
-        self.use_mlflow: bool = getattr(self.conf.logging, "mlflow", False)
+        self.use_mlflow: bool = self.conf.logging.mlflow
         self.use_tensorboard: bool = self.conf.logging.tensorboard
         self.use_imagesaver: bool = self.conf.logging.image
         self.use_stdout: bool = self.conf.logging.stdout
