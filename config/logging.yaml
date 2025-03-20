@@ -2,6 +2,7 @@ logging:
   project_id: ~
   output_dir: ./outputs
   tensorboard: true
+  mlflow: false
   image: true
   stdout: true
   model_save_options:

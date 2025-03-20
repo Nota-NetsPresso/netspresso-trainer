@@ -1,3 +1,21 @@
+# v1.3.0
+
+## New Features:
+
+- Add MLFlow train tracking feature by `@hglee98` in [PR 615](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/615)
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
 # v1.2.0
 
 ## New Features:
