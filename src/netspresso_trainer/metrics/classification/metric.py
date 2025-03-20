@@ -48,7 +48,7 @@ class ClassificationMetricAdaptor:
 
 class Top1Accuracy(BaseMetric):
     def __init__(self, num_classes, classwise_analysis, **kwargs):
-        metric_name = 'Acc@1' # Name for logging
+        metric_name = 'Acc_1' # Name for logging
         super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, pred, target, **kwargs):
@@ -67,7 +67,7 @@ class Top1Accuracy(BaseMetric):
 
 class Top5Accuracy(BaseMetric):
     def __init__(self, num_classes, classwise_analysis, **kwargs):
-        metric_name = 'Acc@5' # Name for logging
+        metric_name = 'Acc_5' # Name for logging
         super().__init__(metric_name=metric_name, num_classes=num_classes, classwise_analysis=classwise_analysis)
 
     def calibrate(self, pred, target, **kwargs):

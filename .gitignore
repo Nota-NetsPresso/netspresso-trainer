@@ -34,3 +34,7 @@ docker-compose.yml
 
 !data/.gitkeep
 !weights/.gitkeep
+
+# mlflow
+**/mlruns/
+**/mlartifacts/

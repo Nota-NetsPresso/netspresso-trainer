@@ -8,7 +8,7 @@ If you have a better recipe, please share with us anytime. We appreciate all eff
 
 ## Classification
 
-| Dataset | Model | Weights | Input shape | Acc@1 | Acc@5 | Params | FLOPs | NetsPresso | Remarks |
+| Dataset | Model | Weights | Input shape | Acc_1 | Acc_5 | Params | FLOPs | NetsPresso | Remarks |
 |---|---|---|---|---|---|---|---|---|---|
 | ImageNet1K | [EfficientFormer-l1*](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/efficientformer/efficientformer-l1-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/efficientformer/efficientformer_l1_imagenet1k.safetensors?versionId=JIkKVaUF0fhkvLz2jfcY3MmbUg6MkUO6) | (224, 224) | 80.03 | 94.90 | 11.84M | 2.60G | Supported | [snap-research/EfficientFormer](https://github.com/snap-research/EfficientFormer?tab=readme-ov-file#classification-on-imagenet-1k) |
 | ImageNet1K | [MixNet-s](https://github.com/Nota-NetsPresso/netspresso-trainer/blob/master/config/model/mixnet/mixnet-s-classification.yaml) | [download](https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/mixnet/mixnet_s_imagenet1k.safetensors?versionId=n0sHuieRyTWWzwBmSAE8oSP4BL53laDP) | (224, 224) | 75.08 | 92.32 | 4.13M | 0.51G | Supported | - |
