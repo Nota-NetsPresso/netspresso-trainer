@@ -1,3 +1,21 @@
+# Upcoming
+
+## New Features:
+
+No changes to highlight.
+
+## Bug Fixes:
+
+- Fix bug where training failed with torch.fx detection model by `hglee98` in [PR 619](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/619)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+No changes to highlight.
+
 # v1.3.0
 
 ## New Features:
