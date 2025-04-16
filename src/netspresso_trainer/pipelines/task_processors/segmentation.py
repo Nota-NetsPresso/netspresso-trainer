@@ -20,6 +20,8 @@ import cv2
 import numpy as np
 import torch
 
+from netspresso_trainer.models.utils import set_training_targets
+
 from .base import BaseTaskProcessor
 
 
@@ -41,12 +43,7 @@ class SegmentationProcessor(BaseTaskProcessor):
         optimizer.zero_grad()
 
         with torch.cuda.amp.autocast(enabled=self.mixed_precision):
-            if isinstance(train_model, torch.nn.parallel.DistributedDataParallel):
-                if hasattr(train_model.module.head, "_training_targets"): # for RT-DETR
-                    train_model.module.head.set_training_targets(target)
-            else:
-                if hasattr(train_model.head, "_training_targets"):
-                    train_model.head.set_training_targets(target)
+            train_model = set_training_targets(train_model, target) 
             out = train_model(images)
             loss_factory.calc(out, target, phase='train')
 
