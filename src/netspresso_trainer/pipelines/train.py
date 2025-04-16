@@ -288,7 +288,7 @@ class TrainingPipeline(BasePipeline):
 
         model = copy.deepcopy(model)
 
-        save_dtype = model.save_dtype
+        save_dtype = model.save_dtype if hasattr(model, 'save_dtype') else next(model.parameters()).dtype
         if save_dtype == torch.float16:
             model = model.type(save_dtype)
 
@@ -333,7 +333,7 @@ class TrainingPipeline(BasePipeline):
         model = self.model.module if hasattr(self.model, 'module') else self.model
         best_model = copy.deepcopy(model)
 
-        save_dtype = best_model.save_dtype
+        save_dtype = best_model.save_dtype if hasattr(best_model, 'save_dtype') else next(best_model.parameters()).dtype
         if save_dtype == torch.float16:
             best_model = best_model.type(save_dtype)
 
