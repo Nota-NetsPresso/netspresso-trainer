@@ -180,8 +180,7 @@ class PIDNet(nn.Module):
             size=x_d.shape[-2:],
             mode='bilinear', align_corners=use_align_corners)
 
-        if not torch.jit.is_tracing() and not isinstance(x, torch.fx.Proxy):
-            temp_p = x_
+        temp_p = x_ # For aux loss: P branch
 
         x = self.relu(self.layer4(x))
         x_ = self.layer4_(self.relu(x_))
@@ -194,8 +193,7 @@ class PIDNet(nn.Module):
             size=x_d.shape[-2:],
             mode='bilinear', align_corners=use_align_corners)
 
-        if not torch.jit.is_tracing() and not isinstance(x, torch.fx.Proxy):
-            temp_d = x_d
+        temp_d = x_d # For aux loss: D branch
 
         x_ = self.layer5_(self.relu(x_))
         x_d = self.layer5_d(self.relu(x_d))
@@ -207,12 +205,8 @@ class PIDNet(nn.Module):
 
         x_ = self.final_layer(self.dfm(x_, x, x_d))
 
-        if not torch.jit.is_tracing() and not isinstance(x, torch.fx.Proxy):
-            x_extra_p = self.seghead_p(temp_p)
-            x_extra_d = self.seghead_d(temp_d)
-        else:
-            x_extra_p = None
-            x_extra_d = None
+        x_extra_p = self.seghead_p(temp_p) # P branch
+        x_extra_d = self.seghead_d(temp_d) # D branch
 
         return PIDNetModelOutput(extra_p=x_extra_p, extra_d=x_extra_d, pred=x_)
 
