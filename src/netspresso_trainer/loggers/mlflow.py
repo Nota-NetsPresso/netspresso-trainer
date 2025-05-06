@@ -110,6 +110,17 @@ class MLFlowLogger:
             except Exception as e:
                 logger.error(f"Failed to log artifact {file}: {e}")
 
+    def log_onnx_model(self, model_path: Union[str, Path], input_example: torch.Tensor=None):
+        try:
+            import onnx
+            onnx_model = onnx.load_model(model_path)
+            # Convert torch tensor to numpy array if provided
+            if input_example is not None and isinstance(input_example, torch.Tensor):
+                input_example = input_example.cpu().numpy()
+            mlflow.onnx.log_model(onnx_model, "model", input_example=input_example)
+        except Exception as e:
+            logger.error(f"Failed to log ONNX model: {e}")
+
     def __call__(
         self,
         prefix: Literal["training", "validation", "evaluation", "inference"],
