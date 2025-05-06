@@ -147,8 +147,9 @@ class MLFlowLogger:
         }
 
         for section_name, flatten_func in config_sections.items():
-            section_conf = hp_omegaconf.get(section_name, None)
-            if section_conf is not None:
+            # Check if the section exists in the config and access it safely
+            if hasattr(hp_omegaconf, section_name):
+                section_conf = getattr(hp_omegaconf, section_name)
                 section_conf = OmegaConf.to_container(section_conf, resolve=True)
                 flattened_conf = flatten_func(section_conf)
                 mlflow.log_params(flattened_conf)
