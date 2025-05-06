@@ -355,6 +355,9 @@ class TrainingPipeline(BasePipeline):
                     sample_input=self.sample_input.type(save_dtype),
                     opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(model_save_path.with_suffix('.onnx'))}")
+            if self.logger.use_mlflow:
+                self.logger.mlflow_logger.log_onnx_model(model_save_path.with_suffix('.onnx'),
+                input_example=self.sample_input.type(save_dtype))
 
             if not self.is_graphmodule_training:
                 save_graphmodule(best_model,
