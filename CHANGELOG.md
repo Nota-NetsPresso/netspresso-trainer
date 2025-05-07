@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Loosen torch version coverage, not fixed version by `@illian01` in [PR 622](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/622)
 
 # v1.3.0
 
