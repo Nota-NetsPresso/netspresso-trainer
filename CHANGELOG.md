@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Upload ONNX model to mlflow server if mlflow logging option is enabled by `hglee98` in [PR 621](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/621)
 
 ## Bug Fixes:
 
