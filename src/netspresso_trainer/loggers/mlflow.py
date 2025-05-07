@@ -112,19 +112,53 @@ class MLFlowLogger:
             except Exception as e:
                 logger.error(f"Failed to log artifact {file}: {e}")
 
-    def log_onnx_model(self, model_path: Union[str, Path], input_example: torch.Tensor=None):
+    def log_onnx_model(self, model_path: Union[str, Path], input_example: Optional[torch.Tensor] = None) -> bool:
+        """
+        Log an ONNX model to MLflow.
+
+        Args:
+            model_path: Path to the ONNX model file
+            input_example: Optional input tensor example for model signature
+
+        Returns:
+            bool: True if logging was successful, False otherwise
+        """
         try:
+            # Lazy import to avoid dependency issues
             import onnx
-            onnx_model = onnx.load_model(model_path)
-            # Convert torch tensor to numpy array if provided
-            if input_example is not None and isinstance(input_example, torch.Tensor):
-                input_example = input_example.cpu().numpy()
-                signature = mlflow.models.infer_signature(
-                    model_input=input_example,
-                )
+
+            # Load the ONNX model
+            onnx_model = onnx.load_model(str(model_path))
+
+            # Initialize signature as None
+            signature = None
+
+            # Process input example if provided
+            if input_example is not None:
+                if not isinstance(input_example, (torch.Tensor, np.ndarray)):
+                    logger.warning(f"Input example must be a torch.Tensor or np.ndarray, got {type(input_example)}")
+                else:
+                    # Convert torch tensor to numpy if needed
+                    if isinstance(input_example, torch.Tensor):
+                        input_example = input_example.detach().cpu().numpy()
+
+                    # Infer model signature from input example
+                    try:
+                        signature = mlflow.models.infer_signature(model_input=input_example)
+                    except Exception as sig_error:
+                        logger.warning(f"Failed to infer signature: {sig_error}")
+
+            # Log the model to MLflow
             mlflow.onnx.log_model(onnx_model, "model", signature=signature)
+            logger.info(f"Successfully logged ONNX model from {model_path}")
+            return True
+
+        except ImportError as ie:
+            logger.error(f"Failed to import required modules for ONNX logging: {ie}")
+            return False
         except Exception as e:
             logger.error(f"Failed to log ONNX model: {e}")
+            return False
 
     def __call__(
         self,
