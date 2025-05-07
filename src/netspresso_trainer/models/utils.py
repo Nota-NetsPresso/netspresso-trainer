@@ -265,3 +265,11 @@ def get_model_format(model_conf: omegaconf.DictConfig):
         return 'tflite'
     else:
         raise ValueError(f"Unsupported model format: {model_conf.checkpoint.path}")
+
+def set_training_targets(train_model, targets: dict):
+    if isinstance(train_model, nn.Module) and hasattr(train_model, "head") and hasattr(train_model.head, "_training_targets"):
+        train_model.head.set_training_targets(targets)
+    elif isinstance(train_model, torch.nn.parallel.DistributedDataParallel) and hasattr(train_model.module, "head") and hasattr(train_model.module.head, "_training_targets"):
+        train_model.module.head.set_training_targets(targets)
+
+    return train_model

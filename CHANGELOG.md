@@ -1,3 +1,21 @@
+# v1.3.1
+
+## New Features:
+
+- Upload ONNX model to mlflow server if mlflow logging option is enabled by `hglee98` in [PR 621](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/621)
+
+## Bug Fixes:
+
+- Fix bug where training failed with torch.fx detection model by `hglee98` in [PR 619](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/619)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Loosen torch version coverage, not fixed version by `@illian01` in [PR 622](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/622)
+
 # v1.3.0
 
 ## New Features:
