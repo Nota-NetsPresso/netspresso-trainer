@@ -20,6 +20,7 @@ from typing import Dict, List, Literal, Optional, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
 from loguru import logger
 from omegaconf import OmegaConf
 
@@ -118,7 +119,10 @@ class MLFlowLogger:
             # Convert torch tensor to numpy array if provided
             if input_example is not None and isinstance(input_example, torch.Tensor):
                 input_example = input_example.cpu().numpy()
-            mlflow.onnx.log_model(onnx_model, "model", input_example=input_example)
+                signature = mlflow.models.infer_signature(
+                    model_input=input_example,
+                )
+            mlflow.onnx.log_model(onnx_model, "model", signature=signature)
         except Exception as e:
             logger.error(f"Failed to log ONNX model: {e}")
 
