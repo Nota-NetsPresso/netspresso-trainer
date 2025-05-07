@@ -149,7 +149,7 @@ class MLFlowLogger:
                         logger.warning(f"Failed to infer signature: {sig_error}")
 
             # Log the model to MLflow
-            mlflow.onnx.log_model(onnx_model, "model", signature=signature)
+            mlflow.onnx.log_model(onnx_model, "onnx_model", signature=signature)
             logger.info(f"Successfully logged ONNX model from {model_path}")
             return True
 
