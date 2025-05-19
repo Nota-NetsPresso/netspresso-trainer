@@ -23,6 +23,7 @@ import torch
 from netspresso_trainer.models.utils import set_training_targets
 
 from .base import BaseTaskProcessor
+from ...utils.protocols import ProcessorStepOut
 
 
 class SegmentationProcessor(BaseTaskProcessor):
@@ -71,6 +72,8 @@ class SegmentationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='train')
 
+        return ProcessorStepOut.empty() # Return empty output
+
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices = batch['indices']
@@ -104,16 +107,15 @@ class SegmentationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='valid')
 
-        logs = {
-            'images': images.detach().cpu().numpy(),
-            'target': labels,
-            'pred': pred
-        }
-        if 'edges' in batch:
-            logs.update({
-                'bd_gt': bd_gt.detach().cpu().numpy()
-            })
-        return dict(logs.items())
+        step_out = ProcessorStepOut.empty()
+        if self.single_gpu_or_rank_zero:
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'mask': mask}
+                for mask in list(pred)
+            ]
+
+        return step_out
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -137,12 +139,14 @@ class SegmentationProcessor(BaseTaskProcessor):
                 gathered_pred = sum(gathered_pred, [])
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': pred
-            }
-            return results
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'mask': mask}
+                for mask in list(pred)
+            ]
+        return step_out
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
