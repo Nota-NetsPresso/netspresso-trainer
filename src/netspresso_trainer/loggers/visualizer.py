@@ -153,20 +153,17 @@ class SegmentationVisualizer:
         mask = (gray_image == 255)
         color_image[0][mask] = color_image[1][mask] = color_image[2][mask] = 255
 
+        color_image = color_image.transpose((1, 2, 0))  # H x W x C
+
         return color_image
 
-    def __call__(self, results, images=None):
-        if len(results.shape) == 3:
-            result_images = []
-            for _real_gray_image in results:
-                result_images.append(self._convert(_real_gray_image)[np.newaxis, ...])
+    def __call__(self, samples: Dict):
+        result_images = []
+        for pred in samples['pred']:
+            mask = pred['mask']
+            result_images.append(self._convert(mask))
 
-            return np.concatenate(result_images, axis=0)
-        elif len(results.shape) == 2:
-            return self._convert(results)
-        else:
-            raise IndexError(f"gray_image.shape should be either 2 or 3, but {results.shape} were indexed.")
-
+        return result_images
 
 class PoseEstimationVisualizer:
     def __init__(self, class_map, pallete=None):
