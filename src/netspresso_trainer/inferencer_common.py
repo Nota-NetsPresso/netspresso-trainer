@@ -81,7 +81,8 @@ def inference_common(
                               class_map=test_dataset.class_map,
                               logging_dir=logging_dir,
                               is_graphmodule_training=None, # TODO: Remove is_graphmodule_training ...
-                              dataloaders={'test': test_dataloader})
+                              dataloaders={'test': test_dataloader},
+                              data_stats={'test': test_dataset.stats})
 
     try:
         # Start inference
