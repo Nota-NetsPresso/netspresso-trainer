@@ -71,20 +71,19 @@ class EvaluationPipeline(BasePipeline):
         return self.loss_factory.result('valid').get('total').avg
 
     @torch.no_grad()
-    def evaluation(self, num_samples=NUM_SAMPLES):
+    def evaluation(self):
         self._is_ready()
         self.timer.start_record(name='evaluation')
 
-        num_returning_samples = 0
-        returning_samples = []
-        outputs = []
+        outputs = {'images': [], 'pred': []}
+        returning_samples = {'images': [], 'pred': []}
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.task_processor.valid_step(self.model, batch, self.loss_factory, self.metric_factory)
-            if out is not None:
-                outputs.append(out)
-                if num_returning_samples < num_samples:
-                    returning_samples.append(out)
-                    num_returning_samples += len(out['pred'])
+            
+            if self.single_gpu_or_rank_zero and (len(returning_samples['images']) < self.logger.num_sample_images):
+                add_sample_num = self.logger.num_sample_images - len(returning_samples['images'])
+                returning_samples['images'].extend(out['images'][:add_sample_num])
+                returning_samples['pred'].extend(out['pred'][:add_sample_num])
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
 
         self.timer.end_record(name='evaluation')
