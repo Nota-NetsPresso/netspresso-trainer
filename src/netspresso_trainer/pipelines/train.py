@@ -41,6 +41,7 @@ from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_flops
+from ..utils.protocols import ProcessorStepOut
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
@@ -218,29 +219,33 @@ class TrainingPipeline(BasePipeline):
             raise e
 
     def train_one_epoch(self, epoch):
-        outputs = []
+        outputs = ProcessorStepOut.empty()
         self.train_dataloader.sampler.set_epoch(epoch)
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory)
             if self.model_ema:
                 self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
-            outputs.append(out)
+            outputs['images'].extend(out['images'])
+            outputs['pred'].extend(out['pred'])
+            outputs['target'].extend(out['target'])
         self.task_processor.get_metric_with_all_outputs(outputs, phase='train', metric_factory=self.metric_factory)
 
     @torch.no_grad()
     def validate(self):
-        returning_samples = {'images': [], 'pred': []}
-        outputs = {'images': [], 'pred': []}
+        returning_samples = ProcessorStepOut.empty()
+        outputs = ProcessorStepOut.empty()
         eval_model = self.model_ema.ema_model if self.model_ema else self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.task_processor.valid_step(eval_model, batch, self.loss_factory, self.metric_factory)
             outputs['images'].extend(out['images'])
             outputs['pred'].extend(out['pred'])
+            outputs['target'].extend(out['target'])
 
             if self.single_gpu_or_rank_zero and (len(returning_samples['images']) < self.logger.num_sample_images):
                 add_sample_num = self.logger.num_sample_images - len(returning_samples['images'])
                 returning_samples['images'].extend(out['images'][:add_sample_num])
                 returning_samples['pred'].extend(out['pred'][:add_sample_num])
+                returning_samples['target'].extend(out['target'][:add_sample_num])
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
         return returning_samples
 
