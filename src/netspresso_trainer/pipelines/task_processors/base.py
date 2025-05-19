@@ -21,8 +21,6 @@ import torch
 import torch.distributed as dist
 from loguru import logger
 
-NUM_SAMPLES = 16
-
 
 class BaseTaskProcessor(ABC):
     def __init__(self, conf, postprocessor, devices, **kwargs):

@@ -26,7 +26,7 @@ from torch.utils.tensorboard.summary import hparams
 
 
 class TensorboardLogger:
-    def __init__(self, task, model, result_dir, step_per_epoch: int, num_sample_images: int) -> None:
+    def __init__(self, task, model, result_dir, step_per_epoch: int) -> None:
         super(TensorboardLogger, self).__init__()
         self.task = task
         self.model_name = model
@@ -34,7 +34,6 @@ class TensorboardLogger:
         self.result_dir = Path(result_dir)
         self.result_dir.mkdir(exist_ok=True)
         self.step_per_epoch = step_per_epoch
-        self.num_sample_images = num_sample_images
 
         self.tensorboard = SummaryWriter(self.result_dir / "tensorboard")
 

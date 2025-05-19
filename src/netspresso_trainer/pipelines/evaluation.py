@@ -35,8 +35,6 @@ from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
-NUM_SAMPLES = 16
-
 
 class EvaluationPipeline(BasePipeline):
     def __init__(
