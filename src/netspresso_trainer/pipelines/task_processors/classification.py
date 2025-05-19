@@ -98,11 +98,16 @@ class ClassificationProcessor(BaseTaskProcessor):
             metric_factory.update(pred, labels, phase='valid')
 
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': {"label": pred, "conf_score": conf_score}
+            return_images = list(images.detach().cpu().numpy())
+            return_pred = [
+                {'label': label, 'conf_score': conf_score}
+                for label, conf_score in zip(list(pred), list(conf_score))
+            ]
+
+            return {
+                'images': return_images,
+                'pred': return_pred,
             }
-            return results
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -125,24 +130,30 @@ class ClassificationProcessor(BaseTaskProcessor):
                 pred = gathered_pred
 
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': {"label": pred, "conf_score": conf_score}
+            return_images = list(images.detach().cpu().numpy())
+            return_pred = [
+                {'label': label, 'conf_score': conf_score}
+                for label, conf_score in zip(list(pred), list(conf_score))
+            ]
+
+            return {
+                'images': return_images,
+                'pred': return_pred,
             }
-            return results
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
 
-    def _convert_result(self, result, class_map):
-        assert "pred" in result and "images" in result
-        return_preds = []
-        for idx in range(len(result['images'])):
-            image = result['images'][idx:idx+1]
+    def get_predictions(self, results, class_map):
+        assert "pred" in results and "images" in results
+
+        predictions = []
+        for idx in range(len(results['images'])):
+            image = results['images'][idx]
             height, width = image.shape[-2:]
-            label = result['pred']['label'][idx]
-            conf_score = result['pred']['conf_score'][idx]
-            return_preds.append(
+            label = results['pred'][idx]['label']
+            conf_score = results['pred'][idx]['conf_score']
+            predictions.append(
                 {
                     "class": int(label[0]),
                     "name": class_map[int(label[0])],
@@ -153,14 +164,5 @@ class ClassificationProcessor(BaseTaskProcessor):
                     }
                 }
             )
-        return return_preds
-
-    def get_predictions(self, results, class_map):
-        predictions = []
-        if isinstance(results, list):
-            for minibatch in results:
-                predictions.extend(self._convert_result(minibatch, class_map))
-        elif isinstance(results, dict):
-            predictions.extend(self._convert_result(results, class_map))
 
         return predictions
