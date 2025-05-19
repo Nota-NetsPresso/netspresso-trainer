@@ -78,9 +78,9 @@ class DetectionProcessor(BaseTaskProcessor):
         if self.single_gpu_or_rank_zero:
             step_out['target'] = [{'boxes': bbox.detach().cpu().numpy(), 'labels': label.detach().cpu().numpy()}
                                   for bbox, label in zip(bboxes, labels)]
-            step_out['pred'] = [{'post_boxes': bboxes,
-                                 'post_scores': scores,
-                                 'post_labels': labels}
+            step_out['pred'] = [{'boxes': bboxes,
+                                 'scores': scores,
+                                 'labels': labels}
                                 for bboxes, scores, labels in pred]
         return step_out
 
@@ -137,9 +137,9 @@ class DetectionProcessor(BaseTaskProcessor):
             step_out['images'] = list(images.detach().cpu().numpy())
             step_out['target'] = [{'boxes': bbox.detach().cpu().numpy(), 'labels': label.detach().cpu().numpy()}
                                   for bbox, label in zip(bboxes, labels)]
-            step_out['pred'] = [{'post_boxes': bboxes,
-                                 'post_scores': scores,
-                                 'post_labels': labels}
+            step_out['pred'] = [{'boxes': bboxes,
+                                 'scores': scores,
+                                 'labels': labels}
                                 for bboxes, scores, labels in pred]
         return step_out
 
