@@ -14,7 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 
 import cv2
 import numpy as np
@@ -49,10 +49,20 @@ class ClassificationVisualizer:
         self.n = len(class_map)
         self.class_map = class_map
 
-    def __call__(self, results: List[Tuple[np.ndarray, np.ndarray]], images=None):
+    def __call__(self, samples: Dict):
+        """
+        Args:
+            samples (Dict): {
+                'image': np.ndarray (1, 3, H, W),
+                'pred': Dict[str, np.ndarray], # {'label': np.ndarray (1, k), 'conf_score': np.ndarray (1, k)}
+            }
+        """
+
         return_images = []
-        for image, label, conf_score in zip(images, results["label"], results["conf_score"]):
+        for image, pred in zip(samples['images'], samples['pred']):
             image = image.copy()
+            label, conf_score = pred['label'], pred['conf_score']
+
             class_name = self.class_map[label[0]] # Class is determined with top1 score
             conf_score = conf_score[0]
             prediction = f"{str(class_name)} {round(float(conf_score), 2)}"
@@ -62,8 +72,7 @@ class ClassificationVisualizer:
             image = cv2.rectangle(image, (x1, y1), (x1+text_w, y1+text_h+5), color=(0, 0, 255), thickness=-1)
             image = cv2.putText(image, prediction, (x1, y1+text_h), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-            return_images.append(image[np.newaxis, ...])
-        return_images = np.concatenate(return_images, axis=0)
+            return_images.append(image)
         return return_images
 
 
