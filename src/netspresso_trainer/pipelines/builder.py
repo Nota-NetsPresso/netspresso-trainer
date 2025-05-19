@@ -35,7 +35,6 @@ from ..schedulers import build_scheduler
 from ..utils.model_ema import build_ema
 from ..utils.record import Timer
 from .registry import PIPELINES, SUPPORTING_TASK_LIST, TASK_PROCESSOR
-from .train import NUM_SAMPLES
 
 
 def load_optimizer_checkpoint(conf, optimizer, scheduler):
