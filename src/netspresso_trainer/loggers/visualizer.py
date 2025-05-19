@@ -49,23 +49,16 @@ class ClassificationVisualizer:
         self.n = len(class_map)
         self.class_map = class_map
 
-    def __call__(self, samples: Dict):
-        """
-        Args:
-            samples (Dict): {
-                'image': np.ndarray (1, 3, H, W),
-                'pred': Dict[str, np.ndarray], # {'label': np.ndarray (1, k), 'conf_score': np.ndarray (1, k)}
-            }
-        """
-
+    def __call__(self, original_images: List, pred_or_target: List):
         return_images = []
-        for image, pred in zip(samples['images'], samples['pred']):
+        for image, ann in zip(original_images, pred_or_target):
             image = image.copy()
-            label, conf_score = pred['label'], pred['conf_score']
+            label = ann['label']
+            conf_score = ann['conf_score'] if 'conf_score' in ann else None
 
             class_name = self.class_map[label[0]] # Class is determined with top1 score
-            conf_score = conf_score[0]
-            prediction = f"{str(class_name)} {round(float(conf_score), 2)}"
+            conf_score = f" {round(float(conf_score[0]), 2)}" if conf_score is not None else ""
+            prediction = f"{str(class_name)}" + conf_score
             x1, y1 = 0, 0
             text_size, _ = cv2.getTextSize(prediction, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
             text_w, text_h = text_size
@@ -103,12 +96,17 @@ class DetectionVisualizer:
 
         return color_image
 
-    def __call__(self, samples: Dict):
+    def __call__(self, original_images: List, pred_or_target: List):
 
         return_images = []
-        for image, pred in zip(samples['images'], samples['pred']):
+        for image, ann in zip(original_images, pred_or_target):
             image = image.copy()
-            for box, class_label, conf_score in zip(pred['post_boxes'], pred['post_labels'], pred['post_scores']):
+            instance_num = len(ann['boxes'])
+            for instance_idx in range(instance_num):
+                box = ann['boxes'][instance_idx]
+                class_label = int(ann['labels'][instance_idx])
+                conf_score = float(ann['scores'][instance_idx]) if 'conf_scores' in ann else None
+
                 class_name = self.class_map[class_label]
 
                 # unnormalize depending on the visualizing image size
@@ -116,7 +114,7 @@ class DetectionVisualizer:
                 y1 = int(box[1])
                 x2 = int(box[2])
                 y2 = int(box[3])
-                conf_score = " " + str(round(conf_score, 2))
+                conf_score = '' if conf_score is None else " " + str(round(conf_score, 2))
                 color = self.cmap[class_label].tolist()
 
                 image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
@@ -157,10 +155,10 @@ class SegmentationVisualizer:
 
         return color_image
 
-    def __call__(self, samples: Dict):
+    def __call__(self, original_images: List, pred_or_target: List):
         result_images = []
-        for pred in samples['pred']:
-            mask = pred['mask']
+        for ann in pred_or_target:
+            mask = ann['mask']
             result_images.append(self._convert(mask))
 
         return result_images

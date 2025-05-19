@@ -120,10 +120,13 @@ class TrainingLogger():
 
         sample_readable = {
             'images': [magic_image_handler(image) for image in samples['images']],
-            'pred': samples['pred']
+            'pred': samples['pred'],
+            'target': samples['target'],
         }
 
-        sample_readable['pred'] = self.label_converter(sample_readable)
+        # TODO: pred and target can be more complex data structure later.
+        sample_readable['pred'] = self.label_converter(sample_readable['images'], sample_readable['pred'])
+        sample_readable['target'] = self.label_converter(sample_readable['images'], sample_readable['target'])
         return sample_readable
 
     def log(
