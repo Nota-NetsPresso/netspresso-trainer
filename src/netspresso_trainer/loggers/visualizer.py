@@ -103,21 +103,20 @@ class DetectionVisualizer:
 
         return color_image
 
-    def __call__(self, results: List[Tuple[np.ndarray, np.ndarray]], images=None):
+    def __call__(self, samples: Dict):
 
         return_images = []
-        for image, result in zip(images, results):
+        for image, pred in zip(samples['images'], samples['pred']):
             image = image.copy()
-            bbox_list, class_index_list = result
-            for bbox_label, class_label in zip(bbox_list, class_index_list):
+            for box, class_label, conf_score in zip(pred['post_boxes'], pred['post_labels'], pred['post_scores']):
                 class_name = self.class_map[class_label]
 
                 # unnormalize depending on the visualizing image size
-                x1 = int(bbox_label[0])
-                y1 = int(bbox_label[1])
-                x2 = int(bbox_label[2])
-                y2 = int(bbox_label[3])
-                conf_score = "" if len(bbox_label) <= 4 else " " + str(round(bbox_label[4], 2))
+                x1 = int(box[0])
+                y1 = int(box[1])
+                x2 = int(box[2])
+                y2 = int(box[3])
+                conf_score = " " + str(round(conf_score, 2))
                 color = self.cmap[class_label].tolist()
 
                 image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
@@ -126,8 +125,7 @@ class DetectionVisualizer:
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
                 image = cv2.putText(image, f"{class_name}{conf_score}", (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-            return_images.append(image[np.newaxis, ...])
-        return_images = np.concatenate(return_images, axis=0)
+            return_images.append(image)
         return return_images
 
 
