@@ -114,6 +114,10 @@ class SegmentationProcessor(BaseTaskProcessor):
                 {'mask': mask}
                 for mask in list(pred)
             ]
+            step_out['target'] = [
+                {'mask': mask}
+                for mask in list(labels)
+            ]
 
         return step_out
 

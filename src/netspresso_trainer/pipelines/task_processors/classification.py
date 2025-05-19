@@ -107,6 +107,10 @@ class ClassificationProcessor(BaseTaskProcessor):
                 {'label': label, 'conf_score': conf_score}
                 for label, conf_score in zip(list(pred), list(conf_score))
             ]
+            step_out['target'] = [
+                {'label': np.expand_dims(label, axis=0)} # Add extra dimension to match the pred shape
+                for label in labels
+            ]
 
         return step_out
 
