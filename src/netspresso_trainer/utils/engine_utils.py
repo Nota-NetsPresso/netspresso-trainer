@@ -214,6 +214,8 @@ def validate_train_config(conf: DictConfig) -> ConfigSummary:
     project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
     logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='training')
 
+    assert (conf.logging.num_save_samples is None) or (conf.logging.num_save_samples >= 0)
+
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=is_graphmodule_training, logging_dir=logging_dir)
 
 
@@ -231,6 +233,8 @@ def validate_evaluation_config(conf: DictConfig, gpus: Union[List, int]) -> Conf
     project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
     logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='evaluation')
 
+    assert (conf.logging.num_save_samples is None) or (conf.logging.num_save_samples >= 0)
+
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
 
 
@@ -247,5 +251,7 @@ def validate_inference_config(conf: DictConfig, gpus: Union[List, int]) -> Confi
 
     project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{task}_{model_name}"
     logging_dir: Path = get_new_logging_dir(output_root_dir=conf.logging.output_dir, project_id=project_id, mode='inference')
+
+    assert (conf.logging.num_save_samples is None) or (conf.logging.num_save_samples >= 0)
 
     return ConfigSummary(task=task, model_name=model_name, is_graphmodule_training=None, logging_dir=logging_dir)
