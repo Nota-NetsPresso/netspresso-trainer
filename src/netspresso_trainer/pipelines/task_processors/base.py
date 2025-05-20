@@ -61,3 +61,7 @@ class BaseTaskProcessor(ABC):
     @abstractmethod
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         raise NotImplementedError
+
+    @abstractmethod
+    def get_predictions(self, results, class_map):
+        raise NotImplementedError
