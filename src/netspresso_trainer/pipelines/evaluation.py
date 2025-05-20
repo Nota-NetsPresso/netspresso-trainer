@@ -30,9 +30,9 @@ from tqdm import tqdm
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import EvaluationSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
-from ..utils.protocols import ProcessorStepOut
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
@@ -81,7 +81,7 @@ class EvaluationPipeline(BasePipeline):
             outputs['images'].extend(out['images'])
             outputs['pred'].extend(out['pred'])
             outputs['target'].extend(out['target'])
-            
+
             if self.single_gpu_or_rank_zero and (len(returning_samples['images']) < self.logger.num_sample_images):
                 add_sample_num = self.logger.num_sample_images - len(returning_samples['images'])
                 returning_samples['images'].extend(out['images'][:add_sample_num])

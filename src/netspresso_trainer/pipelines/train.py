@@ -39,9 +39,9 @@ from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_flops
-from ..utils.protocols import ProcessorStepOut
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 

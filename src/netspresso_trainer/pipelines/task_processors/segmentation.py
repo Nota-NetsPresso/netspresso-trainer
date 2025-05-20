@@ -22,8 +22,8 @@ import torch
 
 from netspresso_trainer.models.utils import set_training_targets
 
-from .base import BaseTaskProcessor
 from ...utils.protocols import ProcessorStepOut
+from .base import BaseTaskProcessor
 
 
 class SegmentationProcessor(BaseTaskProcessor):

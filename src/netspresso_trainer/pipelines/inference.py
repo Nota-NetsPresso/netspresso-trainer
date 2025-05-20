@@ -28,9 +28,9 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..loggers.base import TrainingLogger
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import InferenceSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
-from ..utils.protocols import ProcessorStepOut
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
 
