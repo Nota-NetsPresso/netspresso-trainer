@@ -56,6 +56,7 @@ class TrainingLogger():
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
         self.num_sample_images: int = sys.maxsize if self.conf.logging.num_save_samples is None else self.conf.logging.num_save_samples
+        self.conf.logging.num_save_samples = self.num_sample_images # Overwrite
 
         self.use_mlflow: bool = self.conf.logging.mlflow
         self.use_tensorboard: bool = self.conf.logging.tensorboard
