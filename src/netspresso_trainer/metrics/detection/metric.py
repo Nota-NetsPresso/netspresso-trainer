@@ -273,7 +273,7 @@ class DetectionMetricAdaptor:
 
         # Gather matching stats for predictions and targets
         for pred, target in zip(predictions, targets):
-            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['post_boxes'], pred['post_labels'], pred['post_scores']
+            predicted_objs_bbox, predicted_objs_class, predicted_objs_confidence = pred['boxes'], pred['labels'], pred['scores']
             true_objs_bbox, true_objs_class = target['boxes'], target['labels']
 
             true_objs = np.concatenate((true_objs_bbox, true_objs_class[..., np.newaxis]), axis=-1)

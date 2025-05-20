@@ -20,6 +20,7 @@ import torch
 
 from netspresso_trainer.models.utils import set_training_targets
 
+from ...utils.protocols import ProcessorStepOut
 from .base import BaseTaskProcessor
 
 
@@ -73,13 +74,15 @@ class DetectionProcessor(BaseTaskProcessor):
                 labels = gathered_labels
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            logs = {
-                'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                        for bbox, label in zip(bboxes, labels)],
-                'pred': pred
-            }
-            return dict(logs.items())
+            step_out['target'] = [{'boxes': bbox.detach().cpu().numpy(), 'labels': label.detach().cpu().numpy()}
+                                  for bbox, label in zip(bboxes, labels)]
+            step_out['pred'] = [{'boxes': bboxes,
+                                 'scores': scores,
+                                 'labels': labels}
+                                for bboxes, scores, labels in pred]
+        return step_out
 
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
@@ -129,14 +132,16 @@ class DetectionProcessor(BaseTaskProcessor):
                 labels = gathered_labels
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            logs = {
-                'images': images.detach().cpu().numpy(),
-                'target': [(bbox.detach().cpu().numpy(), label.detach().cpu().numpy())
-                        for bbox, label in zip(bboxes, labels)],
-                'pred': pred
-            }
-            return dict(logs.items())
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['target'] = [{'boxes': bbox.detach().cpu().numpy(), 'labels': label.detach().cpu().numpy()}
+                                  for bbox, label in zip(bboxes, labels)]
+            step_out['pred'] = [{'boxes': bboxes,
+                                 'scores': scores,
+                                 'labels': labels}
+                                for bboxes, scores, labels in pred]
+        return step_out
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -164,55 +169,35 @@ class DetectionProcessor(BaseTaskProcessor):
                 gathered_pred = sum(gathered_pred, [])
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            results = {'images': images.detach().cpu().numpy(), 'pred': pred}
-            return results
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [{'post_boxes': bboxes,
+                                 'post_scores': scores,
+                                 'post_labels': labels}
+                                for bboxes, scores, labels in pred]
+        return step_out
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         if self.single_gpu_or_rank_zero:
-            pred = []
-            targets = []
-            for output_batch in outputs:
-                if len(output_batch['target']) == 0:
-                    continue
-
-                for detection, class_idx in output_batch['target']:
-                    target_on_image = {}
-                    target_on_image['boxes'] = detection
-                    target_on_image['labels'] = class_idx
-                    targets.append(target_on_image)
-
-                for detection, class_idx in output_batch['pred']:
-                    pred_on_image = {}
-                    pred_on_image['post_boxes'] = detection[..., :4]
-                    pred_on_image['post_scores'] = detection[..., -1]
-                    pred_on_image['post_labels'] = class_idx
-                    pred.append(pred_on_image)
+            pred = outputs['pred']
+            targets = outputs['target']
             metric_factory.update(pred, target=targets, phase=phase)
 
     def get_predictions(self, results, class_map):
+        assert "pred" in results and "images" in results
+
         predictions = []
-        if isinstance(results, list):
-            for minibatch in results:
-                predictions.extend(self._convert_result(minibatch, class_map))
-        elif isinstance(results, dict):
-            predictions.extend(self._convert_result(results, class_map))
-
-        return predictions
-
-    def _convert_result(self, result, class_map):
-        assert "pred" in result and "images" in result
-        return_preds = []
-        for idx in range(len(result['pred'])):
-            image = result['images'][idx:idx+1]
+        for idx in range(len(results['pred'])):
+            image = results['images'][idx]
             height, width = image.shape[-2:]
             preds = []
-            for bbox, label in zip(result['pred'][idx][0], result['pred'][idx][1]):
+            for bbox, label, score in zip(results['pred'][idx]['post_boxes'], results['pred'][idx]['post_labels'], results['pred'][idx]['post_scores']):
                 x1 = int(bbox[0])
                 y1 = int(bbox[1])
                 x2 = int(bbox[2])
                 y2 = int(bbox[3])
-                confidence_score = float(bbox[4])
+                confidence_score = float(score)
                 class_idx = int(label)
                 name = class_map[class_idx]
                 preds.append(
@@ -228,7 +213,7 @@ class DetectionProcessor(BaseTaskProcessor):
                         }
                     }
                 )
-            return_preds.append(
+            predictions.append(
                 {
                     "bboxes": preds,
                     "shape": {
@@ -238,4 +223,4 @@ class DetectionProcessor(BaseTaskProcessor):
                 }
             )
 
-        return return_preds
+        return predictions

@@ -308,7 +308,12 @@ class DetectionPostprocessor:
         if self.postprocess:
             pred = self.postprocess(pred)
 
-        pred = [(torch.cat([p[:, :4], p[:, 4:5] * p[:, 5:6]], dim=-1).detach().cpu().numpy(),
-                      p[:, 6].to(torch.int).detach().cpu().numpy())
-                      for p in pred]
+        pred = [
+            (
+                p[:, :4].detach().cpu().numpy(),                 # bbox
+                (p[:, 4] * p[:, 5]).detach().cpu().numpy(),  # obj_conf
+                p[:, 6].to(torch.int).detach().cpu().numpy()     # label
+            )
+            for p in pred
+        ]
         return pred

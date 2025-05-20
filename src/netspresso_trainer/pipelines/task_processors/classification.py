@@ -21,6 +21,7 @@ import torch
 
 from netspresso_trainer.models.utils import set_training_targets
 
+from ...utils.protocols import ProcessorStepOut
 from .base import BaseTaskProcessor
 
 
@@ -67,6 +68,8 @@ class ClassificationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='train')
 
+        return ProcessorStepOut.empty() # Return empty output
+
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices, images, labels = batch
@@ -97,12 +100,19 @@ class ClassificationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='valid')
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': {"label": pred, "conf_score": conf_score}
-            }
-            return results
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'label': label, 'conf_score': conf_score}
+                for label, conf_score in zip(list(pred), list(conf_score))
+            ]
+            step_out['target'] = [
+                {'label': np.expand_dims(label, axis=0)} # Add extra dimension to match the pred shape
+                for label in labels
+            ]
+
+        return step_out
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -124,25 +134,29 @@ class ClassificationProcessor(BaseTaskProcessor):
                 gathered_pred = np.concatenate(gathered_pred, axis=0)
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': {"label": pred, "conf_score": conf_score}
-            }
-            return results
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'label': label, 'conf_score': conf_score}
+                for label, conf_score in zip(list(pred), list(conf_score))
+            ]
+
+        return step_out
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
 
-    def _convert_result(self, result, class_map):
-        assert "pred" in result and "images" in result
-        return_preds = []
-        for idx in range(len(result['images'])):
-            image = result['images'][idx:idx+1]
+    def get_predictions(self, results, class_map):
+        assert "pred" in results and "images" in results
+
+        predictions = []
+        for idx in range(len(results['images'])):
+            image = results['images'][idx]
             height, width = image.shape[-2:]
-            label = result['pred']['label'][idx]
-            conf_score = result['pred']['conf_score'][idx]
-            return_preds.append(
+            label = results['pred'][idx]['label']
+            conf_score = results['pred'][idx]['conf_score']
+            predictions.append(
                 {
                     "class": int(label[0]),
                     "name": class_map[int(label[0])],
@@ -153,14 +167,5 @@ class ClassificationProcessor(BaseTaskProcessor):
                     }
                 }
             )
-        return return_preds
-
-    def get_predictions(self, results, class_map):
-        predictions = []
-        if isinstance(results, list):
-            for minibatch in results:
-                predictions.extend(self._convert_result(minibatch, class_map))
-        elif isinstance(results, dict):
-            predictions.extend(self._convert_result(results, class_map))
 
         return predictions

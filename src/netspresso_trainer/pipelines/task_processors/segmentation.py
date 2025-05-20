@@ -22,6 +22,7 @@ import torch
 
 from netspresso_trainer.models.utils import set_training_targets
 
+from ...utils.protocols import ProcessorStepOut
 from .base import BaseTaskProcessor
 
 
@@ -71,6 +72,8 @@ class SegmentationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='train')
 
+        return ProcessorStepOut.empty() # Return empty output
+
     def valid_step(self, eval_model, batch, loss_factory, metric_factory):
         eval_model.eval()
         indices = batch['indices']
@@ -104,16 +107,19 @@ class SegmentationProcessor(BaseTaskProcessor):
         else:
             metric_factory.update(pred, labels, phase='valid')
 
-        logs = {
-            'images': images.detach().cpu().numpy(),
-            'target': labels,
-            'pred': pred
-        }
-        if 'edges' in batch:
-            logs.update({
-                'bd_gt': bd_gt.detach().cpu().numpy()
-            })
-        return dict(logs.items())
+        step_out = ProcessorStepOut.empty()
+        if self.single_gpu_or_rank_zero:
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'mask': mask}
+                for mask in list(pred)
+            ]
+            step_out['target'] = [
+                {'mask': mask}
+                for mask in list(labels)
+            ]
+
+        return step_out
 
     def test_step(self, test_model, batch):
         test_model.eval()
@@ -137,36 +143,29 @@ class SegmentationProcessor(BaseTaskProcessor):
                 gathered_pred = sum(gathered_pred, [])
                 pred = gathered_pred
 
+        step_out = ProcessorStepOut.empty()
         if self.single_gpu_or_rank_zero:
-            results = {
-                'images': images.detach().cpu().numpy(),
-                'pred': pred
-            }
-            return results
+            step_out['images'] = list(images.detach().cpu().numpy())
+            step_out['pred'] = [
+                {'mask': mask}
+                for mask in list(pred)
+            ]
+        return step_out
 
     def get_metric_with_all_outputs(self, outputs, phase: Literal['train', 'valid'], metric_factory):
         pass
 
     def get_predictions(self, results, class_map):
+        assert "pred" in results and "images" in results
         predictions = []
-        if isinstance(results, list):
-            for minibatch in results:
-                predictions.extend(self._convert_result(minibatch, class_map))
-        elif isinstance(results, dict):
-            predictions.extend(self._convert_result(results, class_map))
 
-        return predictions
-
-    def _convert_result(self, result, class_map):
-        assert "pred" in result and "images" in result
-        return_preds = []
         class_keys = class_map.keys()
-        for idx in range(len(result['pred'])):
-            image = result['images'][idx:idx+1]
+        for idx in range(len(results['pred'])):
+            image = results['images'][idx]
             height, width = image.shape[-2:]
             preds = []
             for class_idx in class_keys:
-                binary_mask = np.where(result['pred'][idx] == class_idx, 1, 0)
+                binary_mask = np.where(results['pred'][idx]['mask'] == class_idx, 1, 0)
                 contours, _ = cv2.findContours(binary_mask.astype(np.uint8),
                                                        mode=cv2.RETR_EXTERNAL,
                                                        method=cv2.CHAIN_APPROX_SIMPLE)
@@ -185,7 +184,7 @@ class SegmentationProcessor(BaseTaskProcessor):
                         "polygon": segmentation
                     }
                 )
-            return_preds.append(
+            predictions.append(
                 {
                     "segmentation": preds,
                     "shape": {
@@ -194,4 +193,4 @@ class SegmentationProcessor(BaseTaskProcessor):
                     }
                 }
             )
-        return return_preds
+        return predictions
