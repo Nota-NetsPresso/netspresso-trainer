@@ -156,25 +156,16 @@ class SegmentationProcessor(BaseTaskProcessor):
         pass
 
     def get_predictions(self, results, class_map):
+        assert "pred" in results and "images" in results
         predictions = []
-        if isinstance(results, list):
-            for minibatch in results:
-                predictions.extend(self._convert_result(minibatch, class_map))
-        elif isinstance(results, dict):
-            predictions.extend(self._convert_result(results, class_map))
 
-        return predictions
-
-    def _convert_result(self, result, class_map):
-        assert "pred" in result and "images" in result
-        return_preds = []
         class_keys = class_map.keys()
-        for idx in range(len(result['pred'])):
-            image = result['images'][idx:idx+1]
+        for idx in range(len(results['pred'])):
+            image = results['images'][idx]
             height, width = image.shape[-2:]
             preds = []
             for class_idx in class_keys:
-                binary_mask = np.where(result['pred'][idx] == class_idx, 1, 0)
+                binary_mask = np.where(results['pred'][idx]['mask'] == class_idx, 1, 0)
                 contours, _ = cv2.findContours(binary_mask.astype(np.uint8),
                                                        mode=cv2.RETR_EXTERNAL,
                                                        method=cv2.CHAIN_APPROX_SIMPLE)
@@ -193,7 +184,7 @@ class SegmentationProcessor(BaseTaskProcessor):
                         "polygon": segmentation
                     }
                 )
-            return_preds.append(
+            predictions.append(
                 {
                     "segmentation": preds,
                     "shape": {
@@ -202,4 +193,4 @@ class SegmentationProcessor(BaseTaskProcessor):
                     }
                 }
             )
-        return return_preds
+        return predictions
