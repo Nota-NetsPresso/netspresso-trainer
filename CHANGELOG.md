@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add num_save_samples option and code refactoring by `@illian01` in [PR 625]
 
 ## Bug Fixes:
 
