@@ -2,7 +2,7 @@
 
 ## New Features:
 
-- Add num_save_samples option and code refactoring by `@illian01` in [PR 625]
+- Add num_save_samples option and code refactoring by `@illian01` in [PR 625](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/625)
 
 ## Bug Fixes:
 
