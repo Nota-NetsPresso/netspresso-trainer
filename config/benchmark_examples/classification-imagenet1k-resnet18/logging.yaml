@@ -3,8 +3,8 @@ logging:
   output_dir: ./outputs
   tensorboard: true
   mlflow: false
-  image: true
   stdout: true
+  num_save_samples: 16 # num_save_samples should be >= 0 or None
   model_save_options:
     save_optimizer_state: true
     save_best_only: false
