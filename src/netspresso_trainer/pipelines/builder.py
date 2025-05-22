@@ -116,7 +116,8 @@ def build_pipeline(
             train_logger = build_logger(conf, task, model_name,
                                         step_per_epoch=train_step_per_epoch,
                                         class_map=class_map,
-                                        result_dir=logging_dir,)
+                                        result_dir=logging_dir,
+                                        dataloader=eval_dataloader,)
 
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
@@ -156,7 +157,8 @@ def build_pipeline(
             eval_logger = build_logger(conf, task, model_name,
                                        step_per_epoch=0,
                                        class_map=class_map,
-                                       result_dir=logging_dir,)
+                                       result_dir=logging_dir,
+                                       dataloader=eval_dataloader,)
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
                                             task=task,
@@ -181,7 +183,8 @@ def build_pipeline(
             eval_logger = build_logger(conf, task, model_name,
                                        step_per_epoch=0,
                                        class_map=class_map,
-                                       result_dir=logging_dir,)
+                                       result_dir=logging_dir,
+                                       dataloader=test_dataloader,)
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
                                             task=task,
