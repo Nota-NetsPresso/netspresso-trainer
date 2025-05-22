@@ -6,7 +6,7 @@
 
 ## Bug Fixes:
 
-No changes to highlight.
+- Fix classification postprocessing bug by `@illian01` in [PR 627](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/627)
 
 ## Breaking Changes:
 
