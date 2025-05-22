@@ -39,12 +39,11 @@ from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
-
-NUM_SAMPLES = 16
 
 
 class TrainingPipeline(BasePipeline):
@@ -220,30 +219,31 @@ class TrainingPipeline(BasePipeline):
             raise e
 
     def train_one_epoch(self, epoch):
-        outputs = []
+        outputs = ProcessorStepOut.empty()
         self.train_dataloader.sampler.set_epoch(epoch)
         for _idx, batch in enumerate(tqdm(self.train_dataloader, leave=False)):
             out = self.task_processor.train_step(self.model, batch, self.optimizer, self.loss_factory, self.metric_factory)
             if self.model_ema:
                 self.model_ema.update(model=self.model.module if hasattr(self.model, 'module') else self.model)
-            outputs.append(out)
+            if self.single_gpu_or_rank_zero:
+                outputs['name'].extend(out['name'])
+                outputs['pred'].extend(out['pred'])
+                outputs['target'].extend(out['target'])
         self.task_processor.get_metric_with_all_outputs(outputs, phase='train', metric_factory=self.metric_factory)
 
     @torch.no_grad()
-    def validate(self, num_samples=NUM_SAMPLES):
-        num_returning_samples = 0
-        returning_samples = []
-        outputs = []
+    def validate(self):
+        outputs = ProcessorStepOut.empty()
         eval_model = self.model_ema.ema_model if self.model_ema else self.model
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.task_processor.valid_step(eval_model, batch, self.loss_factory, self.metric_factory)
-            if out is not None:
-                outputs.append(out)
-                if num_returning_samples < num_samples:
-                    returning_samples.append(out)
-                    num_returning_samples += len(out['pred'])
+            if self.single_gpu_or_rank_zero:
+                outputs['name'].extend(out['name'])
+                outputs['pred'].extend(out['pred'])
+                outputs['target'].extend(out['target'])
+
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
-        return returning_samples
+        return outputs
 
     def log_end_epoch(
         self,

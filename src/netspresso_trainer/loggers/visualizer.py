@@ -14,7 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
-from typing import List, Tuple
+from typing import Dict, List, Tuple
 
 import cv2
 import numpy as np
@@ -49,21 +49,23 @@ class ClassificationVisualizer:
         self.n = len(class_map)
         self.class_map = class_map
 
-    def __call__(self, results: List[Tuple[np.ndarray, np.ndarray]], images=None):
+    def __call__(self, original_images: List, pred_or_target: List):
         return_images = []
-        for image, label, conf_score in zip(images, results["label"], results["conf_score"]):
+        for image, ann in zip(original_images, pred_or_target):
             image = image.copy()
+            label = ann['label']
+            conf_score = ann['conf_score'] if 'conf_score' in ann else None
+
             class_name = self.class_map[label[0]] # Class is determined with top1 score
-            conf_score = conf_score[0]
-            prediction = f"{str(class_name)} {round(float(conf_score), 2)}"
+            conf_score = f" {round(float(conf_score[0]), 2)}" if conf_score is not None else ""
+            prediction = f"{str(class_name)}" + conf_score
             x1, y1 = 0, 0
             text_size, _ = cv2.getTextSize(prediction, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
             text_w, text_h = text_size
             image = cv2.rectangle(image, (x1, y1), (x1+text_w, y1+text_h+5), color=(0, 0, 255), thickness=-1)
             image = cv2.putText(image, prediction, (x1, y1+text_h), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-            return_images.append(image[np.newaxis, ...])
-        return_images = np.concatenate(return_images, axis=0)
+            return_images.append(image)
         return return_images
 
 
@@ -94,21 +96,25 @@ class DetectionVisualizer:
 
         return color_image
 
-    def __call__(self, results: List[Tuple[np.ndarray, np.ndarray]], images=None):
+    def __call__(self, original_images: List, pred_or_target: List):
 
         return_images = []
-        for image, result in zip(images, results):
+        for image, ann in zip(original_images, pred_or_target):
             image = image.copy()
-            bbox_list, class_index_list = result
-            for bbox_label, class_label in zip(bbox_list, class_index_list):
+            instance_num = len(ann['boxes'])
+            for instance_idx in range(instance_num):
+                box = ann['boxes'][instance_idx]
+                class_label = int(ann['labels'][instance_idx])
+                conf_score = float(ann['scores'][instance_idx]) if 'conf_scores' in ann else None
+
                 class_name = self.class_map[class_label]
 
                 # unnormalize depending on the visualizing image size
-                x1 = int(bbox_label[0])
-                y1 = int(bbox_label[1])
-                x2 = int(bbox_label[2])
-                y2 = int(bbox_label[3])
-                conf_score = "" if len(bbox_label) <= 4 else " " + str(round(bbox_label[4], 2))
+                x1 = int(box[0])
+                y1 = int(box[1])
+                x2 = int(box[2])
+                y2 = int(box[3])
+                conf_score = '' if conf_score is None else " " + str(round(conf_score, 2))
                 color = self.cmap[class_label].tolist()
 
                 image = cv2.rectangle(image, (x1, y1), (x2, y2), color=color, thickness=2)
@@ -117,8 +123,7 @@ class DetectionVisualizer:
                 image = cv2.rectangle(image, (x1, y1-5-text_h), (x1+text_w, y1), color=color, thickness=-1)
                 image = cv2.putText(image, f"{class_name}{conf_score}", (x1, y1-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 
-            return_images.append(image[np.newaxis, ...])
-        return_images = np.concatenate(return_images, axis=0)
+            return_images.append(image)
         return return_images
 
 
@@ -146,20 +151,17 @@ class SegmentationVisualizer:
         mask = (gray_image == 255)
         color_image[0][mask] = color_image[1][mask] = color_image[2][mask] = 255
 
+        color_image = color_image.transpose((1, 2, 0))  # H x W x C
+
         return color_image
 
-    def __call__(self, results, images=None):
-        if len(results.shape) == 3:
-            result_images = []
-            for _real_gray_image in results:
-                result_images.append(self._convert(_real_gray_image)[np.newaxis, ...])
+    def __call__(self, original_images: List, pred_or_target: List):
+        result_images = []
+        for ann in pred_or_target:
+            mask = ann['mask']
+            result_images.append(self._convert(mask))
 
-            return np.concatenate(result_images, axis=0)
-        elif len(results.shape) == 2:
-            return self._convert(results)
-        else:
-            raise IndexError(f"gray_image.shape should be either 2 or 3, but {results.shape} were indexed.")
-
+        return result_images
 
 class PoseEstimationVisualizer:
     def __init__(self, class_map, pallete=None):

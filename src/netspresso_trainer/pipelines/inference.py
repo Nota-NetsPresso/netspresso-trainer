@@ -28,12 +28,11 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from ..loggers.base import TrainingLogger
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import InferenceSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
-
-NUM_SAMPLES = 16
 
 
 class InferencePipeline(BasePipeline):
@@ -63,21 +62,17 @@ class InferencePipeline(BasePipeline):
         self._is_ready()
         self.timer.start_record(name='inference')
 
-        num_returning_samples = 0
-        returning_samples = []
-        outputs = []
+        outputs = ProcessorStepOut.empty()
         for _idx, batch in enumerate(tqdm(self.test_dataloader, leave=False)):
             out = self.task_processor.test_step(self.model, batch)
-            if out is not None:
-                outputs.append(out)
-                if num_returning_samples < NUM_SAMPLES: # TODO: Save all output or set by config
-                    returning_samples.append(out)
-                    num_returning_samples += len(out['pred'])
+            if self.single_gpu_or_rank_zero:
+                outputs['name'].extend(out['name'])
+                outputs['pred'].extend(out['pred'])
 
         self.timer.end_record(name='inference')
         if self.single_gpu_or_rank_zero:
             time_for_inference = self.timer.get(name='inference', as_pop=False)
-            self.log_end_inference(time_for_inference=time_for_inference, valid_samples=returning_samples)
+            self.log_end_inference(time_for_inference=time_for_inference, valid_samples=outputs)
 
     def log_end_inference(
         self,

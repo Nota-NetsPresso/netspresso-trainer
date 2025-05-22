@@ -35,7 +35,6 @@ from ..schedulers import build_scheduler
 from ..utils.model_ema import build_ema
 from ..utils.record import Timer
 from .registry import PIPELINES, SUPPORTING_TASK_LIST, TASK_PROCESSOR
-from .train import NUM_SAMPLES
 
 
 def load_optimizer_checkpoint(conf, optimizer, scheduler):
@@ -117,8 +116,8 @@ def build_pipeline(
             train_logger = build_logger(conf, task, model_name,
                                         step_per_epoch=train_step_per_epoch,
                                         class_map=class_map,
-                                        num_sample_images=NUM_SAMPLES,
-                                        result_dir=logging_dir,)
+                                        result_dir=logging_dir,
+                                        dataloader=eval_dataloader,)
 
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
@@ -158,8 +157,8 @@ def build_pipeline(
             eval_logger = build_logger(conf, task, model_name,
                                        step_per_epoch=0,
                                        class_map=class_map,
-                                       num_sample_images=NUM_SAMPLES,
-                                       result_dir=logging_dir,)
+                                       result_dir=logging_dir,
+                                       dataloader=eval_dataloader,)
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
                                             task=task,
@@ -184,8 +183,8 @@ def build_pipeline(
             eval_logger = build_logger(conf, task, model_name,
                                        step_per_epoch=0,
                                        class_map=class_map,
-                                       num_sample_images=NUM_SAMPLES,
-                                       result_dir=logging_dir,)
+                                       result_dir=logging_dir,
+                                       dataloader=test_dataloader,)
         # Build pipeline
         pipeline = PIPELINES[pipeline_type](conf=conf,
                                             task=task,

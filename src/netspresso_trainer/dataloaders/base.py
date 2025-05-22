@@ -35,6 +35,7 @@ class BaseCustomDataset(data.Dataset):
 
         self.transform = transform(conf_augmentation)
         self.samples = samples
+        self.sample_name_to_index = {sample['name']: i for i, sample in enumerate(samples)}
 
         self._root = conf_data.path.root
         self._idx_to_class = idx_to_class

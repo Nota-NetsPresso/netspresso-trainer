@@ -1,3 +1,22 @@
+# 1.4.0
+
+## New Features:
+
+- Add num_save_samples option and code refactoring by `@illian01` in [PR 625](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/625)
+
+## Bug Fixes:
+
+- Fix classification postprocessing bug by `@illian01` in [PR 627](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/627)
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+- Refactoring sample saving logic by `@illian01` in [PR 626](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/626)
+- Fix dockerfile torch version by `hglee98` in [PR 624](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/624)
+
 # v1.3.1
 
 ## New Features:

@@ -14,6 +14,7 @@
 #
 # ----------------------------------------------------------------------------
 
+import sys
 from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Literal, Optional, Tuple, Union
@@ -39,9 +40,9 @@ class TrainingLogger():
         model: str,
         class_map: Dict[int, str],
         step_per_epoch: int,
-        num_sample_images: int,
         result_dir: Union[Path, str],
         epoch: Optional[int] = None,
+        dataloader=None,
     ) -> None:
         super(TrainingLogger, self).__init__()
         self.conf = conf
@@ -49,16 +50,19 @@ class TrainingLogger():
         self.model: str = model
         self.class_map: Dict = class_map
         self.epoch = epoch
-        self.num_sample_images = num_sample_images
+        self.dataloader = dataloader
 
         self.project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{self.task}_{self.model}"
 
         self._result_dir = result_dir
         OmegaConf.save(config=self.conf, f=(result_dir / "hparams.yaml"))
 
+        self.num_sample_images: int = sys.maxsize if self.conf.logging.num_save_samples is None else self.conf.logging.num_save_samples
+        self.conf.logging.num_save_samples = self.num_sample_images # Overwrite
+
         self.use_mlflow: bool = self.conf.logging.mlflow
         self.use_tensorboard: bool = self.conf.logging.tensorboard
-        self.use_imagesaver: bool = self.conf.logging.image
+        self.use_imagesaver: bool = bool(self.conf.logging.num_save_samples)
         self.use_stdout: bool = self.conf.logging.stdout
         self._save_best_only: bool = self.conf.logging.model_save_options.save_best_only
 
@@ -67,7 +71,7 @@ class TrainingLogger():
             self.loggers.append(ImageSaver(model=model, result_dir=self._result_dir, save_best_only=self._save_best_only))
         if self.use_tensorboard:
             self.tensorboard_logger = TensorboardLogger(task=task, model=model, result_dir=self._result_dir,
-                                                        step_per_epoch=step_per_epoch, num_sample_images=num_sample_images)
+                                                        step_per_epoch=step_per_epoch)
             self.loggers.append(self.tensorboard_logger)
         if self.use_mlflow:
             from .mlflow import MLFlowLogger
@@ -113,52 +117,24 @@ class TrainingLogger():
             raise TypeError(f"Unsupported type for {k}!!! Current type: {type(v)}")
         return scalar_dict
 
-    def _convert_imagedict_as_readable(self, images_dict: Dict):
-        assert 'images' in images_dict
-        image_new: np.ndarray = magic_image_handler(images_dict['images'])
-        image_new = image_new.astype(np.uint8)
-        images_dict.update({'images': image_new[:self.num_sample_images]})
-        for k, v in images_dict.items():
-            if k == 'images':
-                continue
+    def _convert_images_as_readable(self, samples: Union[Dict, List]):
+        if len(samples['name']) == 0:
+            return None
 
-            # target, pred, bg_gt
-            if isinstance(v, dict):
-                for key in v:
-                    v[key] = v[key][:self.num_sample_images]
-            else:
-                v = v[:self.num_sample_images]
-            v_new: np.ndarray = magic_image_handler(
-                self.label_converter(v, images=images_dict['images']))
-            v_new = v_new.astype(np.uint8)
-            images_dict.update({k: v_new})
-        return images_dict
+        sample_name_to_index = self.dataloader.dataset.sample_name_to_index
+        images = [self.dataloader.dataset[sample_name_to_index[name]]['pixel_values'].numpy() for name in samples['name'][:self.num_sample_images]]
+        images = [magic_image_handler(image) for image in images]
 
-    def _convert_images_as_readable(self, images_dict_or_list: Union[Dict, List]):
-        if isinstance(images_dict_or_list, list):
-            images_list = images_dict_or_list
+        sample_readable = {}
+        sample_readable['images'] = images
+        # TODO: pred and target can be more complex data structure later.
+        sample_readable['pred'] = samples['pred'][:self.num_sample_images]
+        sample_readable['pred'] = self.label_converter(sample_readable['images'], sample_readable['pred'])
+        if bool(samples['target']):
+            sample_readable['target'] = samples['target'][:self.num_sample_images]
+            sample_readable['target'] = self.label_converter(sample_readable['images'], sample_readable['target'])
 
-            if len(images_list) == 0:
-                return None
-
-            images_dict = {key: [] for key in images_list[0]}
-            for minibatch in images_list:
-                minibatch: Dict = self._convert_imagedict_as_readable(minibatch)
-                for k_batch, v_batch in minibatch.items():
-                    v_batch = list(v_batch)
-                    if k_batch in images_dict:
-                        images_dict[k_batch].extend(v_batch)
-                        continue
-                    images_dict[k_batch] = v_batch
-
-            return images_dict
-
-        if isinstance(images_dict_or_list, dict):
-            images_dict = images_dict_or_list
-            images_dict = self._convert_imagedict_as_readable(images_dict)
-            return images_dict
-
-        raise TypeError(f"Unsupported type for image logger!!! Current type: {type(images_dict_or_list)}")
+        return sample_readable
 
     def log(
         self,
@@ -179,7 +155,7 @@ class TrainingLogger():
         if metrics is not None:
             metrics = self._convert_scalar_as_readable(metrics)
         if samples is not None:
-            samples = self._convert_images_as_readable(deepcopy(samples))
+            samples = self._convert_images_as_readable(samples)
 
         for logger in self.loggers:
             logger(

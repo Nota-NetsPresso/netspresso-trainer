@@ -30,12 +30,11 @@ from tqdm import tqdm
 from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
+from ..utils.protocols import ProcessorStepOut
 from ..utils.record import EvaluationSummary, PredictionSummary, Timer
 from ..utils.stats import get_params_and_flops
 from .base import BasePipeline
 from .task_processors.base import BaseTaskProcessor
-
-NUM_SAMPLES = 16
 
 
 class EvaluationPipeline(BasePipeline):
@@ -71,26 +70,24 @@ class EvaluationPipeline(BasePipeline):
         return self.loss_factory.result('valid').get('total').avg
 
     @torch.no_grad()
-    def evaluation(self, num_samples=NUM_SAMPLES):
+    def evaluation(self):
         self._is_ready()
         self.timer.start_record(name='evaluation')
 
-        num_returning_samples = 0
-        returning_samples = []
-        outputs = []
+        outputs = ProcessorStepOut.empty()
         for _idx, batch in enumerate(tqdm(self.eval_dataloader, leave=False)):
             out = self.task_processor.valid_step(self.model, batch, self.loss_factory, self.metric_factory)
-            if out is not None:
-                outputs.append(out)
-                if num_returning_samples < num_samples:
-                    returning_samples.append(out)
-                    num_returning_samples += len(out['pred'])
+            if self.single_gpu_or_rank_zero:
+                outputs['name'].extend(out['name'])
+                outputs['pred'].extend(out['pred'])
+                outputs['target'].extend(out['target'])
+
         self.task_processor.get_metric_with_all_outputs(outputs, phase='valid', metric_factory=self.metric_factory)
 
         self.timer.end_record(name='evaluation')
         if self.single_gpu_or_rank_zero:
             time_for_evaluation = self.timer.get(name='evaluation', as_pop=False)
-            self.log_end_evaluation(time_for_evaluation=time_for_evaluation, valid_samples=returning_samples)
+            self.log_end_evaluation(time_for_evaluation=time_for_evaluation, valid_samples=outputs)
 
     def log_end_evaluation(
         self,

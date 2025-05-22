@@ -31,6 +31,6 @@ class ClassificationPostprocessor():
         maxk = min(TOPK_MAX, pred.size()[1])
         if k:
             maxk = min(k, maxk)
-        logits, pred = pred.topk(maxk, 1, True, True)
-        conf_score = torch.softmax(logits, dim=-1)
-        return pred.detach().cpu().numpy(), conf_score.detach().cpu().numpy()
+        conf_score = torch.softmax(pred, dim=-1)
+        logits, pred = conf_score.topk(maxk, 1, True, True)
+        return pred.detach().cpu().numpy(), logits.detach().cpu().numpy()

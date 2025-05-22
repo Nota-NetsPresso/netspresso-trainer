@@ -26,7 +26,7 @@ from omegaconf import DictConfig
 
 from .augmentation.registry import TRANSFORM_DICT
 from .registry import CREATE_TRANSFORM, CUSTOM_DATASET, DATA_SAMPLER, HUGGINGFACE_DATASET
-from .utils.collate_fn import classification_mix_collate_fn, classification_onehot_collate_fn, detection_collate_fn
+from .utils.collate_fn import default_collate_fn
 from .utils.loader import create_loader
 
 TRAIN_VALID_SPLIT_RATIO = 0.9
@@ -178,22 +178,23 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
 
     cache_data = conf.environment.cache_data
     if task == 'classification':
-        # TODO: ``phase`` should be removed later.
-        transforms = getattr(conf.augmentation, phase, None)
-        if transforms:
-            name = transforms[-1].name.lower()
-            if name == 'mixing':
-                mix_kwargs = list(transforms[-1].keys())
-                mix_kwargs.remove('name')
-                mix_kwargs = {k:transforms[-1][k] for k in mix_kwargs}
-                mix_kwargs['num_classes'] = dataset.num_classes
-                mix_transforms = TRANSFORM_DICT[name](**mix_kwargs)
+        collate_fn = default_collate_fn
+        # # TODO: Remove this when mixing is refactored
+        # transforms = getattr(conf.augmentation, phase, None)
+        # if transforms:
+        #     name = transforms[-1].name.lower()
+        #     if name == 'mixing':
+        #         mix_kwargs = list(transforms[-1].keys())
+        #         mix_kwargs.remove('name')
+        #         mix_kwargs = {k:transforms[-1][k] for k in mix_kwargs}
+        #         mix_kwargs['num_classes'] = dataset.num_classes
+        #         mix_transforms = TRANSFORM_DICT[name](**mix_kwargs)
 
-                collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
-            else:
-                collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
-        else:
-            collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
+        #         collate_fn = partial(classification_mix_collate_fn, mix_transforms=mix_transforms)
+        #     else:
+        #         collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
+        # else:
+        # collate_fn = partial(classification_onehot_collate_fn, num_classes=dataset.num_classes)
 
         dataloader = create_loader(
             dataset,
@@ -211,7 +212,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             kwargs=None
         )
     elif task == 'segmentation':
-        collate_fn = None
+        collate_fn = default_collate_fn
 
         if phase == 'train':
             batch_size = conf.environment.batch_size
@@ -234,7 +235,7 @@ def build_dataloader(conf, task: str, model_name: str, dataset, phase, profile=F
             kwargs=None
         )
     elif task == 'detection':
-        collate_fn = detection_collate_fn
+        collate_fn = default_collate_fn
 
         if phase == 'train':
             batch_size = conf.environment.batch_size
