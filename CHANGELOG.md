@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+- Refactoring sample saving logic by `@illian01` in [PR 626](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/626)
 
 # v1.3.1
 
