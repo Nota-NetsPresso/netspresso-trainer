@@ -15,6 +15,7 @@ No changes to highlight.
 ## Other Changes:
 
 - Refactoring sample saving logic by `@illian01` in [PR 626](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/626)
+- Fix dockerfile torch version by `hglee98` in [PR 624](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/624)
 
 # v1.3.1
 
