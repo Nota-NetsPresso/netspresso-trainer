@@ -42,6 +42,7 @@ class TrainingLogger():
         step_per_epoch: int,
         result_dir: Union[Path, str],
         epoch: Optional[int] = None,
+        dataloader=None,
     ) -> None:
         super(TrainingLogger, self).__init__()
         self.conf = conf
@@ -49,6 +50,7 @@ class TrainingLogger():
         self.model: str = model
         self.class_map: Dict = class_map
         self.epoch = epoch
+        self.dataloader = dataloader
 
         self.project_id = conf.logging.project_id if conf.logging.project_id is not None else f"{self.task}_{self.model}"
 
@@ -116,18 +118,22 @@ class TrainingLogger():
         return scalar_dict
 
     def _convert_images_as_readable(self, samples: Union[Dict, List]):
-        if len(samples['images']) == 0:
+        if len(samples['name']) == 0:
             return None
 
-        sample_readable = {
-            'images': [magic_image_handler(image) for image in samples['images']],
-            'pred': samples['pred'],
-            'target': samples['target'],
-        }
+        sample_name_to_index = self.dataloader.dataset.sample_name_to_index
+        images = [self.dataloader.dataset[sample_name_to_index[name]]['pixel_values'].numpy() for name in samples['name'][:self.num_sample_images]]
+        images = [magic_image_handler(image) for image in images]
 
+        sample_readable = {}
+        sample_readable['images'] = images
         # TODO: pred and target can be more complex data structure later.
+        sample_readable['pred'] = samples['pred'][:self.num_sample_images]
         sample_readable['pred'] = self.label_converter(sample_readable['images'], sample_readable['pred'])
-        sample_readable['target'] = self.label_converter(sample_readable['images'], sample_readable['target'])
+        if bool(samples['target']):
+            sample_readable['target'] = samples['target'][:self.num_sample_images]
+            sample_readable['target'] = self.label_converter(sample_readable['images'], sample_readable['target'])
+
         return sample_readable
 
     def log(
@@ -149,7 +155,7 @@ class TrainingLogger():
         if metrics is not None:
             metrics = self._convert_scalar_as_readable(metrics)
         if samples is not None:
-            samples = self._convert_images_as_readable(deepcopy(samples))
+            samples = self._convert_images_as_readable(samples)
 
         for logger in self.loggers:
             logger(

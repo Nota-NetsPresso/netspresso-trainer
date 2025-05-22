@@ -56,11 +56,11 @@ class SegmentationSampleLoader(BaseSampleLoader):
 
             images = sorted(images, key=lambda k: natural_key(k))
             labels = sorted(labels, key=lambda k: natural_key(k))
-            images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
+            images_and_targets.extend([{'image': str(image), 'label': str(label), 'name': Path(image).name} for image, label in zip(images, labels)])
 
         else:
             for ext in IMG_EXTENSIONS:
-                images_and_targets.extend([{'image': str(file), 'label': None}
+                images_and_targets.extend([{'image': str(file), 'label': None, 'name': Path(file).name}
                                            for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
             images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
 
@@ -190,7 +190,8 @@ class SegmentationCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         outputs = {}
-        outputs.update({'indices': index})
+        outputs['name'] = self.samples[index]['name']
+        outputs['indices'] = torch.tensor(index, dtype=torch.int64)
         if label is None:
             out = self.transform(image=img)
             outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})
@@ -249,6 +250,7 @@ class SegmentationHFDataset(BaseHFDataset):
 
         self.idx_to_class = idx_to_class
         self.samples = huggingface_dataset
+        self.sample_name_to_index = {f'{idx}': idx for idx in range(len(self.samples))} # TODO: Use sample name instead of just number
 
         assert "label_value_to_idx" in kwargs
         self.label_value_to_idx = kwargs["label_value_to_idx"]
@@ -289,21 +291,22 @@ class SegmentationHFDataset(BaseHFDataset):
 
         w, h = img.size
 
+        outputs = {}
+        outputs['indices'] = torch.tensor(index, dtype=torch.int64)
+        outputs['name'] = f'{index}'
+
         if label is None:
             out = self.transform(image=img)
             return {'pixel_values': out['image'], 'name': img_name, 'org_shape': (h, w)}
 
-        outputs = {}
-
         if 'pidnet' in self.model_name:
             edge = generate_edge(np.array(label))
             out = self.transform(image=img, mask=mask, edge=edge, dataset=self)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float(), 'name': img_name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'edges': out['edge'].float()})
         else:
             out = self.transform(image=img, mask=mask, dataset=self)
-            outputs.update({'pixel_values': out['image'], 'labels': out['mask'], 'name': img_name})
+            outputs.update({'pixel_values': out['image'], 'labels': out['mask']})
 
-        outputs.update({'indices': index})
         if self._split in ['train', 'training']:
             return outputs
 

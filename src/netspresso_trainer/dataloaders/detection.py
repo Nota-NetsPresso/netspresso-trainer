@@ -60,11 +60,11 @@ class DetectionSampleLoader(BaseSampleLoader):
 
             images = sorted(images, key=lambda k: natural_key(k))
             labels = sorted(labels, key=lambda k: natural_key(k))
-            images_and_targets.extend([{'image': str(image), 'label': str(label)} for image, label in zip(images, labels)])
+            images_and_targets.extend([{'image': str(image), 'label': str(label), 'name': Path(image).name} for image, label in zip(images, labels)])
 
         else:
             for ext in IMG_EXTENSIONS:
-                images_and_targets.extend([{'image': str(file), 'label': None}
+                images_and_targets.extend([{'image': str(file), 'label': None, 'name': Path(file).name}
                                         for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
             images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
 
@@ -157,7 +157,8 @@ class DetectionCustomDataset(BaseCustomDataset):
         w, h = img.size
 
         outputs = {}
-        outputs.update({'indices': index})
+        outputs['name'] = self.samples[index]['name']
+        outputs.update({'indices': torch.tensor(index, dtype=torch.int64)})
         if ann is None:
             out = self.transform(image=img)
             outputs.update({'pixel_values': out['image'], 'org_shape': (h, w)})

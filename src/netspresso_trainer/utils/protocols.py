@@ -2,10 +2,10 @@ from typing import List, TypedDict
 
 
 class ProcessorStepOut(TypedDict):
-    images: List
+    name: List
     pred: List
     target: List
 
     @classmethod
     def empty(cls):
-        return cls(images=[], pred=[], target=[])
+        return cls(name=[], pred=[], target=[])
