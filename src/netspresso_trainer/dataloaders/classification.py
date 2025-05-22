@@ -22,8 +22,10 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
+import torch
 import PIL.Image as Image
 import torch.distributed as dist
+from torch.nn import functional as F
 from loguru import logger
 from omegaconf import ListConfig
 
@@ -51,14 +53,14 @@ class ClassficationSampleLoader(BaseSampleLoader):
             for ext in IMG_EXTENSIONS:
                 for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}')):
                     if file.name in file_to_idx:
-                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name]})
+                        images_and_targets.append({'image': str(file), 'label': file_to_idx[file.name], 'name': file.name, 'path': str(file)})
                         continue
                     logger.debug(f"Found file without label: {file}")
         else:
             if split in ['train', 'valid']:
                 raise ValueError("For train and valid split, label path must be provided!")
             for ext in VALID_IMG_EXTENSIONS:
-                images_and_targets.extend([{'image': str(file), 'label': None} for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
+                images_and_targets.extend([{'image': str(file), 'label': None, 'name': Path(file).name, 'path': str(file)} for file in chain(image_dir.glob(f'*{ext}'), image_dir.glob(f'*{ext.upper()}'))])
 
         images_and_targets = sorted(images_and_targets, key=lambda k: natural_key(k['image']))
         return images_and_targets
@@ -163,10 +165,16 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
         if self.transform is not None:
             out = self.transform(img)
-
-        if target is None:
-            target = -1  # To be ignored at cross-entropy loss
-        return index, out['image'], target
+    
+        outputs = {}
+        outputs['indices'] = torch.tensor(index, dtype=torch.int64)
+        outputs['name'] = self.samples[index]['name']
+        outputs['pixel_values'] = out['image']
+        if target is not None:
+            target = torch.tensor(target, dtype=torch.int64)
+            target = F.one_hot(target, num_classes=self.num_classes).to(dtype=outputs['pixel_values'].dtype)
+            outputs['labels'] = target
+        return outputs
 
 
 class ClassificationHFDataset(BaseHFDataset):
@@ -194,6 +202,7 @@ class ClassificationHFDataset(BaseHFDataset):
         # Make sure that you additionally install `requirements-data.txt`
 
         self.samples = huggingface_dataset
+        self.sample_name_to_index = {f'{idx}': idx for idx in range(len(self.samples))} # TODO: Use sample name instead of just number
         self.idx_to_class = idx_to_class
         self.class_to_idx = {v: k for k, v in self.idx_to_class.items()}
 
@@ -219,9 +228,16 @@ class ClassificationHFDataset(BaseHFDataset):
 
         if self.transform is not None:
             out = self.transform(img)
-        if target is None:
-            target = -1
-        return index, out['image'], target
+
+        outputs = {}
+        outputs['indices'] = torch.tensor(index, dtype=torch.int64)
+        outputs['name'] = f'{index}'
+        outputs['pixel_values'] = out['image']
+        if target is not None:
+            target = torch.tensor(target, dtype=torch.int64)
+            target = F.one_hot(target, num_classes=self.num_classes).to(dtype=outputs['pixel_values'].dtype)
+            outputs['labels'] = target
+        return outputs
 
     def cache_dataset(self):
         raise NotImplementedError("Caching is not implemented for HuggingFace datasets.")
