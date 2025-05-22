@@ -32,6 +32,9 @@ class ClassificationProcessor(BaseTaskProcessor):
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
         indices, images, labels = batch['indices'], batch['pixel_values'], batch['labels']
+        images = torch.stack(images, dim=0)
+        labels = torch.stack(labels, dim=0)
+
         images = images.to(self.devices).to(self.data_type)
         labels = labels.to(self.devices).to(self.data_type)
         target = {'target': labels}
@@ -74,6 +77,10 @@ class ClassificationProcessor(BaseTaskProcessor):
         eval_model.eval()
         name = batch['name']
         indices, images, labels = batch['indices'], batch['pixel_values'], batch['labels']
+        indices = torch.stack(indices, dim=0)
+        images = torch.stack(images, dim=0)
+        labels = torch.stack(labels, dim=0)
+
         images = images.to(self.devices)
         labels = labels.to(self.devices)
         target = {'target': labels}
@@ -93,7 +100,7 @@ class ClassificationProcessor(BaseTaskProcessor):
             gathered_labels = [None for _ in range(torch.distributed.get_world_size())]
 
             # Remove dummy samples, they only come in distributed environment
-            name = np.array(batch['name'])[batch['indices'] != -1].tolist()
+            name = np.array(name)[indices != -1].tolist()
             pred = pred[indices != -1]
             conf_score = conf_score[indices != -1]
             labels = labels[indices != -1]
@@ -129,6 +136,9 @@ class ClassificationProcessor(BaseTaskProcessor):
         test_model.eval()
         name = batch['name']
         indices, images = batch['indices'], batch['pixel_values']
+        indices = torch.stack(indices, dim=0)
+        images = torch.stack(images, dim=0)
+
         images = images.to(self.devices)
 
         out = test_model(images)
@@ -141,7 +151,7 @@ class ClassificationProcessor(BaseTaskProcessor):
             gathered_conf_score = [None for _ in range(torch.distributed.get_world_size())]
 
             # Remove dummy samples, they only come in distributed environment
-            name = np.array(batch['name'])[batch['indices'] != -1].tolist()
+            name = np.array(name)[indices != -1].tolist()
             pred = pred[indices != -1]
             conf_score = conf_score[indices != -1]
             torch.distributed.gather_object(name, gathered_name if torch.distributed.get_rank() == 0 else None, dst=0)
