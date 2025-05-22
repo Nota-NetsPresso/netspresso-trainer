@@ -31,7 +31,7 @@ class ClassificationProcessor(BaseTaskProcessor):
 
     def train_step(self, train_model, batch, optimizer, loss_factory, metric_factory):
         train_model.train()
-        indices, images, labels = batch['indices'], batch['pixel_values'], batch['labels']
+        images, labels = batch['pixel_values'], batch['labels']
         images = torch.stack(images, dim=0)
         labels = torch.stack(labels, dim=0)
 

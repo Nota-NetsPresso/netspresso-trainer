@@ -22,12 +22,12 @@ from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-import torch
 import PIL.Image as Image
+import torch
 import torch.distributed as dist
-from torch.nn import functional as F
 from loguru import logger
 from omegaconf import ListConfig
+from torch.nn import functional as F
 
 from .base import BaseCustomDataset, BaseHFDataset, BaseSampleLoader
 from .utils.constants import IMG_EXTENSIONS
@@ -165,7 +165,7 @@ class ClassificationCustomDataset(BaseCustomDataset):
 
         if self.transform is not None:
             out = self.transform(img)
-    
+
         outputs = {}
         outputs['indices'] = torch.tensor(index, dtype=torch.int64)
         outputs['name'] = self.samples[index]['name']
