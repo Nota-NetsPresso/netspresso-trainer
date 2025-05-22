@@ -167,23 +167,19 @@ class ClassificationProcessor(BaseTaskProcessor):
         pass
 
     def get_predictions(self, results, class_map):
-        assert "pred" in results and "images" in results
+        assert "pred" in results and "name" in results
 
         predictions = []
-        for idx in range(len(results['images'])):
-            image = results['images'][idx]
-            height, width = image.shape[-2:]
+        for idx in range(len(results['name'])):
+            sample = results['name'][idx]
             label = results['pred'][idx]['label']
             conf_score = results['pred'][idx]['conf_score']
             predictions.append(
                 {
+                    "sample": sample,
                     "class": int(label[0]),
-                    "name": class_map[int(label[0])],
+                    "class_name": class_map[int(label[0])],
                     "conf_score": float(conf_score[0]),
-                    "shape": {
-                        "width": width,
-                        "height": height
-                    }
                 }
             )
 
