@@ -62,22 +62,17 @@ class InferencePipeline(BasePipeline):
         self._is_ready()
         self.timer.start_record(name='inference')
 
-        returning_samples = ProcessorStepOut.empty()
         outputs = ProcessorStepOut.empty()
         for _idx, batch in enumerate(tqdm(self.test_dataloader, leave=False)):
             out = self.task_processor.test_step(self.model, batch)
-            outputs['images'].extend(out['images'])
-            outputs['pred'].extend(out['pred'])
-
-            if self.single_gpu_or_rank_zero and (len(returning_samples['images']) < self.logger.num_sample_images):
-                add_sample_num = self.logger.num_sample_images - len(returning_samples['images'])
-                returning_samples['images'].extend(out['images'][:add_sample_num])
-                returning_samples['pred'].extend(out['pred'][:add_sample_num])
+            if self.single_gpu_or_rank_zero:
+                outputs['name'].extend(out['name'])
+                outputs['pred'].extend(out['pred'])
 
         self.timer.end_record(name='inference')
         if self.single_gpu_or_rank_zero:
             time_for_inference = self.timer.get(name='inference', as_pop=False)
-            self.log_end_inference(time_for_inference=time_for_inference, valid_samples=returning_samples)
+            self.log_end_inference(time_for_inference=time_for_inference, valid_samples=outputs)
 
     def log_end_inference(
         self,
