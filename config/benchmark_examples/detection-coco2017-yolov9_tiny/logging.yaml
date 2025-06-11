@@ -1,0 +1,18 @@
+logging:
+  project_id: ~
+  output_dir: ./outputs
+  tensorboard: true
+  mlflow: false
+  stdout: true
+  num_save_samples: 16 # num_save_samples should be >= 0 or None
+  model_save_options:
+    save_optimizer_state: true
+    save_best_only: false
+    best_model_criterion: loss # metric
+    sample_input_size: [640, 640] # Used for flops and onnx export
+    onnx_export_opset: 13 # Recommend in range [13, 17]
+    validation_epoch: &validation_epoch 10
+    save_checkpoint_epoch: *validation_epoch  # Multiplier of `validation_epoch`.
+  metrics:
+    classwise_analysis: False
+    metric_names: ~ # None for default settings
