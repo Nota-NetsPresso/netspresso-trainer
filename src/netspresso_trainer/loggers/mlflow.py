@@ -191,6 +191,7 @@ class MLFlowLogger:
     def log_hparams(self, hp_omegaconf: OmegaConf):
         config_sections = {
             "training": self.flatten_dict,
+            "data": self.flatten_dict,
             "environment": self.flatten_dict,
             "model": self.flatten_dict,
             "augmentation": self.flatten_augmentation_config,
