@@ -228,7 +228,7 @@ class MLFlowLogger:
                 result.append((f"{parent_key}{sep}{i}", item))
         return result
 
-    def flatten_augmentation_config(self, aug_config):
+    def flatten_augmentation_config(self, aug_config, parent_key=""):
         flat_dict = {}
 
         for phase in ["train", "inference"]:
@@ -243,7 +243,7 @@ class MLFlowLogger:
                 transform_name = transform["name"]
                 for key, value in transform.items():
                     if key != "name":
-                        flat_key = f"{phase}.{transform_name}.{key}"
+                        flat_key = f"{parent_key}.{phase}.{transform_name}.{key}"
                         flat_dict[flat_key] = value
 
         return flat_dict
