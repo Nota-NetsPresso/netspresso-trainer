@@ -202,7 +202,7 @@ class MLFlowLogger:
             if hasattr(hp_omegaconf, section_name):
                 section_conf = getattr(hp_omegaconf, section_name)
                 section_conf = OmegaConf.to_container(section_conf, resolve=True)
-                flattened_conf = flatten_func(section_conf)
+                flattened_conf = flatten_func(section_conf, parent_key=section_name)
                 mlflow.log_params(flattened_conf)
 
     def flatten_dict(self, nested_dict, parent_key="", sep="."):
