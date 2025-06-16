@@ -14,7 +14,7 @@ No changes to highlight.
 
 ## Other Changes:
 
-No changes to highlight.
+Fix/add data params mlflow by `@hglee98` in [PR 629](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/629)
 
 # 1.4.0
 
