@@ -35,11 +35,11 @@ from ..loggers.base import TrainingLogger
 from ..losses.builder import LossFactory
 from ..metrics.builder import MetricFactory
 from ..utils.checkpoint import load_checkpoint, save_checkpoint
+from ..utils.exir import save_exir
 from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
-from ..utils.exir import save_exir
 from ..utils.protocols import ProcessorStepOut
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_flops
