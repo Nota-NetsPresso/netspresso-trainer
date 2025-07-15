@@ -2,7 +2,7 @@ model:
   task: detection
   name: yolov9_c
   checkpoint:
-    use_pretrained: false
+    use_pretrained: true
     load_head: false
     path: ~
     optimizer_path: ~

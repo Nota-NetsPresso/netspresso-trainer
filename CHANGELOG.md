@@ -2,7 +2,7 @@
 
 ## New Features:
 
-No changes to highlight.
+- Add yolov9 pretrained weights by `@illian01` in [PR 631](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/631)
 
 ## Bug Fixes:
 
