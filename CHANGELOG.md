@@ -3,6 +3,7 @@
 ## New Features:
 
 - Add yolov9 pretrained weights by `@illian01` in [PR 631](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/631)
+- Add EXIR exporting feature by `@illian01` in [PR 632](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/632)
 
 ## Bug Fixes:
 
