@@ -39,6 +39,7 @@ from ..utils.fx import save_graphmodule
 from ..utils.logger import yaml_for_logging
 from ..utils.model_ema import ModelEMA
 from ..utils.onnx import save_onnx
+from ..utils.exir import save_exir
 from ..utils.protocols import ProcessorStepOut
 from ..utils.record import Timer, TrainingSummary
 from ..utils.stats import get_params_and_flops
@@ -355,6 +356,12 @@ class TrainingPipeline(BasePipeline):
                     sample_input=self.sample_input.type(save_dtype),
                     opset_version=opset_version)
             logger.info(f"ONNX model converting and saved at {str(model_save_path.with_suffix('.onnx'))}")
+
+            save_exir(best_model,
+                model_save_path.with_suffix('.exir'),
+                sample_input=self.sample_input.type(save_dtype))
+            logger.info(f"EXIR model converting and saved at {str(model_save_path.with_suffix('.exir'))}")
+
             if self.logger.use_mlflow:
                 self.logger.mlflow_logger.log_onnx_model(model_save_path.with_suffix('.onnx'),
                 input_example=self.sample_input.type(save_dtype))
