@@ -40,7 +40,7 @@ LEVELNO_TO_LEVEL_NAME = {
 def rank_filter(record):
     try:
         return dist.get_rank() == 0
-    except RuntimeError:  # Default process group has not been initialized, please make sure to call init_process_group.
+    except (RuntimeError, ValueError):  # Default process group has not been initialized, please make sure to call init_process_group.
         return True
 
 def get_format(level: str, distributed: bool = False):
