@@ -1,0 +1,73 @@
+model:
+  task: detection
+  name: yolov9_m
+  checkpoint:
+    use_pretrained: true
+    load_head: false
+    path: ~
+    optimizer_path: ~
+  freeze_backbone: false
+  architecture:
+    full: ~ # auto
+    backbone:
+      name: gelan
+      params:
+        stem_out_channels: 32
+        stem_kernel_size: 3
+        stem_stride: 2
+        return_stage_idx: [1, 2, 3]
+        act_type: &act_type silu
+      stage_params:
+        # Conv2D: ['conv', out_channels, kernel_size, stride]
+        # ELAN: ['elan', out_channels, part_channels, use_identity]
+        # RepNCSPELAN: ['repncspelan', out_channels, part_channels, use_identity, depth]
+        # AConv: ['aconv', out_channels]
+        # ADown: ['adown', out_channels]
+        -
+          - ['conv', 64, 3, 2]
+          - ['repncspelan', 128, 128, false, 1]
+        -
+          - ['aconv', 240]
+          - ['repncspelan', 240, 240, false, 1]
+        -
+          - ['aconv', 360]
+          - ['repncspelan', 360, 360, false, 1]
+        - 
+          - ['aconv', 480]
+          - ['repncspelan', 480, 480, false, 1]
+    neck:
+      name: yolov9fpn
+      params:
+        repeat_num: 1
+        act_type: *act_type
+        use_aux_loss: &use_aux_loss false
+        bu_type: aconv
+        spp_channels: 480
+        n4_channels: 360
+        p3_channels: 240
+        p3_to_p4_channels: 184
+        p4_channels: 360
+        p4_to_p5_channels: 240
+        p5_channels: 480
+    head:
+      name: yolo_detection_head
+      params:
+        version: v9
+        num_anchors: ~
+        use_group: true
+        reg_max: &reg_max 16
+        act_type: *act_type
+        use_aux_loss: *use_aux_loss
+  postprocessor: 
+    params: 
+      # postprocessor - decode
+      reg_max: *reg_max
+      score_thresh: 0.01
+      # postprocessor - nms
+      nms_thresh: 0.65
+      class_agnostic: false
+  losses:
+    - criterion: yolov9_loss
+      reg_max: *reg_max
+      weight: ~
+      l1_activate_epoch: ~

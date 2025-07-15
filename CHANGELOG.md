@@ -1,3 +1,22 @@
+# v1.4.1
+
+## New Features:
+
+- Add yolov9 pretrained weights by `@illian01` in [PR 631](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/631)
+- Add EXIR exporting feature by `@illian01` in [PR 632](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/632)
+
+## Bug Fixes:
+
+No changes to highlight.
+
+## Breaking Changes:
+
+No changes to highlight.
+
+## Other Changes:
+
+Fix/add data params mlflow by `@hglee98` in [PR 629](https://github.com/Nota-NetsPresso/netspresso-trainer/pull/629)
+
 # 1.4.0
 
 ## New Features:

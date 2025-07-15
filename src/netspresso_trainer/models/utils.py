@@ -56,6 +56,10 @@ DEFAULT_WEIGHT_VERSION_DICT = {
     'yolox_m': 'coco',
     'yolox_l': 'coco',
     'yolox_x': 'coco',
+    'yolov9_tiny': 'coco',
+    'yolov9_s': 'coco',
+    'yolov9_c': 'coco',
+    'yolov9_m': 'coco',
     'rtdetr_res18': 'coco',
     'rtdetr_res50': 'coco',
     'yolo_fastest_v2': 'coco',
@@ -133,6 +137,18 @@ MODEL_CHECKPOINT_URL_DICT = {
     },
     'yolox_x': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolox/yolox_x_coco.safetensors?versionId=NWskUEbSGviBWskHQ3P1dQZXnRXOR1WN",
+    },
+    'yolov9_tiny': {
+        "coco": "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolov9/yolov9_tiny_coco.safetensors?versionId=lFU6CTU6CayTyETvHr4o8k_Sh26vRH2F",
+    },
+    "yolov9_s": {
+        "coco": "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolov9/yolov9_s_coco.safetensors?versionId=EpMf6UaAZC0qwIRmQVR_mqeRObskt2PK",
+    },
+    "yolov9_m": {
+        "coco": "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolov9/yolov9_m_coco.safetensors?versionId=jjmbLq_06YW1VyUPexSvl6KDOBQJpFd5"
+    },
+    "yolov9_c": {
+        "coco": "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/yolov9/yolov9_c_coco.safetensors?versionId=TDZWEU8pi_c0ZHPS_U073BoqXaUFCviN",
     },
     'rtdetr_res18': {
         'coco': "https://netspresso-trainer-public.s3.ap-northeast-2.amazonaws.com/checkpoint/rtdetr/rtdetr_res18_coco.safetensors?versionId=uu9v49NI6rQx8wOY6bJbEXUFOG_R9xqH",

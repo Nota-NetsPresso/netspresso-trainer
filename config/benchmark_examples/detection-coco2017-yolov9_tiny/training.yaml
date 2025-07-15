@@ -1,0 +1,23 @@
+training:
+  epochs: 500
+  mixed_precision: True
+  max_norm: ~
+  ema:
+    name: exp_decay
+    decay: 0.9999
+    beta: 2000
+  optimizer:
+    name: sgd
+    lr: 0.01
+    momentum: 0.937
+    weight_decay: 0.0005 # No bias and norm decay
+    nesterov: True
+    no_bias_decay: True
+    no_norm_weight_decay: True
+    overwrite: ~
+  scheduler:
+    name: cosine_no_sgdr
+    warmup_epochs: 3
+    warmup_bias_lr: 0.001
+    min_lr: 0.0001
+    end_epoch: 485

@@ -1,0 +1,56 @@
+augmentation:
+  train:
+    - 
+      name: mosaicdetection
+      size: [640, 640]
+      mosaic_prob: 1.0
+      affine_scale: [0.1, 1.9]
+      degrees: 0.0
+      translate: 0.1
+      shear: 0.0
+      enable_mixup: True
+      mixup_prob: 0.15
+      mixup_scale: [0.1, 2.0]
+      fill: 0
+      mosaic_off_duration: 15
+    -
+      name: hsvjitter
+      h_mag: 5
+      s_mag: 30
+      v_mag: 30
+    -
+      name: randomhorizontalflip
+      p: 0.5
+    -
+      name: resize
+      size: 640
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: long
+    -
+      name: pad
+      size: 640
+      fill: 0
+    -
+      name: randomresize
+      base_size: [640, 640]
+      stride: 32
+      random_range: 5
+      interpolation: bilinear
+    -
+      name: totensor
+      pixel_range: 1.0
+  inference:
+    - 
+      name: resize
+      size: 640
+      interpolation: bilinear
+      max_size: ~
+      resize_criteria: long
+    - 
+      name: pad
+      size: 640
+      fill: 0
+    -
+      name: totensor
+      pixel_range: 1.0

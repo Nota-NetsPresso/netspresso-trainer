@@ -1,0 +1,6 @@
+environment: 
+  seed: 1
+  num_workers: 4
+  gpus: 0, 1, 2, 3, 4, 5, 6, 7
+  batch_size: 16 # Batch size per gpu
+  cache_data: False
