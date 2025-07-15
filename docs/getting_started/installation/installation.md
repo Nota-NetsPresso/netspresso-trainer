@@ -2,8 +2,8 @@
 
 ### Prerequisites
 
-- Python `3.8` | `3.9` | `3.10`
-- PyTorch `2.0.1` (recommended) (compatible with: `1.11.x` - `2.0.1`)
+- Python `>=3.10`
+- PyTorch `>=2.0.1`
 
 ### Install with pypi
 
