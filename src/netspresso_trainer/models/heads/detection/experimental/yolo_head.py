@@ -28,6 +28,7 @@ from torch.fx.proxy import Proxy
 from typing import Dict, List, Optional, Tuple, Union
 from ....op.custom import Anchor2Vec, ConvLayer
 from ....utils import ModelOutput
+from netspresso_trainer.utils.bbox_utils import generate_anchors
 
 def round_up(x: Union[int, Tensor], div: int = 1) -> Union[int, Tensor]:
     """
@@ -145,6 +146,27 @@ class YOLODetectionHead(nn.Module):
             heads.append(head)
         return heads
 
+    def prepare_export(self, input_size: List[int],
+                       feat_sizes: Optional[List[Tuple[int, int]]] = None) -> None:
+        """Switch to export mode so forward() returns decoded (boxes, class_scores).
+
+        Args:
+            input_size: Model input image size as [height, width].
+            feat_sizes: Optional list of (height, width) for each detection scale's
+                feature map.  When provided the anchor grids are pre-computed and
+                stored as constant buffers, which removes Range/Cast ops from the
+                exported ONNX graph.
+        """
+        self._export = True
+        self._export_input_size = input_size
+
+        if feat_sizes is not None:
+            h, w = input_size
+            stage_strides = [w // fw for (_, fw) in feat_sizes]
+            offset, scaler = generate_anchors((h, w), stage_strides)
+            self.register_buffer('_export_offset', offset.float())
+            self.register_buffer('_export_scaler', scaler.float())
+
     def forward(self, x_in: Union[List[Tensor], Dict]) -> ModelOutput:
         if isinstance(x_in, Dict):
             assert self.aux_heads
@@ -156,7 +178,70 @@ class YOLODetectionHead(nn.Module):
         # if self.training and self.aux_heads:
         #     aux_outputs = [head(x) for head, x in zip(self.aux_heads, aux_in)]
         #     outputs = {"outputs": outputs, "aux_outputs": aux_outputs}
+
+        if getattr(self, '_export', False):
+            return self._decode_outputs(outputs)
+
         return ModelOutput(pred=outputs)
+
+    def _decode_outputs(self, outputs: List[Tensor]) -> Tuple[Tensor, Tensor]:
+        """Decode raw head outputs into merged (boxes_xyxy, class_scores) tensors.
+
+        All detection scales are concatenated and processed by a *single* Anchor2Vec
+        call (matching the expected ONNX structure), which keeps the graph compact.
+
+        Args:
+            outputs: List of per-scale tensors, each (B, 4*reg_max+num_classes, H, W).
+
+        Returns:
+            boxes: (B, total_anchors, 4) decoded xyxy box coordinates.
+            class_scores: (B, total_anchors, num_classes) after sigmoid.
+        """
+        # Use the first head's Anchor2Vec; all heads share the same fixed weights.
+        anchor2vec = self.heads[0].anchor2vec
+        num_reg_channels = 4 * anchor2vec.reg_max
+
+        pred_reg_flat: List[Tensor] = []
+        pred_cls_flat: List[Tensor] = []
+
+        for layer_output in outputs:
+            reg = layer_output[:, :num_reg_channels]          # (B, 4*reg_max, H, W)
+            cls = layer_output[:, num_reg_channels:]           # (B, num_classes, H, W)
+
+            b, _, fh, fw = reg.shape
+            pred_reg_flat.append(reg.reshape(b, num_reg_channels, fh * fw))
+
+            b, c, fh, fw = cls.shape
+            pred_cls_flat.append(cls.permute(0, 2, 3, 1).reshape(b, fh * fw, c))
+
+        # (B, 4*reg_max, total_anchors) — one Softmax + Conv3d for all scales
+        all_reg = torch.cat(pred_reg_flat, dim=2)
+        # (B, total_anchors, num_classes) with sigmoid applied
+        pred_class_logits = torch.cat(pred_cls_flat, dim=1).sigmoid()
+
+        # Apply a single Anchor2Vec: unsqueeze trailing dim to make it 4-D (H=total_anchors, W=1)
+        _, bbox_reg = anchor2vec(all_reg.unsqueeze(-1))  # (B, 4, total_anchors, 1)
+        pred_bbox_reg = bbox_reg.squeeze(-1).permute(0, 2, 1)  # (B, total_anchors, 4)
+
+        # Use pre-computed anchor buffers (no extra ONNX ops) when available,
+        # otherwise fall back to on-the-fly computation.
+        if hasattr(self, '_export_offset'):
+            offset = self._export_offset
+            scaler = self._export_scaler
+        else:
+            h, w = self._export_input_size
+            stage_strides = [w // layer.shape[-1] for layer in outputs]
+            offset, scaler = generate_anchors((h, w), stage_strides)
+            device = outputs[0].device
+            offset = offset.float().to(device)
+            scaler = scaler.float().to(device)
+
+        # Decode ltrb distances to xyxy coordinates
+        pred_xyxy = pred_bbox_reg * scaler.view(1, -1, 1)
+        lt, rb = pred_xyxy.chunk(2, dim=-1)
+        boxes = torch.cat([offset.unsqueeze(0) - lt, offset.unsqueeze(0) + rb], dim=-1)
+
+        return boxes, pred_class_logits
 
 def yolo_detection_head(num_classes, intermediate_features_dim, conf_model_head, **kwargs):
     return YOLODetectionHead(num_classes=num_classes,
