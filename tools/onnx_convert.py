@@ -18,7 +18,7 @@ import argparse
 import os
 from itertools import chain
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List
 
 import torch
 import torch.nn as nn
@@ -26,8 +26,6 @@ from netspresso_trainer.models import build_model
 from netspresso_trainer.models.utils import is_single_task_model
 from netspresso_trainer.utils.onnx import save_onnx
 from omegaconf import OmegaConf
-
-TEMP_NUM_CLASSES = 80
 
 def parse_args():
 
@@ -40,8 +38,11 @@ def parse_args():
         '-o', '--output-dir', type=str, default="onnx/",
         help="ONNX model output path")
     parser.add_argument(
-        '--sample-size', type=list, default=[640, 640],
-        help="Model config path")
+        '--sample-size', type=int, nargs=2, default=[640, 640],
+        help="Model input size (height, width).")
+    parser.add_argument(
+        '--num-classes', type=int, default=80,
+        help="Number of output classes.")
     parser.add_argument(
         '--debug', action='store_true', help="Debug mode to check with the error message")
 
@@ -68,9 +69,23 @@ if __name__ == '__main__':
             config = OmegaConf.load(model_config_path)
             config = config.model
             config.single_task_model = is_single_task_model(config)
-            torch_model: nn.Module = build_model(config, num_classes=TEMP_NUM_CLASSES, devices=torch.device("cpu"), distributed=False)
+            torch_model: nn.Module = build_model(config, num_classes=args.num_classes, devices=torch.device("cpu"), distributed=False)
             torch_model.eval()
-            print(torch_model)
+
+            if hasattr(torch_model.head, "prepare_export"):
+                # Pre-compute anchor grids to eliminate Range/Cast ops in ONNX.
+                # Run backbone+neck once to obtain per-scale feature map sizes.
+                feat_sizes = None
+                with torch.no_grad():
+                    dummy = torch.randn(1, 3, *args.sample_size)
+                    feats = torch_model.backbone(dummy)
+                    if hasattr(torch_model, 'neck'):
+                        feats = torch_model.neck(feats['intermediate_features'])
+                    feat_sizes = [(int(f.shape[-2]), int(f.shape[-1]))
+                                  for f in feats['intermediate_features']]
+                torch_model.head.prepare_export(input_size=args.sample_size,
+                                                feat_sizes=feat_sizes)
+
             save_onnx(torch_model, f=Path(args.output_dir) / f"{model_config_path.stem}.onnx",
                       sample_input=torch.randn(1, 3, *args.sample_size), opset_version=17)
             print("Success!")
